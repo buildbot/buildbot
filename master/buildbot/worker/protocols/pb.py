@@ -23,6 +23,7 @@ from typing import Generator
 from twisted.internet import defer
 from twisted.python import log
 from twisted.spread import pb
+from twisted.spread.pb import RemoteReference
 
 from buildbot.pbutil import decode
 from buildbot.util import deferwaiter
@@ -31,7 +32,6 @@ from buildbot.worker.protocols import base
 if TYPE_CHECKING:
     from twisted.internet.defer import Deferred
     from twisted.python.failure import Failure
-    from twisted.spread.pb import RemoteReference
 
     from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
@@ -51,7 +51,8 @@ class Listener(base.UpdateRegistrationListener):
     def get_manager(self) -> PBManager:
         return self.master.pbmanager
 
-    def before_connection_setup(self, mind: RemoteReference, workerName: str) -> None:
+    def before_connection_setup(self, mind: object, workerName: str) -> None:
+        assert isinstance(mind, RemoteReference), type(mind)
         log.msg(f"worker '{workerName}' attaching from {mind.broker.transport.getPeer()}")
         try:
             mind.broker.transport.setTcpKeepAlive(1)

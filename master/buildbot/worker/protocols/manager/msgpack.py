@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import base64
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 import msgpack
 from autobahn.twisted.websocket import WebSocketServerFactory
@@ -27,6 +31,17 @@ from buildbot.util import deferwaiter
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols.manager.base import BaseDispatcher
 from buildbot.worker.protocols.manager.base import BaseManager
+from buildbot.worker.protocols.msgpack import Connection
+
+if TYPE_CHECKING:
+    from autobahn.websocket.types import ConnectionRequest
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IListeningPort
+
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.protocols.base import FileReaderImpl
+    from buildbot.worker.protocols.base import FileWriterImpl
+    from buildbot.worker.protocols.base import RemoteCommandImpl
 
 
 class ConnectioLostError(Exception):
@@ -37,7 +52,7 @@ class RemoteWorkerError(Exception):
     pass
 
 
-def decode_http_authorization_header(value):
+def decode_http_authorization_header(value: str) -> tuple[str, str]:
     if value[:5] != 'Basic':
         raise ValueError("Value should always start with 'Basic'")
 
@@ -49,7 +64,7 @@ def decode_http_authorization_header(value):
     return (username, password)
 
 
-def encode_http_authorization_header(name, password):
+def encode_http_authorization_header(name: bytes, password: bytes) -> str:
     if b":" in name:
         raise ValueError("Username is not allowed to contain a colon.")
     userpass = name + b':' + password
@@ -59,43 +74,43 @@ def encode_http_authorization_header(name, password):
 class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     debug = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.seq_num_to_waiters_map = {}
-        self.connection = None
-        self.worker_name = None
+        self.seq_num_to_waiters_map: dict[int, Deferred[Any]] = {}
+        self.connection: Connection | None = None
+        self.worker_name: str | None = None
         self._deferwaiter = deferwaiter.DeferWaiter()
 
-    def get_dispatcher(self):
+    def get_dispatcher(self) -> Dispatcher:
         # This is an instance of class msgpack.Dispatcher set in Dispatcher.__init__().
         # self.factory is set on the protocol instance when creating it in Twisted internals
         return self.factory.buildbot_dispatcher
 
     @defer.inlineCallbacks
-    def onOpen(self):
+    def onOpen(self) -> InlineCallbacksType[None]:
         if self.debug:
             log.msg("WebSocket connection open.")
         self.seq_number = 0
-        self.command_id_to_command_map = {}
-        self.command_id_to_reader_map = {}
-        self.command_id_to_writer_map = {}
+        self.command_id_to_command_map: dict[str, RemoteCommandImpl] = {}
+        self.command_id_to_reader_map: dict[str, FileReaderImpl] = {}
+        self.command_id_to_writer_map: dict[str, FileWriterImpl] = {}
         yield self.initialize()
 
-    def maybe_log_worker_to_master_msg(self, message):
+    def maybe_log_worker_to_master_msg(self, message: dict[str, Any]) -> None:
         if self.debug:
             log.msg("WORKER -> MASTER message: ", message)
 
-    def maybe_log_master_to_worker_msg(self, message):
+    def maybe_log_master_to_worker_msg(self, message: dict[str, Any]) -> None:
         if self.debug:
             log.msg("MASTER -> WORKER message: ", message)
 
-    def contains_msg_key(self, msg, keys):
+    def contains_msg_key(self, msg: dict[str, Any], keys: tuple[str, ...]) -> None:
         for k in keys:
             if k not in msg:
                 raise KeyError(f'message did not contain obligatory "{k}" key')
 
     @defer.inlineCallbacks
-    def initialize(self):
+    def initialize(self) -> InlineCallbacksType[None]:
         try:
             dispatcher = self.get_dispatcher()
             yield dispatcher.master.initLock.acquire()
@@ -103,7 +118,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             if self.worker_name in dispatcher.users:
                 _, afactory = dispatcher.users[self.worker_name]
                 self.connection = yield afactory(self, self.worker_name)
-                yield self.connection.attached(self)
+                yield cast(Connection, self.connection).attached(self)
             else:
                 self.sendClose()
         except Exception as e:
@@ -113,7 +128,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             eventually(dispatcher.master.initLock.release)
 
     @defer.inlineCallbacks
-    def call_update(self, msg):
+    def call_update(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         result = None
         is_exception = False
         try:
@@ -123,7 +138,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_update_msgpack(msg['args'])
+            yield command.remote_update_msgpack(msg['args'])  # type: ignore[func-returns-value]
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -131,7 +146,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_complete(self, msg):
+    def call_complete(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         result = None
         is_exception = False
         try:
@@ -140,7 +155,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             if msg['command_id'] not in self.command_id_to_command_map:
                 raise KeyError('unknown "command_id"')
             command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_complete(msg['args'])
+            yield command.remote_complete(msg['args'])  # type: ignore[func-returns-value]
 
             if msg['command_id'] in self.command_id_to_command_map:
                 del self.command_id_to_command_map[msg['command_id']]
@@ -154,7 +169,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_update_upload_file_write(self, msg):
+    def call_update_upload_file_write(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         result = None
         is_exception = False
         try:
@@ -171,7 +186,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_update_upload_file_utime(self, msg):
+    def call_update_upload_file_utime(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         result = None
         is_exception = False
         try:
@@ -181,14 +196,14 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             file_writer = self.command_id_to_writer_map[msg['command_id']]
-            yield file_writer.remote_utime('access_time', 'modified_time')
+            yield file_writer.remote_utime((msg['access_time'], msg['modified_time']))
         except Exception as e:
             is_exception = True
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_update_upload_file_close(self, msg):
+    def call_update_upload_file_close(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         result = None
         is_exception = False
         try:
@@ -205,7 +220,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_update_read_file(self, msg):
+    def call_update_read_file(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         result = None
         is_exception = False
         try:
@@ -222,7 +237,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_update_read_file_close(self, msg):
+    def call_update_read_file_close(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         result = None
         is_exception = False
         try:
@@ -239,7 +254,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_update_upload_directory_unpack(self, msg):
+    def call_update_upload_directory_unpack(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         result = None
         is_exception = False
         try:
@@ -256,7 +271,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.send_response_msg(msg, result, is_exception)
 
     @defer.inlineCallbacks
-    def call_update_upload_directory_write(self, msg):
+    def call_update_upload_directory_write(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
         result = None
         is_exception = False
         try:
@@ -272,7 +287,9 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             result = str(e)
         self.send_response_msg(msg, result, is_exception)
 
-    def send_response_msg(self, msg, result, is_exception):
+    def send_response_msg(
+        self, msg: dict[str, Any], result: str | None, is_exception: bool
+    ) -> None:
         dict_output = {'op': 'response', 'seq_number': msg['seq_number'], 'result': result}
         if is_exception:
             dict_output['is_exception'] = True
@@ -282,7 +299,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
         self.sendMessage(payload, isBinary=True)
 
-    def onMessage(self, payload, isBinary):
+    def onMessage(self, payload: bytes, isBinary: bool) -> None:
         if not isBinary:
             name = self.worker_name if self.worker_name is not None else '<???>'
             log.msg(f'Message type from worker {name} unsupported')
@@ -329,7 +346,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             self.send_response_msg(msg, f"Command {msg['op']} does not exist.", is_exception=True)
 
     @defer.inlineCallbacks
-    def get_message_result(self, msg):
+    def get_message_result(self, msg: dict[str, Any]) -> InlineCallbacksType[Any]:
         if msg['op'] != 'print' and msg['op'] != 'get_worker_info' and self.connection is None:
             raise ConnectioLostError("No worker connection")
 
@@ -338,7 +355,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.maybe_log_master_to_worker_msg(msg)
 
         object = msgpack.packb(msg, use_bin_type=True)
-        d = defer.Deferred()
+        d: Deferred[Any] = defer.Deferred()
         self.seq_num_to_waiters_map[self.seq_number] = d
 
         self.seq_number = self.seq_number + 1
@@ -347,7 +364,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         return res1
 
     @defer.inlineCallbacks
-    def onConnect(self, request):
+    def onConnect(self, request: ConnectionRequest) -> InlineCallbacksType[None]:
         if self.debug:
             log.msg(f"Client connecting: {request.peer}")
 
@@ -381,7 +398,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         if not authentication:
             raise ConnectionDeny(401, "Unauthorized")
 
-    def onClose(self, wasClean, code, reason):
+    def onClose(self, wasClean: bool, code: int | None, reason: str) -> None:
         if self.debug:
             log.msg(f"WebSocket connection closed: {reason}")
         # stop waiting for the responses of all commands
@@ -396,12 +413,12 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 class Dispatcher(BaseDispatcher):
     DUMMY_PORT = 1
 
-    def __init__(self, config_portstr, portstr):
-        super().__init__(portstr)
+    def __init__(self, config_port: str | int) -> None:
+        super().__init__(config_port=config_port)
         try:
-            port = int(config_portstr)
+            port = int(config_port)
         except ValueError as e:
-            raise ValueError(f'portstr unsupported: {config_portstr}') from e
+            raise ValueError(f'portstr unsupported: {config_port}') from e
 
         # Autobahn does not support zero port meaning to pick whatever port number is free, so
         # we work around this by setting the port to nonzero value and resetting the value once
@@ -412,22 +429,22 @@ class Dispatcher(BaseDispatcher):
             port = self.DUMMY_PORT
 
         self.serverFactory = WebSocketServerFactory(f"ws://0.0.0.0:{port}")
-        self.serverFactory.buildbot_dispatcher = self
+        self.serverFactory.buildbot_dispatcher = self  # type: ignore[attr-defined]
         self.serverFactory.protocol = BuildbotWebSocketServerProtocol
 
-    def start_listening_port(self):
+    def start_listening_port(self) -> IListeningPort:
         port = super().start_listening_port()
         if self._zero_port:
             # Check that websocket port is actually stored into the port attribute, as we're
             # relying on undocumented behavior.
-            if self.serverFactory.port != self.DUMMY_PORT:
+            if self.serverFactory.port != self.DUMMY_PORT:  # type: ignore[attr-defined]
                 raise RuntimeError("Expected websocket port to be set to dummy port")
-            self.serverFactory.port = port.getHost().port
+            self.serverFactory.port = port.getHost().port  # type: ignore[attr-defined]
         return port
 
 
-class MsgManager(BaseManager):
-    def __init__(self):
+class MsgManager(BaseManager[Dispatcher]):
+    def __init__(self) -> None:
         super().__init__('msgmanager')
 
     dispatcher_class = Dispatcher
