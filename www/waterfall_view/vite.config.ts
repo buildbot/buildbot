@@ -14,7 +14,7 @@ export default defineConfig({
         }
       }
     }),
-    checker({typescript: true}),
+    checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
   ],
   define: {
     'process.env.NODE_ENV': '"production"',
