@@ -212,7 +212,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         d = self.conn.remoteSetBuilderList(builders)
         return d
 
-    def check_message_send_response(
+    async def check_message_send_response(
         self,
         command_name: str,
         args: dict[str, list[str] | str],
@@ -229,8 +229,8 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         self.d_get_message_result.callback(None)
 
         remote_command = self.protocol.command_id_to_command_map[command_id]
-        remote_command.remote_update_msgpack(update_msg)
-        remote_command.remote_complete(None)
+        await remote_command.remote_update_msgpack(update_msg)
+        await remote_command.remote_complete(None)
 
     def check_message_set_worker_settings(self) -> None:
         newline_re = r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)'
@@ -251,25 +251,25 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
-        self.check_message_send_response(
+        yield self.check_message_send_response(
             'listdir', {'path': 'testdir'}, [('files', ['dir1', 'dir2', 'dir3']), ('rc', 0)]
         )
 
         path = os.path.join('testdir', 'dir1')
-        self.check_message_send_response('stat', {'path': path}, [('stat', (1,)), ('rc', 0)])
+        yield self.check_message_send_response('stat', {'path': path}, [('stat', (1,)), ('rc', 0)])
 
         path = os.path.join('testdir', 'dir2')
-        self.check_message_send_response('stat', {'path': path}, [('stat', (1,)), ('rc', 0)])
+        yield self.check_message_send_response('stat', {'path': path}, [('stat', (1,)), ('rc', 0)])
 
         path = os.path.join('testdir', 'dir3')
-        self.check_message_send_response('stat', {'path': path}, [('stat', (1,)), ('rc', 0)])
+        yield self.check_message_send_response('stat', {'path': path}, [('stat', (1,)), ('rc', 0)])
 
         paths = [
             os.path.join('testdir', 'info'),
             os.path.join('testdir', 'test_dir1'),
             os.path.join('testdir', 'test_dir2'),
         ]
-        self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
+        yield self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
 
         r = yield d
         self.assertEqual(r, ['builder1', 'builder2'])
@@ -280,22 +280,22 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
-        self.check_message_send_response(
+        yield self.check_message_send_response(
             'listdir', {'path': 'testdir'}, [('files', ['dir1', 'dir2', 'dir3']), ('rc', 0)]
         )
 
         path = os.path.join('testdir', 'dir1')
-        self.check_message_send_response(
+        yield self.check_message_send_response(
             'stat', {'path': path}, [('stat', (stat.S_IFDIR,)), ('rc', 0)]
         )
 
         path = os.path.join('testdir', 'dir2')
-        self.check_message_send_response(
+        yield self.check_message_send_response(
             'stat', {'path': path}, [('stat', (stat.S_IFDIR,)), ('rc', 0)]
         )
 
         path = os.path.join('testdir', 'dir3')
-        self.check_message_send_response(
+        yield self.check_message_send_response(
             'stat', {'path': path}, [('stat', (stat.S_IFDIR,)), ('rc', 0)]
         )
 
@@ -304,14 +304,14 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
             os.path.join('testdir', 'dir2'),
             os.path.join('testdir', 'dir3'),
         ]
-        self.check_message_send_response('rmdir', {'paths': paths}, [('rc', 0)])
+        yield self.check_message_send_response('rmdir', {'paths': paths}, [('rc', 0)])
 
         paths = [
             os.path.join('testdir', 'info'),
             os.path.join('testdir', 'test_dir1'),
             os.path.join('testdir', 'test_dir2'),
         ]
-        self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
+        yield self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
 
         r = yield d
         self.assertEqual(r, ['builder1', 'builder2'])
@@ -326,7 +326,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         )
         self.check_message_set_worker_settings()
 
-        self.check_message_send_response(
+        yield self.check_message_send_response(
             'listdir', {'path': 'testdir'}, [('files', ['dir1', 'dir2', 'dir3']), ('rc', 0)]
         )
 
@@ -335,7 +335,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
             os.path.join('testdir', 'test_dir1'),
             os.path.join('testdir', 'test_dir2'),
         ]
-        self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
+        yield self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
 
         r = yield d
         self.assertEqual(r, ['builder1', 'builder2'])
@@ -346,15 +346,15 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
-        self.check_message_send_response(
+        yield self.check_message_send_response(
             'listdir', {'path': 'testdir'}, [('files', ['dir1', 'test_dir2']), ('rc', 0)]
         )
 
         path = os.path.join('testdir', 'dir1')
-        self.check_message_send_response('stat', {'path': path}, [('stat', (1,)), ('rc', 0)])
+        yield self.check_message_send_response('stat', {'path': path}, [('stat', (1,)), ('rc', 0)])
 
         paths = [os.path.join('testdir', 'info'), os.path.join('testdir', 'test_dir1')]
-        self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
+        yield self.check_message_send_response('mkdir', {'paths': paths}, [('rc', 0)])
 
         r = yield d
         self.assertEqual(r, ['builder1', 'builder2'])
@@ -365,7 +365,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
-        self.check_message_send_response(
+        yield self.check_message_send_response(
             'listdir',
             {'path': 'testdir'},
             [('files', ['test_dir1', 'test_dir2', 'info']), ('rc', 0)],
@@ -380,7 +380,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
-        self.check_message_send_response(
+        yield self.check_message_send_response(
             'listdir', {'path': 'testdir'}, [('no_key', []), ('rc', 0)]
         )
 
@@ -394,7 +394,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         d = self.set_up_set_builder_list([('builder1', 'test_dir1'), ('builder2', 'test_dir2')])
         self.check_message_set_worker_settings()
 
-        self.check_message_send_response('listdir', {'path': 'testdir'}, [('rc', 123)])
+        yield self.check_message_send_response('listdir', {'path': 'testdir'}, [('rc', 123)])
 
         with self.assertRaisesRegex(Exception, "Error number: 123"):
             yield d

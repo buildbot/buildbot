@@ -138,7 +138,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_update_msgpack(msg['args'])  # type: ignore[func-returns-value]
+            yield command.remote_update_msgpack(msg['args'])
         except Exception as e:
             is_exception = True
             result = str(e)
@@ -155,7 +155,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             if msg['command_id'] not in self.command_id_to_command_map:
                 raise KeyError('unknown "command_id"')
             command = self.command_id_to_command_map[msg['command_id']]
-            yield command.remote_complete(msg['args'])  # type: ignore[func-returns-value]
+            yield command.remote_complete(msg['args'])
 
             if msg['command_id'] in self.command_id_to_command_map:
                 del self.command_id_to_command_map[msg['command_id']]

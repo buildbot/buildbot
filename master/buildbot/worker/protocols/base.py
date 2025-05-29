@@ -163,7 +163,7 @@ class Connection:
         commandId: str,
         commandName: str,
         args: dict[str, Any],
-    ) -> Deferred:
+    ) -> Deferred[None]:
         raise NotImplementedError
 
     def remoteShutdown(self) -> Deferred[None]:
@@ -172,19 +172,19 @@ class Connection:
     def remoteStartBuild(self, builderName: str) -> Deferred[None]:
         raise NotImplementedError
 
-    def remoteInterruptCommand(self, builderName: str, commandId: str, why: str) -> Deferred:
+    def remoteInterruptCommand(self, builderName: str, commandId: str, why: str) -> Deferred[None]:
         raise NotImplementedError
 
 
 # RemoteCommand base implementation and base proxy
 class RemoteCommandImpl:
-    def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> int:
+    def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> Deferred[int]:
         raise NotImplementedError
 
-    def remote_update_msgpack(self, updates: list[tuple[str, Any]]) -> None:
+    def remote_update_msgpack(self, updates: list[tuple[str, Any]]) -> Deferred[None]:
         raise NotImplementedError
 
-    def remote_complete(self, failure: Any | None = None) -> None:
+    def remote_complete(self, failure: Any | None = None) -> Deferred[None]:
         raise NotImplementedError
 
 

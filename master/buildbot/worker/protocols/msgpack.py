@@ -77,14 +77,16 @@ class BasicRemoteCommand(RemoteCommandImpl):
     def wait_until_complete(self) -> Deferred[None]:
         return self.d
 
-    def remote_update_msgpack(self, args: list[tuple[Any, Any]]) -> None:
+    def remote_update_msgpack(self, args: list[tuple[Any, Any]]) -> Deferred[None]:
         # args is a list of tuples
         # first element of the tuple is a key, second element is a value
         for key, value in args:
             if key not in self.update_results:
                 self.update_results[key] = value
 
-    def remote_complete(self, failure: Any | None = None) -> None:
+        return defer.succeed(None)
+
+    def remote_complete(self, failure: Any | None = None) -> Deferred[None]:
         if 'rc' not in self.update_results:
             self.d.errback(
                 Exception(
@@ -92,7 +94,7 @@ class BasicRemoteCommand(RemoteCommandImpl):
                     f"master failed. {self.error_msg}. 'rc' did not arrive."
                 )
             )
-            return
+            return defer.succeed(None)
 
         if self.update_results['rc'] != 0:
             self.d.errback(
@@ -102,7 +104,7 @@ class BasicRemoteCommand(RemoteCommandImpl):
                     f"{self.update_results['rc']}"
                 )
             )
-            return
+            return defer.succeed(None)
 
         for key in self.expected_keys:
             if key not in self.update_results:
@@ -113,9 +115,10 @@ class BasicRemoteCommand(RemoteCommandImpl):
                         f"Key '{key}' is missing."
                     )
                 )
-                return
+                return defer.succeed(None)
 
         self.d.callback(None)
+        return defer.succeed(None)
 
 
 class Connection(base.Connection):

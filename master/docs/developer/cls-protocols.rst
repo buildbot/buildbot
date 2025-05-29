@@ -77,7 +77,7 @@ to know about protocol calls or handle protocol specific exceptions.
         :type commandName: string
         :param args: arguments for that command
         :type args: List
-        :returns: Deferred
+        :returns: Deferred[None]
 
         Start command on the worker.
 
@@ -102,7 +102,7 @@ to know about protocol calls or handle protocol specific exceptions.
         :type commandId: string
         :param why: reason to interrupt
         :type why: string
-        :returns: Deferred
+        :returns: Deferred[None]
 
         Interrupt the command executed on builderName with given commandId on worker, and print reason "why" to worker logs.
 
@@ -129,7 +129,9 @@ On worker sides, those proxy objects are replaced by a proxy object having a sin
 
     .. py:method:: remote_update(updates)
 
-        :param updates: dictionary of updates
+        :param updates: list of updates, which are tuples of dictionary of updates and a number (not used, present for historical reasons)
+        :type updates: list[tuple[dict[str | bytes, Any], int]]
+        :returns: Deferred[int] the highest number found in the updates tuples
 
         Called when the workers have updates to the current remote command.
 
@@ -159,6 +161,7 @@ On worker sides, those proxy objects are replaced by a proxy object having a sin
     .. :py:method:: remote_complete(failure=None)
 
         :param failure: copy of the failure if any
+        :returns: Deferred[None]
 
             Called by the worker when the command is complete.
 

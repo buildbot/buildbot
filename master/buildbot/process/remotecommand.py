@@ -256,7 +256,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         except Exception as e:
             log.msg("RemoteCommand.interrupt failed", self, e)
 
-    def remote_update_msgpack(self, updates: list[tuple[str, Any]]) -> None:
+    def remote_update_msgpack(self, updates: list[tuple[str, Any]]) -> defer.Deferred[None]:
         assert self.worker is not None
         self.worker.messageReceivedFromWorker()
         try:
@@ -273,10 +273,14 @@ class RemoteCommand(base.RemoteCommandImpl):
             # log failure, terminate build, let worker retire the update
             self._finished(Failure())
 
+        return defer.succeed(None)
+
     def split_line(self, stream: str, text: str) -> str | None:
         return self._line_boundary_finders[stream].append(text)
 
-    def remote_update(self, updates: list[tuple[dict[str | bytes, Any], int]]) -> int:
+    def remote_update(
+        self, updates: list[tuple[dict[str | bytes, Any], int]]
+    ) -> defer.Deferred[int]:
         """
         I am called by the worker's
         L{buildbot_worker.base.WorkerForBuilderBase.sendUpdate} so
@@ -316,9 +320,9 @@ class RemoteCommand(base.RemoteCommandImpl):
                 # TODO: what if multiple updates arrive? should
                 # skip the rest but ack them all
             max_updatenum = max(max_updatenum, num)
-        return max_updatenum
+        return defer.succeed(max_updatenum)
 
-    def remote_complete(self, failure=None) -> None:
+    def remote_complete(self, failure=None) -> defer.Deferred[None]:
         """
         Called by the worker's
         L{buildbot_worker.base.WorkerForBuilderBase.commandComplete} to
@@ -334,6 +338,8 @@ class RemoteCommand(base.RemoteCommandImpl):
         # acknowledgement so the worker can retire the completion message.
         if self.active:
             eventually(self._finished, failure)
+
+        return defer.succeed(None)
 
     @util.deferredLocked('loglock')
     @async_to_deferred
