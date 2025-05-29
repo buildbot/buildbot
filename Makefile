@@ -28,6 +28,7 @@ check_for_yarn:
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample
 WWW_DEP_PKGS := www/plugin_support www/data-module www/ui
+WWW_PURE_DEP_PKGS := www/eslint-config
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
@@ -64,11 +65,13 @@ docs-release-spelling: docs-towncrier
 
 frontend_deps: $(VENV_NAME) check_for_yarn
 	$(PIP) install build wheel -r requirements-ci.txt
+	for i in $(WWW_PURE_DEP_PKGS); \
+		do (cd $$i; $(YARN) install --pure-lockfile); done
 	for i in $(WWW_DEP_PKGS); \
 		do (cd $$i; $(YARN) install --pure-lockfile; $(YARN) run build); done
 
 frontend_tests: frontend_deps check_for_yarn
-	for i in $(WWW_PKGS); \
+	for i in $(WWW_PURE_DEP_PKGS) $(WWW_PKGS); \
 		do (cd $$i; $(YARN) install --pure-lockfile); done
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
 		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test || exit 1) || exit 1; done
@@ -88,7 +91,7 @@ frontend_install_tests: frontend_deps
 
 # upgrade FE dependencies
 frontend_yarn_upgrade: check_for_yarn
-	for i in $(WWW_PKGS) $(WWW_EX_PKGS) $(WWW_DEP_PKGS); \
+	for i in $(WWW_PKGS) $(WWW_EX_PKGS) $(WWW_DEP_PKGS) $(WWW_PURE_DEP_PKGS); \
 		do (cd $$i; echo $$i; rm -rf yarn.lock; $(YARN) install || echo $$i failed); done
 
 # install git hooks for validating patches at commit time

@@ -14,11 +14,6 @@
     "test": "vitest run",
     "test-watch": "vitest --watch"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app"
-    ]
-  },
   "babel": {
     "presets": [
       "react-app"
@@ -35,6 +30,8 @@
     "@vitejs/plugin-react": "~4.3.1",
     "axios": "~1.7.7",
     "axios-mock-adapter": "~2.0.0",
+    "eslint": "^9.27.0",
+    "eslint-config-buildbot": "link:../eslint-config",
     "jsdom": "^25.0.0",
     "mobx": "^6.13.4",
     "moment": "^2.29.4",

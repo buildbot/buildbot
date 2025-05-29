@@ -16,7 +16,7 @@ export default defineConfig({
       }
     }),
     dts(),
-    checker({typescript: true}),
+    checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
   ],
   build: {
     lib: {
