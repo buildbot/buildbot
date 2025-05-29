@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import calendar
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Iterable
@@ -182,6 +183,7 @@ class TempChange:
         return self._chdict
 
 
+@dataclass
 class BuildRequest:
     """
 
@@ -215,18 +217,17 @@ class BuildRequest:
     @ivar bsid: ID of the parent buildset
     """
 
-    submittedAt: None | int = None
-    # FIXME: this makes it a class var
-    sources: dict[str, TempSourceStamp] = {}
-    id: int
+    brid: int
     bsid: int
     buildername: str
     builderid: int
     priority: int
+    submitted_at: int | None
     master: BuildMaster
-    waitedFor: int
+    waited_for: bool
     reason: str | None
     properties: properties.Properties
+    sources: dict[str, TempSourceStamp]
 
     @classmethod
     def fromBrdict(cls, master: BuildMaster, brdict: BuildRequestModel) -> Deferred[BuildRequest]:
@@ -254,41 +255,52 @@ class BuildRequest:
         brdict: BuildRequestModel,
         master: BuildMaster,
     ) -> InlineCallbacksType[BuildRequest]:
-        buildrequest = cls()
-        buildrequest.id = brid
-        buildrequest.bsid = brdict.buildsetid
-        buildrequest.buildername = brdict.buildername
-        buildrequest.builderid = brdict.builderid
-        buildrequest.priority = brdict.priority
-        dt = brdict.submitted_at
-        if dt:
-            buildrequest.submittedAt = calendar.timegm(dt.utctimetuple())
-        buildrequest.master = master
-        buildrequest.waitedFor = brdict.waited_for
-
         # fetch the buildset to get the reason
         buildset: BuildSetModel | None = yield master.db.buildsets.getBuildset(brdict.buildsetid)
         assert buildset is not None  # schema should guarantee this
-        buildrequest.reason = buildset.reason
 
         # fetch the buildset properties, and convert to Properties
         buildset_properties: BsProps = yield master.db.buildsets.getBuildsetProperties(
             brdict.buildsetid
         )
 
-        buildrequest.properties = properties.Properties.fromDict(buildset_properties)
-
         # make a fake sources dict (temporary)
-        bsdata: BuildSetData | None = yield master.data.get(('buildsets', str(buildrequest.bsid)))
+        bsdata: BuildSetData | None = yield master.data.get(('buildsets', str(brdict.buildsetid)))
         assert bsdata is not None
         assert bsdata['sourcestamps'], "buildset must have at least one sourcestamp"
-        buildrequest.sources = {}
+        sources: dict[str, TempSourceStamp] = {}
         for ssdata in bsdata['sourcestamps']:
-            ss = buildrequest.sources[ssdata['codebase']] = TempSourceStamp(ssdata)
+            ss = sources[ssdata['codebase']] = TempSourceStamp(ssdata)
             changes: list[ChangeData] = yield master.data.get(("sourcestamps", ss.ssid, "changes"))
             ss.changes = [TempChange(change) for change in changes]
 
-        return buildrequest
+        return cls(
+            brid=brid,
+            bsid=brdict.buildsetid,
+            buildername=brdict.buildername,
+            builderid=brdict.builderid,
+            priority=brdict.priority,
+            submitted_at=(
+                calendar.timegm(dt.utctimetuple()) if (dt := brdict.submitted_at) else None
+            ),
+            master=master,
+            waited_for=brdict.waited_for,
+            reason=buildset.reason,
+            properties=properties.Properties.fromDict(buildset_properties),
+            sources=sources,
+        )
+
+    @property
+    def id(self) -> int:
+        return self.brid
+
+    @property
+    def submittedAt(self) -> int | None:
+        return self.submitted_at
+
+    @property
+    def waitedFor(self) -> int | None:
+        return self.waited_for
 
     @staticmethod
     def filter_buildset_props_for_collapsing(bs_props: BsProps) -> BsProps:

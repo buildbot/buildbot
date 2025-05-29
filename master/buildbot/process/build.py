@@ -112,6 +112,7 @@ class Build(properties.PropertiesMixin):
     def __init__(self, requests: list[BuildRequest], builder: Builder) -> None:
         self.requests = requests
         self.builder = builder
+        assert builder.master is not None
         self.master = builder.master
         self.workerforbuilder: AbstractWorkerForBuilder | None = None
 
@@ -163,10 +164,8 @@ class Build(properties.PropertiesMixin):
     def getProperties(self) -> IProperties:
         return self.properties
 
-    def setLocks(self, lockList: list[BaseLockId]) -> None:
-        # FIXME: should take Iterable and create a list
-        # to avoid keeping same ref as caller and caller potentially mutating it
-        self.locks = lockList
+    def setLocks(self, lockList: Iterable[BaseLockId]) -> None:
+        self.locks = list(lockList)
 
     @defer.inlineCallbacks
     def _setup_locks(self) -> InlineCallbacksType[None]:
@@ -354,7 +353,6 @@ class Build(properties.PropertiesMixin):
 
                 projectid = yield self.builder.find_project_id(project)
                 # Note: not waiting for updateBuilderInfo to complete
-                assert self.master is not None
                 self.master.data.updates.updateBuilderInfo(
                     self._builderid, description, None, None, projectid, tags
                 )
@@ -391,7 +389,6 @@ class Build(properties.PropertiesMixin):
         # then we just assign the build to the first buildrequest
         brid = self.requests[0].id
         builderid = yield self.getBuilderId()
-        assert self.master is not None
         assert self.master.data is not None
         self.buildid, self.number = yield self.master.data.updates.addBuild(
             builderid=builderid, buildrequestid=brid, workerid=worker.workerid
@@ -579,7 +576,6 @@ class Build(properties.PropertiesMixin):
         state_string: str,
     ) -> InlineCallbacksType[None]:
         assert self._preparation_step is not None
-        assert self.master is not None
         if self.stopped:
             # if self.stopped, then this failure is a LatentWorker's failure to substantiate
             # which we triggered on purpose in stopBuild()
@@ -701,7 +697,6 @@ class Build(properties.PropertiesMixin):
         # FIXME: bad assumption of BuildStep instead of IBuildStep
         assert isinstance(step, BuildStep)
         assert self.conn is not None
-        assert self.master is not None
         try:
             results = yield step.startStep(self.conn)
             yield self.master.data.updates.setBuildProperties(self.buildid, self)
@@ -747,7 +742,6 @@ class Build(properties.PropertiesMixin):
         log.msg(f" step '{step.name}' complete: {statusToString(results)} ({text})")
         if text:
             self.text.extend(text)
-            assert self.master is not None
             self.master.data.updates.setBuildStateString(
                 self.buildid, bytes2unicode(" ".join(self.text))
             )
@@ -865,7 +859,6 @@ class Build(properties.PropertiesMixin):
             eventually(self.releaseLocks)
             metrics.MetricCountEvent.log('active_builds', -1)
 
-            assert self.master is not None
             yield self.master.data.updates.setBuildStateString(
                 self.buildid, bytes2unicode(" ".join(text))
             )
@@ -933,8 +926,7 @@ class Build(properties.PropertiesMixin):
             return
 
         if self._locks_released and self._build_finished:
-            # FIXME: should be self.builder.master
-            self.builder.botmaster.maybeStartBuildsForAllBuilders()  # type: ignore[attr-defined]
+            self.master.botmaster.maybeStartBuildsForAllBuilders()
 
     def getSummaryStatistic(
         self,
@@ -968,7 +960,6 @@ class Build(properties.PropertiesMixin):
     @defer.inlineCallbacks
     def waitUntilFinished(self) -> InlineCallbacksType[None]:
         buildid = yield self.get_buildid()
-        assert self.master is not None
         yield self.master.mq.waitUntilEvent(
             ('builds', str(buildid), 'finished'), lambda: self.finished
         )
