@@ -302,6 +302,7 @@ class BuildRequest:
         return self.submitted_at
 
     @property
+    @deprecated(Version("buildbot", 4, 3, 0), ".waitedFor")
     def waitedFor(self) -> int | None:
         return self.waited_for
 
