@@ -35,7 +35,7 @@ from urllib import request as urllib_request
 
 from sqlalchemy.engine.url import make_url
 from twisted.internet import threads
-from twisted.python import log
+from twisted.logger import Logger
 
 from buildbot.process.buildstep import _BuildStepFactory
 from buildbot.util import unicode2bytes
@@ -223,7 +223,8 @@ def _sendWithRequests(url: str, data: dict[str, Any]) -> str | None:
 
 
 def _sendBuildbotNetUsageData(data: dict[str, Any]) -> None:
-    log.msg(f"buildbotNetUsageData: sending {data}")
+    logger = Logger()
+    logger.info("sending {data}", data=data)
     # first try with requests, as this is the most stable http library
     res: str | bytes | None = _sendWithRequests(PHONE_HOME_URL, data)
     # then we try with stdlib, which not always work with https
@@ -231,14 +232,14 @@ def _sendBuildbotNetUsageData(data: dict[str, Any]) -> None:
         res = _sendWithUrlib(PHONE_HOME_URL, data)
     # at last stage
     if res is None:
-        log.msg(
-            "buildbotNetUsageData: Could not send using https, "
+        logger.warn(
+            "Could not send using https, "
             "please `pip install 'requests[security]'` for proper SSL implementation`"
         )
         data['buggySSL'] = True
         res = _sendWithUrlib(PHONE_HOME_URL.replace("https://", "http://"), data)
 
-    log.msg("buildbotNetUsageData: buildbot.net said:", res)
+    logger.info("buildbot.net said: {res}", res=res)
 
 
 def sendBuildbotNetUsageData(master: BuildMaster) -> None:
