@@ -22,6 +22,7 @@ from typing import Sequence
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import task
+from twisted.logger import Logger
 from twisted.python import log
 from twisted.python import reflect
 from twisted.python.reflect import accumulateClassList
@@ -218,6 +219,8 @@ class BuildbotService(
         self.rendered = False
         super().__init__()
 
+        self._logger = Logger(self.name)
+
     def getConfigDict(self):
         _type = type(self)
         return {
@@ -375,9 +378,8 @@ class ClusteredBuildbotService(BuildbotService):
             try:
                 yield self.deactivate()
                 yield self._unclaimService()
-            except Exception as e:
-                msg = f"Caught exception while deactivating ClusteredService({self.name})"
-                log.err(e, _why=msg)
+            except Exception:
+                self._logger.failure("Caught exception while deactivating ClusteredService")
 
         yield super().stopService()
 
@@ -389,7 +391,12 @@ class ClusteredBuildbotService(BuildbotService):
         self._activityPollDeferred = d
 
         # this should never happen, but just in case:
-        d.addErrback(log.err, 'while polling for service activity:')
+        d.addErrback(
+            lambda fail: self._logger.failure(
+                'while polling for service activity:',
+                failure=fail,
+            )
+        )
 
     def _stopActivityPolling(self):
         if self._activityPollCall:
@@ -416,8 +423,7 @@ class ClusteredBuildbotService(BuildbotService):
             try:
                 claimed = yield self._claimService()
             except Exception:
-                msg = f'WARNING: ClusteredService({self.name}) got exception while trying to claim'
-                log.err(_why=msg)
+                self._logger.failure('ClusteredService got exception while trying to claim')
                 return
 
             if not claimed:
@@ -436,8 +442,7 @@ class ClusteredBuildbotService(BuildbotService):
                 yield self.activate()
             except Exception:
                 # this service is half-active, and noted as such in the db..
-                msg = f'WARNING: ClusteredService({self.name}) is only partially active'
-                log.err(_why=msg)
+                self._logger.failure('ClusteredService is only partially active')
             finally:
                 # cannot wait for its deactivation
                 # with yield self._stopActivityPolling
@@ -450,8 +455,7 @@ class ClusteredBuildbotService(BuildbotService):
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to
             # fail
-            msg = f'WARNING: ClusteredService({self.name}) failed during activity poll'
-            log.err(_why=msg)
+            self._logger.failure('ClusteredService failed during activity poll')
 
 
 class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin, ReconfigurableServiceMixin):

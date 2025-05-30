@@ -1109,6 +1109,11 @@ them should actually trigger the required builds.
 
     * BuildbotServiceManager calls reconfigService() for the second time for services that have their configuration changed.
 
+    .. py:attribute:: _logger
+
+        :type: :py:class:`twisted.logger.Logger`
+
+        A logger instance which namespace is the service's name, providing an unified way for service's to log messages.
 
     .. py:method:: __init__(self, *args, **kwargs)
 

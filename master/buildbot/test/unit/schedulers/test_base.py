@@ -1204,7 +1204,7 @@ class BaseScheduler(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCas
 
         sched.activate = activate
 
-        sched.startService()
+        yield sched.startService()
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     @defer.inlineCallbacks

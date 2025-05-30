@@ -193,8 +193,8 @@ Logging to stdout
 It can be useful to let buildbot output it's log to stdout instead of a logfile.
 For example when running via docker, supervisor or when buildbot is started with --no-daemon.
 This can be accomplished by editing :file:`buildbot.tac`. It's already enabled in the docker :file:`buildbot.tac`
-Change the line: `application.setComponent(ILogObserver, FileLogObserver(logfile).emit)`
-to: `application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)`
+Change the line: `application.setComponent(ILogObserver, textFileLogObserver(logfile))`
+to: `application.setComponent(ILogObserver, textFileLogObserver(sys.stdout))`
 
 .. _Deleting-old-logs:
 

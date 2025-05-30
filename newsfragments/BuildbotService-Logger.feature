@@ -1,0 +1,1 @@
+``:class:BuildbotService`` now has a ``_logger`` field, which is a ``twisted.logger.Logger`` instance using the service's name as it's namespace.
