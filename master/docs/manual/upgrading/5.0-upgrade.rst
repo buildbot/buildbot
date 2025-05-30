@@ -105,3 +105,9 @@ Data API
 
 The multiline string type of ``ResourceType.eventPathPatterns`` and ``Enpoint.pathPatterns``
 attribute has been deprecated. Use list of strings type instead.
+
+``buildbot.process.BuildRequest``
+=================================
+
+The ``submittedAt`` and ``waitedFor`` attributes to ``BuildRequest`` have been removed.
+Their respective equivalent are ``submitted_at`` and ``waited_for``.

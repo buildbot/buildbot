@@ -548,7 +548,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(br.properties.getProperty('x'), 1)
         self.assertEqual(br.properties.getProperty('y'), 2)
-        self.assertEqual(br.submittedAt, 1200000000)
+        self.assertEqual(br.submitted_at, 1200000000)
         self.assertEqual(br.buildername, 'bldr')
         self.assertEqual(br.priority, 13)
         self.assertEqual(br.id, 288)
@@ -627,7 +627,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(br.properties.getProperty('x'), 1)
         self.assertEqual(br.properties.getProperty('y'), 2)
-        self.assertEqual(br.submittedAt, 1200000000)
+        self.assertEqual(br.submitted_at, 1200000000)
         self.assertEqual(br.buildername, 'bldr')
         self.assertEqual(br.priority, 13)
         self.assertEqual(br.id, 288)

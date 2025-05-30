@@ -505,7 +505,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 # parenting is a field of Buildset
                 # get the buildsets only for requests
                 # that are waited for
-                buildset_ids = set(br.bsid for br in breqs if br.waitedFor)
+                buildset_ids = set(br.bsid for br in breqs if br.waited_for)
                 if not buildset_ids:
                     continue
                 # get buildsets if they have a parent

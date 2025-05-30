@@ -151,7 +151,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                     for build in list(builder.building):
                         # if build is waited for then this is a sub-build, so
                         # no need to retry it
-                        if sum(br.waitedFor for br in build.requests):
+                        if sum(br.waited_for for br in build.requests):
                             results = CANCELLED
                         else:
                             results = RETRY

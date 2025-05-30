@@ -21,6 +21,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process import factory
 from buildbot.process.botmaster import BotMaster
+from buildbot.process.buildrequest import BuildRequest
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import RETRY
 from buildbot.test.fake import fakemaster
@@ -46,8 +47,8 @@ class TestCleanShutdown(TestReactorMixin, unittest.TestCase):
         self.fake_builder = builder = mock.Mock()
         self.build_deferred = defer.Deferred()
 
-        request = mock.Mock()
-        request.waitedFor = waitedFor
+        request = mock.Mock(spec=BuildRequest)
+        request.waited_for = waitedFor
         build = mock.Mock()
         build.stopBuild = self.stopFakeBuild
         build.waitUntilFinished.return_value = self.build_deferred

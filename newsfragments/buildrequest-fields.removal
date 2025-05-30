@@ -1,0 +1,1 @@
+The ``submittedAt``, and ``waitedFor`` fields of ``process.BuildRequest`` have been deprecated in favor of their snake case equivalent (``submitted_at``, and ``waited_for``).
