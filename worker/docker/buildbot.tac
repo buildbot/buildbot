@@ -3,8 +3,10 @@ import os
 import sys
 
 from twisted.application import service
-from twisted.python.log import FileLogObserver
-from twisted.python.log import ILogObserver
+from twisted.logger import FilteringLogObserver
+from twisted.logger import ILogObserver
+from twisted.logger import LogLevelFilterPredicate
+from twisted.logger import textFileLogObserver
 
 from buildbot_worker.bot import Worker
 
@@ -12,9 +14,13 @@ from buildbot_worker.bot import Worker
 basedir = os.environ.get("BUILDBOT_BASEDIR",
     os.path.abspath(os.path.dirname(__file__)))
 application = service.Application('buildbot-worker')
+application.setComponent(
+    ILogObserver,
+    FilteringLogObserver(
+        textFileLogObserver(sys.stdout), predicates=[LogLevelFilterPredicate()]
+    ),
+)
 
-
-application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)
 # and worker on the same process!
 buildmaster_host = os.environ.get("BUILDMASTER", 'localhost')
 port = int(os.environ.get("BUILDMASTER_PORT", 9989))
