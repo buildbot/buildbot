@@ -17,7 +17,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
-from typing import Mapping
 from typing import TypeVar
 
 from twisted.internet import defer
@@ -27,6 +26,8 @@ from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from twisted.internet.defer import Deferred
 
     from buildbot.master import BuildMaster

@@ -15,11 +15,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from buildbot import util
 from buildbot.config.checks import check_param_str
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class Codebase(util.ComparableMixin):

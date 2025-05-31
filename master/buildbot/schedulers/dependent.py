@@ -15,8 +15,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 
@@ -26,6 +26,9 @@ from buildbot import util
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.schedulers import base
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class Dependent(base.ReconfigurableBaseScheduler):

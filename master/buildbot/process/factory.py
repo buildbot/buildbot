@@ -19,7 +19,6 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 from typing import Callable
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.python import deprecate
 from twisted.python import versions
@@ -40,6 +39,8 @@ from buildbot.steps.source.svn import SVN
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from buildbot.process.builder import Builder
 
 

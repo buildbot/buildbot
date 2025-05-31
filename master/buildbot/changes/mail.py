@@ -31,7 +31,6 @@ from email.utils import parsedate_tz
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -42,6 +41,8 @@ from buildbot.interfaces import IChangeSource
 from buildbot.util.maildir import MaildirService
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from buildbot.util.twisted import InlineCallbacksType
 
 

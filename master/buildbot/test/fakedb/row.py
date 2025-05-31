@@ -15,10 +15,13 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from buildbot.util import unicode2bytes
 from buildbot.util.sautils import hash_columns
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class Row:

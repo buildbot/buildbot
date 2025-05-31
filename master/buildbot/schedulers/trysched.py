@@ -13,12 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import base64
 import json
 import os
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.protocols import basic
@@ -33,6 +35,9 @@ from buildbot.util import netstrings
 from buildbot.util import unicode2bytes
 from buildbot.util.maildir import MaildirService
 from buildbot.util.service import IndependentAsyncMultiService
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class TryBase(base.ReconfigurableBaseScheduler):

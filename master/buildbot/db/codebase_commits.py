@@ -18,13 +18,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Awaitable
 from typing import Callable
 
 from buildbot.db import base
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable
+
     import sqlalchemy as sa
     from twisted.internet import defer
 

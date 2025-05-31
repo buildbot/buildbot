@@ -21,7 +21,6 @@ import re
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Sequence
 from typing import cast
 from urllib.parse import quote as urlquote
 
@@ -42,14 +41,15 @@ from buildbot.util.git import check_ssh_config
 from buildbot.util.git_credential import GitCredentialOptions
 from buildbot.util.git_credential import add_user_password_to_credentials
 from buildbot.util.state import StateMixin
-from buildbot.util.twisted import InlineCallbacksType
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import Callable
     from typing import Literal
 
     from buildbot.interfaces import IRenderable
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class GitError(Exception):

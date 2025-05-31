@@ -31,9 +31,9 @@ from buildbot.test.util.integration import RunFakeMasterTestCase
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    from collections.abc import Coroutine
     from typing import Any
     from typing import Callable
-    from typing import Coroutine
     from typing import TypeVar
 
     from typing_extensions import ParamSpec

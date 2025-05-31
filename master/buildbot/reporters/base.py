@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import abc
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -24,6 +26,9 @@ from buildbot import config
 from buildbot.reporters import utils
 from buildbot.util import service
 from buildbot.util import tuplematch
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 ENCODING = 'utf-8'
 

@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import ClassVar
-from typing import Sequence
 from typing import cast
 
 from twisted.internet import defer
@@ -69,6 +68,7 @@ from buildbot.util import flatten
 from buildbot.util.test_result_submitter import TestResultSubmitter
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import TypeVar
 
     from twisted.internet.base import ReactorBase

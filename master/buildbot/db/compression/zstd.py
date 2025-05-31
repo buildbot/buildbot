@@ -26,9 +26,9 @@ from buildbot.db.compression.protocol import CompressObjInterface
 from buildbot.db.compression.protocol import CompressorInterface
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from typing import Callable
     from typing import ClassVar
-    from typing import Generator
 
 
 _T = TypeVar('_T')

@@ -18,9 +18,9 @@ import collections
 import json
 import re
 import weakref
+from typing import TYPE_CHECKING
 from typing import Callable
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
@@ -31,6 +31,9 @@ from buildbot import util
 from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
 from buildbot.util import flatten
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @implementer(IProperties)

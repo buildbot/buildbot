@@ -43,9 +43,9 @@ from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
-    from typing import AsyncGenerator
+    from collections.abc import AsyncGenerator
+    from collections.abc import Generator
     from typing import Callable
-    from typing import Generator
     from typing import Literal
     from typing import TypeVar
 

@@ -21,7 +21,6 @@ from pathlib import PurePosixPath
 from pathlib import PureWindowsPath
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Iterable
 
 from twisted.internet import defer
 from twisted.python import log
@@ -35,6 +34,7 @@ from buildbot.worker.protocols import base
 from buildbot.worker.protocols.base import RemoteCommandImpl
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from pathlib import PurePath
 
     from twisted.internet.defer import Deferred

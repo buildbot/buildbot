@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 from unittest import mock
 
 from twisted.internet import defer
@@ -25,6 +27,9 @@ from buildbot.schedulers import base
 from buildbot.schedulers import manager
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class SchedulerManager(unittest.TestCase):

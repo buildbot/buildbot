@@ -18,7 +18,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -28,6 +27,8 @@ from buildbot.changes import base
 from buildbot.pbutil import NewCredPerspective
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from buildbot.config.master import MasterConfig
     from buildbot.util.twisted import InlineCallbacksType
 
