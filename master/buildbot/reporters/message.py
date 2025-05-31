@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 import jinja2
 from twisted.internet import defer
@@ -32,6 +34,9 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def get_detected_status_text(mode, results, previous_results):

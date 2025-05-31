@@ -14,10 +14,12 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import re
 import textwrap
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -29,6 +31,9 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import results
 from buildbot.steps.source.base import Source
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @implementer(IRenderable)

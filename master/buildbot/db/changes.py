@@ -37,8 +37,8 @@ from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     import datetime
+    from collections.abc import Iterable
     from typing import Any
-    from typing import Iterable
     from typing import Literal
 
 

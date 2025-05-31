@@ -12,8 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from zope.interface import implementer
@@ -24,6 +27,9 @@ from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter
 
 from .utils import BuildStatusGeneratorMixin
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @implementer(interfaces.IReportGenerator)

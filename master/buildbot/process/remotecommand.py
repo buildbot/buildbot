@@ -35,8 +35,8 @@ from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.protocols import base
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable
     from typing import Any
-    from typing import Awaitable
     from typing import Callable
 
     from buildbot.process.buildstep import BuildStep

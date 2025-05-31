@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Generator
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -28,6 +27,8 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from buildbot.test.fakedb import FakeDBConnector
 
 CREATED_AT = 927845299

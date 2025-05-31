@@ -18,7 +18,6 @@ from __future__ import annotations
 import contextlib
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Generator
 
 from twisted.internet import defer
 from twisted.python import log
@@ -30,6 +29,8 @@ from buildbot.util import deferwaiter
 from buildbot.worker.protocols import base
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from twisted.internet.defer import Deferred
     from twisted.python.failure import Failure
 

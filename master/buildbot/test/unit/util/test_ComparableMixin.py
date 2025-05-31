@@ -13,12 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.trial import unittest
 
 from buildbot import util
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class ComparableMixin(unittest.TestCase):

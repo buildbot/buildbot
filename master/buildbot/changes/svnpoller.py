@@ -23,7 +23,6 @@ import xml.dom.minidom
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Sequence
 from typing import cast
 from urllib.parse import quote_plus as urlquote_plus
 
@@ -36,6 +35,8 @@ from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from buildbot.util.twisted import InlineCallbacksType
 
 # these split_file_* functions are available for use as values to the

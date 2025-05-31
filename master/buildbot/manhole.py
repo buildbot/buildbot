@@ -13,12 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import base64
 import binascii
 import os
 import types
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.application import strports
 from twisted.conch import manhole
@@ -34,6 +36,9 @@ from buildbot import config
 from buildbot.util import ComparableMixin
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 try:
     from twisted.conch import manhole_ssh

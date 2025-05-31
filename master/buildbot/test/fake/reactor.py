@@ -21,9 +21,9 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -37,6 +37,9 @@ from twisted.python.failure import Failure
 from zope.interface import implementer
 
 from buildbot.util.twisted import async_to_deferred
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # The code here is based on the implementations in
 # https://twistedmatrix.com/trac/ticket/8295

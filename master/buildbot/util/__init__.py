@@ -26,7 +26,6 @@ import textwrap
 import time
 from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 from typing import overload
 from urllib.parse import urlsplit
 from urllib.parse import urlunsplit
@@ -42,8 +41,8 @@ from buildbot.util.misc import deferredLocked
 from ._notifier import Notifier
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import ClassVar
-    from typing import Sequence
     from typing import TypeVar
 
     _T = TypeVar('_T')

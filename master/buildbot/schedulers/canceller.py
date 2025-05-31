@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 
@@ -24,6 +26,9 @@ from buildbot.data import resultspec
 from buildbot.util.service import BuildbotService
 from buildbot.util.ssfilter import SourceStampFilter
 from buildbot.util.ssfilter import extract_filter_values
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class _OldBuildFilterSet:

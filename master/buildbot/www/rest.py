@@ -23,7 +23,6 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
-from typing import Iterator
 from urllib.parse import urlparse
 
 from twisted.internet import defer
@@ -46,6 +45,7 @@ from buildbot.www.encoding import BrotliEncoderFactory
 from buildbot.www.encoding import ZstandardEncoderFactory
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from typing import Any
 
     from twisted.web import server

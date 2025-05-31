@@ -27,9 +27,9 @@ from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.expression import Executable
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import Any
     from typing import Callable
-    from typing import Sequence
 
     from sqlalchemy.future.engine import Connection
     from sqlalchemy.future.engine import Engine

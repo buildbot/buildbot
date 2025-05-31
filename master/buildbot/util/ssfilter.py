@@ -13,12 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from buildbot.util import ComparableMixin
 from buildbot.util import NotABranch
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def extract_filter_values(values, filter_name):

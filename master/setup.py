@@ -653,9 +653,7 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
-py_38 = sys.version_info[0] > 3 or (sys.version_info[0] == 3 and sys.version_info[1] >= 8)
-if not py_38:
-    raise RuntimeError("Buildbot master requires at least Python-3.8")
+setup_args['python_requires'] = ">=3.9"
 
 twisted_ver = ">= 24.7.0"
 

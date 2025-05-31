@@ -23,8 +23,8 @@ from buildbot.data import base
 from buildbot.data import types
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
     from typing import Any
-    from typing import AsyncGenerator
 
     from buildbot.db.logs import LogModel
 

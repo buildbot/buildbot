@@ -24,7 +24,7 @@ from twisted.python import log
 from buildbot.data import base
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from collections.abc import Sequence
 
 
 class NotSupportedFieldTypeError(TypeError):

@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 
@@ -24,6 +26,9 @@ from buildbot.process.results import FAILURE
 from buildbot.util.service import BuildbotService
 from buildbot.util.ssfilter import SourceStampFilter
 from buildbot.util.ssfilter import extract_filter_values
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class _FailingSingleBuilderConfig:

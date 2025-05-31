@@ -20,7 +20,6 @@ from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import ClassVar
-from typing import Sequence
 from typing import cast
 
 from twisted.internet import defer
@@ -35,6 +34,8 @@ from buildbot.util.pullrequest import PullRequestMixin
 from buildbot.util.state import StateMixin
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from buildbot.util.twisted import InlineCallbacksType
 
 log = Logger()

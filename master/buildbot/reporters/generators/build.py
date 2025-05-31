@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from zope.interface import implementer
@@ -25,6 +27,9 @@ from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.message import MessageFormatterRenderable
 
 from .utils import BuildStatusGeneratorMixin
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @implementer(interfaces.IReportGenerator)

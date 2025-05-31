@@ -15,26 +15,21 @@
 
 from __future__ import annotations
 
-import sys
+import importlib.resources
 
 from twisted.web import static
 
 from buildbot.util import bytes2unicode
 
-if sys.version_info[:2] >= (3, 9):
-    # We need importlib.resources.files, which is added in Python 3.9
-    # https://docs.python.org/3/library/importlib.resources.html
-    import importlib.resources as importlib_resources
-else:
-    import importlib_resources  # type: ignore[import-not-found]
-
 
 class Application:
     def __init__(self, package_name: str, description: str, ui: bool = True) -> None:
         self.description = description
-        self.version = importlib_resources.files(package_name).joinpath("VERSION")
-        self.version = bytes2unicode(self.version.read_bytes())
-        self.static_dir = importlib_resources.files(package_name) / "static"
+        # type ignore on `importlib.resources.files` since mypy conf target 3.8
+        # where master is 3.9+, so mypy think it does not exists as it was introduced in 3.9.
+        version_file = importlib.resources.files(package_name).joinpath("VERSION")  # type: ignore[attr-defined]
+        self.version = bytes2unicode(version_file.read_bytes())
+        self.static_dir = importlib.resources.files(package_name) / "static"  # type: ignore[attr-defined]
         self.resource = static.File(self.static_dir)
         self.ui = ui
 

@@ -20,9 +20,6 @@ from functools import reduce
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
-from typing import Iterable
-from typing import Iterator
-from typing import Sequence
 from typing import cast
 
 from twisted.internet import defer
@@ -53,6 +50,9 @@ from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from collections.abc import Iterator
+    from collections.abc import Sequence
     from pathlib import PurePath
 
     from twisted.internet.defer import Deferred

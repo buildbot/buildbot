@@ -1,0 +1,3 @@
+extend = "../pyproject.toml"
+
+target-version = "py39"

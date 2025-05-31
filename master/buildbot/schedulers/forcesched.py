@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import re
 import traceback
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python.reflect import accumulateClassList
@@ -29,6 +29,9 @@ from buildbot.process.properties import Properties
 from buildbot.reporters.mail import VALID_EMAIL_ADDR
 from buildbot.schedulers import base
 from buildbot.util import identifiers
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class ValidationError(ValueError):

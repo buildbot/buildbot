@@ -28,8 +28,8 @@ from buildbot.data.resultspec import NoneComparator
 from buildbot.data.resultspec import ReverseComparator
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import ClassVar
-    from typing import Sequence
 
 
 class ResultSpecMKListMixin:
