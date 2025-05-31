@@ -1,0 +1,9 @@
+extend = "../pyproject.toml"
+
+target-version = "py39"
+
+[lint]
+extend-ignore = [
+    "UP035",
+    "UP036",
+]
