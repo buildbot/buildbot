@@ -19,9 +19,9 @@ import io
 import json
 import random
 import shlex
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -47,6 +47,9 @@ from buildbot.util import epoch2datetime
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class TelegramChannel(Channel):

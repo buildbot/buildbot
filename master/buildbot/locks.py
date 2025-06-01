@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -23,6 +25,9 @@ from buildbot import util
 from buildbot.util import service
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 if False:  # for debugging  pylint: disable=using-constant-test
     debuglog = log.msg

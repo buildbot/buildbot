@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import base64
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.application import internet
 from twisted.internet import defer
@@ -39,6 +41,9 @@ from buildbot.reporters.words import ThrottledClientFactory
 from buildbot.reporters.words import dangerousCommand
 from buildbot.util import service
 from buildbot.util import ssl
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class UsageError(ValueError):

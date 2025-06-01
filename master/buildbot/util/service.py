@@ -16,8 +16,8 @@
 from __future__ import annotations
 
 import hashlib
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.application import service
 from twisted.internet import defer
@@ -34,6 +34,9 @@ from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class ReconfigurableServiceMixin:

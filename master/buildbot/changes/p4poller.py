@@ -26,7 +26,6 @@ from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import ClassVar
-from typing import Sequence
 
 import dateutil.tz
 from twisted.internet import defer
@@ -42,6 +41,8 @@ from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from twisted.python.failure import Failure
 
     from buildbot.util.twisted import InlineCallbacksType

@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import re
-from typing import Generator
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.python import log
@@ -37,6 +37,9 @@ from buildbot.reporters.generators.buildrequest import BuildRequestGenerator
 from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import httpclientservice
 from buildbot.util.giturlparse import giturlparse
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 HOSTED_BASE_URL = 'https://api.github.com'
 

@@ -22,7 +22,6 @@ from pathlib import Path
 from pathlib import PurePath
 from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from packaging.version import parse as parse_version
 from twisted.internet import defer
@@ -39,6 +38,8 @@ from buildbot.util.misc import writeLocalFile
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from buildbot.changes.gitpoller import GitPoller
     from buildbot.interfaces import IRenderable
     from buildbot.util.git_credential import GitCredentialOptions

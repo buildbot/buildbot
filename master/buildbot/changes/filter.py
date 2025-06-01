@@ -15,17 +15,20 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
 from typing import ClassVar
-from typing import Pattern
-from typing import Sequence
 
 from buildbot.util import ComparableMixin
 from buildbot.util import NotABranch
 from buildbot.util.ssfilter import _create_branch_filters
 from buildbot.util.ssfilter import _create_filters
 from buildbot.util.ssfilter import _create_property_filters
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from re import Pattern
 
 
 class ChangeFilter(ComparableMixin):

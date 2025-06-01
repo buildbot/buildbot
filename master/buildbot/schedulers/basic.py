@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from collections import defaultdict
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -31,6 +33,9 @@ from buildbot.schedulers import dependent
 from buildbot.util import NotABranch
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class BaseBasicScheduler(base.ReconfigurableBaseScheduler):

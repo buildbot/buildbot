@@ -43,9 +43,9 @@ from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
-    from typing import AsyncGenerator
+    from collections.abc import AsyncGenerator
+    from collections.abc import Generator
     from typing import Callable
-    from typing import Generator
     from typing import Literal
     from typing import TypeVar
 
@@ -271,10 +271,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # Note that row.content is stored as bytes, and our caller expects unicode
             data = self._get_compressor(compressed).read(content)
             # NOTE: we need a streaming decompression interface
-            with io.BytesIO(data) as data_buffer, io.TextIOWrapper(
-                data_buffer,
-                encoding='utf-8',
-            ) as reader:
+            with (
+                io.BytesIO(data) as data_buffer,
+                io.TextIOWrapper(
+                    data_buffer,
+                    encoding='utf-8',
+                ) as reader,
+            ):
                 # last line-ending is stripped from chunk on insert
                 # add it back here to simplify handling after
                 data_buffer.seek(0, os.SEEK_END)

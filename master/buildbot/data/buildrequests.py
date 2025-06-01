@@ -29,7 +29,7 @@ from buildbot.process.results import RETRY
 
 if TYPE_CHECKING:
     import datetime
-    from typing import Sequence
+    from collections.abc import Sequence
 
     from buildbot.data.resultspec import ResultSpec
     from buildbot.db.buildrequests import BuildRequestModel

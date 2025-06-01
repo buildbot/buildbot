@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import failure
@@ -25,6 +27,9 @@ from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.util import debounce
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @implementer(ITriggerableScheduler)

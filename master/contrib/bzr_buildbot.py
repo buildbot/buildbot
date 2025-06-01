@@ -95,11 +95,13 @@ Contact Information
 Maintainer/author: gary.poster@canonical.com
 """
 
+from __future__ import annotations
+
 # Work around Twisted bug.
 # See http://twistedmatrix.com/trac/ticket/3591
 import socket
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 import bzrlib.branch
 import bzrlib.errors
@@ -114,6 +116,9 @@ import twisted.python.log
 import twisted.spread.pb
 from twisted.internet import defer
 from twisted.python import failure
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 try:
     import buildbot.changes.base

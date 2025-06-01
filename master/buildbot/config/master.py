@@ -23,10 +23,9 @@ import traceback
 import warnings
 from dataclasses import dataclass
 from dataclasses import field
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Generator
-from typing import Sequence
 from typing import cast
 
 from twisted.internet import defer
@@ -54,6 +53,10 @@ from buildbot.warnings import ConfigWarning
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from collections.abc import Sequence
 
 DEFAULT_DB_URL = 'sqlite:///state.sqlite'
 

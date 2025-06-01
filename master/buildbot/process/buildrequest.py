@@ -19,8 +19,6 @@ import calendar
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Iterable
-from typing import Mapping
 
 from twisted.internet import defer
 from twisted.python.deprecate import deprecated
@@ -32,6 +30,9 @@ from buildbot.process import properties
 from buildbot.process.results import SKIPPED
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from collections.abc import Mapping
+
     from twisted.internet.defer import Deferred
 
     from buildbot.data.builders import BuilderData

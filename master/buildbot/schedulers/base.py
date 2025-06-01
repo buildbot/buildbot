@@ -14,8 +14,8 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.python import log
@@ -28,6 +28,9 @@ from buildbot.process.properties import Properties
 from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @implementer(interfaces.IScheduler)

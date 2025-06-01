@@ -24,8 +24,8 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 from email.utils import parseaddr
 from io import BytesIO
+from typing import TYPE_CHECKING
 from typing import ClassVar
-from typing import Sequence
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -47,6 +47,9 @@ from buildbot.util import unicode2bytes
 
 from .utils import merge_reports_prop
 from .utils import merge_reports_prop_take_first
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
 # although it has no effect before python-2.7.

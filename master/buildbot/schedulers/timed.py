@@ -13,10 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
-from typing import Sequence
 
 import croniter
 from twisted.internet import defer
@@ -31,6 +33,9 @@ from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # States of objects which have to be observed are registered in the data base table `object_state`.
 # `objectid` in the `object_state` refers to the object from the `object` table.

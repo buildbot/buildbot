@@ -15,15 +15,18 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import ClassVar
 from typing import NamedTuple
-from typing import Sequence
 
 from zope.interface import implementer
 
 from buildbot.interfaces import IRenderable
 from buildbot.util import ComparableMixin
 from buildbot.util.twisted import async_to_deferred
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @implementer(IRenderable)
