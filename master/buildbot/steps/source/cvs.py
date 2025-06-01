@@ -350,6 +350,6 @@ class CVS(Source):
         if not changes:
             return None
         lastChange = max(c.when for c in changes)
-        lastSubmit = max(br.submittedAt for br in self.build.requests)
+        lastSubmit = max(br.submitted_at for br in self.build.requests)
         when = (lastChange + lastSubmit) / 2
         return formatdate(when)

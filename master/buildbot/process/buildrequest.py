@@ -23,6 +23,8 @@ from typing import Iterable
 from typing import Mapping
 
 from twisted.internet import defer
+from twisted.python.deprecate import deprecated
+from twisted.python.versions import Version
 
 from buildbot.data import resultspec
 from buildbot.db.buildsets import BsProps
@@ -295,10 +297,12 @@ class BuildRequest:
         return self.brid
 
     @property
+    @deprecated(Version("buildbot", 4, 3, 0), ".submitted_at")
     def submittedAt(self) -> int | None:
         return self.submitted_at
 
     @property
+    @deprecated(Version("buildbot", 4, 3, 0), ".waitedFor")
     def waitedFor(self) -> int | None:
         return self.waited_for
 
@@ -444,4 +448,4 @@ class BuildRequest:
         return ", ".join(reasons)
 
     def getSubmitTime(self) -> int | None:
-        return self.submittedAt
+        return self.submitted_at
