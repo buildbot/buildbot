@@ -42,11 +42,19 @@ application = service.Application('buildbot-worker')
 """,
     """
 from twisted.python.logfile import LogFile
-from twisted.python.log import ILogObserver, FileLogObserver
+from twisted.logger import ILogObserver
+from twisted.logger import textFileLogObserver
+from twisted.logger import LogLevelFilterPredicate
+from twisted.logger import FilteringLogObserver
 logfile = LogFile.fromFullPath(
     os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
     maxRotatedFiles=maxRotatedFiles)
-application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+application.setComponent(
+    ILogObserver,
+    FilteringLogObserver(
+        textFileLogObserver(logfile), predicates=[LogLevelFilterPredicate()]
+    ),
+)
 """,
     """
 buildmaster_host = %(host)r

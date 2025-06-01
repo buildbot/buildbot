@@ -33,7 +33,7 @@ from twisted.internet import defer
 from twisted.internet import interfaces
 from twisted.internet import protocol
 from twisted.internet import reactor
-from twisted.python import log
+from twisted.logger import Logger
 
 from buildbot import config
 from buildbot import util
@@ -45,8 +45,6 @@ if TYPE_CHECKING:
     from twisted.python.failure import Failure
 
     from buildbot.util.twisted import InlineCallbacksType
-
-debug_logging = False
 
 
 class P4PollerError(Exception):
@@ -66,28 +64,27 @@ class TicketLoginProtocol(protocol.ProcessProtocol):
         self.p4base = p4base
         self.transport: interfaces.IProcessTransport | None = None
 
+        self._logger = Logger(f"P4Poller.TicketLoginProtocol({self.p4base})")
+
     def connectionMade(self) -> None:
         if self.stdin:
-            if debug_logging:
-                log.msg(f"P4Poller: entering password for {self.p4base}: {self.stdin!r}")
+            self._logger.debug("entering password")
             assert self.transport is not None
             self.transport.write(self.stdin)
         assert self.transport is not None
         self.transport.closeStdin()
 
     def processEnded(self, reason: Failure) -> None:
-        if debug_logging:
-            log.msg(f"P4Poller: login process finished for {self.p4base}: {reason.value.exitCode}")
-        self.deferred.callback(reason.value.exitCode)
+        exit_code = reason.value.exitCode
+        self._logger.debug("login process finished: {exit_code}", exit_code=exit_code)
+        self.deferred.callback(exit_code)
 
     def outReceived(self, data: bytes) -> None:
-        if debug_logging:
-            log.msg(f"P4Poller: login stdout for {self.p4base}: {data!r}")
+        self._logger.debug("login stdout: {data!r}", data=data)
         self.stdout += data
 
     def errReceived(self, data: bytes) -> None:
-        if debug_logging:
-            log.msg(f"P4Poller: login stderr for {self.p4base}: {data!r}")
+        self._logger.error("login stderr: {data!r}", data=data)
         self.stderr += data
 
 
@@ -261,7 +258,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
 
     def poll(self) -> defer.Deferred[None]:  # type: ignore[override]
         d = self._poll()
-        d.addErrback(log.err, f'P4 poll failed on {self.p4port}, {self.p4base}')
+        d.addErrback(lambda fail: self._logger.failure('poll failed', failure=fail))
         return d
 
     @defer.inlineCallbacks
@@ -297,7 +294,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             self._ticket_login_counter -= 1
             if self._ticket_login_counter <= 0:
                 # Re-acquire the ticket and reset the counter.
-                log.msg(f"P4Poller: (re)acquiring P4 ticket for {self.p4base}...")
+                self._logger.info("(re)acquiring P4 ticket...")
                 assert self.p4passwd
                 protocol = TicketLoginProtocol(self.p4passwd + "\n", self.p4base)
                 self._acquireTicket(protocol)
@@ -322,7 +319,12 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         try:
             result = bytes2unicode(result, self.encoding)
         except UnicodeError as ex:
-            log.msg(f"{ex}: cannot fully decode {result!r} in {self.encoding}")
+            self._logger.warn(
+                "{ex}: cannot fully decode {result!r} in {encoding}",
+                ex=ex,
+                result=result,
+                encoding=self.encoding,
+            )
             result = bytes2unicode(result, encoding=self.encoding, errors="replace")
 
         last_change = self.last_change
@@ -338,7 +340,7 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             if last_change is None:
                 # first time through, the poller just gets a "baseline" for where to
                 # start on the next poll
-                log.msg(f'P4Poller: starting at change {num}')
+                self._logger.info('starting at change {num}', num=num)
                 self.last_change = num
                 return
             changelists.append(num)
@@ -361,9 +363,11 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             try:
                 result = bytes2unicode(result, self.encoding)
             except UnicodeError as ex:
-                log.msg(f"P4Poller: couldn't decode changelist description: {ex}")
-                log.msg(f"P4Poller: in object: {result}")
-                log.err(f"P4Poller: poll failed on {self.p4port}, {self.p4base}")
+                self._logger.error(
+                    "Couldn't decode changelist description in object: {result}. ex: {ex}",
+                    result=result,
+                    ex=ex,
+                )
                 raise
 
             lines = result.split('\n')
