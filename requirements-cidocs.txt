@@ -27,4 +27,4 @@ click==8.1.7
 docutils==0.20.1  # pyup: ignore (sphinx-rtd-theme 2.0.0 requires docutils<0.21)
 imagesize==1.4.1
 pyenchant==3.2.2
-snowballstemmer==2.2.0
+snowballstemmer==3.0.1
