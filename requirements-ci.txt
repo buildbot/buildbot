@@ -11,7 +11,7 @@ hvac==2.3.0
 ldap3==2.9.1
 mypy==1.15.0
 mypy-zope==1.0.11
-psutil==6.1.0
+psutil==7.0.0
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
