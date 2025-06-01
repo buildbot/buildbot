@@ -1,0 +1,12 @@
+# AppVeyor CI
+# https://www.appveyor.com/docs
+
+image:
+  - Visual Studio 2019
+
+build: false
+
+test_script:
+  - ps: |
+          echo Success
+
