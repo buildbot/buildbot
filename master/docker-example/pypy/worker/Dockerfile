@@ -1,2 +1,2 @@
-from pypy:2-onbuild
+from pypy:3-onbuild
 CMD ["twistd", "-ny", "buildbot.tac"]
