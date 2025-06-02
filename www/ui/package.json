@@ -29,7 +29,7 @@
     "axios": "~1.7.7",
     "bootstrap": "^4.6.2",
     "mobx": "^6.13.4",
-    "mobx-react": "^9.1.1",
+    "mobx-react": "^9.2.0",
     "moment": "^2.29.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -42,14 +42,14 @@
     "@vitejs/plugin-react": "~4.3.1",
     "axios": "~1.7.7",
     "axios-mock-adapter": "~2.0.0",
-    "babel-preset-react-app": "^10.0.0",
+    "babel-preset-react-app": "^10.1.0",
     "bootstrap": "^4.6.2",
     "buildbot-plugin-support": "link:../plugin_support",
     "eslint": "^9.27.0",
     "eslint-config-buildbot": "link:../eslint-config",
     "jsdom": "^25.0.0",
     "mobx": "^6.13.4",
-    "mobx-react": "^9.1.1",
+    "mobx-react": "^9.2.0",
     "moment": "^2.29.4",
     "react": "^18.2.0",
     "react-app-polyfill": "~3.0.0",
@@ -57,7 +57,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
     "react-test-renderer": "^18.2.0",
-    "sass": "^1.56.0",
+    "sass": "^1.89.1",
     "vite": "~5.4.12",
     "vite-plugin-checker": "^0.8.0",
     "vite-plugin-dts": "^4.1.0",
@@ -67,6 +67,6 @@
   "license": "GPL-2.0",
   "dependencies": {
     "buildbot-data-js": "link:../data-module",
-    "react-icons": "^5.3.0"
+    "react-icons": "^5.5.0"
   }
 }
