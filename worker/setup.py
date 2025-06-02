@@ -115,7 +115,10 @@ setup_args = {
     'package_data': {
         '': [
             'VERSION',
-        ]
+        ],
+        'buildbot_worker': [
+            'py.typed',
+        ],
     },
     'cmdclass': {'install_data': our_install_data, 'sdist': our_sdist},
     'entry_points': {

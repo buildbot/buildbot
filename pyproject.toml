@@ -80,7 +80,7 @@ quote-style = "preserve"
         showcontent = true
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 namespace_packages = true
 pretty = true
 warn_redundant_casts = true
@@ -88,7 +88,7 @@ disallow_untyped_calls = false
 disallow_untyped_defs = true
 warn_unused_ignores = true
 no_implicit_optional = true
-mypy_path = "$MYPY_CONFIG_FILE_DIR/master:$MYPY_CONFIG_FILE_DIR/worker"
+mypy_path = "$MYPY_CONFIG_FILE_DIR/master"
 plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = [
@@ -149,7 +149,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot_worker.scripts.windows_service",
       "buildbot.asyncio",
       "buildbot.clients.sendchange",
       "buildbot.clients.tryclient",

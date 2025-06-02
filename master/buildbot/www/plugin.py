@@ -25,11 +25,9 @@ from buildbot.util import bytes2unicode
 class Application:
     def __init__(self, package_name: str, description: str, ui: bool = True) -> None:
         self.description = description
-        # type ignore on `importlib.resources.files` since mypy conf target 3.8
-        # where master is 3.9+, so mypy think it does not exists as it was introduced in 3.9.
-        version_file = importlib.resources.files(package_name).joinpath("VERSION")  # type: ignore[attr-defined]
+        version_file = importlib.resources.files(package_name).joinpath("VERSION")
         self.version = bytes2unicode(version_file.read_bytes())
-        self.static_dir = importlib.resources.files(package_name) / "static"  # type: ignore[attr-defined]
+        self.static_dir = str(importlib.resources.files(package_name) / "static")
         self.resource = static.File(self.static_dir)
         self.ui = ui
 
