@@ -220,7 +220,7 @@ class BuildRequest:
     @ivar bsid: ID of the parent buildset
     """
 
-    brid: int
+    id: int
     bsid: int
     buildername: str
     builderid: int
@@ -278,7 +278,7 @@ class BuildRequest:
             ss.changes = [TempChange(change) for change in changes]
 
         return cls(
-            brid=brid,
+            id=brid,
             bsid=brdict.buildsetid,
             buildername=brdict.buildername,
             builderid=brdict.builderid,
@@ -292,10 +292,6 @@ class BuildRequest:
             properties=properties.Properties.fromDict(buildset_properties),
             sources=sources,
         )
-
-    @property
-    def id(self) -> int:
-        return self.brid
 
     @property
     @deprecated(Version("buildbot", 4, 3, 0), ".submitted_at")
