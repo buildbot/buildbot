@@ -189,7 +189,6 @@ Install the ``buildbot-worker`` command:
    pip install --upgrade pip
    pip install buildbot-worker
    # required for `runtests` build
-   pip install setuptools-trial
 
 Now, create the worker:
 

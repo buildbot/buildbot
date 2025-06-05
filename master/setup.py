@@ -112,30 +112,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
     long_description = long_d_f.read()
 
 setup_args = {
-    'name': "buildbot",
     'version': version,
-    'description': "The Continuous Integration Framework",
-    'long_description': long_description,
-    'author': "Brian Warner",
-    'author_email': "warner-buildbot@lothar.com",
-    'maintainer': "Dustin J. Mitchell",
-    'maintainer_email': "dustin@v.igoro.us",
-    'url': "http://buildbot.net/",
-    'classifiers': [
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: No Input/Output (Daemon)',
-        'Environment :: Web Environment',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
-        'Topic :: Software Development :: Build Tools',
-        'Topic :: Software Development :: Testing',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: 3.13',
-    ],
     'packages': [
         "buildbot",
         "buildbot.configurators",
@@ -200,25 +177,6 @@ setup_args = {
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
     'data_files': [("buildbot", [])],
-    'package_data': {
-        "": ["VERSION"],
-        "buildbot.reporters.templates": ["*.txt"],
-        "buildbot.db.migrations": [
-            "alembic.ini",
-            "README",
-        ],
-        "buildbot.db.migrations.versions": ["*.py"],
-        "buildbot.scripts": [
-            "sample.cfg",
-            "buildbot_tac.tmpl",
-        ],
-        "buildbot.spec": ["*.raml"],
-        "buildbot.spec.types": ["*.raml"],
-        "buildbot.test.unit.test_templates_dir": ["*.html"],
-        "buildbot.test.unit.test_templates_dir.plugin": ["*.*"],
-        "buildbot.test.integration.pki": ["*.*"],
-        "buildbot.test.integration.pki.ca": ["*.*"],
-    },
     'cmdclass': {'install_data': install_data_twisted, 'sdist': our_sdist},
     'entry_points': concat_dicts(
         define_plugin_entries([
@@ -647,22 +605,12 @@ setup_args = {
     ),
 }
 
-# set zip_safe to false to force Windows installs to always unpack eggs
-# into directories, which seems to work better --
-# see http://buildbot.net/trac/ticket/907
-if sys.platform == "win32":
-    setup_args['zip_safe'] = False
-
-setup_args['python_requires'] = ">=3.9"
-
-twisted_ver = ">= 24.7.0"
-
 bundle_version = version.split("-")[0]
 
 # dependencies
 setup_args['install_requires'] = [
     'setuptools >= 8.0',
-    'Twisted ' + twisted_ver,
+    'Twisted >= 24.7.0',
     'treq >= 20.9',
     'Jinja2 >= 2.1',
     'msgpack >= 0.6.0',
@@ -678,11 +626,9 @@ setup_args['install_requires'] = [
     'PyJWT',
     'pyyaml',
     'unidiff >= 0.7.5',
+    # buildbot_windows_service needs pywin32
+    'pywin32; platform_system=="Windows"',
 ]
-
-# buildbot_windows_service needs pywin32
-if sys.platform == "win32":
-    setup_args['install_requires'].append('pywin32')
 
 # Unit test dependencies.
 test_deps = [
@@ -696,19 +642,14 @@ test_deps = [
     'moto',
     "Markdown>=3.0.0",
     'parameterized',
+    # LZ4 fails to build on Windows:
+    # https://github.com/steeve/python-lz4/issues/27
+    # lz4 required for log compression tests.
+    'lz4; platform_system!="Windows"',
 ]
-if sys.platform != 'win32':
-    test_deps += [
-        # LZ4 fails to build on Windows:
-        # https://github.com/steeve/python-lz4/issues/27
-        # lz4 required for log compression tests.
-        'lz4',
-    ]
-
-setup_args['tests_require'] = test_deps
 
 setup_args['extras_require'] = {
-    'test': ["setuptools_trial", "ruff", *test_deps],
+    'test': ["ruff", *test_deps],
     'bundle': [
         f"buildbot-www=={bundle_version}",
         f"buildbot-worker=={bundle_version}",
@@ -717,7 +658,7 @@ setup_args['extras_require'] = {
         f"buildbot-grid-view=={bundle_version}",
     ],
     'tls': [
-        'Twisted[tls] ' + twisted_ver,
+        'Twisted[tls]',
         # There are bugs with extras inside extras:
         # <https://github.com/pypa/pip/issues/3516>
         # so we explicitly include Twisted[tls] dependencies.
@@ -746,18 +687,9 @@ setup_args['extras_require'] = {
     ],
 }
 
-if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
-    setup_args['setup_requires'] = [
-        'setuptools_trial',
-    ]
-
 if os.getenv('NO_INSTALL_REQS'):
     setup_args['install_requires'] = None
     setup_args['extras_require'] = None
 
 if __name__ == '__main__':
     setup(**setup_args)
-
-# Local Variables:
-# fill-column: 71
-# End:

@@ -67,31 +67,7 @@ class our_sdist(sdist):
 
 
 setup_args = {
-    'name': "buildbot-worker",
     'version': version,
-    'description': "Buildbot Worker Daemon",
-    'long_description': "See the 'buildbot' package for details",
-    'author': "Brian Warner",
-    'author_email': "warner-buildbot@lothar.com",
-    'maintainer': "Dustin J. Mitchell",
-    'maintainer_email': "dustin@v.igoro.us",
-    'url': "http://buildbot.net/",
-    'classifiers': [
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: No Input/Output (Daemon)',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
-        'Topic :: Software Development :: Build Tools',
-        'Topic :: Software Development :: Testing',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: 3.13',
-    ],
     'packages': [
         "buildbot_worker",
         "buildbot_worker.util",
@@ -130,42 +106,24 @@ setup_args = {
     },
 }
 
-# set zip_safe to false to force Windows installs to always unpack eggs
-# into directories, which seems to work better --
-# see http://buildbot.net/trac/ticket/907
-if sys.platform == "win32":
-    setup_args['zip_safe'] = False
-
 twisted_ver = ">= 21.2.0"
 
 setup_args['install_requires'] = [
     'twisted ' + twisted_ver,
-]
-
-setup_args['install_requires'] += [
     'autobahn >= 0.16.0',
     'msgpack >= 0.6.0',
+    # buildbot_worker_windows_service needs pywin32
+    'pywin32; platform_system=="Windows"',
 ]
-
-# buildbot_worker_windows_service needs pywin32
-if sys.platform == "win32":
-    setup_args['install_requires'].append('pywin32')
 
 # Unit test hard dependencies.
 test_deps = [
     'psutil',
 ]
 
-setup_args['tests_require'] = test_deps
-
 setup_args['extras_require'] = {
     'test': test_deps,
 }
-
-if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
-    setup_args['setup_requires'] = [
-        'setuptools_trial',
-    ]
 
 if os.getenv('NO_INSTALL_REQS'):
     setup_args['install_requires'] = None

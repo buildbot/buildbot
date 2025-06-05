@@ -39,7 +39,6 @@ _build
 # downloaded by setup_requires eggs
 *.egg
 .eggs/
-master/setuptools_trial*
 sandbox
 sandbox.*
 .idea/
