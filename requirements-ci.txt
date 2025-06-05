@@ -49,7 +49,7 @@ MarkupSafe==3.0.2
 moto==5.0.22
 msgpack==1.1.0
 mypy-extensions==1.0.0
-packaging==24.2
+packaging==25.0
 parameterized==0.9.0
 pyasn1==0.6.1
 pyasn1-modules==0.4.1
