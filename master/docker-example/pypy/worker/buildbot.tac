@@ -3,27 +3,28 @@ import os
 import sys
 
 from twisted.application import service
-from twisted.logger import ILogObserver
-from twisted.logger import textFileLogObserver
-from twisted.logger import LogLevelFilterPredicate
 from twisted.logger import FilteringLogObserver
+from twisted.logger import ILogObserver
+from twisted.logger import LogLevelFilterPredicate
+from twisted.logger import textFileLogObserver
 
-from buildslave.bot import BuildSlave
+from buildbot_worker.bot import Worker
 
 # setup worker
-basedir = os.path.abspath(os.path.dirname(__file__))
+basedir = os.environ.get("BUILDBOT_BASEDIR",
+    os.path.abspath(os.path.dirname(__file__)))
 application = service.Application('buildbot-worker')
-
-
 application.setComponent(
     ILogObserver,
     FilteringLogObserver(
         textFileLogObserver(sys.stdout), predicates=[LogLevelFilterPredicate()]
     ),
 )
+
 # and worker on the same process!
 buildmaster_host = os.environ.get("BUILDMASTER", 'localhost')
 port = int(os.environ.get("BUILDMASTER_PORT", 9989))
+protocol = os.environ.get("BUILDMASTER_PROTOCOL", 'pb')
 workername = os.environ.get("WORKERNAME", 'docker')
 passwd = os.environ.get("WORKERPASS")
 
@@ -38,10 +39,11 @@ keepalive = 600
 umask = None
 maxdelay = 300
 allow_shutdown = None
-usepty=False
+maxretries = 10
+delete_leftover_dirs = False
 
-s = BuildSlave(buildmaster_host, port, workername, passwd, basedir,
-               keepalive, usepty, umask=umask, maxdelay=maxdelay,
-               allow_shutdown=allow_shutdown)
-
+s = Worker(buildmaster_host, port, workername, passwd, basedir,
+           keepalive, umask=umask, maxdelay=maxdelay, protocol=protocol,
+           allow_shutdown=allow_shutdown, maxRetries=maxretries,
+           delete_leftover_dirs=delete_leftover_dirs)
 s.setServiceParent(application)
