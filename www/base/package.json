@@ -24,7 +24,7 @@
     "popper.js": "^1.16.1",
     "postcss-flexbugs-fixes": "4.2.1",
     "postcss-loader": "3.0.0",
-    "postcss-normalize": "8.0.1",
+    "postcss-normalize": "9.0.0",
     "postcss-preset-env": "6.7.2",
     "postcss-safe-parser": "5.0.2",
     "react": "^18.2.0",
