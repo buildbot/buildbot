@@ -6,6 +6,7 @@ import 'bootstrap';
 import {Routes, Route} from "react-router-dom";
 import {ConfigContext, TopbarContext, useCurrentTimeSetupTimers} from "buildbot-ui";
 
+import {MessageInfo} from "./components/MessageInfo/MessageInfo";
 import {PageWithSidebar} from "./components/PageWithSidebar/PageWithSidebar";
 import {StoresContext} from "./contexts/Stores";
 import {globalMenuSettings} from "./plugins/GlobalMenuSettings";
@@ -53,14 +54,17 @@ export const App = observer(() => {
   );
 
   return (
-    <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
-      <Topbar store={topbarStore} appTitle={globalMenuSettings.appTitle}>
-        <TopbarActions store={topbarStore}/>
-        <Loginbar/>
-      </Topbar>
-      <Routes>
-        {routeElements}
-      </Routes>
-    </PageWithSidebar>
+    <>
+      <MessageInfo />
+      <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
+        <Topbar store={topbarStore} appTitle={globalMenuSettings.appTitle}>
+          <TopbarActions store={topbarStore}/>
+          <Loginbar/>
+        </Topbar>
+        <Routes>
+          {routeElements}
+        </Routes>
+      </PageWithSidebar>
+    </>
   );
 });
