@@ -3,7 +3,8 @@ attrs==25.3.0;  python_version >= "3.8"
 autobahn==24.4.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9"  # pyup: ignore
 Automat==22.10.0;  python_version < "3.8"  # pyup: ignore
-Automat==24.8.1;  python_version >= "3.8"
+Automat==24.8.1;  python_version >= "3.8" and python_version < "3.9"
+Automat==25.4.16;  python_version >= "3.9"
 cffi==1.15.1;  python_version < "3.8"  # pyup: ignore
 cffi==1.17.1;  python_version >= "3.8"
 constantly==23.10.4; python_version >= "3.8"
