@@ -62,7 +62,7 @@ export class DataClient {
 
     const subscribePromise = subscribe ? collection.subscribe() : Promise.resolve();
 
-    subscribePromise.then(() =>
+    void subscribePromise.then(() =>
       // get the data from the rest api
       this.restClient.get(endpoint, query).then((response) => {
         const datalist = response[descriptor.restArrayField];

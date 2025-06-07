@@ -29,8 +29,8 @@ describe('Web socket client', () => {
     const msg1 = {a: 1};
     const msg2 = {b: 2};
     const msg3 = {c: 3};
-    client.send(msg1);
-    client.send(msg2);
+    void client.send(msg1);
+    void client.send(msg2);
     expect(socket.sendQueue.length).toBe(0);
     openSocket(socket);
     expect(socket.sendQueue.length).toBe(2);
@@ -44,7 +44,7 @@ describe('Web socket client', () => {
 
     socket.readyState = WebSocket.OPEN;
     expect(socket.sendQueue.length).toBe(0);
-    client.send({});
+    void client.send({});
     expect(socket.sendQueue).toContain(JSON.stringify({'_id': 1}));
   });
 
