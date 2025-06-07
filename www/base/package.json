@@ -40,7 +40,7 @@
     "react-select": "^5.8.1",
     "react-tooltip": "^5.28.0",
     "react-virtualized-auto-sizer": "^1.0.26",
-    "resolve": "1.18.1",
+    "resolve": "1.22.10",
     "ts-pnp": "1.2.0",
     "typescript": "~5.6.3",
     "underscore": "^1.13.4"
