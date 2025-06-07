@@ -111,7 +111,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
     return Promise.resolve();
   }
 
-  initial(data: any[]) {}
+  initial(_data: any[]) {}
 
   close() : Promise<void> {
     this.disposer();

@@ -75,7 +75,7 @@ export function parse(object : any): any {
     const v = object[k];
     try {
       object[k] = JSON.parse(v);
-    } catch (error) {}
+    } catch (_error) {}
   } // ignore
   return object;
 }
@@ -98,7 +98,7 @@ export function emailInString(s: string) {
   const emailRegex = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/;
   try {
     return emailRegex.exec(s)?.pop() || '';
-  } catch (error) {
+  } catch (_error) {
     return '';
   }
 }

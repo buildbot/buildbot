@@ -82,26 +82,26 @@ export class BaseDataAccessor implements IDataAccessor {
 }
 
 export class EmptyDataAccessor implements IDataAccessor {
-  registerCollection(c: IDataCollection) {}
-  unregisterCollection(c: IDataCollection) {}
+  registerCollection(_: IDataCollection) {}
+  unregisterCollection(_: IDataCollection) {}
 
   isOpen() { return false; }
   close() {}
 
-  get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
-                                  descriptor: IDataDescriptor<DataType>): DataCollection<DataType> {
+  get<DataType extends BaseClass>(_endpoint: string, _query: RequestQuery,
+                                  _descriptor: IDataDescriptor<DataType>): DataCollection<DataType> {
     throw Error("Not implemented");
   }
 
-  getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection {
+  getProperties(_endpoint: string, _query: RequestQuery): DataPropertiesCollection {
     throw Error("Not implemented");
   }
 
-  getRaw(endpoint: string, query: Query): CancellablePromise<any> {
+  getRaw(_endpoint: string, _query: Query): CancellablePromise<any> {
     throw Error("Not implemented");
   }
 
-  control(endpoint: string, method: string, params: ControlParams): Promise<any> {
+  control(_endpoint: string, _method: string, _params: ControlParams): Promise<any> {
     throw Error("Not implemented");
   }
 }

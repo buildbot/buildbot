@@ -66,7 +66,7 @@ const axiosForEach = (obj: any, fn: (obj: any, key: any) => void) => {
   }
 }
 
-const axiosParamsSerializerWithoutBraces = (params: Record<string, any>, options?: ParamsSerializerOptions) => {
+const axiosParamsSerializerWithoutBraces = (params: Record<string, any>, _options?: ParamsSerializerOptions) => {
   const parts: string[] = [];
 
   axiosForEach(params, (val, key) => {

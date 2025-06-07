@@ -30,7 +30,7 @@ export class WebSocketClient {
     this.socket.onmessage = this.onMessage;
   }
 
-  onOpen = (ev: Event) => {
+  onOpen = (_ev: Event) => {
     this.flush();
   }
 
