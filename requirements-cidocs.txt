@@ -22,7 +22,7 @@ towncrier==24.8.0
 
 alabaster==1.0.0; python_version >= "3.10"
 alabaster==0.7.16; python_version == "3.9" # pyup: ignore 1.0.0 dropped support for Python 3.9 and earlier
-Babel==2.16.0
+Babel==2.17.0
 click==8.1.7
 docutils==0.20.1  # pyup: ignore (sphinx-rtd-theme 2.0.0 requires docutils<0.21)
 imagesize==1.4.1
