@@ -10,7 +10,7 @@ sphinxcontrib-jquery==4.1.0
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
-sphinxcontrib-spelling==8.0.0
+sphinxcontrib-spelling==8.0.1
 sphinxcontrib-websupport==2.0.0
 Pygments==2.18.0
 towncrier==24.8.0
