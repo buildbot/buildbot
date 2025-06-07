@@ -64,7 +64,7 @@ type RenderComponentProps<T> = {
   data: T,
   index: number,
   isScrolling?: boolean,
-  style: Object,
+  style: object,
 };
 
 type RenderComponent<T> = React.ComponentType<RenderComponentProps<T>>;
@@ -93,7 +93,7 @@ type GetRangeToRenderOverrideCallback = (overscanStartIndex: number,
                                          visibleStopIndex: number) => [number, number, number, number];
 
 type ScrollEvent = SyntheticEvent<HTMLDivElement>;
-type ItemStyleCache = {[index: number]: Object};
+type ItemStyleCache = {[index: number]: object};
 
 export type FixedSizeListOuterProps = {
   children: React.ReactNode,
@@ -137,7 +137,7 @@ export type FixedSizeListProps<T> = {
   outerRef?: Ref<HTMLElement>,
   outerElementType?: string | React.ForwardRefExoticComponent<React.PropsWithoutRef<FixedSizeListOuterProps>>,
   overscanCount: number,
-  style?: Object,
+  style?: object,
   useIsScrolling: boolean,
   width: number | string,
 };
