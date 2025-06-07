@@ -46,7 +46,14 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-function-type': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        "warn",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_"
+        }
+      ],
       '@typescript-eslint/no-wrapper-object-types': 'warn',
       '@typescript-eslint/restrict-template-expressions': 'warn',
       '@typescript-eslint/triple-slash-reference': 'warn',
