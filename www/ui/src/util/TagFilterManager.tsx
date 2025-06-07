@@ -215,6 +215,9 @@ export class TagFilterManager {
       return (
         <span key={tag}>
           <span onClick={() => this.toggleTag(tag)}
+                onKeyDown={() => this.toggleTag(tag)}
+                role="button"
+                tabIndex={0}
                 className={"bb-tag-filter-manager-tag clickable " +
                   (this.isTagFiltered(tag) ? 'bb-tag-filter-manager-tag-filtered': '')}>
               {tag}
