@@ -12,7 +12,7 @@ sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
 sphinxcontrib-spelling==8.0.0
 sphinxcontrib-websupport==2.0.0
-Pygments==2.18.0
+Pygments==2.19.1
 towncrier==24.8.0
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
