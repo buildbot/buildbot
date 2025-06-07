@@ -70,7 +70,7 @@ async function waitForAnimationFrame() {
 }
 
 async function sleepMs(ms: number) {
-  var promise = new Promise((r) => setTimeout(r, ms));
+  const promise = new Promise((r) => setTimeout(r, ms));
   await promise;
 }
 

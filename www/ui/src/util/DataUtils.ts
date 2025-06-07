@@ -23,7 +23,7 @@ export function hasActiveMaster(builder: Builder, masters: DataCollection<Master
     return false;
   }
   let active = false;
-  for (let mid of builder.masterids) {
+  for (const mid of builder.masterids) {
     const m = masters.getByIdOrNull(mid.toString());
     if (m !== null && m.active) {
       active = true;

@@ -27,7 +27,7 @@ export function parseTemplate(template: string) : ParsedTemplate {
 
   let i = template.indexOf("%(");
   while (i >= 0) {
-    let iend = template.indexOf(")", i + 2);
+    const iend = template.indexOf(")", i + 2);
     if (iend < 0) {
       errors.push(`Unclosed replacement field at position ${i}`);
       break;
@@ -56,7 +56,7 @@ export function fillTemplate(template: string, replacements: Map<string, string>
   }
 
   while (i >= 0) {
-    let iend = template.indexOf(")", i + 2);
+    const iend = template.indexOf(")", i + 2);
     if (iend < 0) {
       return result;
     }

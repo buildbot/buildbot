@@ -32,7 +32,7 @@ type BuildLinkWithSummaryTooltipProps = {
 };
 
 export const getBuildLinkDisplayProperties = () => {
-  var template = buildbotGetSettings().getStringSetting('Links.build_link_template');
+  const template = buildbotGetSettings().getStringSetting('Links.build_link_template');
   if (template === "")
     return [];
   return [...parseTemplate(template).replacements.values()]
@@ -41,11 +41,11 @@ export const getBuildLinkDisplayProperties = () => {
 }
 
 export const formatBuildLinkText = (build: Build): string => {
-  var template = buildbotGetSettings().getStringSetting('Links.build_link_template');
+  const template = buildbotGetSettings().getStringSetting('Links.build_link_template');
   if (template === "") {
     return `${build.number}`;
   }
-  var replacements = new Map<string, string>([['build_number', `${build.number}`]]);
+  const replacements = new Map<string, string>([['build_number', `${build.number}`]]);
   for (const repl of parseTemplate(template).replacements.values()) {
     if (repl.startsWith("prop:")) {
       const prop = repl.substring(5);
