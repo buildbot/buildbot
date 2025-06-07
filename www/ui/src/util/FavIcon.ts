@@ -69,7 +69,7 @@ export function useFavIcon(result: number) {
   const url = config.isProxy ? '' : config.buildbotURL;
 
   useEffect(() => {
-    setFavIcon(url, result);
+    setFavIcon(url, result).catch(error => console.error('Error setting favicon:', error));
   }, [url, result]);
 
   // We only want to clear the favicon once, thus the useEffect hook is split into two parts, one
