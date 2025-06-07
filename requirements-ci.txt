@@ -25,8 +25,8 @@ attrs==25.3.0
 autobahn==24.4.2
 Automat==24.8.1
 boto==2.49.0
-boto3==1.35.72
-botocore==1.35.72
+boto3==1.38.32
+botocore==1.38.32
 certifi==2024.8.30
 cffi==1.17.1
 charset-normalizer==3.4.2
@@ -35,7 +35,7 @@ croniter==6.0.0
 cryptography==45.0.3
 dill==0.3.9
 evalidate==2.0.5
-greenlet==3.1.1
+greenlet==3.2.3
 hyperlink==21.0.0
 idna==3.10
 incremental==24.7.2
@@ -52,7 +52,7 @@ mypy-extensions==1.0.0
 packaging==25.0
 parameterized==0.9.0
 pyasn1==0.6.1
-pyasn1-modules==0.4.1
+pyasn1-modules==0.4.2
 pycparser==2.22
 PyJWT==2.10.1
 pyOpenSSL==25.1.0
@@ -63,10 +63,10 @@ PyYAML==6.0.2
 requests==2.32.3
 responses==0.25.7
 ruff==0.11.13
-s3transfer==0.10.4
+s3transfer==0.13.0
 service-identity==24.2.0
 six==1.16.0
-SQLAlchemy==2.0.36
+SQLAlchemy==2.0.41
 treq==24.9.1
 Twisted==24.11.0
 txaio==23.1.1
