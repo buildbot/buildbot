@@ -44,7 +44,7 @@ describe('Data utils service', function() {
   describe('socketPathRE(arg)', () =>
 
     it('should return the WebSocket subscribe path of the parameter path', function() {
-      let result = socketPathRE('asd/1/*');
+      const result = socketPathRE('asd/1/*');
       expect(result.test("asd/1/new")).toBeTruthy();
 
       let source = socketPathRE('asd/1/bnm/*/*').source;

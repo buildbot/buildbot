@@ -56,7 +56,7 @@ const parseFilter = (fieldAndOperator: string, value: any): ValueFilter | null =
 export class DataQuery {
   query: Query;
   filters: ValueFilter[] = [];
-  order: any | null = null;
+  order: string | null = null;
   limit: number | null = null;
 
   constructor(query: Query | null) {
@@ -64,7 +64,7 @@ export class DataQuery {
       query = {};
     }
     this.query = query;
-    for (let fieldAndOperator in query) {
+    for (const fieldAndOperator in query) {
       const filter = parseFilter(fieldAndOperator, query[fieldAndOperator]);
       if (filter !== null) {
         this.filters.push(filter);
@@ -129,9 +129,11 @@ export class DataQuery {
       array.sort(compare(order));
     } else if (Array.isArray(order)) {
       array.sort((a: any, b: any) => {
-        for (let o of Array.from(order)) {
-          const f = compare(o)(a, b);
-          if (f) { return f; }
+        for (const o of Array.from(order)) {
+          if (typeof o === 'string') {
+            const f = compare(o)(a, b);
+            if (f) { return f; }
+          }
         }
         return 0;
       });

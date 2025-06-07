@@ -49,7 +49,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
     if (parentArray !== null) {
       this.disposer = autorun(() => {
         const newParentIds = new Set<string>();
-        for (let parent of this.parentArray!) {
+        for (const parent of this.parentArray!) {
           if (this.parentFilteredIds !== null && this.parentFilteredIds.indexOf(parent.id) < 0) {
             continue;
           }
@@ -60,7 +60,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
           }
         }
 
-        for (let key of this.byParentId.keys()) {
+        for (const key of this.byParentId.keys()) {
           if (!newParentIds.has(key)) {
             this.removeByParentId(key);
           }
@@ -81,7 +81,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
             }
           }
         }
-        for (let key of this.byParentId.keys()) {
+        for (const key of this.byParentId.keys()) {
           if (!newParentIds.has(key)) {
             this.removeByParentId(key);
           }
@@ -111,11 +111,13 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
     return Promise.resolve();
   }
 
-  initial(data: any[]) {}
+  initial(_data: any[]) {}
 
-  close() : Promise<void> {
+  close() {
     this.disposer();
-    return Promise.all([...this.byParentId.values()].map((collection => collection.close()))).then();
+    for (const collection of this.byParentId.values()) {
+      collection.close();
+    }
   }
 
   @action addByParentId(id: string, collection: Collection) {

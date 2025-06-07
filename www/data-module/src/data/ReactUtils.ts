@@ -16,7 +16,7 @@ import {DataPropertiesCollection} from "./DataPropertiesCollection";
 // The default value is not used as the context is injected
 export const DataClientContext = createContext<DataClient>(undefined as any);
 
-export function useDataAccessor<T>(dependency: any[]): IDataAccessor {
+export function useDataAccessor(dependency: any[]): IDataAccessor {
   const dataClient = useContext(DataClientContext);
 
   const storedDependency = useRef<any[]>([]);
@@ -45,7 +45,7 @@ export function useDataAccessor<T>(dependency: any[]): IDataAccessor {
 
 export function useDataApiQuery<Collection extends IDataCollection>(
     callback: () => Collection): Collection {
-  let storedCollection = useRef<Collection|null>(null);
+  const storedCollection = useRef<Collection|null>(null);
   if (storedCollection.current === null || !storedCollection.current.isValid()) {
     if (storedCollection.current !== null) {
       storedCollection.current.close();
@@ -55,7 +55,7 @@ export function useDataApiQuery<Collection extends IDataCollection>(
   return storedCollection.current;
 }
 
-function arrayElementsEqual<T>(a: any[], b: any[]) {
+function arrayElementsEqual(a: any[], b: any[]) {
   if (a.length !== b.length) {
     return false;
   }
@@ -67,10 +67,10 @@ function arrayElementsEqual<T>(a: any[], b: any[]) {
   return true;
 }
 
-export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
+export function useDataApiDynamicQuery<Collection extends IDataCollection>(
     dependency: any[], callback: () => Collection): Collection {
   const storedDependency = useRef<any[]>([]);
-  let storedCollection = useRef<Collection|null>(null);
+  const storedCollection = useRef<Collection|null>(null);
 
   if (storedCollection.current === null ||
       !storedCollection.current.isValid() ||
@@ -88,11 +88,11 @@ export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
 // The difference between this function and useDataApiDynamicQuery() is that
 // useDataApiDynamicQuery() will return empty collection whenever it is refreshed whereas
 // this function will wait until the replacement query is resolved.
-export function useDataApiDynamicQueryResolved<T, Collection extends IDataCollection>(
+export function useDataApiDynamicQueryResolved<Collection extends IDataCollection>(
   dependency: any[], callback: () => Collection): Collection {
   const storedDependency = useRef<any[]>([]);
-  let storedCollection = useRef<Collection|null>(null);
-  let storedNewCollection = useRef<Collection|null>(null);
+  const storedCollection = useRef<Collection|null>(null);
+  const storedNewCollection = useRef<Collection|null>(null);
 
   if (storedCollection.current === null ||
       !storedCollection.current.isValid() ||

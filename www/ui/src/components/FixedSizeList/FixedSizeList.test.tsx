@@ -61,7 +61,7 @@ const simulateScroll = (instance: FixedSizeList<any>, scrollOffset: number, dire
 const findScrollContainer = (rendered: any) => rendered.root.children[0].children[0];
 
 async function waitForAnimationFrame() {
-  const p = new Promise<void>((resolve, reject) => {
+  const p = new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => {
       resolve();
     });
@@ -69,10 +69,6 @@ async function waitForAnimationFrame() {
   await p;
 }
 
-async function sleepMs(ms: number) {
-  var promise = new Promise((r) => setTimeout(r, ms));
-  await promise;
-}
 
 async function renderWithReactDom(children: React.ReactNode) {
   const instance = createRoot(document.createElement('div'));
@@ -136,7 +132,7 @@ describe('FixedSizeList', () => {
       <div style={style}>{JSON.stringify(rest, null, 2)}</div>
     ));
 
-    // @ts-ignore
+    // @ts-expect-error: This is a test case where we expect a type error
     defaultProps = {
       children: memo((props) => itemRenderer(props)),
       height: 100,
@@ -745,6 +741,7 @@ describe('FixedSizeList', () => {
     });
 
     it('should receive a data value if itemData is provided', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const itemKey = vi.fn((index, data) => index);
       const itemData = {};
       renderer.create(

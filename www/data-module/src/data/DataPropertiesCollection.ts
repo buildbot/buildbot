@@ -85,9 +85,9 @@ export class DataPropertiesCollection implements IDataCollection {
     if (this.isOpen) {
       this.isOpen = false;
       this.accessor.unregisterCollection(this);
-      return this.webSocketClient.unsubscribe(this.socketPath, this);
+      this.webSocketClient.unsubscribe(this.socketPath, this)
+        .catch(error => console.error('Unsubscription error:', error));
     }
-    return Promise.resolve();
   }
 
   @action initial(data: any[]) {

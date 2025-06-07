@@ -19,46 +19,17 @@ import './BuildLinkWithSummaryTooltip.scss';
 import {Link} from "react-router-dom";
 import {OverlayTrigger, Tooltip} from "react-bootstrap";
 import {Build, results2class} from "buildbot-data-js";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
+import {buildbotSetupPlugin} from "buildbot-plugin-support";
 import {observer} from "mobx-react";
 import {Builder} from "buildbot-data-js";
-import {fillTemplate, parseTemplate} from "../../util/TemplateFormat";
 import {BuildSummaryTooltip} from "../BuildSummaryTooltip/BuildSummaryTooltip";
 import {BadgeRound} from "../BadgeRound/BadgeRound";
+import {formatBuildLinkText} from "./utils";
 
 type BuildLinkWithSummaryTooltipProps = {
   build: Build;
   builder?: Builder | null;
 };
-
-export const getBuildLinkDisplayProperties = () => {
-  var template = buildbotGetSettings().getStringSetting('Links.build_link_template');
-  if (template === "")
-    return [];
-  return [...parseTemplate(template).replacements.values()]
-    .filter(x => x.startsWith("prop:"))
-    .map(x => x.substring(5));
-}
-
-export const formatBuildLinkText = (build: Build): string => {
-  var template = buildbotGetSettings().getStringSetting('Links.build_link_template');
-  if (template === "") {
-    return `${build.number}`;
-  }
-  var replacements = new Map<string, string>([['build_number', `${build.number}`]]);
-  for (const repl of parseTemplate(template).replacements.values()) {
-    if (repl.startsWith("prop:")) {
-      const prop = repl.substring(5);
-      const value = build.properties[prop];
-      if (value === undefined || value === null || value === '') {
-        continue;
-      }
-      replacements.set(repl, value[0]);
-    }
-  }
-
-  return fillTemplate(template, replacements);
-}
 
 export const BuildLinkWithSummaryTooltip =
   observer(({build, builder}: BuildLinkWithSummaryTooltipProps) => {

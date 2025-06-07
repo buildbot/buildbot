@@ -23,7 +23,7 @@ export function hasActiveMaster(builder: Builder, masters: DataCollection<Master
     return false;
   }
   let active = false;
-  for (let mid of builder.masterids) {
+  for (const mid of builder.masterids) {
     const m = masters.getByIdOrNull(mid.toString());
     if (m !== null && m.active) {
       active = true;
@@ -41,7 +41,7 @@ export function buildDurationFormatWithLocks(build: Build, now: number) {
     : durationFormat(now - build.started_at);
 
   if (build.locks_duration_s > 0) {
-    res += ` (locks: ${durationFormat(build.locks_duration_s!)})`;
+    res += ` (locks: ${durationFormat(build.locks_duration_s)})`;
   }
   return res;
 }

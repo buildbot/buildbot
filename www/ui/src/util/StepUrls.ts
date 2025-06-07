@@ -69,15 +69,15 @@ export function analyzeStepUrls(analyzer: StepUrlAnalyzer, urls: StepUrl[]): Ste
     otherUrls: [],
   };
 
-  for (let url of urls) {
-    let brRes = execRegexesGetFirstResult(analyzer.buildrequest, url.url)
+  for (const url of urls) {
+    const brRes = execRegexesGetFirstResult(analyzer.buildrequest, url.url)
     if (brRes !== null) {
       info.buildrequests.push({
         buildrequestid: brRes[1],
       })
       continue;
     }
-    let buildRes = execRegexesGetFirstResult(analyzer.build, url.url)
+    const buildRes = execRegexesGetFirstResult(analyzer.build, url.url)
     if (buildRes !== null) {
       info.builds.push({
         builderid: buildRes[1],

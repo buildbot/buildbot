@@ -66,7 +66,7 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
 
   const buildResultClass = build !== null ? " " + results2class(build, null) : "";
 
-  const reason = getPropertyValueOrDefault(propertiesQuery.properties, "reason", null);
+  const reason = getPropertyValueOrDefault(propertiesQuery.properties, "reason", null) as string;
 
   const baseUrls = config.buildbotURLs || [config.buildbotURL];
   const stepUrlAnalyzer = useStepUrlAnalyzer(baseUrls);

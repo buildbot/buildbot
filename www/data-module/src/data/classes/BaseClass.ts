@@ -22,7 +22,7 @@ export class BaseClass {
     this.endpoint = endpoint;
   }
 
-  update(object: any) {
+  update(_object: any) {
     throw Error("Not implemented");
   }
 

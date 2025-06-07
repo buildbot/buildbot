@@ -50,7 +50,7 @@ export class MockDataClient extends DataClient {
   // register return values with the .when function when testing get will return the given values
   get<DataType extends BaseClass>(endpoint: string, accessor: BaseDataAccessor,
                                   descriptor: IDataDescriptor<DataType>,
-                                  query: Query, subscribe: boolean) {
+                                  query: Query, _subscribe: boolean) {
     if (this.expects.length > 0) {
       const exp = this.expects.shift();
       expect(exp!.endpoint).toEqual(endpoint);

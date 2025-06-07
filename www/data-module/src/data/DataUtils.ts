@@ -71,11 +71,11 @@ export function splitOptions(args: any[]) {
 }
 
 export function parse(object : any): any {
-  for (let k in object) {
+  for (const k in object) {
     const v = object[k];
     try {
       object[k] = JSON.parse(v);
-    } catch (error) {}
+    } catch (_error) {}
   } // ignore
   return object;
 }
@@ -83,7 +83,7 @@ export function parse(object : any): any {
 export function numberOrString(str: string | number) : number {
   // if already a number
   if (typeof str === 'number') {
-    return str as number;
+    return str;
   }
   // else parse string to integer
   const number = parseInt(str, 10);
@@ -98,7 +98,7 @@ export function emailInString(s: string) {
   const emailRegex = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/;
   try {
     return emailRegex.exec(s)?.pop() || '';
-  } catch (error) {
+  } catch (_error) {
     return '';
   }
 }

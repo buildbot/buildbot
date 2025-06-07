@@ -22,6 +22,7 @@ export * from "./components/ArrowExpander/ArrowExpander";
 export * from "./components/BadgeRound/BadgeRound";
 export * from "./components/BadgeStatus/BadgeStatus";
 export * from "./components/BuildLinkWithSummaryTooltip/BuildLinkWithSummaryTooltip";
+export * from "./components/BuildLinkWithSummaryTooltip/utils";
 export * from "./components/BuildSummaryTooltip/BuildSummaryTooltip";
 export * from "./components/ChangeDetails/ChangeDetails";
 export * from "./components/ChangeUserAvatar/ChangeUserAvatar";
