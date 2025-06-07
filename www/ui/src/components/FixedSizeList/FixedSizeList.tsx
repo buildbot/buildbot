@@ -523,7 +523,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
         className,
         onScroll: (e) => this._onScrollVertical(e),
         onWheel: (e) => this._onWheel(),
-        // @ts-ignore: type checker gets confused about what is the type of the component.
+        // @ts-expect-error: type checker gets confused about what is the type of the component.
         ref: (ref: HTMLElement) => this._outerRefSetter(ref),
         style: {
           position: 'relative',
@@ -811,7 +811,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
       typeof outerRef === 'object' &&
       outerRef.hasOwnProperty('current')
     ) {
-      // @ts-ignore
+      // @ts-expect-error: type checker gets confused about what is the type of the component.
       outerRef.current = ref;
     }
   }

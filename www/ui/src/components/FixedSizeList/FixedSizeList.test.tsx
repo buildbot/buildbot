@@ -136,7 +136,7 @@ describe('FixedSizeList', () => {
       <div style={style}>{JSON.stringify(rest, null, 2)}</div>
     ));
 
-    // @ts-ignore
+    // @ts-expect-error: This is a test case where we expect a type error
     defaultProps = {
       children: memo((props) => itemRenderer(props)),
       height: 100,
