@@ -71,7 +71,7 @@ treq==24.9.1
 Twisted==24.11.0
 txaio==23.1.1
 txrequests==0.9.6
-typing_extensions==4.12.2
+typing_extensions==4.13.2
 unidiff==0.7.5
 # botocore for py3.9 depends on urllib3<1.27
 urllib3==1.26.19; python_version <= "3.9"  # pyup: ignore
