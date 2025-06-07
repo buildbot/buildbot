@@ -118,7 +118,13 @@ export const ChangeDetails = observer(({change, compact, showDetails, setShowDet
 
   return (
     <div className="changedetails">
-      <div className="changedetails-heading" onClick={onHeadingClicked}>
+      <div
+        className="changedetails-heading"
+        onClick={onHeadingClicked}
+        onKeyDown={onHeadingClicked}
+        role="button"
+        tabIndex={0}
+      >
         { !compact
           ? <ChangeUserAvatar name={changeAuthorName} email={changeEmail} showName={false}/>
           : <></>
