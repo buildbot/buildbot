@@ -174,7 +174,7 @@ const validateSharedProps = (
         throw Error(
           'An invalid "direction" prop has been specified. ' +
           'Value should be either "ltr" or "rtl". ' +
-          `"${direction}" was specified.`
+          `"${String(direction)}" was specified.`
         );
     }
 
