@@ -65,7 +65,7 @@ responses==0.25.7
 ruff==0.11.13
 s3transfer==0.13.0
 service-identity==24.2.0
-six==1.16.0
+six==1.17.0
 SQLAlchemy==2.0.41
 treq==24.9.1
 Twisted==24.11.0
