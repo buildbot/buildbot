@@ -56,7 +56,7 @@ pyasn1-modules==0.4.1
 pycparser==2.22
 PyJWT==2.10.1
 pyOpenSSL==25.1.0
-pypugjs==5.11.0
+pypugjs==5.12.0
 python-dateutil==2.9.0.post0
 pytz==2024.2
 PyYAML==6.0.2
