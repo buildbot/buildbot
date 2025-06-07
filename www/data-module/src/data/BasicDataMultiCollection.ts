@@ -113,9 +113,11 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
 
   initial(_data: any[]) {}
 
-  close() : Promise<void> {
+  close() {
     this.disposer();
-    return Promise.all([...this.byParentId.values()].map((collection => collection.close()))).then();
+    for (const collection of this.byParentId.values()) {
+      collection.close();
+    }
   }
 
   @action addByParentId(id: string, collection: Collection) {

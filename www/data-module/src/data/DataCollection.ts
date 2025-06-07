@@ -24,7 +24,7 @@ export interface IDataCollection {
   isResolved(): boolean;
   subscribe(): Promise<void>;
   initial(data: any[]): void;
-  close(): Promise<void>;
+  close(): void;
 }
 
 export class DataCollection<DataType extends BaseClass> implements IDataCollection {
@@ -101,9 +101,9 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     if (this.isOpen) {
       this.isOpen = false;
       this.accessor.unregisterCollection(this);
-      return this.webSocketClient.unsubscribe(this.socketPath, this);
+      this.webSocketClient.unsubscribe(this.socketPath, this)
+        .catch(error => console.error('Unsubscription error:', error));
     }
-    return Promise.resolve();
   }
 
   getRelated<ChildDataType extends BaseClass>(
