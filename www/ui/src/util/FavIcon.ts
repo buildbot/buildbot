@@ -70,7 +70,7 @@ export function useFavIcon(result: number) {
 
   useEffect(() => {
     setFavIcon(url, result);
-  }, [result]);
+  }, [url, result]);
 
   // We only want to clear the favicon once, thus the useEffect hook is split into two parts, one
   // for updates, one for eventual cleanup when navigating out of view.
