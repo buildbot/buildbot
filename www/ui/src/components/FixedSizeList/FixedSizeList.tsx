@@ -221,7 +221,6 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
 
   // Always use explicit constructor for React components.
   // It produces less code after transpilation. (#26)
-  // eslint-disable-next-line no-useless-constructor
   constructor(props: FixedSizeListProps<T>) {
     super(props);
   }

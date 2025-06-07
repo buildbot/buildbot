@@ -741,6 +741,7 @@ describe('FixedSizeList', () => {
     });
 
     it('should receive a data value if itemData is provided', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const itemKey = vi.fn((index, data) => index);
       const itemData = {};
       renderer.create(
