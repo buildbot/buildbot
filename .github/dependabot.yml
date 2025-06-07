@@ -4,6 +4,7 @@ updates:
     directory: "/"
     commit-message:
       prefix: ""
+    open-pull-requests-limit: 15
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
@@ -13,6 +14,8 @@ updates:
       - "www/**"
     commit-message:
       prefix: "www: "
+    # more PRs won't help due to merge conflicts in lock file
+    open-pull-requests-limit: 3
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
@@ -22,6 +25,8 @@ updates:
       - "e2e/**"
     commit-message:
       prefix: "e2e: "
+    # more PRs won't help due to merge conflicts in lock file
+    open-pull-requests-limit: 3
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
@@ -31,6 +36,7 @@ updates:
       - "**/*"
     commit-message:
       prefix: "docker: "
+    open-pull-requests-limit: 15
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
