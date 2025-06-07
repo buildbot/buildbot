@@ -58,7 +58,7 @@ PyJWT==2.10.1
 pyOpenSSL==25.1.0
 pypugjs==5.12.0
 python-dateutil==2.9.0.post0
-pytz==2024.2
+pytz==2025.2
 PyYAML==6.0.2
 requests==2.32.3
 responses==0.25.7
