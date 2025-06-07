@@ -45,7 +45,7 @@ export function useDataAccessor<T>(dependency: any[]): IDataAccessor {
 
 export function useDataApiQuery<Collection extends IDataCollection>(
     callback: () => Collection): Collection {
-  let storedCollection = useRef<Collection|null>(null);
+  const storedCollection = useRef<Collection|null>(null);
   if (storedCollection.current === null || !storedCollection.current.isValid()) {
     if (storedCollection.current !== null) {
       storedCollection.current.close();
@@ -70,7 +70,7 @@ function arrayElementsEqual<T>(a: any[], b: any[]) {
 export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
     dependency: any[], callback: () => Collection): Collection {
   const storedDependency = useRef<any[]>([]);
-  let storedCollection = useRef<Collection|null>(null);
+  const storedCollection = useRef<Collection|null>(null);
 
   if (storedCollection.current === null ||
       !storedCollection.current.isValid() ||
@@ -91,8 +91,8 @@ export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
 export function useDataApiDynamicQueryResolved<T, Collection extends IDataCollection>(
   dependency: any[], callback: () => Collection): Collection {
   const storedDependency = useRef<any[]>([]);
-  let storedCollection = useRef<Collection|null>(null);
-  let storedNewCollection = useRef<Collection|null>(null);
+  const storedCollection = useRef<Collection|null>(null);
+  const storedNewCollection = useRef<Collection|null>(null);
 
   if (storedCollection.current === null ||
       !storedCollection.current.isValid() ||

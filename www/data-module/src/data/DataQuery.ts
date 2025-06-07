@@ -64,7 +64,7 @@ export class DataQuery {
       query = {};
     }
     this.query = query;
-    for (let fieldAndOperator in query) {
+    for (const fieldAndOperator in query) {
       const filter = parseFilter(fieldAndOperator, query[fieldAndOperator]);
       if (filter !== null) {
         this.filters.push(filter);
@@ -129,7 +129,7 @@ export class DataQuery {
       array.sort(compare(order));
     } else if (Array.isArray(order)) {
       array.sort((a: any, b: any) => {
-        for (let o of Array.from(order)) {
+        for (const o of Array.from(order)) {
           const f = compare(o)(a, b);
           if (f) { return f; }
         }

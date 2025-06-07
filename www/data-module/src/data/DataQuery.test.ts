@@ -32,7 +32,7 @@ class WrappedDataQuery {
 
 describe('dataquery service', () => {
   let testArray: any[] = [];
-  let wrappedDataQuery = new WrappedDataQuery();
+  const wrappedDataQuery = new WrappedDataQuery();
 
   beforeEach(() => {
     testArray = [{

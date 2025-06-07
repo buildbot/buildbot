@@ -71,7 +71,7 @@ export function splitOptions(args: any[]) {
 }
 
 export function parse(object : any): any {
-  for (let k in object) {
+  for (const k in object) {
     const v = object[k];
     try {
       object[k] = JSON.parse(v);

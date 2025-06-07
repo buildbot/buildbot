@@ -49,7 +49,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
     if (parentArray !== null) {
       this.disposer = autorun(() => {
         const newParentIds = new Set<string>();
-        for (let parent of this.parentArray!) {
+        for (const parent of this.parentArray!) {
           if (this.parentFilteredIds !== null && this.parentFilteredIds.indexOf(parent.id) < 0) {
             continue;
           }
@@ -60,7 +60,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
           }
         }
 
-        for (let key of this.byParentId.keys()) {
+        for (const key of this.byParentId.keys()) {
           if (!newParentIds.has(key)) {
             this.removeByParentId(key);
           }
@@ -81,7 +81,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
             }
           }
         }
-        for (let key of this.byParentId.keys()) {
+        for (const key of this.byParentId.keys()) {
           if (!newParentIds.has(key)) {
             this.removeByParentId(key);
           }
