@@ -69,10 +69,6 @@ async function waitForAnimationFrame() {
   await p;
 }
 
-async function sleepMs(ms: number) {
-  const promise = new Promise((r) => setTimeout(r, ms));
-  await promise;
-}
 
 async function renderWithReactDom(children: React.ReactNode) {
   const instance = createRoot(document.createElement('div'));

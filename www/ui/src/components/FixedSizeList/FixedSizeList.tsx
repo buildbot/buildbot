@@ -156,24 +156,12 @@ type State = {
 const IS_SCROLLING_DEBOUNCE_INTERVAL = 150;
 const WHEEL_TO_SCROLL_EVENT_MS = 1000;
 
-const defaultItemKey = (index: number, data: unknown) => index;
-
-// In DEV mode, this Set helps us only log a warning once per component instance.
-// This avoids spamming the console every time a render happens.
-let devWarningsDirection: WeakSet<object>|null = null;
-let devWarningsTagName: WeakSet<object>|null = null;
-if (process.env.NODE_ENV !== 'production') {
-  if (typeof window !== 'undefined' && typeof window.WeakSet !== 'undefined') {
-    devWarningsDirection = new WeakSet();
-    devWarningsTagName = new WeakSet();
-  }
-}
+const defaultItemKey = (index: number) => index;
 
 const validateSharedProps = (
   {
     children,
     direction,
-    height,
   }: FixedSizeListProps<any>
 ): void => {
   if (process.env.NODE_ENV !== 'production') {
@@ -242,7 +230,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     return index * itemSize;
   }
 
-  getItemSize({ itemSize }: FixedSizeListProps<any>, index: number): number {
+  getItemSize({ itemSize }: FixedSizeListProps<any>): number {
     return itemSize;
   }
 
@@ -260,7 +248,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     return scrollOffset + largeListLastSubWindowOffset;
   }
 
-  getOffsetForIndexAndAlignment({ direction, height, itemCount, itemSize, width }: FixedSizeListProps<any>,
+  getOffsetForIndexAndAlignment({ height, itemCount, itemSize }: FixedSizeListProps<any>,
                                 index: number,
                                 align: ScrollToAlign,
                                 globalScrollOffset: number,
@@ -321,7 +309,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
     );
   }
 
-  getStopIndexForStartIndex({ direction, height, itemCount, itemSize, width }: FixedSizeListProps<any>,
+  getStopIndexForStartIndex({ height, itemCount, itemSize }: FixedSizeListProps<any>,
                             startIndex: number,
                             globalScrollOffset: number): number {
     const offset = startIndex * itemSize;
@@ -522,7 +510,7 @@ export class FixedSizeList<T> extends PureComponent<FixedSizeListProps<T>, State
       {
         className,
         onScroll: (e) => this._onScrollVertical(e),
-        onWheel: (e) => this._onWheel(),
+        onWheel: () => this._onWheel(),
         // @ts-expect-error: type checker gets confused about what is the type of the component.
         ref: (ref: HTMLElement) => this._outerRefSetter(ref),
         style: {
