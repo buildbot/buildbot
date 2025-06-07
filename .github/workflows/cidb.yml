@@ -4,6 +4,12 @@ on:
     branches:
     - master
     - release
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow on'
+        required: true
+        default: 'master'
 
 permissions:
   contents: read
@@ -83,7 +89,15 @@ jobs:
         options: --health-cmd "${{ matrix.check }}" --health-interval 10s --health-timeout 5s --health-retries 10
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout specific branch
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        if: ${{ github.event_name != 'workflow_dispatch' }}
 
       - run: sudo apt-get install aspell aspell-en iamerican ispell
 
