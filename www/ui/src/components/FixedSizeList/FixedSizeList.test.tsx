@@ -61,7 +61,7 @@ const simulateScroll = (instance: FixedSizeList<any>, scrollOffset: number, dire
 const findScrollContainer = (rendered: any) => rendered.root.children[0].children[0];
 
 async function waitForAnimationFrame() {
-  const p = new Promise<void>((resolve, reject) => {
+  const p = new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => {
       resolve();
     });
