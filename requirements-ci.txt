@@ -39,7 +39,7 @@ greenlet==3.1.1
 hyperlink==21.0.0
 idna==3.10
 incremental==24.7.2
-Jinja2==3.1.5
+Jinja2==3.1.6
 jmespath==1.0.1
 lz4==4.3.3
 zstandard==0.23.0
