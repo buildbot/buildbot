@@ -201,7 +201,7 @@ describe('Data service', () => {
       expect(collection.array.length).toBe(3);
       const spyClose = vi.spyOn(collection, 'close');
       data.close();
-      expect(collection.close).toHaveBeenCalled();
+      expect(spyClose).toHaveBeenCalled();
     });
   });
 
