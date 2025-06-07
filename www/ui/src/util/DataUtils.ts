@@ -41,7 +41,7 @@ export function buildDurationFormatWithLocks(build: Build, now: number) {
     : durationFormat(now - build.started_at);
 
   if (build.locks_duration_s > 0) {
-    res += ` (locks: ${durationFormat(build.locks_duration_s!)})`;
+    res += ` (locks: ${durationFormat(build.locks_duration_s)})`;
   }
   return res;
 }
