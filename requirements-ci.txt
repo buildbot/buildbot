@@ -21,7 +21,7 @@ pywin32==310; platform_system=="Windows"
 # while to remove no longer needed dependencies.
 
 alembic==1.14.0
-attrs==24.2.0
+attrs==25.3.0
 autobahn==24.4.2
 Automat==24.8.1
 boto==2.49.0
