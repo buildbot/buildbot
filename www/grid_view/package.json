@@ -33,7 +33,7 @@
     "buildbot-plugin-support": "link:../plugin_support",
     "buildbot-ui": "link:../ui",
     "eslint": "^9.27.0",
-    "eslint-config-buildbot": "link:../eslint-config",
+    "build-config-buildbot": "link:../common-config",
     "jsdom": "^25.0.0",
     "mobx": "^6.13.4",
     "mobx-react": "^9.1.1",

@@ -1,5 +1,5 @@
 {
-  "name": "eslint-config-buildbot",
+  "name": "build-config-buildbot",
   "version": "0.1.0",
   "description": "Buildbot WWW shared eslint config",
   "main": "index.js",
