@@ -172,12 +172,12 @@ describe('Data service', () => {
   });
 
   describe('control(method, params)', () =>
-    it('should send a jsonrpc message using POST', () => {
+    it('should send a jsonrpc message using POST', async () => {
       mock.onPost(rootUrl + 'tests/1').reply(200, {});
 
       const method = 'force';
       const params = {a: "1"};
-      client.control("tests/1", method, params);
+      await client.control("tests/1", method, params);
       expect(mock.history.post[0].url).toEqual(rootUrl + "tests/1");
       expect(mock.history.post[0].data).toEqual(JSON.stringify({
         id: 1,
