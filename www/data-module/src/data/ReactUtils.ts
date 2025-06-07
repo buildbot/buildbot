@@ -16,7 +16,7 @@ import {DataPropertiesCollection} from "./DataPropertiesCollection";
 // The default value is not used as the context is injected
 export const DataClientContext = createContext<DataClient>(undefined as any);
 
-export function useDataAccessor<T>(dependency: any[]): IDataAccessor {
+export function useDataAccessor(dependency: any[]): IDataAccessor {
   const dataClient = useContext(DataClientContext);
 
   const storedDependency = useRef<any[]>([]);
@@ -55,7 +55,7 @@ export function useDataApiQuery<Collection extends IDataCollection>(
   return storedCollection.current;
 }
 
-function arrayElementsEqual<T>(a: any[], b: any[]) {
+function arrayElementsEqual(a: any[], b: any[]) {
   if (a.length !== b.length) {
     return false;
   }
@@ -67,7 +67,7 @@ function arrayElementsEqual<T>(a: any[], b: any[]) {
   return true;
 }
 
-export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
+export function useDataApiDynamicQuery<Collection extends IDataCollection>(
     dependency: any[], callback: () => Collection): Collection {
   const storedDependency = useRef<any[]>([]);
   const storedCollection = useRef<Collection|null>(null);
@@ -88,7 +88,7 @@ export function useDataApiDynamicQuery<T, Collection extends IDataCollection>(
 // The difference between this function and useDataApiDynamicQuery() is that
 // useDataApiDynamicQuery() will return empty collection whenever it is refreshed whereas
 // this function will wait until the replacement query is resolved.
-export function useDataApiDynamicQueryResolved<T, Collection extends IDataCollection>(
+export function useDataApiDynamicQueryResolved<Collection extends IDataCollection>(
   dependency: any[], callback: () => Collection): Collection {
   const storedDependency = useRef<any[]>([]);
   const storedCollection = useRef<Collection|null>(null);
