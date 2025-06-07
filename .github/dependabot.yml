@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     commit-message:
-      prefix: ""
+      prefix: "requirements: "
     open-pull-requests-limit: 15
     schedule:
       interval: "cron"
