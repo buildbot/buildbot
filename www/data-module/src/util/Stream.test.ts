@@ -37,8 +37,8 @@ describe('Stream', () => {
 
     const data = {a: 'A', b: 'B'};
     const listeners = {
-      first(data: any) { expect(data).toEqual({a: 'A', b: 'B'}); },
-      second(data: any) { expect(data).toEqual({a: 'A', b: 'B'}); }
+      first(this: void, data: any) { expect(data).toEqual({a: 'A', b: 'B'}); },
+      second(this: void, data: any) { expect(data).toEqual({a: 'A', b: 'B'}); }
     };
 
     vi.spyOn(listeners, 'first');
