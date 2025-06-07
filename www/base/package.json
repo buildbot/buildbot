@@ -22,7 +22,7 @@
     "moment": "^2.29.4",
     "outdated-browser-rework": "^3.0.1",
     "popper.js": "^1.16.1",
-    "postcss-flexbugs-fixes": "4.2.1",
+    "postcss-flexbugs-fixes": "5.0.1",
     "postcss-loader": "3.0.0",
     "postcss-normalize": "9.0.0",
     "postcss-preset-env": "6.7.2",
