@@ -83,7 +83,7 @@ export function parse(object : any): any {
 export function numberOrString(str: string | number) : number {
   // if already a number
   if (typeof str === 'number') {
-    return str as number;
+    return str;
   }
   // else parse string to integer
   const number = parseInt(str, 10);
