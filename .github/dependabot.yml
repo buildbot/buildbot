@@ -2,7 +2,8 @@ version: 2
 updates:
   - package-ecosystem: "pip"
     directory: "/"
-    prefix: ""
+    commit-message:
+      prefix: ""
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
@@ -10,7 +11,8 @@ updates:
   - package-ecosystem: "npm"
     directories:
       - "www/**"
-    prefix: "www: "
+    commit-message:
+      prefix: "www: "
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
@@ -18,7 +20,8 @@ updates:
   - package-ecosystem: "npm"
     directories:
       - "e2e/**"
-    prefix: "e2e: "
+    commit-message:
+      prefix: "e2e: "
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
@@ -26,14 +29,16 @@ updates:
   - package-ecosystem: "docker"
     directories:
       - "**/*"
-    prefix: "docker: "
+    commit-message:
+      prefix: "docker: "
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
 
   - package-ecosystem: "github-actions"
     directory: "/"
-    prefix: "github: "
+    commit-message:
+      prefix: "github: "
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
