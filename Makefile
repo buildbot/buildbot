@@ -28,7 +28,7 @@ check_for_yarn:
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample
 WWW_DEP_PKGS := www/plugin_support www/data-module www/ui
-WWW_PURE_DEP_PKGS := www/eslint-config
+WWW_PURE_DEP_PKGS := www/common-config
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))

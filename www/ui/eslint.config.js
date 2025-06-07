@@ -1,8 +1,8 @@
 import { defineConfig } from "eslint/config";
-import buildbotConfig from "eslint-config-buildbot";
+import {buildbotEslintConfig} from "build-config-buildbot";
 
 export default defineConfig([
   {
-    extends: [buildbotConfig],
+    extends: [buildbotEslintConfig],
   },
 ]);

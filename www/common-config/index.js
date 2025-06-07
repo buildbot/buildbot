@@ -6,7 +6,7 @@ import importPlugin from 'eslint-plugin-import';
 import jsxAlly from 'eslint-plugin-jsx-a11y'
 import tseslint from 'typescript-eslint'
 
-export default tseslint.config(
+export const buildbotEslintConfig = tseslint.config(
   { ignores: ['dist'] },
   {
     extends: [
