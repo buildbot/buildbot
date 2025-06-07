@@ -7,7 +7,7 @@ cffi==1.15.1;  python_version < "3.8"  # pyup: ignore
 cffi==1.17.1;  python_version >= "3.8"
 constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
-cryptography==44.0.1
+cryptography==45.0.3
 funcsigs==1.0.2
 hyperlink==21.0.0
 idna==3.10
@@ -15,7 +15,7 @@ incremental==22.10.0;  python_version < "3.8" # pyup: ignore
 incremental==24.7.2;  python_version >= "3.8"
 mock==5.1.0
 parameterized==0.9.0
-pbr==6.1.0
+pbr==6.1.1
 PyHamcrest==2.1.0
 psutil==7.0.0
 pycparser==2.21;  python_version < "3.8" # pyup: ignore
