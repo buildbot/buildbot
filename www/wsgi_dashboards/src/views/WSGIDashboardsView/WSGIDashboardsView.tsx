@@ -71,7 +71,7 @@ export default function WSGIDashboardsView({name}: WSGIDashboardsViewProps) {
     }
 
     pendingRequest.current = getData(location);
-    pendingRequest.current.then((content) => {
+    void pendingRequest.current.then((content) => {
       setWsgiContent(content);
     });
     return () => {
