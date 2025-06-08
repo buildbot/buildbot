@@ -86,9 +86,14 @@ if ('buildbotFrontendConfig' in windowAny) {
   doRender(windowAny.buildbotFrontendConfig);
 } else {
   // fallback during development
-  axios.get('config').then((response) => {
-    const config: Config = response.data;
-    config.isProxy = true;
-    doRender(config);
-  });
+  axios
+    .get('config')
+    .then((response) => {
+      const config: Config = response.data;
+      config.isProxy = true;
+      doRender(config);
+    })
+    .catch((error) => {
+      console.error('Error fetching config:', error);
+    });
 }

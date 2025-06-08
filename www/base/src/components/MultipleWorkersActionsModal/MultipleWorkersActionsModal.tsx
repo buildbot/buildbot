@@ -270,28 +270,36 @@ export const MultipleWorkersActionsModal = observer(
           <Button
             variant="primary"
             disabled={stopDisabled}
-            onClick={async () => await doAction('stop')}
+            onClick={() => {
+              doAction('stop').catch((err) => console.error(err));
+            }}
           >
             Graceful Shutdown
           </Button>
           <Button
             variant="primary"
             disabled={stopDisabled}
-            onClick={async () => await doAction('kill')}
+            onClick={() => {
+              doAction('kill').catch((err) => console.error(err));
+            }}
           >
             Force Shutdown
           </Button>
           <Button
             variant="primary"
             disabled={pauseDisabled}
-            onClick={async () => await doAction('pause')}
+            onClick={() => {
+              doAction('pause').catch((err) => console.error(err));
+            }}
           >
             Pause
           </Button>
           <Button
             variant="primary"
             disabled={unpauseDisabled}
-            onClick={async () => await doAction('unpause')}
+            onClick={() => {
+              doAction('unpause').catch((err) => console.error(err));
+            }}
           >
             Unpause
           </Button>
