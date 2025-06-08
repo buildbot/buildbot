@@ -38,7 +38,7 @@ function getData(url: string) {
     onCancel(() => {
       controller.abort();
     });
-    let config = {
+    const config = {
       method: 'get',
       url,
       params: {},
@@ -110,7 +110,7 @@ function getIcon(iconNames: string[]): IconType | undefined {
 buildbotSetupPlugin((reg, config) => {
   const wsgi_dashboards = config.plugins['wsgi_dashboards'];
 
-  for (let dashboard of wsgi_dashboards) {
+  for (const dashboard of wsgi_dashboards) {
     const {name} = dashboard;
     let {caption} = dashboard;
     if (caption == null) {
