@@ -185,7 +185,7 @@ class V2RootResource(resource.Resource):
         except Forbidden as e:
             # There is nothing in jsonrc spec about forbidden error, so pick
             # invalid request
-            msg = unicode2bytes(e.message)
+            msg = unicode2bytes(e.message or '')
             writeError(msg, 403, JSONRPC_CODES["invalid_request"])
             return
         except Exception as e:

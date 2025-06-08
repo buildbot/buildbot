@@ -123,7 +123,7 @@ class HTTPTunnelFactory(protocol.ClientFactory):
         super().doStop()
 
     def buildProtocol(self, addr: IAddress) -> Protocol | None:
-        proto = self.protocol(self._onConnection)  # type: ignore[has-type]
+        proto = self.protocol(self._onConnection)
         proto.factory = self
         return proto
 

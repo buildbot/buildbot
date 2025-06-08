@@ -236,7 +236,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         else:
             mode = 'w'
 
-        with tarfile.TarFile.open(mode=mode, fileobj=self.fp) as archive:
+        with tarfile.TarFile.open(mode=mode, fileobj=self.fp) as archive:  # type: ignore[call-overload]
             try:
                 archive.add(self.path, '')
             except OSError as e:

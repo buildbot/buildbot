@@ -247,6 +247,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                     res = self._model_from_row(row)
                     rv[lastId] = res
                 if row.builderid and row.masterid:
+                    assert lastId is not None
                     rv[lastId].configured_on.append(
                         BuilderMasterModel(builderid=row.builderid, masterid=row.masterid)
                     )

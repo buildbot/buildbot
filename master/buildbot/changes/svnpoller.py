@@ -297,7 +297,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             self._prefix = ""
             return self._prefix
         rootnode = rootnodes[0]
-        root = "".join([c.data for c in rootnode.childNodes])
+        root = "".join([c.data for c in rootnode.childNodes if hasattr(c, 'data')])
         # root will be a unicode string
         if not self.repourl.startswith(root):
             log.msg(
@@ -383,7 +383,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
     def _get_text(self, element: xml.dom.minidom.Element, tag_name: str) -> str:
         try:
             child_nodes = element.getElementsByTagName(tag_name)[0].childNodes
-            text = "".join([t.data for t in child_nodes])
+            text = "".join([t.data for t in child_nodes if hasattr(t, 'data')])
         except IndexError:
             text = "unknown"
         return text
@@ -439,7 +439,7 @@ class SVNPoller(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
             for p in pathlist.getElementsByTagName("path"):
                 kind = p.getAttribute("kind")
                 action = p.getAttribute("action")
-                path = "".join([t.data for t in p.childNodes])
+                path = "".join([t.data for t in p.childNodes if hasattr(t, 'data')])
                 if path.startswith("/"):
                     path = path[1:]
                 if kind == "dir" and not path.endswith("/"):
