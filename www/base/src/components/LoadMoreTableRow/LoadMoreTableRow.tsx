@@ -15,18 +15,20 @@
   Copyright Buildbot Team Members
 */
 
-import {Button} from "react-bootstrap";
+import {Button} from 'react-bootstrap';
 
 type LoadMoreTableRowProps = {
   onLoadMore: () => void;
-  colSpan: number
-}
+  colSpan: number;
+};
 
 export const LoadMoreTableRow = ({onLoadMore, colSpan}: LoadMoreTableRowProps) => {
   return (
     <tr key={'load-more'}>
       <td colSpan={colSpan}>
-        <Button variant="outline-secondary" onClick={onLoadMore}>Load more</Button>
+        <Button variant="outline-secondary" onClick={onLoadMore}>
+          Load more
+        </Button>
       </td>
     </tr>
   );

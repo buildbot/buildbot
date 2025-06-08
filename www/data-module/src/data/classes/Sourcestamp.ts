@@ -5,24 +5,24 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
 
 export class Sourcestamp extends BaseClass {
   @observable ssid!: number;
-  @observable branch!: string|null;
+  @observable branch!: string | null;
   @observable codebase!: string;
   @observable created_at!: number;
-  @observable patch!: string|null; // TODO
+  @observable patch!: string | null; // TODO
   @observable project!: string;
   @observable repository!: string;
-  @observable revision!: string|null;
+  @observable revision!: string | null;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "sourcestamps", String(object.ssid));
+    super(accessor, 'sourcestamps', String(object.ssid));
     this.update(object);
     makeObservable(this);
   }
@@ -52,13 +52,13 @@ export class Sourcestamp extends BaseClass {
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get<Sourcestamp>("sourcestamps", query, sourcestampDescriptor);
+    return accessor.get<Sourcestamp>('sourcestamps', query, sourcestampDescriptor);
   }
 }
 
 export class SourcestampDescriptor implements IDataDescriptor<Sourcestamp> {
-  restArrayField = "sourcestamps";
-  fieldId: string = "ssid";
+  restArrayField = 'sourcestamps';
+  fieldId: string = 'ssid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Sourcestamp(accessor, object);

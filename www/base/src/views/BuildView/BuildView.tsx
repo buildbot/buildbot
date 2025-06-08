@@ -16,12 +16,12 @@
 */
 
 import './BuildView.scss';
-import {observer} from "mobx-react";
-import {FaSpinner} from "react-icons/fa";
-import {AlertNotification} from "../../components/AlertNotification/AlertNotification";
-import {useEffect, useState} from "react";
-import {Link, NavigateFunction, useNavigate, useParams} from "react-router-dom";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
+import {observer} from 'mobx-react';
+import {FaSpinner} from 'react-icons/fa';
+import {AlertNotification} from '../../components/AlertNotification/AlertNotification';
+import {useEffect, useState} from 'react';
+import {Link, NavigateFunction, useNavigate, useParams} from 'react-router-dom';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
 import {
   Build,
   Buildrequest,
@@ -42,8 +42,8 @@ import {
   useDataApiDynamicQuery,
   useDataApiQuery,
   useDataApiSingleElementQuery,
-} from "buildbot-data-js";
-import {computed} from "mobx";
+} from 'buildbot-data-js';
+import {computed} from 'mobx';
 import {
   BadgeRound,
   ChangeUserAvatar,
@@ -55,20 +55,22 @@ import {
   useTopbarItems,
   useTopbarActions,
   useLoadMoreItemsState,
-} from "buildbot-ui";
-import {PropertiesTable} from "../../components/PropertiesTable/PropertiesTable";
-import {ChangesTable} from "../../components/ChangesTable/ChangesTable";
-import {BuildSummary} from "../../components/BuildSummary/BuildSummary";
-import {Tab, Table, Tabs} from "react-bootstrap";
-import {buildTopbarItemsForBuilder} from "../../util/TopbarUtils";
-import {BuildViewDebugTab} from "./BuildViewDebugTab";
+} from 'buildbot-ui';
+import {PropertiesTable} from '../../components/PropertiesTable/PropertiesTable';
+import {ChangesTable} from '../../components/ChangesTable/ChangesTable';
+import {BuildSummary} from '../../components/BuildSummary/BuildSummary';
+import {Tab, Table, Tabs} from 'react-bootstrap';
+import {buildTopbarItemsForBuilder} from '../../util/TopbarUtils';
+import {BuildViewDebugTab} from './BuildViewDebugTab';
 import {LoadingSpan} from '../../components/LoadingSpan/LoadingSpan';
 
 const buildTopbarActions = (
   build: Build | null,
-  isRebuilding: boolean, rebuiltBuildRequest: Buildrequest | null,
+  isRebuilding: boolean,
+  rebuiltBuildRequest: Buildrequest | null,
   isStopping: boolean,
-  doRebuild: () => void, doStop: () => void,
+  doRebuild: () => void,
+  doStop: () => void,
   navigate: NavigateFunction,
 ) => {
   const actions: TopbarAction[] = [];
@@ -78,50 +80,55 @@ const buildTopbarActions = (
 
   if (build.complete) {
     if (rebuiltBuildRequest !== null) {
-      const caption = rebuiltBuildRequest.complete ? "Rebuilt" : (rebuiltBuildRequest.claimed ? "Rebuilding..." : "Rebuild pending");
+      const caption = rebuiltBuildRequest.complete
+        ? 'Rebuilt'
+        : rebuiltBuildRequest.claimed
+          ? 'Rebuilding...'
+          : 'Rebuild pending';
       actions.push({
         caption: caption,
-        icon: (rebuiltBuildRequest.complete ? undefined : <FaSpinner />),
+        icon: rebuiltBuildRequest.complete ? undefined : <FaSpinner />,
         action: () => {
           navigate(`/buildrequests/${rebuiltBuildRequest.id}?redirect_to_build=true`);
-        }
-      })
-    }
-    else if (isRebuilding) {
+        },
+      });
+    } else if (isRebuilding) {
       actions.push({
-        caption: "Rebuilding...",
+        caption: 'Rebuilding...',
         icon: <FaSpinner />,
         // do nothing, wait for 'rebuiltBuildRequest'
-        action: () => { },
+        action: () => {},
       });
     } else {
       actions.push({
-        caption: "Rebuild",
-        action: doRebuild
+        caption: 'Rebuild',
+        action: doRebuild,
       });
     }
   } else {
     if (isStopping) {
       actions.push({
-        caption: "Stopping...",
-        icon: <FaSpinner/>,
-        action: doStop
+        caption: 'Stopping...',
+        icon: <FaSpinner />,
+        action: doStop,
       });
     } else {
       actions.push({
-        caption: "Stop",
-        action: doStop
+        caption: 'Stop',
+        action: doStop,
       });
     }
   }
   return actions;
-}
+};
 
-const getResponsibleUsers = (propertiesQuery: DataPropertiesCollection,
-                             changesAuthors: Set<string>) => {
+const getResponsibleUsers = (
+  propertiesQuery: DataPropertiesCollection,
+  changesAuthors: Set<string>,
+) => {
   const responsibleUsers: {[name: string]: string | null} = {};
-  if (getPropertyValueOrDefault(propertiesQuery.properties, "scheduler", "") === "force") {
-    const owner = getPropertyValueOrDefault(propertiesQuery.properties, "owner", "");
+  if (getPropertyValueOrDefault(propertiesQuery.properties, 'scheduler', '') === 'force') {
+    const owner = getPropertyValueOrDefault(propertiesQuery.properties, 'owner', '');
     if (owner.match(/^.+<.+@.+\..+>.*$/)) {
       const splitResult = owner.split(new RegExp('<|>'));
       if (splitResult.length === 2) {
@@ -140,67 +147,68 @@ const getResponsibleUsers = (propertiesQuery: DataPropertiesCollection,
   }
 
   return responsibleUsers;
-}
+};
 
 type TabWidgetProps = {
   build: Build | null;
-}
+};
 
 const ChangesTabWidget = ({build}: TabWidgetProps) => {
-  const initialChangesFetchLimit = buildbotGetSettings().getIntegerSetting("Changes.changesFetchLimit");
+  const initialChangesFetchLimit = buildbotGetSettings().getIntegerSetting(
+    'Changes.changesFetchLimit',
+  );
   const [changesFetchLimit, onLoadMoreChanges] = useLoadMoreItemsState(
-    initialChangesFetchLimit, initialChangesFetchLimit
+    initialChangesFetchLimit,
+    initialChangesFetchLimit,
   );
 
-  const changesQuery = useDataApiSingleElementQuery(
-    build, [changesFetchLimit],
-    b => b.getChanges({query: {limit: changesFetchLimit}})
+  const changesQuery = useDataApiSingleElementQuery(build, [changesFetchLimit], (b) =>
+    b.getChanges({query: {limit: changesFetchLimit}}),
   );
   if (!changesQuery.isResolved()) {
-    return <LoadingSpan />
+    return <LoadingSpan />;
   }
 
-  return <ChangesTable
-    changes={changesQuery}
-    fetchLimit={changesFetchLimit} onLoadMore={onLoadMoreChanges}
-  />
-}
+  return (
+    <ChangesTable
+      changes={changesQuery}
+      fetchLimit={changesFetchLimit}
+      onLoadMore={onLoadMoreChanges}
+    />
+  );
+};
 
 type ResponsibleUsersTabWidgetProps = {
   propertiesQuery: DataPropertiesCollection;
 } & TabWidgetProps;
 
 const ResponsibleUsersTabWidget = ({build, propertiesQuery}: ResponsibleUsersTabWidgetProps) => {
-  const changesQuery = useDataApiSingleElementQuery(
-    build, [],
-    b => b.getChanges({subscribe: false, query: {field: 'author'}})
+  const changesQuery = useDataApiSingleElementQuery(build, [], (b) =>
+    b.getChanges({subscribe: false, query: {field: 'author'}}),
   );
 
   if (!propertiesQuery.isResolved() || !changesQuery.isResolved()) {
-    return <LoadingSpan />
+    return <LoadingSpan />;
   }
 
-  const responsibleUsers = computed(() => getResponsibleUsers(
-    propertiesQuery,
-    new Set(changesQuery.array.map(c => c.author))
-  )).get();
+  const responsibleUsers = computed(() =>
+    getResponsibleUsers(propertiesQuery, new Set(changesQuery.array.map((c) => c.author))),
+  ).get();
 
   return (
     <ul className="list-group">
-      {
-        Object.entries(responsibleUsers).map(([author, email], index) => (
-          <li key={index} className="list-group-item">
-            <ChangeUserAvatar name={author} email={email} showName={true}/>
-          </li>
-        ))
-      }
+      {Object.entries(responsibleUsers).map(([author, email], index) => (
+        <li key={index} className="list-group-item">
+          <ChangeUserAvatar name={author} email={email} showName={true} />
+        </li>
+      ))}
     </ul>
   );
-}
+};
 
 const BuildView = observer(() => {
-  const builderid = useParams<"builderid">().builderid;
-  const buildnumber = Number.parseInt(useParams<"buildnumber">().buildnumber ?? "");
+  const builderid = useParams<'builderid'>().builderid;
+  const buildnumber = Number.parseInt(useParams<'buildnumber'>().buildnumber ?? '');
   const navigate = useNavigate();
 
   const accessor = useDataAccessor([builderid, buildnumber]);
@@ -214,77 +222,88 @@ const BuildView = observer(() => {
   // note that this registers to the updates for all the builds for that builder
   // need to see how that scales
   const buildsQuery = useDataApiQuery(() =>
-    buildersQuery.getRelated(builder => Build.getAll(accessor, {query: {
-        builderid: builder.builderid,
-        number__eq: [buildnumber - 1, buildnumber, buildnumber + 1]}
-    }
-  )));
+    buildersQuery.getRelated((builder) =>
+      Build.getAll(accessor, {
+        query: {
+          builderid: builder.builderid,
+          number__eq: [buildnumber - 1, buildnumber, buildnumber + 1],
+        },
+      }),
+    ),
+  );
 
-  const buildsArray = buildsQuery.getParentCollectionOrEmpty(builder?.id ?? "").array;
-  const prevBuild = findOrNull(buildsArray, b => b.number === buildnumber - 1);
-  const build = findOrNull(buildsArray, b => b.number === buildnumber);
-  const nextBuild = findOrNull(buildsArray, b => b.number === buildnumber + 1);
+  const buildsArray = buildsQuery.getParentCollectionOrEmpty(builder?.id ?? '').array;
+  const prevBuild = findOrNull(buildsArray, (b) => b.number === buildnumber - 1);
+  const build = findOrNull(buildsArray, (b) => b.number === buildnumber);
+  const nextBuild = findOrNull(buildsArray, (b) => b.number === buildnumber + 1);
 
-  const buildrequestsQuery = useDataApiSingleElementQuery(build, [],
-    b => b.buildrequestid === null
+  const buildrequestsQuery = useDataApiSingleElementQuery(build, [], (b) =>
+    b.buildrequestid === null
       ? new DataCollection<Buildrequest>()
-      : Buildrequest.getAll(accessor, {id: b.buildrequestid.toString()}));
+      : Buildrequest.getAll(accessor, {id: b.buildrequestid.toString()}),
+  );
 
-  const buildsetsQuery = useDataApiQuery(() => buildrequestsQuery.getRelated(
-    br => Buildset.getAll(accessor, {id: br.buildsetid.toString()})));
-  const parentBuildQuery = useDataApiQuery(() => buildsetsQuery.getRelated(
-    bs => bs.parent_buildid === null
-      ? new DataCollection<Build>()
-      : Build.getAll(accessor, {id: bs.parent_buildid.toString()})));
-  const propertiesQuery = useDataApiDynamicQuery([build === null],
-    () => build === null ? new DataPropertiesCollection() : build.getProperties());
+  const buildsetsQuery = useDataApiQuery(() =>
+    buildrequestsQuery.getRelated((br) =>
+      Buildset.getAll(accessor, {id: br.buildsetid.toString()}),
+    ),
+  );
+  const parentBuildQuery = useDataApiQuery(() =>
+    buildsetsQuery.getRelated((bs) =>
+      bs.parent_buildid === null
+        ? new DataCollection<Build>()
+        : Build.getAll(accessor, {id: bs.parent_buildid.toString()}),
+    ),
+  );
+  const propertiesQuery = useDataApiDynamicQuery([build === null], () =>
+    build === null ? new DataPropertiesCollection() : build.getProperties(),
+  );
 
-  const workersQuery = useDataApiSingleElementQuery(build, [],
-    b => Worker.getAll(accessor, {id: b.workerid.toString()}));
+  const workersQuery = useDataApiSingleElementQuery(build, [], (b) =>
+    Worker.getAll(accessor, {id: b.workerid.toString()}),
+  );
 
-  const projectsQuery = useDataApiQuery(() => buildersQuery.getRelated(builder => {
-    return builder.projectid === null
-      ? new DataCollection<Project>()
-      : Project.getAll(accessor, {id: builder.projectid.toString()})
-  }));
+  const projectsQuery = useDataApiQuery(() =>
+    buildersQuery.getRelated((builder) => {
+      return builder.projectid === null
+        ? new DataCollection<Project>()
+        : Project.getAll(accessor, {id: builder.projectid.toString()});
+    }),
+  );
 
   const buildset = buildsetsQuery.getNthOrNull(0);
 
   // Get rebuilt Build if it exists
-  const rebuiltBuildsetQuery = useDataApiDynamicQuery(
-    [buildset ?? build],
-    () => {
-      const rebuilt_buildid = buildset?.rebuilt_buildid ?? build?.buildid;
-      if (rebuilt_buildid === undefined) {
-        return new DataCollection<Buildset>();
-      }
-      return Buildset.getAll(
-      accessor,
-        {
-          query: {
-            rebuilt_buildid: rebuilt_buildid,
-            // don't query the same buildset, use gt as we only want newests
-            bsid__gt: buildset !== null ? buildset.bsid : null,
-            // only get the most recent one
-            // NOTE: this will navigate straight to the newest rebuild
-            // we can flip the 'order' here to go to the first rebuild
-            limit: 1, order: '-bsid',
-          }
-        }
-      );
+  const rebuiltBuildsetQuery = useDataApiDynamicQuery([buildset ?? build], () => {
+    const rebuilt_buildid = buildset?.rebuilt_buildid ?? build?.buildid;
+    if (rebuilt_buildid === undefined) {
+      return new DataCollection<Buildset>();
     }
-  );
+    return Buildset.getAll(accessor, {
+      query: {
+        rebuilt_buildid: rebuilt_buildid,
+        // don't query the same buildset, use gt as we only want newests
+        bsid__gt: buildset !== null ? buildset.bsid : null,
+        // only get the most recent one
+        // NOTE: this will navigate straight to the newest rebuild
+        // we can flip the 'order' here to go to the first rebuild
+        limit: 1,
+        order: '-bsid',
+      },
+    });
+  });
   const rebuiltBuildRequestQuery = useDataApiSingleElementQuery(
     rebuiltBuildsetQuery.getNthOrNull(0),
     [],
-    (bs: Buildset) => Buildrequest.getAll(
-      accessor, {
-      query: {
-        buildsetid: bs.bsid,
-        // newest only
-        limit: 1, order: '-buildsetid',
-      }
-    })
+    (bs: Buildset) =>
+      Buildrequest.getAll(accessor, {
+        query: {
+          buildsetid: bs.bsid,
+          // newest only
+          limit: 1,
+          order: '-buildsetid',
+        },
+      }),
   );
 
   const buildrequest = buildrequestsQuery.getNthOrNull(0);
@@ -293,7 +312,8 @@ const BuildView = observer(() => {
   const project = projectsQuery.getNthOrNull(0);
   const rebuiltBuildRequest = rebuiltBuildRequestQuery.getNthOrNull(0);
 
-  const shouldNavigateToBuilder = buildersQuery.isResolved() && buildsQuery.isResolved() && build === null;
+  const shouldNavigateToBuilder =
+    buildersQuery.isResolved() && buildsQuery.isResolved() && build === null;
   useEffect(() => {
     if (shouldNavigateToBuilder) {
       navigate(`/builders/${builderid}`);
@@ -310,53 +330,75 @@ const BuildView = observer(() => {
   const [isRebuilding, setIsRebuilding] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const doRebuild = function() {
+  const doRebuild = function () {
     setIsRebuilding(true);
 
-    build!.control('rebuild').then((res) => {
-      const brid = Object.values(res.result[1])[0];
-      navigate(`/buildrequests/${brid}?redirect_to_build=true`);
-    }, (reason) => {
-      setIsRebuilding(false);
-      setErrorMsg(`Cannot rebuild: ${reason.error.message}`);
-    });
+    build!.control('rebuild').then(
+      (res) => {
+        const brid = Object.values(res.result[1])[0];
+        navigate(`/buildrequests/${brid}?redirect_to_build=true`);
+      },
+      (reason) => {
+        setIsRebuilding(false);
+        setErrorMsg(`Cannot rebuild: ${reason.error.message}`);
+      },
+    );
   };
 
-  const doStop = function() {
+  const doStop = function () {
     setIsStopping(true);
 
-    build!.control('stop').then(() => {}, (reason) => {
-      setIsStopping(false);
-      setErrorMsg(`Cannot Stop: ${reason.error.message}`);
-    });
+    build!.control('stop').then(
+      () => {},
+      (reason) => {
+        setIsStopping(false);
+        setErrorMsg(`Cannot Stop: ${reason.error.message}`);
+      },
+    );
   };
 
-  useTopbarItems(buildTopbarItemsForBuilder(builder, project, [
-    {caption: buildnumber.toString(), route: `/builders/${builderid}/builds/${buildnumber}`}
-  ]));
+  useTopbarItems(
+    buildTopbarItemsForBuilder(builder, project, [
+      {
+        caption: buildnumber.toString(),
+        route: `/builders/${builderid}/builds/${buildnumber}`,
+      },
+    ]),
+  );
 
-  const actions = buildTopbarActions(build, isRebuilding, rebuiltBuildRequest, isStopping, doRebuild, doStop, navigate);
+  const actions = buildTopbarActions(
+    build,
+    isRebuilding,
+    rebuiltBuildRequest,
+    isStopping,
+    doRebuild,
+    doStop,
+    navigate,
+  );
 
   useTopbarActions(actions);
   useFavIcon(getBuildOrStepResults(build, UNKNOWN));
 
-  const renderPager = (build: Build|null) => {
+  const renderPager = (build: Build | null) => {
     const renderPrevLink = () => {
       if (buildnumber > 1 && prevBuild !== null && build !== null) {
         return (
-          <Link to={`/builders/${builderid}/builds/${prevBuild.number}`}
-                className="bb-build-view-nav-button">
+          <Link
+            to={`/builders/${builderid}/builds/${prevBuild.number}`}
+            className="bb-build-view-nav-button"
+          >
             <BadgeRound className={results2class(prevBuild, 'pulse')}>←</BadgeRound>
             <span className="nomobile">&nbsp;Previous</span>
           </Link>
         );
       }
       return (
-        <span className="bb-build-view-nav-button">&larr;
+        <span className="bb-build-view-nav-button">
+          &larr;
           <span className="nomobile">&nbsp;Previous</span>
         </span>
       );
-    }
+    };
 
     const renderCompleteTime = () => {
       if (build === null || !build.complete) {
@@ -367,17 +409,19 @@ const BuildView = observer(() => {
           Finished {durationFromNowFormat(build.complete_at!, now)}
         </li>
       );
-    }
+    };
 
     const renderNextLink = () => {
       if (!lastBuild && nextBuild !== null) {
         return (
-          <Link to={`/builders/${builderid}/builds/${nextBuild.number}`}
-                className="bb-build-view-nav-button">
+          <Link
+            to={`/builders/${builderid}/builds/${nextBuild.number}`}
+            className="bb-build-view-nav-button"
+          >
             <span className="nomobile">Next&nbsp;</span>
             <BadgeRound className={results2class(nextBuild, 'pulse')}>→</BadgeRound>
           </Link>
-        )
+        );
       }
 
       return (
@@ -385,23 +429,21 @@ const BuildView = observer(() => {
           <span className="nomobile">Next&nbsp;</span>
           <span>&rarr;</span>
         </span>
-      )
-    }
+      );
+    };
 
     return (
       <ul className="bb-build-view-pager">
-        <li className={"previous " + ((build === null || build.number === 1) ? " disabled" : "")}>
+        <li className={'previous ' + (build === null || build.number === 1 ? ' disabled' : '')}>
           {renderPrevLink()}
         </li>
         {renderCompleteTime()}
-        <li className={"next" + (lastBuild ? " disabled" : "")}>
-          {renderNextLink()}
-        </li>
+        <li className={'next' + (lastBuild ? ' disabled' : '')}>{renderNextLink()}</li>
       </ul>
     );
-  }
+  };
 
-  const workerName = worker === null ? "(loading ...)" : worker.name;
+  const workerName = worker === null ? '(loading ...)' : worker.name;
   const renderWorkerInfo = () => {
     if (worker === null) {
       return <></>;
@@ -413,24 +455,27 @@ const BuildView = observer(() => {
         <td className="text-right">{JSON.stringify(value)}</td>
       </tr>
     ));
-  }
+  };
 
   return (
     <div className="container bb-build-view">
-      <AlertNotification text={errorMsg}/>
-      <nav>
-        {renderPager(build)}
-      </nav>
+      <AlertNotification text={errorMsg} />
+      <nav>{renderPager(build)}</nav>
       <Tabs mountOnEnter={true}>
         <Tab eventKey="build-steps" title="Build steps">
-          { build !== null
-            ? <BuildSummary build={build} condensed={false} parentBuild={parentBuild}
-                            parentRelationship={buildset === null ? null : buildset.parent_relationship}/>
-            : <></>
-          }
+          {build !== null ? (
+            <BuildSummary
+              build={build}
+              condensed={false}
+              parentBuild={parentBuild}
+              parentRelationship={buildset === null ? null : buildset.parent_relationship}
+            />
+          ) : (
+            <></>
+          )}
         </Tab>
         <Tab eventKey="properties" title="Build Properties">
-          <PropertiesTable properties={propertiesQuery.properties}/>
+          <PropertiesTable properties={propertiesQuery.properties} />
         </Tab>
         <Tab eventKey="worker" title={`Worker: ${workerName}`}>
           <Table hover striped size="sm">
@@ -450,7 +495,7 @@ const BuildView = observer(() => {
           <ChangesTabWidget build={build} />
         </Tab>
         <Tab eventKey="debug" title="Debug">
-          <BuildViewDebugTab build={build} buildrequest={buildrequest} buildset={buildset}/>
+          <BuildViewDebugTab build={build} buildrequest={buildrequest} buildset={buildset} />
         </Tab>
       </Tabs>
     </div>
@@ -459,25 +504,27 @@ const BuildView = observer(() => {
 
 buildbotSetupPlugin((reg) => {
   reg.registerRoute({
-    route: "builders/:builderid/builds/:buildnumber",
+    route: 'builders/:builderid/builds/:buildnumber',
     group: null,
-    element: () => <BuildView/>,
+    element: () => <BuildView />,
   });
 
   reg.registerSettingGroup({
-    name:'Build',
+    name: 'Build',
     caption: 'Build page related settings',
-    items:[{
-      type: 'integer',
-      name: 'trigger_step_page_size',
-      caption: 'Number of builds to show per page in trigger step',
-      defaultValue: 20
-    }, {
-      type: 'boolean',
-      name: 'show_urls',
-      caption: 'Always show URLs in step',
-      defaultValue: true
-    }
-    ]
+    items: [
+      {
+        type: 'integer',
+        name: 'trigger_step_page_size',
+        caption: 'Number of builds to show per page in trigger step',
+        defaultValue: 20,
+      },
+      {
+        type: 'boolean',
+        name: 'show_urls',
+        caption: 'Always show URLs in step',
+        defaultValue: true,
+      },
+    ],
   });
 });

@@ -16,7 +16,5 @@
 */
 
 export const LoadingSpan = () => {
-  return (
-    <span data-bb-test-id="loading">Loading...</span>
-  );
-}
+  return <span data-bb-test-id="loading">Loading...</span>;
+};

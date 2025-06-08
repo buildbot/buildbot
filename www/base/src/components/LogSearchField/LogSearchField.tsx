@@ -15,10 +15,10 @@
   Copyright Buildbot Team Members
 */
 
-import './LogSearchField.scss'
-import {Ref, useState} from "react";
-import {FaChevronDown, FaChevronUp, FaSearch} from "react-icons/fa";
-import {VscCaseSensitive, VscRegex} from "react-icons/vsc";
+import './LogSearchField.scss';
+import {Ref, useState} from 'react';
+import {FaChevronDown, FaChevronUp, FaSearch} from 'react-icons/fa';
+import {VscCaseSensitive, VscRegex} from 'react-icons/vsc';
 
 export type LogSearchButtonProps = {
   currentResult: number;
@@ -29,9 +29,14 @@ export type LogSearchButtonProps = {
   inputRef: Ref<HTMLInputElement>;
 };
 
-export const LogSearchField = ({currentResult, totalResults,
-                                onSearchInputChanged, onPrevClicked, onNextClicked,
-                                inputRef}: LogSearchButtonProps) => {
+export const LogSearchField = ({
+  currentResult,
+  totalResults,
+  onSearchInputChanged,
+  onPrevClicked,
+  onNextClicked,
+  inputRef,
+}: LogSearchButtonProps) => {
   const [searchText, setSearchText] = useState<string>('');
   const [hasFocus, setHasFocus] = useState<boolean>(false);
   const [isCaseSensitive, setIsCaseSensitive] = useState<boolean>(true);
@@ -46,13 +51,13 @@ export const LogSearchField = ({currentResult, totalResults,
     const newValue = !isCaseSensitive;
     setIsCaseSensitive(newValue);
     onSearchInputChanged(searchText, newValue, useRegex);
-  }
+  };
 
   const onUseRegexToggled = () => {
     const newValue = !useRegex;
     setUseRegex(newValue);
     onSearchInputChanged(searchText, isCaseSensitive, newValue);
-  }
+  };
 
   const optionButtonClass = (optionName: string, isToggled: boolean) => {
     return [
@@ -65,12 +70,11 @@ export const LogSearchField = ({currentResult, totalResults,
     <>
       <button
         className={optionButtonClass('case', isCaseSensitive)}
-        onClick={onCaseInsensitiveToggled}>
+        onClick={onCaseInsensitiveToggled}
+      >
         <VscCaseSensitive />
       </button>
-      <button
-        className={optionButtonClass('regex', useRegex)}
-        onClick={onUseRegexToggled}>
+      <button className={optionButtonClass('regex', useRegex)} onClick={onUseRegexToggled}>
         <VscRegex />
       </button>
     </>
@@ -78,36 +82,43 @@ export const LogSearchField = ({currentResult, totalResults,
 
   const renderSearchNav = () => (
     <div className="bb-log-search-field-nav">
-      <span className="bb-log-search-field-result-count">{currentResult}/{totalResults}</span>
+      <span className="bb-log-search-field-result-count">
+        {currentResult}/{totalResults}
+      </span>
       <button className="bb-log-search-field-nav-button" onClick={onPrevClicked}>
-        <FaChevronUp/>
+        <FaChevronUp />
       </button>
       <button className="bb-log-search-field-nav-button" onClick={onNextClicked}>
-        <FaChevronDown/>
+        <FaChevronDown />
       </button>
     </div>
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (hasFocus && e.key === "Enter") {
+    if (hasFocus && e.key === 'Enter') {
       e.preventDefault();
       onNextClicked();
     }
-  }
+  };
 
-  const shouldRenderOptionals = (hasFocus || searchText !== '');
+  const shouldRenderOptionals = hasFocus || searchText !== '';
 
   return (
     <form role="search" className="bb-log-search-field">
-      <FaSearch className="bb-log-search-field-icon"/>
+      <FaSearch className="bb-log-search-field-icon" />
       {shouldRenderOptionals ? renderOptions() : <></>}
-      <input className="bb-log-search-field-text" type="text" value={searchText}
-             ref={inputRef}
-             onFocus={() => setHasFocus(true)} onBlur={() => setHasFocus(false)}
-             onChange={e => onSearchTextChanged(e.target.value)}
-             onKeyDown={e => onKeyDown(e)}
-             placeholder="Search log"/>
+      <input
+        className="bb-log-search-field-text"
+        type="text"
+        value={searchText}
+        ref={inputRef}
+        onFocus={() => setHasFocus(true)}
+        onBlur={() => setHasFocus(false)}
+        onChange={(e) => onSearchTextChanged(e.target.value)}
+        onKeyDown={(e) => onKeyDown(e)}
+        placeholder="Search log"
+      />
       {shouldRenderOptionals ? renderSearchNav() : <></>}
     </form>
   );
-}
+};

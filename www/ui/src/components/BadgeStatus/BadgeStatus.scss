@@ -11,7 +11,8 @@
   vertical-align: baseline;
   border-radius: 0.25em;
 
-  &.results_SUCCESS, &.worker_CONNECTED {
+  &.results_SUCCESS,
+  &.worker_CONNECTED {
     color: $bb-color-results-success;
     background-color: $bb-color-background-results-success;
     border-color: $bb-color-border-results-success;
@@ -23,7 +24,8 @@
     border-color: $bb-color-border-results-warnings;
   }
 
-  &.results_FAILURE, &.worker_DISCONNECTED {
+  &.results_FAILURE,
+  &.worker_DISCONNECTED {
     color: $bb-color-results-failure;
     background-color: $bb-color-background-results-failure;
     border-color: $bb-color-border-results-failure;

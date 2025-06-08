@@ -15,8 +15,8 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
+import {observer} from 'mobx-react';
+import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
 import {
   ForceSchedulerFieldBase,
   ForceSchedulerFieldBoolean,
@@ -25,43 +25,47 @@ import {
   ForceSchedulerFieldNested,
   ForceSchedulerFieldString,
   ForceSchedulerFieldText,
-  ForceSchedulerFieldUserName
-} from "buildbot-data-js";
-import {FieldNested} from "./FieldNested";
-import {FieldString} from "./FieldString";
-import {FieldText} from "./FieldText";
-import {FieldInt} from "./FieldInt";
-import {FieldBoolean} from "./FieldBoolean";
-import {FieldUserName} from "./FieldUserName";
-import {FieldChoiceString} from "./FieldChoiceString";
+  ForceSchedulerFieldUserName,
+} from 'buildbot-data-js';
+import {FieldNested} from './FieldNested';
+import {FieldString} from './FieldString';
+import {FieldText} from './FieldText';
+import {FieldInt} from './FieldInt';
+import {FieldBoolean} from './FieldBoolean';
+import {FieldUserName} from './FieldUserName';
+import {FieldChoiceString} from './FieldChoiceString';
 
 type FieldAnyProps = {
   field: ForceSchedulerFieldBase;
   fieldsState: ForceBuildModalFieldsState;
-}
+};
 
 export const FieldAny = observer(({field, fieldsState}: FieldAnyProps) => {
   if (field.type === 'text') {
-    return <FieldString field={field as ForceSchedulerFieldString} fieldsState={fieldsState}/>
+    return <FieldString field={field as ForceSchedulerFieldString} fieldsState={fieldsState} />;
   }
   if (field.type === 'textarea') {
-    return <FieldText field={field as ForceSchedulerFieldText} fieldsState={fieldsState}/>
+    return <FieldText field={field as ForceSchedulerFieldText} fieldsState={fieldsState} />;
   }
   if (field.type === 'int') {
-    return <FieldInt field={field as ForceSchedulerFieldInt} fieldsState={fieldsState}/>
+    return <FieldInt field={field as ForceSchedulerFieldInt} fieldsState={fieldsState} />;
   }
   if (field.type === 'bool') {
-    return <FieldBoolean field={field as ForceSchedulerFieldBoolean} fieldsState={fieldsState}/>
+    return <FieldBoolean field={field as ForceSchedulerFieldBoolean} fieldsState={fieldsState} />;
   }
   if (field.type === 'username') {
-    return <FieldUserName field={field as ForceSchedulerFieldUserName} fieldsState={fieldsState}/>
+    return <FieldUserName field={field as ForceSchedulerFieldUserName} fieldsState={fieldsState} />;
   }
   if (field.type === 'list') {
-    return <FieldChoiceString field={field as ForceSchedulerFieldChoiceString}
-                              fieldsState={fieldsState}/>
+    return (
+      <FieldChoiceString
+        field={field as ForceSchedulerFieldChoiceString}
+        fieldsState={fieldsState}
+      />
+    );
   }
   if (field.type === 'nested') {
-    return <FieldNested field={field as ForceSchedulerFieldNested} fieldsState={fieldsState}/>
+    return <FieldNested field={field as ForceSchedulerFieldNested} fieldsState={fieldsState} />;
   }
-  return (<></>);
+  return <></>;
 });

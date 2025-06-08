@@ -15,14 +15,18 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
+import {describe, expect, it} from 'vitest';
 import {render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { FieldBoolean } from "./FieldBoolean";
-import { ForceSchedulerFieldBoolean } from 'buildbot-data-js';
-import { ForceBuildModalFieldsState } from '../ForceBuildModalFieldsState';
+import {FieldBoolean} from './FieldBoolean';
+import {ForceSchedulerFieldBoolean} from 'buildbot-data-js';
+import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
 
-async function assertRenderToSnapshot(defaultValue: boolean, stateValue?: boolean, updateValue: boolean = false) {
+async function assertRenderToSnapshot(
+  defaultValue: boolean,
+  stateValue?: boolean,
+  updateValue: boolean = false,
+) {
   const field: ForceSchedulerFieldBoolean = {
     name: 'dummy',
     fullName: 'fullDummy',
@@ -36,16 +40,14 @@ async function assertRenderToSnapshot(defaultValue: boolean, stateValue?: boolea
     maxsize: null,
     autopopulate: null,
     tooltip: 'dummy',
-  }
+  };
   const state = new ForceBuildModalFieldsState();
   state.createNewField(field.fullName, field.default);
   if (stateValue !== undefined) {
     state.setValue(field.fullName, stateValue);
   }
 
-  const component = render(
-    <FieldBoolean field={field} fieldsState={state} />
-  );
+  const component = render(<FieldBoolean field={field} fieldsState={state} />);
   expect(component.asFragment()).toMatchSnapshot();
 
   if (updateValue) {

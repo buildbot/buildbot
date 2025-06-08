@@ -16,7 +16,5 @@
 */
 
 export const LoadingDiv = () => {
-  return (
-    <div data-bb-test-id="loading">Loading...</div>
-  );
-}
+  return <div data-bb-test-id="loading">Loading...</div>;
+};

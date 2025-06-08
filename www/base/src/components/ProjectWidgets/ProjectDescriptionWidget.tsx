@@ -15,45 +15,41 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {Card} from "react-bootstrap";
-import {
-  Project,
-  useDataAccessor,
-  useDataApiQuery,
-} from "buildbot-data-js";
-import {TableHeading} from "../TableHeading/TableHeading";
+import {observer} from 'mobx-react';
+import {Card} from 'react-bootstrap';
+import {Project, useDataAccessor, useDataApiQuery} from 'buildbot-data-js';
+import {TableHeading} from '../TableHeading/TableHeading';
 
 export type ProjectDescriptionWidgetProps = {
   projectid: number;
-}
+};
 
 export const ProjectDescriptionWidget = observer(({projectid}: ProjectDescriptionWidgetProps) => {
   const accessor = useDataAccessor([]);
 
-  const projectQuery = useDataApiQuery(() => Project.getAll(accessor, {query: {
-      projectid: projectid
-    }}));
+  const projectQuery = useDataApiQuery(() =>
+    Project.getAll(accessor, {
+      query: {
+        projectid: projectid,
+      },
+    }),
+  );
   const project = projectQuery.getNthOrNull(0);
 
   const renderDescription = (project: Project) => {
     if (project.description_format !== null && project.description_html !== null) {
       return (
-          <div>
-            <div dangerouslySetInnerHTML={{__html: project.description_html}}/>
-          </div>
-      )
-    } else {
-      return (
-          <div>{project.description}</div>
+        <div>
+          <div dangerouslySetInnerHTML={{__html: project.description_html}} />
+        </div>
       );
+    } else {
+      return <div>{project.description}</div>;
     }
   };
 
   if (project !== null && project.description === null) {
-    return (
-      <></>
-    );
+    return <></>;
   }
 
   return (

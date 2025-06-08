@@ -15,21 +15,32 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {Button, Form} from "react-bootstrap";
-import React from "react";
-import {TopbarStore} from "buildbot-ui";
+import {observer} from 'mobx-react';
+import {Button, Form} from 'react-bootstrap';
+import React from 'react';
+import {TopbarStore} from 'buildbot-ui';
 
 type TopbarActionsProps = {
   store: TopbarStore;
-}
+};
 
 export const TopbarActions = observer(({store}: TopbarActionsProps) => {
   const elements = store.actions.map((action, index) => {
     return (
       <React.Fragment key={index}>
-        <Button variant={action.variant ?? "light"} onClick={action.action} title={action.help ?? ""}>
-          {action.icon ?  <>{action.icon}<span>&nbsp;</span></> : <></> }
+        <Button
+          variant={action.variant ?? 'light'}
+          onClick={action.action}
+          title={action.help ?? ''}
+        >
+          {action.icon ? (
+            <>
+              {action.icon}
+              <span>&nbsp;</span>
+            </>
+          ) : (
+            <></>
+          )}
           {action.caption}
         </Button>
         &nbsp;
@@ -37,9 +48,5 @@ export const TopbarActions = observer(({store}: TopbarActionsProps) => {
     );
   });
 
-  return (
-    <Form>
-      {elements}
-    </Form>
-  );
+  return <Form>{elements}</Form>;
 });

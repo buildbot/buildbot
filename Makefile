@@ -32,6 +32,7 @@ WWW_PURE_DEP_PKGS := www/common-config
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_PRETTIER := $(filter-out www/plugin_support www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
@@ -63,16 +64,16 @@ docs-release: docs-towncrier
 docs-release-spelling: docs-towncrier
 	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
 
-frontend_deps: $(VENV_NAME) check_for_yarn
-	$(PIP) install build wheel -r requirements-ci.txt
-	for i in $(WWW_PURE_DEP_PKGS); \
+frontend_yarn_install: check_for_yarn
+	for i in $(WWW_PURE_DEP_PKGS) $(WWW_DEP_PKGS) $(WWW_PKGS); \
 		do (cd $$i; $(YARN) install --pure-lockfile); done
+
+frontend_deps: $(VENV_NAME) frontend_yarn_install check_for_yarn
+	$(PIP) install build wheel -r requirements-ci.txt
 	for i in $(WWW_DEP_PKGS); \
-		do (cd $$i; $(YARN) install --pure-lockfile; $(YARN) run build); done
+		do (cd $$i; $(YARN) run build); done
 
 frontend_tests: frontend_deps check_for_yarn
-	for i in $(WWW_PURE_DEP_PKGS) $(WWW_PKGS); \
-		do (cd $$i; $(YARN) install --pure-lockfile); done
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
 		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test || exit 1) || exit 1; done
 
@@ -99,6 +100,14 @@ hooks:
 	cp common/hooks/* `git rev-parse --git-dir`/hooks
 rmpyc:
 	find master worker \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
+
+prettier: check_for_yarn
+	for subdir in $(WWW_PKGS_FOR_PRETTIER); do \
+		cd $$subdir; \
+		echo "Running prettier in $$subdir"; \
+		$(YARN) run prettier -w src *.ts *.js; \
+		cd - > /dev/null; \
+	done
 
 ruff:
 	ruff format .

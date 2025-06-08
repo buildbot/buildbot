@@ -15,22 +15,22 @@
   Copyright Buildbot Team Members
 */
 
-import {Link} from "react-router-dom";
-import {Worker} from "buildbot-data-js";
-import {BadgeRound} from "../BadgeRound/BadgeRound";
+import {Link} from 'react-router-dom';
+import {Worker} from 'buildbot-data-js';
+import {BadgeRound} from '../BadgeRound/BadgeRound';
 
 const connected2class = (worker: Worker) => {
   if (worker.connected_to.length > 0) {
-    return "worker_CONNECTED";
+    return 'worker_CONNECTED';
   } else {
-    return "worker_DISCONNECTED";
+    return 'worker_DISCONNECTED';
   }
 };
 
 type WorkerBadgeProps = {
   worker: Worker;
   showWorkerName: boolean;
-}
+};
 
 export const WorkerBadge = ({worker, showWorkerName}: WorkerBadgeProps) => {
   const shownWorkerName = () => (
@@ -53,4 +53,4 @@ export const WorkerBadge = ({worker, showWorkerName}: WorkerBadgeProps) => {
       </Link>
     </span>
   );
-}
+};

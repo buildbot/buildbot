@@ -25,6 +25,7 @@ matrix:
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=ruff
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=docs
     - env: PYTHON=3.9 TESTS=mypy
+    - env: PYTHON=3.9 TESTS=prettier
 
     # add js tests in separate job. Start it early because it is quite long
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=1G
@@ -178,6 +179,17 @@ script:
       export PATH=/tmp/bbvenv/bin/:$PATH
       ruff check `git ls-files |grep '.py$'` && \
       ruff format --check `git ls-files |grep '.py$'`
+
+  - title: prettier
+    condition: TESTS == "prettier"
+    cmd:  |
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      make frontend_yarn_install
+      for subdir in www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/data-module www/ui; do \
+        cd $$subdir; \
+        $(YARN) run prettier -w src *.ts *.js --check; \
+        cd - > /dev/null; \
+      done
 
   - title: mypy
     condition: TESTS == "mypy"

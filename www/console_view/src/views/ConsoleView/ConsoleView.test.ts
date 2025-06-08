@@ -15,83 +15,109 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
-import {Builder, IDataAccessor} from "buildbot-data-js";
-import {sortBuildersByTags, TagLineConfig} from "./ConsoleView";
+import {describe, expect, it} from 'vitest';
+import {Builder, IDataAccessor} from 'buildbot-data-js';
+import {sortBuildersByTags, TagLineConfig} from './ConsoleView';
 
 type TestBuilder = {
   builderid: number;
   tags: string[];
-}
+};
 
 function testBuilderToReal(b: TestBuilder) {
   return new Builder(undefined as unknown as IDataAccessor, {
     builderid: b.builderid,
-    description: "desc",
+    description: 'desc',
     masterids: [1],
     name: `name${b.builderid}`,
     tags: b.tags,
   });
 }
 
-describe('ConsoleView', function() {
-  describe('sortBuildersByTags', function() {
+describe('ConsoleView', function () {
+  describe('sortBuildersByTags', function () {
+    function testSortBuildersByTags(
+      builders: TestBuilder[],
+      expectedBuilders: TestBuilder[],
+      expectedTagLines: TagLineConfig[],
+    ) {
+      const [resultBuilders, resultLineConfigs] = sortBuildersByTags(
+        builders.map((b) => testBuilderToReal(b)),
+      );
 
-    function testSortBuildersByTags(builders: TestBuilder[],
-                                    expectedBuilders: TestBuilder[],
-                                    expectedTagLines: TagLineConfig[]) {
-      const [resultBuilders, resultLineConfigs] =
-        sortBuildersByTags(builders.map(b => testBuilderToReal(b)));
-
-      expect(resultBuilders).toStrictEqual(expectedBuilders.map(b => testBuilderToReal(b)));
+      expect(resultBuilders).toStrictEqual(expectedBuilders.map((b) => testBuilderToReal(b)));
       expect(resultLineConfigs).toStrictEqual(expectedTagLines);
     }
 
-    it('empty', function() {
+    it('empty', function () {
       testSortBuildersByTags([], [], []);
     });
 
-    it('identical tag', function() {
-      testSortBuildersByTags([
-        {builderid: 1, tags: ['tag']},
-        {builderid: 2, tags: ['tag']},
-        {builderid: 3, tags: ['tag']}
-      ], [
-        {builderid: 1, tags: ['tag']},
-        {builderid: 2, tags: ['tag']},
-        {builderid: 3, tags: ['tag']}
-      ], []);
+    it('identical tag', function () {
+      testSortBuildersByTags(
+        [
+          {builderid: 1, tags: ['tag']},
+          {builderid: 2, tags: ['tag']},
+          {builderid: 3, tags: ['tag']},
+        ],
+        [
+          {builderid: 1, tags: ['tag']},
+          {builderid: 2, tags: ['tag']},
+          {builderid: 3, tags: ['tag']},
+        ],
+        [],
+      );
     });
 
-    it('two tags', function() {
-      testSortBuildersByTags([
-        {builderid: 1, tags: ['tag']},
-        {builderid: 2, tags: ['tag']},
-        {builderid: 3, tags: ['tag']},
-        {builderid: 4, tags: ['tag2']}
-      ], [
-        {builderid: 1, tags: ['tag']},
-        {builderid: 2, tags: ['tag']},
-        {builderid: 3, tags: ['tag']},
-        {builderid: 4, tags: ['tag2']}
-      ], [[{tag: 'tag', colSpan: 3}, {tag: 'tag2', colSpan: 1}]]);
+    it('two tags', function () {
+      testSortBuildersByTags(
+        [
+          {builderid: 1, tags: ['tag']},
+          {builderid: 2, tags: ['tag']},
+          {builderid: 3, tags: ['tag']},
+          {builderid: 4, tags: ['tag2']},
+        ],
+        [
+          {builderid: 1, tags: ['tag']},
+          {builderid: 2, tags: ['tag']},
+          {builderid: 3, tags: ['tag']},
+          {builderid: 4, tags: ['tag2']},
+        ],
+        [
+          [
+            {tag: 'tag', colSpan: 3},
+            {tag: 'tag2', colSpan: 1},
+          ],
+        ],
+      );
     });
 
-    it('hierarchical', function() {
-      testSortBuildersByTags([
-        {builderid: 1, tags: ['tag10', 'tag21']},
-        {builderid: 2, tags: ['tag10', 'tag21']},
-        {builderid: 3, tags: ['tag10', 'tag22']},
-        {builderid: 4, tags: ['tag11', 'tag22']}
-      ], [
-        {builderid: 1, tags: ['tag10', 'tag21']},
-        {builderid: 2, tags: ['tag10', 'tag21']},
-        {builderid: 3, tags: ['tag10', 'tag22']},
-        {builderid: 4, tags: ['tag11', 'tag22']},
-      ], [
-        [{tag: 'tag10', colSpan: 3}, {tag: 'tag11', colSpan: 1}],
-        [{tag: 'tag21', colSpan: 2}, {tag: 'tag22', colSpan: 1}, {tag: "", colSpan: 1}],
-      ]);
+    it('hierarchical', function () {
+      testSortBuildersByTags(
+        [
+          {builderid: 1, tags: ['tag10', 'tag21']},
+          {builderid: 2, tags: ['tag10', 'tag21']},
+          {builderid: 3, tags: ['tag10', 'tag22']},
+          {builderid: 4, tags: ['tag11', 'tag22']},
+        ],
+        [
+          {builderid: 1, tags: ['tag10', 'tag21']},
+          {builderid: 2, tags: ['tag10', 'tag21']},
+          {builderid: 3, tags: ['tag10', 'tag22']},
+          {builderid: 4, tags: ['tag11', 'tag22']},
+        ],
+        [
+          [
+            {tag: 'tag10', colSpan: 3},
+            {tag: 'tag11', colSpan: 1},
+          ],
+          [
+            {tag: 'tag21', colSpan: 2},
+            {tag: 'tag22', colSpan: 1},
+            {tag: '', colSpan: 1},
+          ],
+        ],
+      );
     });
   });
 });

@@ -1,9 +1,9 @@
-@import "bootstrap/scss/bootstrap";
-@import "animations.scss";
-@import "colors.scss";
-@import "mobile.scss";
-@import "guanlecoja.scss";
-@import "buildbot-ui/style.css";
+@import 'bootstrap/scss/bootstrap';
+@import 'animations.scss';
+@import 'colors.scss';
+@import 'mobile.scss';
+@import 'guanlecoja.scss';
+@import 'buildbot-ui/style.css';
 
 // Dashboards which use SVG to draw contents such as waterfall may require
 //  setting  body height to 100vh. (100% of viewport height)
@@ -24,7 +24,6 @@ body.hundredpercent {
   .navbar-static-top {
     border-radius: 0;
   }
-
 }
 
 /* make the sidebar be on the back of the modals dialog */
@@ -40,12 +39,12 @@ body.hundredpercent {
 }
 
 .breadcrumb > li + li.pull-right:before {
-  content: " ";
+  content: ' ';
   padding: 0 2px;
 }
 
 .clickable {
-  cursor: pointer
+  cursor: pointer;
 }
 
 .no-select {
@@ -89,14 +88,18 @@ img.avatar {
   margin-right: 0.3em;
 }
 
-li.unstyled{
+li.unstyled {
   list-style: none;
 }
-.no-margin{
+.no-margin {
   margin: 0px !important;
 }
-.mouse-over-only  {display: none;}
-span:hover>.mouse-over-only  {display: inline;}
+.mouse-over-only {
+  display: none;
+}
+span:hover > .mouse-over-only {
+  display: inline;
+}
 
 /* flex row will make the row grow automatically given the size of the content
    This will make sure all the inside div will fill all content.
@@ -117,21 +120,22 @@ span:hover>.mouse-over-only  {display: inline;}
   /* Then we define how is distributed the remaining space */
   justify-content: space-around;
   .flex-grow-1 {
-    flex-grow: 1
+    flex-grow: 1;
   }
   .flex-grow-2 {
-    flex-grow: 2
+    flex-grow: 2;
   }
   .flex-grow-3 {
-    flex-grow: 3
+    flex-grow: 3;
   }
   .flex-grow-4 {
-    flex-grow: 4
+    flex-grow: 4;
   }
 }
 
-#root, .modal .modal-dialog {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+#root,
+.modal .modal-dialog {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 20px;
   color: #333333;

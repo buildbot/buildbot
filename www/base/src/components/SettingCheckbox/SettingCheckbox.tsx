@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {buildbotGetSettings} from "buildbot-plugin-support";
+import {buildbotGetSettings} from 'buildbot-plugin-support';
 
 export type SettingCheckboxProps = {
   value: boolean;
@@ -27,14 +27,17 @@ export const SettingCheckbox = ({value, settingSelector, label}: SettingCheckbox
   return (
     <div className="form-group">
       <label className="checkbox-inline">
-        <input type="checkbox" name={label}
-               checked={value}
-               onChange={event => {
-                 buildbotGetSettings().setSetting(settingSelector, event.target.checked);
-                 buildbotGetSettings().save();
-               }}/>
-        {' '}{label}
+        <input
+          type="checkbox"
+          name={label}
+          checked={value}
+          onChange={(event) => {
+            buildbotGetSettings().setSetting(settingSelector, event.target.checked);
+            buildbotGetSettings().save();
+          }}
+        />{' '}
+        {label}
       </label>
     </div>
   );
-}
+};

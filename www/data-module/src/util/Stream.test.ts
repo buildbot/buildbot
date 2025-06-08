@@ -5,8 +5,8 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it, vi} from "vitest";
-import {Stream} from "./Stream";
+import {describe, expect, it, vi} from 'vitest';
+import {Stream} from './Stream';
 
 describe('Stream', () => {
   it('should add the listener to listeners on subscribe call', () => {
@@ -16,7 +16,6 @@ describe('Stream', () => {
     stream.subscribe(() => {});
     expect(stream.listeners.length).toBe(1);
   });
-
 
   it('should return the unsubscribe function on subscribe call', () => {
     const stream = new Stream();
@@ -37,8 +36,12 @@ describe('Stream', () => {
 
     const data = {a: 'A', b: 'B'};
     const listeners = {
-      first(this: void, data: any) { expect(data).toEqual({a: 'A', b: 'B'}); },
-      second(this: void, data: any) { expect(data).toEqual({a: 'A', b: 'B'}); }
+      first(this: void, data: any) {
+        expect(data).toEqual({a: 'A', b: 'B'});
+      },
+      second(this: void, data: any) {
+        expect(data).toEqual({a: 'A', b: 'B'});
+      },
     };
 
     vi.spyOn(listeners, 'first');

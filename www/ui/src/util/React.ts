@@ -15,10 +15,11 @@
   Copyright Buildbot Team Members
 */
 
-import {Dispatch, SetStateAction, useEffect, useState} from "react";
+import {Dispatch, SetStateAction, useEffect, useState} from 'react';
 
 export function useStateWithDefaultIfNotSet<T>(
-    defaultCallback: () => T): [T, Dispatch<SetStateAction<T|null>>] {
+  defaultCallback: () => T,
+): [T, Dispatch<SetStateAction<T | null>>] {
   const [explicitValue, setValue] = useState<T | null>(null);
   const value: T = explicitValue !== null ? explicitValue : defaultCallback();
   return [value, setValue];
@@ -27,18 +28,20 @@ export function useStateWithDefaultIfNotSet<T>(
 // Just like useStateWithDefaultIfNotSet, however the current state is changed whenever a given
 // "parent" state is changed. The current state can otherwise be changed independently
 export function useStateWithParentTrackingWithDefaultIfNotSet<T>(
-    parentValue: T, defaultCallback: () => T): [T, (v: T) => void] {
+  parentValue: T,
+  defaultCallback: () => T,
+): [T, (v: T) => void] {
   const [lastParentValue, setLastParentValue] = useState(parentValue);
   const [explicitValue, setExplicitValue] = useState<T | null>(null);
 
   if (parentValue !== lastParentValue) {
     setLastParentValue(parentValue);
     setExplicitValue(parentValue);
-    return [parentValue, t => setExplicitValue(t)];
+    return [parentValue, (t) => setExplicitValue(t)];
   }
 
   const value: T = explicitValue !== null ? explicitValue : defaultCallback();
-  return [value, t => setExplicitValue(t)];
+  return [value, (t) => setExplicitValue(t)];
 }
 
 function getWindowSize() {
@@ -63,11 +66,14 @@ export function useWindowSize() {
   return size;
 }
 
-export function useLoadMoreItemsState(defaultCount: number, increment: number) : [number, () => void] {
+export function useLoadMoreItemsState(
+  defaultCount: number,
+  increment: number,
+): [number, () => void] {
   const [count, setCount] = useState<number>(defaultCount);
 
   const onLoadMore = () => {
-    setCount(c => c + increment);
-  }
+    setCount((c) => c + increment);
+  };
   return [count, onLoadMore];
 }

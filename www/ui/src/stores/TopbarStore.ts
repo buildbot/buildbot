@@ -15,13 +15,13 @@
   Copyright Buildbot Team Members
 */
 
-import {action, IObservableArray, makeObservable, observable} from "mobx";
-import {ButtonVariant} from "react-bootstrap/types";
+import {action, IObservableArray, makeObservable, observable} from 'mobx';
+import {ButtonVariant} from 'react-bootstrap/types';
 
 export type TopbarItem = {
-  route: string | null,
-  caption: string
-}
+  route: string | null;
+  caption: string;
+};
 
 export type TopbarAction = {
   caption: string;
@@ -29,7 +29,7 @@ export type TopbarAction = {
   help?: string;
   variant?: ButtonVariant;
   action: () => void;
-}
+};
 
 export class TopbarStore {
   items: IObservableArray<TopbarItem> = observable<TopbarItem>([]);

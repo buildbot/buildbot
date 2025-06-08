@@ -30,28 +30,34 @@ const parseFilter = (fieldAndOperator: string, value: any): ValueFilter | null =
 
   const [field, operator] = Array.from(fieldAndOperator.split('__'));
   switch (operator) {
-    case 'ne': return (v: any) => v[field] !== value;
-    case 'lt': return (v: any) => v[field] < value;
-    case 'le': return (v: any) => v[field] <= value;
-    case 'gt': return (v: any) => v[field] > value;
-    case 'ge': return (v: any) => v[field] >= value;
-    default: return (v: any) => {
-      if (v[field] === value) {
-        return true;
-      }
-      if (Array.isArray(v[field]) && Array.from(v[field]).includes(value)) {
-        return true;
-      }
-      if (Array.isArray(value) && value.length === 0) {
-        return true;
-      }
-      if (Array.isArray(value) && Array.from(value).includes(v[field])) {
-        return true;
-      }
-      return false;
-    }
+    case 'ne':
+      return (v: any) => v[field] !== value;
+    case 'lt':
+      return (v: any) => v[field] < value;
+    case 'le':
+      return (v: any) => v[field] <= value;
+    case 'gt':
+      return (v: any) => v[field] > value;
+    case 'ge':
+      return (v: any) => v[field] >= value;
+    default:
+      return (v: any) => {
+        if (v[field] === value) {
+          return true;
+        }
+        if (Array.isArray(v[field]) && Array.from(v[field]).includes(value)) {
+          return true;
+        }
+        if (Array.isArray(value) && value.length === 0) {
+          return true;
+        }
+        if (Array.isArray(value) && Array.from(value).includes(v[field])) {
+          return true;
+        }
+        return false;
+      };
   }
-}
+};
 
 export class DataQuery {
   query: Query;
@@ -132,13 +138,15 @@ export class DataQuery {
         for (const o of Array.from(order)) {
           if (typeof o === 'string') {
             const f = compare(o)(a, b);
-            if (f) { return f; }
+            if (f) {
+              return f;
+            }
           }
         }
         return 0;
       });
     } else {
-      throw Error(`Unsupported order parameter for query {order}`)
+      throw Error(`Unsupported order parameter for query {order}`);
     }
   }
 

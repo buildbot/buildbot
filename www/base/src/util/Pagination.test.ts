@@ -15,17 +15,21 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
+import {describe, expect, it} from 'vitest';
 import {render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {makePagination} from "./Pagination";
+import {makePagination} from './Pagination';
 
 describe('makePagination', () => {
   it('disable if unnecessary ', () => {
     let currentPage = 1;
     const paginationElement = makePagination(
-      currentPage, (p) => { currentPage = p; },
-      2, [],
+      currentPage,
+      (p) => {
+        currentPage = p;
+      },
+      2,
+      [],
     )[1];
     expect(render(paginationElement).asFragment()).toMatchSnapshot();
   });
@@ -33,8 +37,12 @@ describe('makePagination', () => {
   it('out of bounds', () => {
     let currentPage = 150;
     const paginationElement = makePagination(
-      currentPage, (p) => { currentPage = p; },
-      2, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('')
+      currentPage,
+      (p) => {
+        currentPage = p;
+      },
+      2,
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split(''),
     )[1];
     // pagination item '18' should be active
     expect(render(paginationElement).asFragment()).toMatchSnapshot();
@@ -43,8 +51,12 @@ describe('makePagination', () => {
   it('paginate data', () => {
     let currentPage = 2;
     const [paginatedData, paginationElement] = makePagination(
-      currentPage, (p) => { currentPage = p; },
-      2, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('')
+      currentPage,
+      (p) => {
+        currentPage = p;
+      },
+      2,
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split(''),
     );
     expect(render(paginationElement).asFragment()).toMatchSnapshot();
     expect(paginatedData).toEqual(['C', 'D']);
@@ -53,17 +65,21 @@ describe('makePagination', () => {
   it('go to page on input', async () => {
     let currentPage = 1;
     const paginationElement = makePagination(
-      currentPage, (p) => { currentPage = p; },
-      2, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('')
+      currentPage,
+      (p) => {
+        currentPage = p;
+      },
+      2,
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split(''),
     )[1];
 
     const renderedElement = render(paginationElement);
     const gotoInput = renderedElement.getByTestId('pagination-goto-input') as HTMLInputElement;
-    await userEvent.type(gotoInput, "3");
+    await userEvent.type(gotoInput, '3');
     // don't go to page on type to avoid reload
     expect(currentPage).toBe(1);
     // goto on user validation (enter pressed)
-    await userEvent.type(gotoInput, "{enter}");
+    await userEvent.type(gotoInput, '{enter}');
     expect(currentPage).toBe(3);
   });
 });

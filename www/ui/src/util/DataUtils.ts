@@ -15,11 +15,11 @@
   Copyright Buildbot Team Members
 */
 
-import {Build, Builder, DataCollection, Master, Step} from "buildbot-data-js";
-import {durationFormat} from "./Moment";
+import {Build, Builder, DataCollection, Master, Step} from 'buildbot-data-js';
+import {durationFormat} from './Moment';
 
 export function hasActiveMaster(builder: Builder, masters: DataCollection<Master>) {
-  if ((builder.masterids == null)) {
+  if (builder.masterids == null) {
     return false;
   }
   let active = false;
@@ -33,7 +33,7 @@ export function hasActiveMaster(builder: Builder, masters: DataCollection<Master
     active = true;
   }
   return active;
-};
+}
 
 export function buildDurationFormatWithLocks(build: Build, now: number) {
   let res = build.complete
@@ -47,9 +47,8 @@ export function buildDurationFormatWithLocks(build: Build, now: number) {
 }
 
 export function stepDurationFormatWithLocks(step: Step, now: number) {
-  const lockDuration = step.locks_acquired_at !== null
-    ? step.locks_acquired_at - step.started_at!
-    : 0;
+  const lockDuration =
+    step.locks_acquired_at !== null ? step.locks_acquired_at - step.started_at! : 0;
 
   if (step.complete) {
     const stepDurationText = durationFormat(step.complete_at! - step.started_at!);
@@ -58,7 +57,7 @@ export function stepDurationFormatWithLocks(step: Step, now: number) {
       // Since lock delay includes general step setup overhead, then sometimes the started_at and
       // locks_acquired_at may fall into different seconds. However, it's unlikely that step setup
       // would take more than one second.
-      return `${stepDurationText} (locks: ${durationFormat(lockDuration)})`
+      return `${stepDurationText} (locks: ${durationFormat(lockDuration)})`;
     }
     return stepDurationText;
   }
@@ -68,7 +67,7 @@ export function stepDurationFormatWithLocks(step: Step, now: number) {
     // Since lock delay includes general step setup overhead, then sometimes the started_at and
     // locks_acquired_at may fall into different seconds. However, it's unlikely that step setup
     // would take more than one second.
-    return `${ongoingStepDurationText} (locks: ${durationFormat(lockDuration)})`
+    return `${ongoingStepDurationText} (locks: ${durationFormat(lockDuration)})`;
   }
 
   return ongoingStepDurationText;

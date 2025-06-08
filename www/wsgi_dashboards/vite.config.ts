@@ -1,8 +1,8 @@
-import {resolve} from "path";
-import {defineConfig} from "vite";
-import react from "@vitejs/plugin-react";
+import {resolve} from 'path';
+import {defineConfig} from 'vite';
+import react from '@vitejs/plugin-react';
 import checker from 'vite-plugin-checker';
-import { ModuleFormat } from "rollup";
+import {ModuleFormat} from 'rollup';
 
 const outDir = 'buildbot_wsgi_dashboards/static';
 
@@ -11,9 +11,9 @@ export default defineConfig({
     react({
       babel: {
         parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties']
-        }
-      }
+          plugins: ['decorators-legacy', 'classProperties'],
+        },
+      },
     }),
     checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
   ],
@@ -23,9 +23,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: "buildbotWSGIDashboardsPlugin",
-      formats: ["umd"],
-      fileName: "scripts",
+      name: 'buildbotWSGIDashboardsPlugin',
+      formats: ['umd'],
+      fileName: 'scripts',
     },
     rollupOptions: {
       external: [
@@ -44,16 +44,16 @@ export default defineConfig({
         assetFileNames: 'styles.css',
         entryFileNames: 'scripts.js',
         globals: {
-          axios: "axios",
-          "buildbot-data-js": "BuildbotDataJs",
-          "buildbot-plugin-support": "BuildbotPluginSupport",
-          "buildbot-ui": "BuildbotUi",
-          mobx: "mobx",
-          "mobx-react": "mobxReact",
-          react: "React",
-          moment: "moment",
-          "react-dom": "ReactDOM",
-          "react-router-dom": "ReactRouterDOM",
+          axios: 'axios',
+          'buildbot-data-js': 'BuildbotDataJs',
+          'buildbot-plugin-support': 'BuildbotPluginSupport',
+          'buildbot-ui': 'BuildbotUi',
+          mobx: 'mobx',
+          'mobx-react': 'mobxReact',
+          react: 'React',
+          moment: 'moment',
+          'react-dom': 'ReactDOM',
+          'react-router-dom': 'ReactRouterDOM',
         },
       },
     },
@@ -62,6 +62,6 @@ export default defineConfig({
     emptyOutDir: true,
   },
   test: {
-    environment: "jsdom"
+    environment: 'jsdom',
   },
 });

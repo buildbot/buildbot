@@ -15,26 +15,37 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {Form} from "react-bootstrap";
-import {SettingValue} from "buildbot-plugin-support";;
-import {SettingItem} from "../../../plugins/GlobalSettings";
+import {observer} from 'mobx-react';
+import {Form} from 'react-bootstrap';
+import {SettingValue} from 'buildbot-plugin-support';
+import {SettingItem} from '../../../plugins/GlobalSettings';
 
 type FieldChoiceCombo = {
   item: SettingItem;
-  setSetting: (value: SettingValue) => void
+  setSetting: (value: SettingValue) => void;
 };
 
 export const FieldChoiceCombo = observer(({item, setSetting}: FieldChoiceCombo) => {
   return (
     <div className="form-group">
       <label>{item.caption}</label>
-      <Form.Control as="select" className="my-1 mr-sm-2" data-bb-test-id={`settings-field-${item.name}`}
-          id="inlineFormCustomSelectPref" custom defaultValue={item.value as string}
-          onChange={event => { console.log(`set ${event.target.value}`); setSetting(event.target.value); }}>
-        {
-          item.choices === undefined ? <></> : item.choices.map(ch => (<option value={ch}>{ch}</option>))
-        }
+      <Form.Control
+        as="select"
+        className="my-1 mr-sm-2"
+        data-bb-test-id={`settings-field-${item.name}`}
+        id="inlineFormCustomSelectPref"
+        custom
+        defaultValue={item.value as string}
+        onChange={(event) => {
+          console.log(`set ${event.target.value}`);
+          setSetting(event.target.value);
+        }}
+      >
+        {item.choices === undefined ? (
+          <></>
+        ) : (
+          item.choices.map((ch) => <option value={ch}>{ch}</option>)
+        )}
       </Form.Control>
     </div>
   );

@@ -15,22 +15,22 @@
   Copyright Buildbot Team Members
 */
 
-import moment from "moment";
-import {useContext, useEffect} from "react";
-import {TimeContext} from "../contexts/Time";
+import moment from 'moment';
+import {useContext, useEffect} from 'react';
+import {TimeContext} from '../contexts/Time';
 
 export function durationFormat(time: number) {
   if (time < 0) {
-    return "";
+    return '';
   }
 
   const d = moment.duration(time * 1000);
   const m = moment.utc(d.asMilliseconds());
   const days = Math.floor(d.asDays());
   if (days) {
-    let plural = "";
+    let plural = '';
     if (days > 1) {
-      plural = "s";
+      plural = 's';
     }
     return `${days} day${plural} ` + m.format('H:mm:ss');
   }
@@ -40,7 +40,7 @@ export function durationFormat(time: number) {
   if (d.minutes()) {
     return m.format('m:ss');
   } else {
-    return m.format('s') + " s";
+    return m.format('s') + ' s';
   }
 }
 
@@ -64,10 +64,7 @@ export function useCurrentTime() {
 export function useCurrentTimeSetupTimers() {
   const timeStore = useContext(TimeContext);
   useEffect(() => {
-    const timer = setInterval(
-      () => timeStore.setTime(moment().unix()),
-      1000
-    );
+    const timer = setInterval(() => timeStore.setTime(moment().unix()), 1000);
     return () => clearInterval(timer);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -5,14 +5,14 @@
   Copyright Buildbot Team Members
 */
 
-import {DataClient} from "./DataClient";
-import {useEffect, useState} from "react";
+import {DataClient} from './DataClient';
+import {useEffect, useState} from 'react';
 
 export type EndpointFieldSpec = {
   name: string;
   type: string;
   type_spec: EndpointTypeSpec;
-}
+};
 
 export type EndpointTypeSpec = {
   name?: string;
@@ -20,14 +20,14 @@ export type EndpointTypeSpec = {
   can_be_null?: boolean;
   of?: EndpointTypeSpec;
   fields?: EndpointFieldSpec[];
-}
+};
 
 export type EndpointDescription = {
   path: string;
   plural: string;
   type: string;
   type_spec: EndpointTypeSpec;
-}
+};
 
 export const useApplicationSpec = (dataClient: DataClient) => {
   const [result, setResult] = useState<EndpointDescription[]>([]);
@@ -36,9 +36,9 @@ export const useApplicationSpec = (dataClient: DataClient) => {
     const performRequest = async () => {
       const response = await dataClient.restClient.get('application.spec');
       setResult(response.specs as EndpointDescription[]);
-    }
+    };
     void performRequest();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
   return result;
-}
+};

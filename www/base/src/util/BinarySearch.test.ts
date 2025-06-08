@@ -36,26 +36,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. */
 
-import {describe, expect, it} from "vitest";
+import {describe, expect, it} from 'vitest';
 import {
   binarySearchEqual,
   binarySearchGreater,
   binarySearchGreaterEqual,
   binarySearchLess,
-  binarySearchLessEqual
-} from "./BinarySearch";
+  binarySearchLessEqual,
+} from './BinarySearch';
 
-it("binarySearchGreaterEqual", () => {
-
+it('binarySearchGreaterEqual', () => {
   var lb = binarySearchGreaterEqual;
 
   function checkArray(arr: number[], values: number[]) {
-    for(var l=0; l<arr.length; ++l) {
-      for(var h=l; h<arr.length; ++h) {
-        for(var i=0; i<values.length; ++i) {
-          for(var j=l; j<=h; ++j) {
-            if(arr[j] >= values[i]) {
-              break
+    for (var l = 0; l < arr.length; ++l) {
+      for (var h = l; h < arr.length; ++h) {
+        for (var i = 0; i < values.length; ++i) {
+          for (var j = l; j <= h; ++j) {
+            if (arr[j] >= values[i]) {
+              break;
             }
           }
           expect(lb(arr, values[i], undefined, l, h)).toEqual(j);
@@ -64,48 +63,47 @@ it("binarySearchGreaterEqual", () => {
     }
   }
 
-  checkArray([0,1,1,1,2], [-1, 0, 1, 2, 0.5, 1.5, 5])
+  checkArray([0, 1, 1, 1, 2], [-1, 0, 1, 2, 0.5, 1.5, 5]);
 
-  expect(lb([0,2,5,6], 0)).toEqual(0);
-  expect(lb([0,2,5,6], 1)).toEqual(1);
-  expect(lb([0,2,5,6], 2)).toEqual(1);
-  expect(lb([0,2,5,6], 3)).toEqual(2);
-  expect(lb([0,2,5,6], 4)).toEqual(2);
-  expect(lb([0,2,5,6], 5)).toEqual(2);
-  expect(lb([0,2,5,6], 6)).toEqual(3);
+  expect(lb([0, 2, 5, 6], 0)).toEqual(0);
+  expect(lb([0, 2, 5, 6], 1)).toEqual(1);
+  expect(lb([0, 2, 5, 6], 2)).toEqual(1);
+  expect(lb([0, 2, 5, 6], 3)).toEqual(2);
+  expect(lb([0, 2, 5, 6], 4)).toEqual(2);
+  expect(lb([0, 2, 5, 6], 5)).toEqual(2);
+  expect(lb([0, 2, 5, 6], 6)).toEqual(3);
 
   function cmp(a: number, b: number) {
-    return a - b
+    return a - b;
   }
 
-  expect(lb([0,1,1,1,2], -1, cmp)).toEqual(0);
-  expect(lb([0,1,1,1,2], 0, cmp)).toEqual(0);
-  expect(lb([0,1,1,1,2], 1, cmp)).toEqual(1);
-  expect(lb([0,1,1,1,2], 2, cmp)).toEqual(4);
-  expect(lb([0,1,1,1,2], 0.5, cmp)).toEqual(1);
-  expect(lb([0,1,1,1,2], 1.5, cmp)).toEqual(4);
-  expect(lb([0,1,1,1,2], 5, cmp)).toEqual(5);
+  expect(lb([0, 1, 1, 1, 2], -1, cmp)).toEqual(0);
+  expect(lb([0, 1, 1, 1, 2], 0, cmp)).toEqual(0);
+  expect(lb([0, 1, 1, 1, 2], 1, cmp)).toEqual(1);
+  expect(lb([0, 1, 1, 1, 2], 2, cmp)).toEqual(4);
+  expect(lb([0, 1, 1, 1, 2], 0.5, cmp)).toEqual(1);
+  expect(lb([0, 1, 1, 1, 2], 1.5, cmp)).toEqual(4);
+  expect(lb([0, 1, 1, 1, 2], 5, cmp)).toEqual(5);
 
-  expect(lb([0,2,5,6], 0, cmp)).toEqual(0);
-  expect(lb([0,2,5,6], 1, cmp)).toEqual(1);
-  expect(lb([0,2,5,6], 2, cmp)).toEqual(1);
-  expect(lb([0,2,5,6], 3, cmp)).toEqual(2);
-  expect(lb([0,2,5,6], 4, cmp)).toEqual(2);
-  expect(lb([0,2,5,6], 5, cmp)).toEqual(2);
-  expect(lb([0,2,5,6], 6, cmp)).toEqual(3);
+  expect(lb([0, 2, 5, 6], 0, cmp)).toEqual(0);
+  expect(lb([0, 2, 5, 6], 1, cmp)).toEqual(1);
+  expect(lb([0, 2, 5, 6], 2, cmp)).toEqual(1);
+  expect(lb([0, 2, 5, 6], 3, cmp)).toEqual(2);
+  expect(lb([0, 2, 5, 6], 4, cmp)).toEqual(2);
+  expect(lb([0, 2, 5, 6], 5, cmp)).toEqual(2);
+  expect(lb([0, 2, 5, 6], 6, cmp)).toEqual(3);
+});
 
-})
-
-it("binarySearchLess", () => {
+it('binarySearchLess', () => {
   const lu = binarySearchLess;
 
   function checkArray(arr: number[], values: number[]) {
-    for(var l = 0; l < arr.length; ++l) {
-      for(var h = l; h < arr.length; ++h) {
-        for(var i = 0; i < values.length; ++i) {
-          for(var j = h; j>=l; --j) {
-            if(values[i] > arr[j]) {
-              break
+    for (var l = 0; l < arr.length; ++l) {
+      for (var h = l; h < arr.length; ++h) {
+        for (var i = 0; i < values.length; ++i) {
+          for (var j = h; j >= l; --j) {
+            if (values[i] > arr[j]) {
+              break;
             }
           }
           expect(lu(arr, values[i], undefined, l, h)).toEqual(j);
@@ -114,19 +112,19 @@ it("binarySearchLess", () => {
     }
   }
 
-  checkArray([0,1,1,1,2], [-1, 0, 1, 2, 0.5, 1.5, 5])
+  checkArray([0, 1, 1, 1, 2], [-1, 0, 1, 2, 0.5, 1.5, 5]);
 });
 
-it("binarySearchGreater", () => {
+it('binarySearchGreater', () => {
   const lb = binarySearchGreater;
 
   function checkArray(arr: number[], values: number[]) {
-    for(var l=0; l<arr.length; ++l) {
-      for(var h=l; h<arr.length; ++h) {
-        for(var i=0; i<values.length; ++i) {
-          for(var j=l; j<=h; ++j) {
-            if(arr[j] > values[i]) {
-              break
+    for (var l = 0; l < arr.length; ++l) {
+      for (var h = l; h < arr.length; ++h) {
+        for (var i = 0; i < values.length; ++i) {
+          for (var j = l; j <= h; ++j) {
+            if (arr[j] > values[i]) {
+              break;
             }
           }
           expect(lb(arr, values[i], undefined, l, h)).toEqual(j);
@@ -135,32 +133,32 @@ it("binarySearchGreater", () => {
     }
   }
 
-  checkArray([0,1,1,1,2], [-1, 0, 1, 2, 0.5, 1.5, 5])
+  checkArray([0, 1, 1, 1, 2], [-1, 0, 1, 2, 0.5, 1.5, 5]);
 });
 
-it("binarySearchLessEqual", () => {
+it('binarySearchLessEqual', () => {
   const lu = binarySearchLessEqual;
 
   function checkArray(arr: number[], values: number[]) {
-    for(var i=0; i<values.length; ++i) {
-      for(var j=arr.length-1; j>=0; --j) {
-        if(values[i] >= arr[j]) {
-          break
+    for (var i = 0; i < values.length; ++i) {
+      for (var j = arr.length - 1; j >= 0; --j) {
+        if (values[i] >= arr[j]) {
+          break;
         }
       }
       expect(lu(arr, values[i])).toEqual(j);
     }
   }
 
-  checkArray([0,1,1,1,2], [-1, 0, 1, 2, 0.5, 1.5, 5]);
-})
+  checkArray([0, 1, 1, 1, 2], [-1, 0, 1, 2, 0.5, 1.5, 5]);
+});
 
-it("binarySearchEqual", () => {
+it('binarySearchEqual', () => {
   const lu = binarySearchEqual;
 
   function checkArray(arr: number[], values: number[]) {
-    for(var i=0; i<values.length; ++i) {
-      if(arr.indexOf(values[i]) < 0) {
+    for (var i = 0; i < values.length; ++i) {
+      if (arr.indexOf(values[i]) < 0) {
         expect(lu(arr, values[i])).toEqual(-1);
       } else {
         expect(arr[lu(arr, values[i])]).toEqual(values[i]);
@@ -168,5 +166,5 @@ it("binarySearchEqual", () => {
     }
   }
 
-  checkArray([0,1,1,1,2], [-1, 0, 1, 2, 0.5, 1.5, 5])
+  checkArray([0, 1, 1, 1, 2], [-1, 0, 1, 2, 0.5, 1.5, 5]);
 });

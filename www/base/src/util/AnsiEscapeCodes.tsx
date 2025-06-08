@@ -31,10 +31,10 @@
 // This parser does not work across lines
 // css class will be reset at each new line
 
-import {cssClassesMapToCssString, LineCssClasses} from "./LineCssClasses";
+import {cssClassesMapToCssString, LineCssClasses} from './LineCssClasses';
 
 const ANSI_RE = new RegExp(/^((\d+)(;\d+)*)?([a-zA-Z])/);
-const CSI_PREFIX = "\x1b[";
+const CSI_PREFIX = '\x1b[';
 
 export function parseAnsiSgrEntry(ansiEntry: string): [string, string[]] {
   // simple utility to extract ansi sgr (Select Graphic Rendition) codes,
@@ -47,7 +47,7 @@ export function parseAnsiSgrEntry(ansiEntry: string): [string, string[]] {
     ansiEntry = ansiEntry.substr(res[0].length);
     if (mode === 'm') {
       if (res[1]) {
-        classes = res[1].split(";");
+        classes = res[1].split(';');
       } else {
         classes = [];
       }
@@ -79,50 +79,49 @@ export function ansiSgrClassesToCss(ansiClasses: string[], cssClasses: {[key: st
     // which is a color reset code
     return {};
   }
-  let newCssClasses: { [key: string]: boolean } = {};
-  let background = "";
-  let foreground = "";
+  let newCssClasses: {[key: string]: boolean} = {};
+  let background = '';
+  let foreground = '';
   let resetForeground = false;
   let resetBackground = false;
   const ansiForegroundCodeList = ['30', '31', '32', '33', '34', '35', '36', '37'];
   const ansiBackgroundCodeList = ['40', '41', '42', '43', '44', '45', '46', '47'];
 
   for (let i = 0; i < ansiClasses.length; i += 1) {
-    if (ansiClasses[i] == '0') { // "all attributes off" code
-      foreground = "";
-      background = "";
+    if (ansiClasses[i] == '0') {
+      // "all attributes off" code
+      foreground = '';
+      background = '';
       resetBackground = true;
       resetForeground = true;
-    }
-    else if (ansiClasses[i] == '39') { // "color reset" code for foreground
-      foreground = "";
+    } else if (ansiClasses[i] == '39') {
+      // "color reset" code for foreground
+      foreground = '';
       resetForeground = true;
-    }
-    else if (ansiClasses[i] == '49') { // "color reset" code for background
-      background = ""
+    } else if (ansiClasses[i] == '49') {
+      // "color reset" code for background
+      background = '';
       resetBackground = true;
     }
     // update background and foreground, each time newer one is detected in ansiClasses
     else if (ansiClasses[i] == '38') {
-      if (ansiClasses[i + 1] == '5') {  // 256 mode
+      if (ansiClasses[i + 1] == '5') {
+        // 256 mode
         foreground = `ansifg-${ansiClasses[i + 2]}`;
         i += 2; // consumes whole triplet as a unit
       }
-    }
-    else if (ansiClasses[i] == '48') {
-      if (ansiClasses[i + 1] == '5') {  // 256 mode
+    } else if (ansiClasses[i] == '48') {
+      if (ansiClasses[i + 1] == '5') {
+        // 256 mode
         background = `ansibg-${ansiClasses[i + 2]}`;
         i += 2; // consumes whole triplet as a unit
       }
-    }
-    else if (ansiForegroundCodeList.includes(ansiClasses[i])) {
-      foreground = `ansi${ansiClasses[i]}`;  // simple SGR mode
-    }
-    else if (ansiBackgroundCodeList.includes(ansiClasses[i])) {
-      background = `ansi${ansiClasses[i]}`;  // simple SGR mode
-    }
-    else {
-      newCssClasses[`ansi${ansiClasses[i]}`] = true;  // other modes not including colors
+    } else if (ansiForegroundCodeList.includes(ansiClasses[i])) {
+      foreground = `ansi${ansiClasses[i]}`; // simple SGR mode
+    } else if (ansiBackgroundCodeList.includes(ansiClasses[i])) {
+      background = `ansi${ansiClasses[i]}`; // simple SGR mode
+    } else {
+      newCssClasses[`ansi${ansiClasses[i]}`] = true; // other modes not including colors
     }
   }
 
@@ -135,8 +134,10 @@ export function ansiSgrClassesToCss(ansiClasses: string[], cssClasses: {[key: st
 
   for (const key in cssClasses) {
     // only add background and foreground color if it is missing in newCssClasses
-    if (((key.includes('ansi3') || key.includes('ansifg')) && !foreground &&  !resetForeground) ||
-      ((key.includes('ansi4') || key.includes('ansibg')) && !background) && !resetBackground){
+    if (
+      ((key.includes('ansi3') || key.includes('ansifg')) && !foreground && !resetForeground) ||
+      ((key.includes('ansi4') || key.includes('ansibg')) && !background && !resetBackground)
+    ) {
       newCssClasses[key] = true;
     }
   }
@@ -149,7 +150,7 @@ export function lineContainsEscapeCodes(line: string) {
 
 export function stripLineEscapeCodes(line: string) {
   let firstEntry = true;
-  let outputText = "";
+  let outputText = '';
 
   for (const ansiEntry of line.split(CSI_PREFIX)) {
     let entryOutputText: string;
@@ -173,13 +174,13 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
   }
 
   let firstEntry = true;
-  let outputText = "";
+  let outputText = '';
   const outputClasses: LineCssClasses[] = [];
   let cssClassesMap: {[key: string]: boolean} = {};
 
   for (const ansiEntry of line.split(CSI_PREFIX)) {
     let entryOutputText: string;
-    let cssClasses : string;
+    let cssClasses: string;
     if (firstEntry) {
       entryOutputText = ansiEntry;
       cssClasses = '';
@@ -194,8 +195,8 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
       outputClasses.push({
         firstPos: outputText.length,
         lastPos: outputText.length + entryOutputText.length,
-        cssClasses
-      })
+        cssClasses,
+      });
       outputText += entryOutputText;
     }
   }
@@ -208,29 +209,36 @@ export function parseEscapeCodesToClasses(line: string): [string, LineCssClasses
 // sequences, or a parsed line with CSS class information.
 //
 // Both line substring and the parsed line information must exclude trailing newline character.
-export function escapeClassesToHtml(text: string, lineStart: number, lineEnd: number,
-                                    cssClassesWithText: [string | null, LineCssClasses[] | null] | undefined) {
+export function escapeClassesToHtml(
+  text: string,
+  lineStart: number,
+  lineEnd: number,
+  cssClassesWithText: [string | null, LineCssClasses[] | null] | undefined,
+) {
   // no css classes to apply to text, no text, only css style reseting escape sequences
-  if (cssClassesWithText !== undefined && cssClassesWithText[1] !== null && cssClassesWithText[1].length === 0) {
-    return [
-      <span key={1}></span>
-    ]
+  if (
+    cssClassesWithText !== undefined &&
+    cssClassesWithText[1] !== null &&
+    cssClassesWithText[1].length === 0
+  ) {
+    return [<span key={1}></span>];
   }
   // no css classes to apply to text
   if (cssClassesWithText === undefined || cssClassesWithText[1] === null) {
-    return [
-      <span key={1}>{text.slice(lineStart, lineEnd)}</span>
-    ]
+    return [<span key={1}>{text.slice(lineStart, lineEnd)}</span>];
   }
 
   const [lineText, cssClasses] = cssClassesWithText;
   return cssClasses.map((cssClass, index) => {
     // Note that outputText already refers to the line text
-    const classText = lineText === null
-      ? text.slice(lineStart + cssClass.firstPos, lineStart + cssClass.lastPos)
-      : lineText.slice(cssClass.firstPos, cssClass.lastPos);
+    const classText =
+      lineText === null
+        ? text.slice(lineStart + cssClass.firstPos, lineStart + cssClass.lastPos)
+        : lineText.slice(cssClass.firstPos, cssClass.lastPos);
     return (
-      <span key={index} className={cssClass.cssClasses}>{classText}</span>
+      <span key={index} className={cssClass.cssClasses}>
+        {classText}
+      </span>
     );
   });
 }
@@ -244,11 +252,25 @@ export function ansi2html(line: string): JSX.Element[] {
 
 export function generateStyle(cssSelector: string) {
   let i;
-  let ret = "";
+  let ret = '';
   // first there are the standard 16 colors
   const colors: string[] = [
-    '000','800','080','880','008','808','088','ccc',
-    '888','f00','0f0','ff0','00f','f0f','0ff','fff'
+    '000',
+    '800',
+    '080',
+    '880',
+    '008',
+    '808',
+    '088',
+    'ccc',
+    '888',
+    'f00',
+    '0f0',
+    'ff0',
+    '00f',
+    'f0f',
+    '0ff',
+    'fff',
   ];
   // 6x6x6 color cube encoded in 3 digits hex form
   // note the non-linearity is based on this table
@@ -263,7 +285,7 @@ export function generateStyle(cssSelector: string) {
   }
   // greyscale ramp encoded in 6 digits hex form
   for (let i = 1; i <= 24; i++) {
-    let c = Math.floor((i*256)/26).toString(16);
+    let c = Math.floor((i * 256) / 26).toString(16);
     if (c.length === 1) {
       c = `0${c}`;
     }
@@ -278,5 +300,5 @@ export function generateStyle(cssSelector: string) {
 }
 
 export function generateStyleElement(cssSelector: string): JSX.Element {
-  return <style>{generateStyle(cssSelector)}</style>
+  return <style>{generateStyle(cssSelector)}</style>;
 }

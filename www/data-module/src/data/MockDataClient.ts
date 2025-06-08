@@ -5,24 +5,24 @@
   Copyright Buildbot Team Members
 */
 
-import {expect} from "vitest";
-import {DataClient} from "./DataClient";
-import {Query} from "./DataQuery";
-import {BaseClass} from "./classes/BaseClass";
-import {BaseDataAccessor} from "./DataAccessor";
-import {IDataDescriptor} from "./classes/DataDescriptor";
-import {DataCollection} from "./DataCollection";
+import {expect} from 'vitest';
+import {DataClient} from './DataClient';
+import {Query} from './DataQuery';
+import {BaseClass} from './classes/BaseClass';
+import {BaseDataAccessor} from './DataAccessor';
+import {IDataDescriptor} from './classes/DataDescriptor';
+import {DataCollection} from './DataCollection';
 
 type MockedResult = {
   endpoint: string;
   query: Query;
   returnValue: any;
-}
+};
 
 export class MockDataClient extends DataClient {
   private isSpied: boolean = false;
   private mocks: MockedResult[] = [];
-  private expects: {endpoint: string, query: Query}[] = [];
+  private expects: {endpoint: string; query: Query}[] = [];
 
   when(endpoint: string, query: Query, returnValue: any) {
     for (const mock of this.mocks) {
@@ -43,14 +43,18 @@ export class MockDataClient extends DataClient {
   verifyNoOutstandingExpectation() {
     expect(
       this.expects.length,
-      `expecting ${this.expects.length} more data requests (${JSON.stringify(this.expects)})`
+      `expecting ${this.expects.length} more data requests (${JSON.stringify(this.expects)})`,
     ).toBe(0);
   }
 
   // register return values with the .when function when testing get will return the given values
-  get<DataType extends BaseClass>(endpoint: string, accessor: BaseDataAccessor,
-                                  descriptor: IDataDescriptor<DataType>,
-                                  query: Query, _subscribe: boolean) {
+  get<DataType extends BaseClass>(
+    endpoint: string,
+    accessor: BaseDataAccessor,
+    descriptor: IDataDescriptor<DataType>,
+    query: Query,
+    _subscribe: boolean,
+  ) {
     if (this.expects.length > 0) {
       const exp = this.expects.shift();
       expect(exp!.endpoint).toEqual(endpoint);
@@ -65,9 +69,13 @@ export class MockDataClient extends DataClient {
     throw new Error(`No return value for: ${endpoint} (${JSON.stringify(query)})`);
   }
 
-  createCollection<DataType extends BaseClass>(restPath: string, accessor: BaseDataAccessor,
-                                               descriptor: IDataDescriptor<DataType>, query: Query,
-                                               response: any) {
+  createCollection<DataType extends BaseClass>(
+    restPath: string,
+    accessor: BaseDataAccessor,
+    descriptor: IDataDescriptor<DataType>,
+    query: Query,
+    response: any,
+  ) {
     const collection = new DataCollection<DataType>();
     collection.open(restPath, query, accessor, descriptor, this.webSocketClient);
 

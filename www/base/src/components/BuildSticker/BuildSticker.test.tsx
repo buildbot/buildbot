@@ -15,28 +15,28 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
+import {describe, expect, it} from 'vitest';
 import {render} from '@testing-library/react';
-import {Build, Builder, FAILURE, SUCCESS} from "buildbot-data-js";
-import {BuildSticker} from "./BuildSticker";
-import {MemoryRouter} from "react-router-dom";
-import {TimeContext, TimeStore} from "buildbot-ui";
+import {Build, Builder, FAILURE, SUCCESS} from 'buildbot-data-js';
+import {BuildSticker} from './BuildSticker';
+import {MemoryRouter} from 'react-router-dom';
+import {TimeContext, TimeStore} from 'buildbot-ui';
 
 function assertBuildStickerRenderSnapshot(build: Build, builder: Builder) {
   const timeStore = new TimeStore();
-  timeStore.setTimeFromString("2022-01-01T00:00:00.000Z");
+  timeStore.setTimeFromString('2022-01-01T00:00:00.000Z');
 
   const component = render(
     <MemoryRouter>
       <TimeContext.Provider value={timeStore}>
-        <BuildSticker build={build} builder={builder}/>
+        <BuildSticker build={build} builder={builder} />
       </TimeContext.Provider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
   expect(component.asFragment()).toMatchSnapshot();
 }
 
-describe('buildsticker component', function() {
+describe('buildsticker component', function () {
   it('simple', () => {
     const build: Build = {
       buildid: 3,
@@ -49,7 +49,7 @@ describe('buildsticker component', function() {
     } as any;
 
     const builder: Builder = {
-      builderid: 2
+      builderid: 2,
     } as any;
 
     assertBuildStickerRenderSnapshot(build, builder);
@@ -67,7 +67,7 @@ describe('buildsticker component', function() {
     } as any;
 
     const builder: Builder = {
-      builderid: 2
+      builderid: 2,
     } as any;
 
     assertBuildStickerRenderSnapshot(build, builder);
@@ -86,7 +86,7 @@ describe('buildsticker component', function() {
     } as any;
 
     const builder: Builder = {
-      builderid: 2
+      builderid: 2,
     } as any;
 
     assertBuildStickerRenderSnapshot(build, builder);
@@ -105,7 +105,7 @@ describe('buildsticker component', function() {
     } as any;
 
     const builder: Builder = {
-      builderid: 2
+      builderid: 2,
     } as any;
 
     assertBuildStickerRenderSnapshot(build, builder);

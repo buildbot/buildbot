@@ -15,25 +15,36 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
-import {Change, useDataAccessor, useDataApiDynamicQuery} from "buildbot-data-js";
-import {useLoadMoreItemsState} from "buildbot-ui";
-import {ChangesTable} from "../../components/ChangesTable/ChangesTable";
+import {observer} from 'mobx-react';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
+import {Change, useDataAccessor, useDataApiDynamicQuery} from 'buildbot-data-js';
+import {useLoadMoreItemsState} from 'buildbot-ui';
+import {ChangesTable} from '../../components/ChangesTable/ChangesTable';
 
 export const ChangesView = observer(() => {
   const accessor = useDataAccessor([]);
 
-  const initialChangesFetchLimit = buildbotGetSettings().getIntegerSetting("Changes.changesFetchLimit");
-  const [changesFetchLimit, onLoadMoreChanges] =
-      useLoadMoreItemsState(initialChangesFetchLimit, initialChangesFetchLimit);
+  const initialChangesFetchLimit = buildbotGetSettings().getIntegerSetting(
+    'Changes.changesFetchLimit',
+  );
+  const [changesFetchLimit, onLoadMoreChanges] = useLoadMoreItemsState(
+    initialChangesFetchLimit,
+    initialChangesFetchLimit,
+  );
 
-  const changesQuery = useDataApiDynamicQuery([changesFetchLimit],
-    () => Change.getAll(accessor, {query: {limit: changesFetchLimit, order: '-changeid'}}));
+  const changesQuery = useDataApiDynamicQuery([changesFetchLimit], () =>
+    Change.getAll(accessor, {
+      query: {limit: changesFetchLimit, order: '-changeid'},
+    }),
+  );
 
   return (
     <div className="container">
-      <ChangesTable changes={changesQuery} fetchLimit={changesFetchLimit} onLoadMore={onLoadMoreChanges}/>
+      <ChangesTable
+        changes={changesQuery}
+        fetchLimit={changesFetchLimit}
+        onLoadMore={onLoadMoreChanges}
+      />
     </div>
   );
 });
@@ -48,19 +59,21 @@ buildbotSetupPlugin((reg) => {
   });
 
   reg.registerRoute({
-    route: "changes",
-    group: "builds",
-    element: () => <ChangesView/>,
+    route: 'changes',
+    group: 'builds',
+    element: () => <ChangesView />,
   });
 
   reg.registerSettingGroup({
     name: 'Changes',
     caption: 'Changes page related settings',
-    items: [{
-      type: 'integer',
-      name: 'changesFetchLimit',
-      caption: 'Initial number of changes to fetch',
-      defaultValue: 50
-    }]
+    items: [
+      {
+        type: 'integer',
+        name: 'changesFetchLimit',
+        caption: 'Initial number of changes to fetch',
+        defaultValue: 50,
+      },
+    ],
   });
 });

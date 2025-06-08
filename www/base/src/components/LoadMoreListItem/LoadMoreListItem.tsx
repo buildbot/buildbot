@@ -15,17 +15,18 @@
   Copyright Buildbot Team Members
 */
 
-import {Button} from "react-bootstrap";
+import {Button} from 'react-bootstrap';
 
 type LoadMoreListItemProps = {
   onLoadMore: () => void;
-}
+};
 
 export const LoadMoreListItem = ({onLoadMore}: LoadMoreListItemProps) => {
-
   return (
-      <li key={'load-more'} className="list-group-item">
-        <Button variant="outline-secondary" onClick={onLoadMore}>Load more</Button>
-      </li>
+    <li key={'load-more'} className="list-group-item">
+      <Button variant="outline-secondary" onClick={onLoadMore}>
+        Load more
+      </Button>
+    </li>
   );
 };

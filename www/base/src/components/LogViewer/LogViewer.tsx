@@ -15,27 +15,27 @@
   Copyright Buildbot Team Members
 */
 
-import {Log} from "buildbot-data-js";
-import {LogViewerHtml} from "./LogViewerHtml";
-import {LogViewerText} from "./LogViewerText";
+import {Log} from 'buildbot-data-js';
+import {LogViewerHtml} from './LogViewerHtml';
+import {LogViewerText} from './LogViewerText';
 
 export type LogViewerProps = {
   log: Log;
-}
+};
 
 export const LogViewer = ({log}: LogViewerProps) => {
   if (log.type === 'h') {
-    return (
-      <LogViewerHtml log={log}/>
-    );
+    return <LogViewerHtml log={log} />;
   } else {
     return (
-      <LogViewerText log={log}
-                     downloadInitiateOverscanRowCount={200}
-                     downloadOverscanRowCount={500}
-                     cachedDownloadOverscanRowCount={10000}
-                     cacheRenderedOverscanRowCount={1000}
-                     maxChunkLinesCount={5000}/>
-    )
+      <LogViewerText
+        log={log}
+        downloadInitiateOverscanRowCount={200}
+        downloadOverscanRowCount={500}
+        cachedDownloadOverscanRowCount={10000}
+        cacheRenderedOverscanRowCount={1000}
+        maxChunkLinesCount={5000}
+      />
+    );
   }
-}
+};

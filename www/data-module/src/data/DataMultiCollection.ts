@@ -5,17 +5,24 @@
   Copyright Buildbot Team Members
 */
 
-import {BaseClass} from "./classes/BaseClass";
-import {DataCollection} from "./DataCollection";
-import {BasicDataMultiCollection} from "./BasicDataMultiCollection";
+import {BaseClass} from './classes/BaseClass';
+import {DataCollection} from './DataCollection';
+import {BasicDataMultiCollection} from './BasicDataMultiCollection';
 
-export class DataMultiCollection<ParentDataType extends BaseClass,
-    DataType extends BaseClass> extends BasicDataMultiCollection<ParentDataType, DataCollection<DataType>> {
-
+export class DataMultiCollection<
+  ParentDataType extends BaseClass,
+  DataType extends BaseClass,
+> extends BasicDataMultiCollection<ParentDataType, DataCollection<DataType>> {
   getRelated<ChildDataType extends BaseClass>(
-    callback: (child: DataType) => DataCollection<ChildDataType>) {
-    return new DataMultiCollection<DataType, ChildDataType>(this.accessor, null, this.byParentId,
-      null, callback);
+    callback: (child: DataType) => DataCollection<ChildDataType>,
+  ) {
+    return new DataMultiCollection<DataType, ChildDataType>(
+      this.accessor,
+      null,
+      this.byParentId,
+      null,
+      callback,
+    );
   }
 
   // Acquires nth element across all collections tracked by this multi collection. The iteration

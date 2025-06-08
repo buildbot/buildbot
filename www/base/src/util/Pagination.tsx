@@ -15,11 +15,12 @@
   Copyright Buildbot Team Members
 */
 
-import { Pagination } from "react-bootstrap";
-import { clamp } from "./Math";
+import {Pagination} from 'react-bootstrap';
+import {clamp} from './Math';
 
 export function makePagination<T>(
-  currentPage: number, setCurrentPage: (pageIdx: number) => void,
+  currentPage: number,
+  setCurrentPage: (pageIdx: number) => void,
   pageSize: number,
   data: T[],
 ): [T[], JSX.Element] {
@@ -33,13 +34,13 @@ export function makePagination<T>(
   const displayItemEnd = Math.min(clampedPage + pageRange, pageCount);
   const pageItemIndexes = Array.from(
     Array(displayItemEnd - displayItemBegin + 1),
-    (_, i)=> i + displayItemBegin
+    (_, i) => i + displayItemBegin,
   );
   const isFirstPage = clampedPage <= 1;
   const isLastPage = clampedPage >= pageCount;
 
   const onGoTo = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
+    if (event.key === 'Enter') {
       event.preventDefault();
 
       const target = event.target as HTMLInputElement;
@@ -52,41 +53,68 @@ export function makePagination<T>(
 
   return [
     data.slice((clampedPage - 1) * pageSize, clampedPage * pageSize),
-    (
-      <Pagination>
-        <Pagination.First disabled={isFirstPage} onClick={_ => { if (!isFirstPage) { setCurrentPage(1); } } } />
-        <Pagination.Prev disabled={isFirstPage} onClick={_ => { if (!isFirstPage) { setCurrentPage(clampedPage - 1); } } } />
+    <Pagination>
+      <Pagination.First
+        disabled={isFirstPage}
+        onClick={(_) => {
+          if (!isFirstPage) {
+            setCurrentPage(1);
+          }
+        }}
+      />
+      <Pagination.Prev
+        disabled={isFirstPage}
+        onClick={(_) => {
+          if (!isFirstPage) {
+            setCurrentPage(clampedPage - 1);
+          }
+        }}
+      />
 
-        {pageItemIndexes.at(0) !== 1 ? <Pagination.Ellipsis /> : <></>}
+      {pageItemIndexes.at(0) !== 1 ? <Pagination.Ellipsis /> : <></>}
 
-        {
-          pageItemIndexes.map(itemIdx => {
-            return (
-              <Pagination.Item
-                key={itemIdx}
-                active={itemIdx === clampedPage}
-                onClick={_ => setCurrentPage(itemIdx)}
-              >
-                {itemIdx}
-              </Pagination.Item>
-            );
-          })
-        }
+      {pageItemIndexes.map((itemIdx) => {
+        return (
+          <Pagination.Item
+            key={itemIdx}
+            active={itemIdx === clampedPage}
+            onClick={(_) => setCurrentPage(itemIdx)}
+          >
+            {itemIdx}
+          </Pagination.Item>
+        );
+      })}
 
-        {pageItemIndexes.at(-1) !== pageCount ? <Pagination.Ellipsis /> : <></>}
+      {pageItemIndexes.at(-1) !== pageCount ? <Pagination.Ellipsis /> : <></>}
 
-        <Pagination.Next disabled={isLastPage} onClick={_ => { if (!isLastPage) { setCurrentPage(clampedPage + 1); } } } />
-        <Pagination.Last disabled={isLastPage} onClick={_ => { if (!isLastPage) { setCurrentPage(pageCount); } } } />
+      <Pagination.Next
+        disabled={isLastPage}
+        onClick={(_) => {
+          if (!isLastPage) {
+            setCurrentPage(clampedPage + 1);
+          }
+        }}
+      />
+      <Pagination.Last
+        disabled={isLastPage}
+        onClick={(_) => {
+          if (!isLastPage) {
+            setCurrentPage(pageCount);
+          }
+        }}
+      />
 
-        <input
-          data-bb-test-id="pagination-goto-input"
-          type="number"
-          min={1} max={pageCount}
-          placeholder="go to" enterKeyHint="go" onKeyDown={onGoTo}
-          size={Math.max(pageCount.toString().length, 5)}
-          disabled={pageCount <= 1}
-        />
-      </Pagination>
-    )
+      <input
+        data-bb-test-id="pagination-goto-input"
+        type="number"
+        min={1}
+        max={pageCount}
+        placeholder="go to"
+        enterKeyHint="go"
+        onKeyDown={onGoTo}
+        size={Math.max(pageCount.toString().length, 5)}
+        disabled={pageCount <= 1}
+      />
+    </Pagination>,
   ];
-};
+}

@@ -15,13 +15,13 @@
   Copyright Buildbot Team Members
 */
 
-import {binarySearchGreater, binarySearchGreaterEqual} from "./BinarySearch";
+import {binarySearchGreater, binarySearchGreaterEqual} from './BinarySearch';
 
 export type LineCssClasses = {
   firstPos: number;
   lastPos: number;
   cssClasses: string;
-}
+};
 
 export function cssClassesMapToCssString(classes: {[key: string]: boolean}): string {
   let res = '';
@@ -38,39 +38,53 @@ export function cssClassesMapToCssString(classes: {[key: string]: boolean}): str
 }
 
 export function combineCssClasses(classesA: string, classesB: string) {
-  if (classesA === '')
-    return classesB;
-  if (classesB === '')
-    return classesA;
+  if (classesA === '') return classesB;
+  if (classesB === '') return classesA;
   return `${classesA} ${classesB}`;
 }
 
-function overlaySingleClassesRange(rangeFirstPos: number, rangeLastPos: number,
-                                   rangeClasses: string,
-                                   overlayFirstPos: number, overlayLastPos: number,
-                                   overlayClasses: string) {
+function overlaySingleClassesRange(
+  rangeFirstPos: number,
+  rangeLastPos: number,
+  rangeClasses: string,
+  overlayFirstPos: number,
+  overlayLastPos: number,
+  overlayClasses: string,
+) {
   const ret: LineCssClasses[] = [
-    {firstPos: overlayFirstPos, lastPos: overlayLastPos,
-      cssClasses: combineCssClasses(rangeClasses, overlayClasses)}
+    {
+      firstPos: overlayFirstPos,
+      lastPos: overlayLastPos,
+      cssClasses: combineCssClasses(rangeClasses, overlayClasses),
+    },
   ];
 
   if (overlayFirstPos > rangeFirstPos) {
-    ret.splice(0, 0,
-      {firstPos: rangeFirstPos, lastPos: overlayFirstPos, cssClasses: rangeClasses});
+    ret.splice(0, 0, {
+      firstPos: rangeFirstPos,
+      lastPos: overlayFirstPos,
+      cssClasses: rangeClasses,
+    });
   }
   if (overlayLastPos < rangeLastPos) {
-    ret.splice(ret.length, 0,
-      {firstPos: overlayLastPos, lastPos: rangeLastPos, cssClasses: rangeClasses});
+    ret.splice(ret.length, 0, {
+      firstPos: overlayLastPos,
+      lastPos: rangeLastPos,
+      cssClasses: rangeClasses,
+    });
   }
   return ret;
 }
 
-export function addOverlayToCssClasses(length: number,
-                                       classes: LineCssClasses[]|null,
-                                       firstPos: number, lastPos: number,
-                                       overlayCssClasses: string): LineCssClasses[] {
+export function addOverlayToCssClasses(
+  length: number,
+  classes: LineCssClasses[] | null,
+  firstPos: number,
+  lastPos: number,
+  overlayCssClasses: string,
+): LineCssClasses[] {
   if (firstPos >= length || lastPos > length || firstPos > lastPos) {
-    throw Error("Invalid invocation of addOverlayToCssClasses");
+    throw Error('Invalid invocation of addOverlayToCssClasses');
   }
   if (classes === null) {
     return overlaySingleClassesRange(0, length, '', firstPos, lastPos, overlayCssClasses);
@@ -85,21 +99,36 @@ export function addOverlayToCssClasses(length: number,
   if (firstPosIndex === lastPosIndex) {
     const toReplace = classesCopy[firstPosIndex];
     const replacementClasses = overlaySingleClassesRange(
-      toReplace.firstPos, toReplace.lastPos, toReplace.cssClasses,
-      firstPos, lastPos, overlayCssClasses);
+      toReplace.firstPos,
+      toReplace.lastPos,
+      toReplace.cssClasses,
+      firstPos,
+      lastPos,
+      overlayCssClasses,
+    );
     classesCopy.splice(firstPosIndex, 1, ...replacementClasses);
     return classesCopy;
   }
 
   const toReplaceFirst = classesCopy[firstPosIndex];
   const replacementClassesFirst = overlaySingleClassesRange(
-    toReplaceFirst.firstPos, toReplaceFirst.lastPos, toReplaceFirst.cssClasses,
-    firstPos, toReplaceFirst.lastPos, overlayCssClasses);
+    toReplaceFirst.firstPos,
+    toReplaceFirst.lastPos,
+    toReplaceFirst.cssClasses,
+    firstPos,
+    toReplaceFirst.lastPos,
+    overlayCssClasses,
+  );
 
   const toReplaceLast = classesCopy[lastPosIndex];
   const replacementClassesLast = overlaySingleClassesRange(
-    toReplaceLast.firstPos, toReplaceLast.lastPos, toReplaceLast.cssClasses,
-    toReplaceLast.firstPos, lastPos, overlayCssClasses);
+    toReplaceLast.firstPos,
+    toReplaceLast.lastPos,
+    toReplaceLast.cssClasses,
+    toReplaceLast.firstPos,
+    lastPos,
+    overlayCssClasses,
+  );
 
   for (let i = firstPosIndex + 1; i < lastPosIndex; ++i) {
     classesCopy[i].cssClasses = combineCssClasses(classesCopy[i].cssClasses, overlayCssClasses);

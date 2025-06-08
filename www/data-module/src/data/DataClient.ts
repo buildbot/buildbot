@@ -5,15 +5,15 @@
   Copyright Buildbot Team Members
 */
 
-import {RestClient} from "./RestClient";
-import {WebSocketClient} from "./WebSocketClient";
-import {BaseDataAccessor, IDataAccessor} from "./DataAccessor";
-import {ControlParams, Query} from "./DataQuery";
-import {DataCollection, IDataCollection} from "./DataCollection";
-import {IDataDescriptor, IAnyDataDescriptor} from "./classes/DataDescriptor";
-import {BaseClass} from "./classes/BaseClass";
-import {DataPropertiesCollection} from "./DataPropertiesCollection";
-import {propertiesDescriptor} from "./classes/Properties";
+import {RestClient} from './RestClient';
+import {WebSocketClient} from './WebSocketClient';
+import {BaseDataAccessor, IDataAccessor} from './DataAccessor';
+import {ControlParams, Query} from './DataQuery';
+import {DataCollection, IDataCollection} from './DataCollection';
+import {IDataDescriptor, IAnyDataDescriptor} from './classes/DataDescriptor';
+import {BaseClass} from './classes/BaseClass';
+import {DataPropertiesCollection} from './DataPropertiesCollection';
+import {propertiesDescriptor} from './classes/Properties';
 
 export class DataClient {
   restClient: RestClient;
@@ -26,35 +26,43 @@ export class DataClient {
     this.webSocketClient = webSocketClient;
   }
 
-  get<DataType extends BaseClass>(endpoint: string, accessor: IDataAccessor,
-                                  descriptor: IDataDescriptor<DataType>,
-                                  query: Query, subscribe: boolean) {
-    return this.getAny(endpoint, accessor, descriptor, query, subscribe,
-      () => {
-        const c = new DataCollection<DataType>(this.nextDataCollectionInternalId);
-        this.nextDataCollectionInternalId += 1;
-        c.open(endpoint, query, accessor, descriptor, this.webSocketClient);
-        return c;
-      });
+  get<DataType extends BaseClass>(
+    endpoint: string,
+    accessor: IDataAccessor,
+    descriptor: IDataDescriptor<DataType>,
+    query: Query,
+    subscribe: boolean,
+  ) {
+    return this.getAny(endpoint, accessor, descriptor, query, subscribe, () => {
+      const c = new DataCollection<DataType>(this.nextDataCollectionInternalId);
+      this.nextDataCollectionInternalId += 1;
+      c.open(endpoint, query, accessor, descriptor, this.webSocketClient);
+      return c;
+    });
   }
 
-  getProperties(endpoint: string, accessor: IDataAccessor,
-                query: Query, subscribe: boolean) {
-    return this.getAny(endpoint, accessor, propertiesDescriptor, query, subscribe,
-      () => {
-        const c = new DataPropertiesCollection();
-        c.open(endpoint, query, accessor, this.webSocketClient);
-        return c;
-      });
+  getProperties(endpoint: string, accessor: IDataAccessor, query: Query, subscribe: boolean) {
+    return this.getAny(endpoint, accessor, propertiesDescriptor, query, subscribe, () => {
+      const c = new DataPropertiesCollection();
+      c.open(endpoint, query, accessor, this.webSocketClient);
+      return c;
+    });
   }
 
-  getAny<T extends IDataCollection>(endpoint: string, accessor: IDataAccessor,
-                                    descriptor: IAnyDataDescriptor, query: Query,
-                                    subscribe: boolean, collectionFactory: () => T) {
+  getAny<T extends IDataCollection>(
+    endpoint: string,
+    accessor: IDataAccessor,
+    descriptor: IAnyDataDescriptor,
+    query: Query,
+    subscribe: boolean,
+    collectionFactory: () => T,
+  ) {
     // subscribe for changes if 'subscribe' is true
     if (subscribe && !accessor) {
-      console.warn("subscribe call should be done after DataClient.open() for " +
-        "maintaining trace of observers");
+      console.warn(
+        'subscribe call should be done after DataClient.open() for ' +
+          'maintaining trace of observers',
+      );
       subscribe = false;
     }
 
@@ -74,7 +82,7 @@ export class DataClient {
 
         // fill up the collection with initial data
         collection.initial(datalist);
-      })
+      }),
     );
 
     return collection;
@@ -82,12 +90,11 @@ export class DataClient {
 
   control(endpoint: string, method: string, params: ControlParams) {
     return this.restClient.post(endpoint, {
-        id: this.getNextRpcId(),
-        jsonrpc: '2.0',
-        method,
-        params
-      }
-    );
+      id: this.getNextRpcId(),
+      jsonrpc: '2.0',
+      method,
+      params,
+    });
   }
 
   private getNextRpcId() {

@@ -15,39 +15,39 @@
   Copyright Buildbot Team Members
 */
 
-import {ForceSchedulerFieldBoolean} from "buildbot-data-js";
-import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
-import {observer} from "mobx-react";
+import {ForceSchedulerFieldBoolean} from 'buildbot-data-js';
+import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
+import {observer} from 'mobx-react';
 
 type FieldBaseProps = {
   field: ForceSchedulerFieldBoolean;
   fieldsState: ForceBuildModalFieldsState;
   children: JSX.Element | JSX.Element[] | string;
-}
+};
 
 export const FieldBase = observer(({field, fieldsState, children}: FieldBaseProps) => {
   const state = fieldsState.fields.get(field.fullName)!;
 
-  let classNames = "form-group";
+  let classNames = 'form-group';
   if (state.errors.length > 0) {
-    classNames += " has-error";
+    classNames += ' has-error';
   }
 
   const errors: JSX.Element[] = [];
   for (const error of state.errors) {
-    errors.push((
-      <div className={"bb-force-build-modal-field-error"}>{error}</div>
-    ))
+    errors.push(<div className={'bb-force-build-modal-field-error'}>{error}</div>);
   }
 
   return (
     <div>
       <div className={classNames}>
         {errors}
-        <div uib-popover="{{field.errors}}"
-             popover-title="{{field.label}}" popover-is-open="field.haserrors"
-             popover-trigger="none">
-        </div>
+        <div
+          uib-popover="{{field.errors}}"
+          popover-title="{{field.label}}"
+          popover-is-open="field.haserrors"
+          popover-trigger="none"
+        ></div>
         {children}
       </div>
     </div>

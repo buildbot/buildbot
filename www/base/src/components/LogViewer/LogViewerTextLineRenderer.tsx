@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {LogTextManager} from "./LogTextManager";
+import {LogTextManager} from './LogTextManager';
 
 export type LogViewerTextLineRendererProps = {
   manager: LogTextManager;
@@ -24,24 +24,33 @@ export type LogViewerTextLineRendererProps = {
   index: number;
 };
 
-export const LogViewerTextLineRenderer = ({manager, logLineDigitCount,
-                                           style, index}: LogViewerTextLineRendererProps) => {
+export const LogViewerTextLineRenderer = ({
+  manager,
+  logLineDigitCount,
+  style,
+  index,
+}: LogViewerTextLineRendererProps) => {
   const renderEmptyRowContents = (index: number, style: React.CSSProperties) => {
     return <div key={index} className="bb-logviewer-text-row" style={style}></div>;
-  }
+  };
 
-  const renderRowContents = (index: number, lineType: string, style: React.CSSProperties,
-                             content: JSX.Element[]) => {
+  const renderRowContents = (
+    index: number,
+    lineType: string,
+    style: React.CSSProperties,
+    content: JSX.Element[],
+  ) => {
     return (
       <div key={index} className="bb-logviewer-text-row" style={style}>
-        <span data-linenumber-content={String(index + 1).padStart(logLineDigitCount, ' ')}
-              className={`log_${lineType}`}>
+        <span
+          data-linenumber-content={String(index + 1).padStart(logLineDigitCount, ' ')}
+          className={`log_${lineType}`}
+        >
           {content}
         </span>
       </div>
     );
   };
 
-  return manager.getRenderedLineContent(index, style,
-    renderRowContents, renderEmptyRowContents);
-}
+  return manager.getRenderedLineContent(index, style, renderRowContents, renderEmptyRowContents);
+};

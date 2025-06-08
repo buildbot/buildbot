@@ -15,20 +15,26 @@
   Copyright Buildbot Team Members
 */
 
-import {TopbarItem} from "buildbot-ui";
-import {Builder, Project} from "buildbot-data-js";
+import {TopbarItem} from 'buildbot-ui';
+import {Builder, Project} from 'buildbot-data-js';
 
-export function buildTopbarItemsForBuilder(builder: Builder|null, project: Project|null,
-                                           extraItems: TopbarItem[]) {
+export function buildTopbarItemsForBuilder(
+  builder: Builder | null,
+  project: Project | null,
+  extraItems: TopbarItem[],
+) {
   const topbarItems: TopbarItem[] = [];
   if (builder !== null) {
-    topbarItems.push({caption: "Builders", route: "/builders"});
+    topbarItems.push({caption: 'Builders', route: '/builders'});
     if (project !== null) {
-      topbarItems.push({caption: project.name, route: `/projects/${builder.projectid}`});
+      topbarItems.push({
+        caption: project.name,
+        route: `/projects/${builder.projectid}`,
+      });
     }
     topbarItems.push({caption: builder.name, route: `/builders/${builder.id}`});
   } else {
-    topbarItems.push({caption: "...", route: null});
+    topbarItems.push({caption: '...', route: null});
   }
   topbarItems.push(...extraItems);
   return topbarItems;

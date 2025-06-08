@@ -5,9 +5,9 @@
   Copyright Buildbot Team Members
 */
 
-import {Step} from "../data/classes/Step";
-import {Build} from "../data/classes/Build";
-import {Buildrequest} from "../data/classes/Buildrequest";
+import {Step} from '../data/classes/Step';
+import {Build} from '../data/classes/Build';
+import {Buildrequest} from '../data/classes/Buildrequest';
 
 export const SUCCESS = 0;
 export const WARNINGS = 1;
@@ -21,15 +21,15 @@ export const PENDING = 1000;
 export const UNKNOWN = 1001;
 
 export const intToResultText: {[key: number]: string} = {
-  [SUCCESS]: "SUCCESS",
-  [WARNINGS]: "WARNINGS",
-  [FAILURE]: "FAILURE",
-  [SKIPPED]: "SKIPPED",
-  [EXCEPTION]: "EXCEPTION",
-  [RETRY]: "RETRY",
-  [CANCELLED]: "CANCELLED",
-  [PENDING]: "PENDING",
-  [UNKNOWN]: "UNKNOWN",
+  [SUCCESS]: 'SUCCESS',
+  [WARNINGS]: 'WARNINGS',
+  [FAILURE]: 'FAILURE',
+  [SKIPPED]: 'SKIPPED',
+  [EXCEPTION]: 'EXCEPTION',
+  [RETRY]: 'RETRY',
+  [CANCELLED]: 'CANCELLED',
+  [PENDING]: 'PENDING',
+  [UNKNOWN]: 'UNKNOWN',
 };
 
 export const intToColor: {[key: number]: string} = {
@@ -42,7 +42,7 @@ export const intToColor: {[key: number]: string} = {
   [CANCELLED]: '#ecc',
   [PENDING]: '#E7D100',
   [UNKNOWN]: '#EEE',
-}
+};
 
 export const allResults = [SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED];
 
@@ -50,10 +50,10 @@ export function getBuildOrStepResults(buildOrStep: Build | Step | null, unknownR
   if (buildOrStep === null) {
     return unknownResults;
   }
-  if ((buildOrStep.results !== null) && buildOrStep.results in intToResultText) {
+  if (buildOrStep.results !== null && buildOrStep.results in intToResultText) {
     return buildOrStep.results;
   }
-  if ((buildOrStep.complete === false) && ((buildOrStep.started_at ?? 0) > 0)) {
+  if (buildOrStep.complete === false && (buildOrStep.started_at ?? 0) > 0) {
     return PENDING;
   }
   return unknownResults;
@@ -61,7 +61,7 @@ export function getBuildOrStepResults(buildOrStep: Build | Step | null, unknownR
 
 export function results2class(buildOrStep: Build | Step | null, pulse: string | null) {
   const results = getBuildOrStepResults(buildOrStep, UNKNOWN);
-  let ret = `results_${intToResultText[results]}`
+  let ret = `results_${intToResultText[results]}`;
   if (results === PENDING && pulse !== null) {
     ret += ` ${pulse}`;
   }
@@ -69,9 +69,9 @@ export function results2class(buildOrStep: Build | Step | null, pulse: string | 
 }
 
 export function results2text(objWithResults: Build | Step | Buildrequest) {
-  let ret = "...";
+  let ret = '...';
   if (objWithResults !== null) {
-    if ((objWithResults.results !== null) && objWithResults.results in intToResultText) {
+    if (objWithResults.results !== null && objWithResults.results in intToResultText) {
       ret = intToResultText[objWithResults.results];
     }
   }

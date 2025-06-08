@@ -67,3 +67,13 @@ export const buildbotEslintConfig = tseslint.config(
     },
   },
 )
+
+export const buildbotPrettierConfig = {
+  tabWidth: 2,
+  printWidth: 100,
+  singleQuote: true,
+  trailingComma: 'all',
+  bracketSpacing: false,
+  bracketSameLine: false,
+  arrowParens: 'always',
+}

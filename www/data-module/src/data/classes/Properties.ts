@@ -5,10 +5,10 @@
   Copyright Buildbot Team Members
 */
 
-import {IAnyDataDescriptor} from "./DataDescriptor";
+import {IAnyDataDescriptor} from './DataDescriptor';
 
 export class PropertiesDescriptor implements IAnyDataDescriptor {
-  restArrayField = "properties";
+  restArrayField = 'properties';
 }
 
 export const propertiesDescriptor = new PropertiesDescriptor();

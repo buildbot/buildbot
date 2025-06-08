@@ -16,8 +16,8 @@
 */
 
 type AlertNotificationProps = {
-  text: string | null
-}
+  text: string | null;
+};
 
 export const AlertNotification = ({text}: AlertNotificationProps) => {
   if (text === null) {
@@ -25,7 +25,5 @@ export const AlertNotification = ({text}: AlertNotificationProps) => {
   }
 
   // TODO: add a way to clear the message
-  return (
-    <div className="alert alert-danger">{text}</div>
-  );
-}
+  return <div className="alert alert-danger">{text}</div>;
+};

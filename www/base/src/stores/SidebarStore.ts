@@ -15,13 +15,13 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
+import {action, makeObservable, observable} from 'mobx';
 
 export class SidebarStore {
   @observable pinned: boolean;
   @observable active: boolean;
   @observable inside: boolean = false;
-  @observable activeGroup: string|null = null;
+  @observable activeGroup: string | null = null;
 
   constructor() {
     makeObservable(this);
@@ -30,11 +30,11 @@ export class SidebarStore {
   }
 
   private computeInitialPinned() {
-    const value = localStorage.getItem("sidebarPinned");
-    if (value === "true") {
+    const value = localStorage.getItem('sidebarPinned');
+    if (value === 'true') {
       return true;
     }
-    if (value === "false") {
+    if (value === 'false') {
       return false;
     }
     return window.innerWidth > 800;
@@ -42,7 +42,7 @@ export class SidebarStore {
 
   @action togglePinned() {
     this.pinned = !this.pinned;
-    localStorage.setItem("sidebarPinned", this.pinned.toString());
+    localStorage.setItem('sidebarPinned', this.pinned.toString());
   }
 
   @action enter() {

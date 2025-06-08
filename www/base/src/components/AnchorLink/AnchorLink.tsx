@@ -15,20 +15,22 @@
   Copyright Buildbot Team Members
 */
 
-import {Link, useLocation} from "react-router-dom";
+import {Link, useLocation} from 'react-router-dom';
 
 type AnchorLinkProps = {
   className: string;
   anchor: string;
   children: JSX.Element | JSX.Element[] | string;
-}
+};
 export const AnchorLink = ({className, anchor, children}: AnchorLinkProps) => {
   const location = useLocation();
   return (
-    <Link className={className}
-          to={`${location.pathname}#${anchor}`}
-          onClick={e => e.stopPropagation()}>
+    <Link
+      className={className}
+      to={`${location.pathname}#${anchor}`}
+      onClick={(e) => e.stopPropagation()}
+    >
       {children}
     </Link>
-  )
-}
+  );
+};

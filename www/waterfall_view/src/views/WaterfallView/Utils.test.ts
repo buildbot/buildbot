@@ -15,18 +15,17 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
-import {Build, IDataAccessor, UNKNOWN} from "buildbot-data-js";
-import {BuildGroup, groupBuildsByTime, WaterfallYScale} from "./Utils";
+import {describe, expect, it} from 'vitest';
+import {Build, IDataAccessor, UNKNOWN} from 'buildbot-data-js';
+import {BuildGroup, groupBuildsByTime, WaterfallYScale} from './Utils';
 
 type TestBuild = {
   buildid: number;
   builderid: number;
   started_at: number;
   complete: boolean;
-  complete_at: number|null;
-}
-
+  complete_at: number | null;
+};
 
 function testBuildToReal(b: TestBuild) {
   return new Build(undefined as unknown as IDataAccessor, {
@@ -39,7 +38,7 @@ function testBuildToReal(b: TestBuild) {
     started_at: b.started_at,
     complete_at: b.complete_at,
     complete: b.complete,
-    state_string: "state",
+    state_string: 'state',
     results: UNKNOWN,
     properties: {},
   });
@@ -47,15 +46,19 @@ function testBuildToReal(b: TestBuild) {
 
 describe('Utils', () => {
   describe('groupBuildsByTime', () => {
-    function testGroupBuildsByTime(builds: TestBuild[],
-                                   builderIds: number[],
-                                   threshold: number,
-                                   currentTimeMs: number,
-                                   expectedGroups: BuildGroup[]) {
-
+    function testGroupBuildsByTime(
+      builds: TestBuild[],
+      builderIds: number[],
+      threshold: number,
+      currentTimeMs: number,
+      expectedGroups: BuildGroup[],
+    ) {
       const groups = groupBuildsByTime(
-        new Set<number>(builderIds), builds.map(b => testBuildToReal(b)),
-        threshold, currentTimeMs);
+        new Set<number>(builderIds),
+        builds.map((b) => testBuildToReal(b)),
+        threshold,
+        currentTimeMs,
+      );
 
       expect(groups).toStrictEqual(expectedGroups);
     }
@@ -107,7 +110,7 @@ describe('Utils', () => {
       ];
       testGroupBuildsByTime(builds, [1], 100, 123400, [
         {minTime: 90000, maxTime: 90290},
-        {minTime: 90400, maxTime: 90590}
+        {minTime: 90400, maxTime: 90590},
       ]);
     });
 
@@ -121,7 +124,7 @@ describe('Utils', () => {
       ];
       testGroupBuildsByTime(builds, [1], 100, 123400, [
         {minTime: 90000, maxTime: 90290},
-        {minTime: 90400, maxTime: 123400}
+        {minTime: 90400, maxTime: 123400},
       ]);
     });
 
@@ -135,7 +138,7 @@ describe('Utils', () => {
       ];
       testGroupBuildsByTime(builds, [1], 100, 123400, [
         {minTime: 90000, maxTime: 90290},
-        {minTime: 90400, maxTime: 123400}
+        {minTime: 90400, maxTime: 123400},
       ]);
     });
 
@@ -147,9 +150,7 @@ describe('Utils', () => {
         {buildid: 4, builderid: 1, started_at: 90400, complete: true, complete_at: 90490},
         {buildid: 5, builderid: 1, started_at: 90500, complete: true, complete_at: 90590},
       ];
-      testGroupBuildsByTime(builds, [1], 100, 123400, [
-        {minTime: 90000, maxTime: 123400}
-      ]);
+      testGroupBuildsByTime(builds, [1], 100, 123400, [{minTime: 90000, maxTime: 123400}]);
     });
   });
 
@@ -177,10 +178,14 @@ describe('Utils', () => {
     });
 
     it('two groups', () => {
-      const scale = new WaterfallYScale([
-        {minTime: 1000, maxTime: 1100},
-        {minTime: 1200, maxTime: 1300}
-      ], 10, 410);
+      const scale = new WaterfallYScale(
+        [
+          {minTime: 1000, maxTime: 1100},
+          {minTime: 1200, maxTime: 1300},
+        ],
+        10,
+        410,
+      );
       expect(scale.getCoord(0)).toBeUndefined();
       expect(scale.getCoord(1000)).toEqual(410);
       expect(scale.getCoord(1050)).toEqual(310);

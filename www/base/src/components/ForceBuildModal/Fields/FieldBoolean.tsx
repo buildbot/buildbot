@@ -15,16 +15,16 @@
   Copyright Buildbot Team Members
 */
 
-import {ForceSchedulerFieldBoolean} from "buildbot-data-js";
-import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
-import {FaRegQuestionCircle} from "react-icons/fa";
-import {observer} from "mobx-react";
-import {Tooltip} from 'react-tooltip'
+import {ForceSchedulerFieldBoolean} from 'buildbot-data-js';
+import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
+import {FaRegQuestionCircle} from 'react-icons/fa';
+import {observer} from 'mobx-react';
+import {Tooltip} from 'react-tooltip';
 
 type FieldBooleanProps = {
   field: ForceSchedulerFieldBoolean;
   fieldsState: ForceBuildModalFieldsState;
-}
+};
 
 export const FieldBoolean = observer(({field, fieldsState}: FieldBooleanProps) => {
   const state = fieldsState.fields.get(field.fullName)!;
@@ -36,15 +36,17 @@ export const FieldBoolean = observer(({field, fieldsState}: FieldBooleanProps) =
           <label>
             <input
               data-bb-test-id={`force-field-${field.fullName}`}
-              type="checkbox" checked={state.value}
-              onChange={event => fieldsState.setValue(field.fullName,
-                event.target.checked)} /> {field.label}
-                {field.tooltip && (
-                  <span data-tooltip-id="my-tooltip" data-tooltip-html={field.tooltip}>
-                    <FaRegQuestionCircle className="tooltip-icon"/>
-                  </span>
-                )}
-                <Tooltip id="my-tooltip" clickable/>
+              type="checkbox"
+              checked={state.value}
+              onChange={(event) => fieldsState.setValue(field.fullName, event.target.checked)}
+            />{' '}
+            {field.label}
+            {field.tooltip && (
+              <span data-tooltip-id="my-tooltip" data-tooltip-html={field.tooltip}>
+                <FaRegQuestionCircle className="tooltip-icon" />
+              </span>
+            )}
+            <Tooltip id="my-tooltip" clickable />
           </label>
         </div>
       </div>

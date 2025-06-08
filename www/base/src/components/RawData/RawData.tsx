@@ -16,25 +16,25 @@
 */
 
 import './RawData.scss';
-import moment from "moment";
-import {useState} from "react";
-import _ from "underscore";
-import {isObservableArray, isObservableObject} from "mobx";
-import {ArrowExpander} from "buildbot-ui";
+import moment from 'moment';
+import {useState} from 'react';
+import _ from 'underscore';
+import {isObservableArray, isObservableObject} from 'mobx';
+import {ArrowExpander} from 'buildbot-ui';
 
 const isArrayRaw = (v: any) => {
   return _.isArray(v) || isObservableArray(v);
-}
+};
 const isObjectRaw = (v: any) => {
   return (_.isObject(v) || isObservableObject(v)) && !isArrayRaw(v);
-}
+};
 
 const isArrayOfObjectsRaw = (v: any) => {
   return isArrayRaw(v) && v.length > 0 && isObjectRaw(v[0]);
-}
+};
 
-export const displayBuildRequestEntry = (key: string, value: any) : string => {
-  if (key === "claimed_at" || key === "complete_at" || key === "submitted_at") {
+export const displayBuildRequestEntry = (key: string, value: any): string => {
+  if (key === 'claimed_at' || key === 'complete_at' || key === 'submitted_at') {
     try {
       return `${value} (${moment(Number.parseInt(value.toString()) * 1000).format()})`;
     } catch (error) {
@@ -42,10 +42,10 @@ export const displayBuildRequestEntry = (key: string, value: any) : string => {
     }
   }
   return value.toString();
-}
+};
 
-export const displayBuildsetEntry = (key: string, value: any) : string => {
-  if (key === "complete_at" || key === "created_at" || key === "submitted_at") {
+export const displayBuildsetEntry = (key: string, value: any): string => {
+  if (key === 'complete_at' || key === 'created_at' || key === 'submitted_at') {
     // created_at is for dictionaries in sourcestamps list
     try {
       return `${value} (${moment(Number.parseInt(value.toString()) * 1000).format()})`;
@@ -54,12 +54,12 @@ export const displayBuildsetEntry = (key: string, value: any) : string => {
     }
   }
   return value.toString();
-}
+};
 
 type RawDataProps = {
   data: {[key: string]: any};
   displayCallback?: (key: string, value: any) => string;
-}
+};
 
 export const RawData = ({data, displayCallback}: RawDataProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -69,24 +69,24 @@ export const RawData = ({data, displayCallback}: RawDataProps) => {
       <ul>
         {value.map((v, index) => (
           <li key={index}>
-            <RawData data={v} displayCallback={displayCallback}/>
+            <RawData data={v} displayCallback={displayCallback} />
           </li>
         ))}
       </ul>
     );
-  }
+  };
 
   const renderDataElement = (key: string, value: any) => {
     if (value === null) {
-      return <dd>{"null"}&nbsp;</dd>;
+      return <dd>{'null'}&nbsp;</dd>;
     }
     if (value === undefined) {
-      return <dd>{"undefined"}&nbsp;</dd>;
+      return <dd>{'undefined'}&nbsp;</dd>;
     }
     if (isArrayOfObjectsRaw(value)) {
       return (
         <dd>
-          <ArrowExpander isExpanded={isExpanded} setIsExpanded={setIsExpanded}/>
+          <ArrowExpander isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
           {isExpanded ? renderArrayElements(value as any[]) : <span>{JSON.stringify(value)}</span>}
         </dd>
       );
@@ -94,23 +94,30 @@ export const RawData = ({data, displayCallback}: RawDataProps) => {
     if (isObjectRaw(value)) {
       return (
         <dd>
-          <ArrowExpander isExpanded={isExpanded} setIsExpanded={setIsExpanded}/>
-          {isExpanded ? <div><RawData data={value} displayCallback={displayCallback}/></div> : <></>}
+          <ArrowExpander isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
+          {isExpanded ? (
+            <div>
+              <RawData data={value} displayCallback={displayCallback} />
+            </div>
+          ) : (
+            <></>
+          )}
         </dd>
-      )
+      );
     }
 
-    const displayValue = displayCallback === undefined ? value.toString() : displayCallback(key, value);
+    const displayValue =
+      displayCallback === undefined ? value.toString() : displayCallback(key, value);
 
     return <dd>{displayValue}&nbsp;</dd>;
-  }
+  };
 
   const renderElements = () => {
     if (data === undefined) {
       return [];
     }
 
-    return Object.entries(data).map(keyValue => {
+    return Object.entries(data).map((keyValue) => {
       const [key, value] = keyValue;
 
       return (
@@ -120,11 +127,7 @@ export const RawData = ({data, displayCallback}: RawDataProps) => {
         </div>
       );
     });
-  }
+  };
 
-  return (
-    <dl className="dl-horizontal">
-      {renderElements()}
-    </dl>
-  );
-}
+  return <dl className="dl-horizontal">{renderElements()}</dl>;
+};

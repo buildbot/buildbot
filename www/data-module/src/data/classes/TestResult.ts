@@ -5,26 +5,25 @@
   Copyright Buildbot Team Members
 */
 
-
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
 
 export class TestResult extends BaseClass {
   @observable test_resultid!: number;
   @observable builderid!: number;
   @observable test_result_setid!: number;
-  @observable test_name!: string|null;
-  @observable test_code_path!: string|null;
-  @observable duration_ns!: number|null;
-  @observable line!: number|null;
+  @observable test_name!: string | null;
+  @observable test_code_path!: string | null;
+  @observable duration_ns!: number | null;
+  @observable line!: number | null;
   @observable value!: string;
 
   constructor(accessor: IDataAccessor, object: any) {
     // Note that the endpoint specified below is not valid. This is fine, as test results have
     // no subresources.
-    super(accessor, "test_results", String(object.test_resultid));
+    super(accessor, 'test_results', String(object.test_resultid));
     this.update(object);
     makeObservable(this);
   }
@@ -55,8 +54,8 @@ export class TestResult extends BaseClass {
 }
 
 export class TestResultDescriptor implements IDataDescriptor<TestResult> {
-  restArrayField = "test_results";
-  fieldId: string = "test_resultid";
+  restArrayField = 'test_results';
+  fieldId: string = 'test_resultid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new TestResult(accessor, object);
