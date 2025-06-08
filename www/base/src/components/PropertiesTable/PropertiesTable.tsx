@@ -34,7 +34,6 @@ export const PropertiesTable = observer(({properties}: PropertiesTableProps) => 
         <td className="text-left">{key}</td>
         <td className="text-left">
           <pre className="bb-properties-value">{valueString}</pre>
-          {/* @ts-ignore CopyToClipboard is not understood as React component for some reason */}
           <CopyToClipboard text={valueString}>
             <FaCopy className="bb-properties-copy clickable"></FaCopy>
           </CopyToClipboard>

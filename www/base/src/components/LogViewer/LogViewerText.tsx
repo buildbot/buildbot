@@ -84,7 +84,7 @@ export const LogViewerText = observer(
         () => setRenderCounter((c) => c + 1),
       );
     }
-    const manager = managerRef.current!;
+    const manager = managerRef.current;
 
     manager.setLogNumLines(log.num_lines);
 
@@ -97,7 +97,7 @@ export const LogViewerText = observer(
     const containerRef = useRef<HTMLDivElement>(null);
     const checkSelection = useCallback(() => {
       manager.setIsSelectionActive(isSelectionActiveWithinElement(containerRef.current));
-    }, []);
+    }, [manager]);
 
     const getRangeToRenderOverride = (
       overscanStartIndex: number,
@@ -150,9 +150,18 @@ export const LogViewerText = observer(
     const outerElementType = useMemo(
       () =>
         forwardRef<HTMLDivElement, FixedSizeListOuterProps>((props, ref) => (
-          <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props} />
+          <div
+            ref={ref}
+            role="button"
+            tabIndex={0}
+            onMouseDown={checkSelection}
+            onMouseUp={checkSelection}
+            onKeyDown={checkSelection}
+            onKeyUp={checkSelection}
+            {...props}
+          />
         )),
-      [],
+      [checkSelection],
     );
 
     const LogTextArea: React.FC<Size> = ({height, width}) => (

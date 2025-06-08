@@ -465,7 +465,7 @@ export class Visualizer {
     const tooltipOnRight = build.builderid < this.builders.length / 2;
 
     // Create tooltip
-    let height = 40;
+    const height = 40;
     const tooltip = e
       .append('g')
       .attr('class', 'svg-tooltip')
@@ -567,6 +567,7 @@ export class Visualizer {
       .text((build) => build.number)
       .each(buildlink);
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     // Add event listeners

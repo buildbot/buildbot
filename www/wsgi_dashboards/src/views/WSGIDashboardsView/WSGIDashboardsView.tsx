@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import axios, {AxiosRequestConfig} from 'axios';
+import axios from 'axios';
 import {createElement, useEffect, useRef, useState} from 'react';
 import * as fa from 'react-icons/fa';
 import {IconType} from 'react-icons';
@@ -38,7 +38,7 @@ function getData(url: string) {
     onCancel(() => {
       controller.abort();
     });
-    let config = {
+    const config = {
       method: 'get',
       url,
       params: {},
@@ -71,7 +71,7 @@ export default function WSGIDashboardsView({name}: WSGIDashboardsViewProps) {
     }
 
     pendingRequest.current = getData(location);
-    pendingRequest.current.then((content) => {
+    void pendingRequest.current.then((content) => {
       setWsgiContent(content);
     });
     return () => {
@@ -97,8 +97,8 @@ export default function WSGIDashboardsView({name}: WSGIDashboardsViewProps) {
 }
 
 function getIcon(iconNames: string[]): IconType | undefined {
-  for (const iconName in iconNames) {
-    // @ts-ignore
+  for (const iconName of iconNames) {
+    // @ts-expect-error Ts does not understand accessing module imports by [] operator
     const icon = fa[iconName];
     if (icon !== undefined) {
       return icon;
@@ -110,7 +110,7 @@ function getIcon(iconNames: string[]): IconType | undefined {
 buildbotSetupPlugin((reg, config) => {
   const wsgi_dashboards = config.plugins['wsgi_dashboards'];
 
-  for (let dashboard of wsgi_dashboards) {
+  for (const dashboard of wsgi_dashboards) {
     const {name} = dashboard;
     let {caption} = dashboard;
     if (caption == null) {

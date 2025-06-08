@@ -18,7 +18,7 @@
     "build-config-buildbot": "link:../common-config",
     "eslint": "^9.27.0",
     "vite": "~5.4.18",
-    "vite-plugin-checker": "^0.8.0",
+    "vite-plugin-checker": "^0.9.0",
     "vite-plugin-dts": "^4.1.0",
     "vitest": "~3.0.5"
   },

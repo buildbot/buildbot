@@ -17,7 +17,6 @@
 
 import {SidebarStore} from '../stores/SidebarStore';
 import {createContext} from 'react';
-import {TopbarStore} from 'buildbot-ui';
 
 export type Stores = {
   sidebar: SidebarStore;

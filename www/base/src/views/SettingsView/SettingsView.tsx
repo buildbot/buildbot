@@ -34,9 +34,9 @@ import {FieldString} from './Fields/FieldString';
 
 const computeMasterCfgSnippet = (settings: GlobalSettings) => {
   let code = "c['www']['ui_default_config'] = { \n";
-  for (let groupName in settings.groups) {
+  for (const groupName in settings.groups) {
     const group = settings.groups[groupName];
-    for (let item of Object.values(group.items)) {
+    for (const item of Object.values(group.items)) {
       if (item.value !== item.defaultValue && item.value !== null) {
         let value = JSON.stringify(item.value);
         if (value === 'true') {

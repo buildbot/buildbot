@@ -43,7 +43,6 @@ import {
   isRangeWithinAnother,
   limitRangeToSize,
 } from '../../util/Math';
-import {LineCssClasses} from '../../util/LineCssClasses';
 
 export type PendingRequest = {
   promise: CancellablePromise<any>;
@@ -651,7 +650,7 @@ export class LogTextManager {
     }
     const newResult = findTextInChunk(
       this.chunks[insertIndex],
-      this.searchString!,
+      this.searchString,
       this.searchOptions,
     );
     this.chunkSearchResults.splice(insertIndex, 0, newResult);
@@ -676,10 +675,10 @@ export class LogTextManager {
     const prevResult = this.chunkSearchResults[mergeIndex];
     const newResult = findTextInChunk(
       this.chunks[mergeIndex],
-      this.searchString!,
+      this.searchString,
       this.searchOptions,
     );
-    const additionalResultsCount = newResult.results.length - prevResult!.results.length;
+    const additionalResultsCount = newResult.results.length - prevResult.results.length;
 
     this.chunkSearchResults[mergeIndex] = newResult;
     this.totalSearchResultCount += additionalResultsCount;

@@ -26,7 +26,6 @@ import {
   BadgeStatus,
   ConfigContext,
   analyzeStepUrls,
-  stepDurationFormatWithLocks,
   useCurrentTime,
   useStateWithParentTrackingWithDefaultIfNotSet,
   useStepUrlAnalyzer,
@@ -221,7 +220,12 @@ const BuildSummaryStepLine = observer(
         className="bb-build-summary-step-line list-group-item"
         id={`bb-step-${step.number}`}
       >
-        <div onClick={() => setFullDisplay(!fullDisplay)}>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setFullDisplay(!fullDisplay)}
+          onKeyDown={() => setFullDisplay(!fullDisplay)}
+        >
           <AnchorLink
             className="bb-build-summary-step-anchor-link"
             anchor={`bb-step-${step.number}`}
@@ -319,14 +323,20 @@ export const BuildSummary = observer(
       <Card className={'bb-build-summary ' + results2class(build, null)}>
         <Card.Header>
           <div
+            role="button"
+            tabIndex={0}
             onClick={() => setFullDisplay(!fullDisplay)}
+            onKeyDown={() => setFullDisplay(!fullDisplay)}
             title="Expand all step logs"
             className="btn btn-xs btn-default"
           >
             <ArrowExpander isExpanded={fullDisplay} />
           </div>
           <div
+            role="button"
+            tabIndex={0}
             onClick={toggleDetails}
+            onKeyDown={toggleDetails}
             title="Show steps according to their importance"
             className="btn btn-xs btn-default"
           >

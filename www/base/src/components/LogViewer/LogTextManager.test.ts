@@ -20,7 +20,7 @@ import {LogTextManager} from './LogTextManager';
 import {CancellablePromise} from 'buildbot-data-js';
 
 const getFakeData = (offset: number, limit: number) => {
-  return new CancellablePromise((resolve, reject, onCancel) => {
+  return new CancellablePromise((resolve, _reject, _onCancel) => {
     let resultString = '';
     for (let i = 0; i < limit; ++i) {
       resultString += 'oaaaaa\n';

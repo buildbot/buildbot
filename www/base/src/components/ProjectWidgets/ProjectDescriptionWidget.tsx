@@ -18,7 +18,6 @@
 import {observer} from 'mobx-react';
 import {Card} from 'react-bootstrap';
 import {Project, useDataAccessor, useDataApiQuery} from 'buildbot-data-js';
-import {TableHeading} from '../TableHeading/TableHeading';
 
 export type ProjectDescriptionWidgetProps = {
   projectid: number;

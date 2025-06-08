@@ -211,7 +211,7 @@ describe('GridView', function () {
       resultsFilter === null ? UNKNOWN : resultsFilter,
       true,
       10,
-      (tags) => true,
+      (_tags) => true,
     );
 
     expect(branches).toEqual(expectedBranches);

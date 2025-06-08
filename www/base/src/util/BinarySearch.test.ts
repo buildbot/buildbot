@@ -36,7 +36,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. */
 
-import {describe, expect, it} from 'vitest';
+import {expect, it} from 'vitest';
 import {
   binarySearchEqual,
   binarySearchGreater,
@@ -46,13 +46,14 @@ import {
 } from './BinarySearch';
 
 it('binarySearchGreaterEqual', () => {
-  var lb = binarySearchGreaterEqual;
+  const lb = binarySearchGreaterEqual;
 
   function checkArray(arr: number[], values: number[]) {
-    for (var l = 0; l < arr.length; ++l) {
-      for (var h = l; h < arr.length; ++h) {
-        for (var i = 0; i < values.length; ++i) {
-          for (var j = l; j <= h; ++j) {
+    for (let l = 0; l < arr.length; ++l) {
+      for (let h = l; h < arr.length; ++h) {
+        for (let i = 0; i < values.length; ++i) {
+          let j;
+          for (j = l; j <= h; ++j) {
             if (arr[j] >= values[i]) {
               break;
             }
@@ -98,10 +99,11 @@ it('binarySearchLess', () => {
   const lu = binarySearchLess;
 
   function checkArray(arr: number[], values: number[]) {
-    for (var l = 0; l < arr.length; ++l) {
-      for (var h = l; h < arr.length; ++h) {
-        for (var i = 0; i < values.length; ++i) {
-          for (var j = h; j >= l; --j) {
+    for (let l = 0; l < arr.length; ++l) {
+      for (let h = l; h < arr.length; ++h) {
+        for (let i = 0; i < values.length; ++i) {
+          let j;
+          for (j = h; j >= l; --j) {
             if (values[i] > arr[j]) {
               break;
             }
@@ -119,10 +121,11 @@ it('binarySearchGreater', () => {
   const lb = binarySearchGreater;
 
   function checkArray(arr: number[], values: number[]) {
-    for (var l = 0; l < arr.length; ++l) {
-      for (var h = l; h < arr.length; ++h) {
-        for (var i = 0; i < values.length; ++i) {
-          for (var j = l; j <= h; ++j) {
+    for (let l = 0; l < arr.length; ++l) {
+      for (let h = l; h < arr.length; ++h) {
+        for (let i = 0; i < values.length; ++i) {
+          let j;
+          for (j = l; j <= h; ++j) {
             if (arr[j] > values[i]) {
               break;
             }
@@ -140,8 +143,9 @@ it('binarySearchLessEqual', () => {
   const lu = binarySearchLessEqual;
 
   function checkArray(arr: number[], values: number[]) {
-    for (var i = 0; i < values.length; ++i) {
-      for (var j = arr.length - 1; j >= 0; --j) {
+    for (let i = 0; i < values.length; ++i) {
+      let j;
+      for (j = arr.length - 1; j >= 0; --j) {
         if (values[i] >= arr[j]) {
           break;
         }
@@ -157,7 +161,7 @@ it('binarySearchEqual', () => {
   const lu = binarySearchEqual;
 
   function checkArray(arr: number[], values: number[]) {
-    for (var i = 0; i < values.length; ++i) {
+    for (let i = 0; i < values.length; ++i) {
       if (arr.indexOf(values[i]) < 0) {
         expect(lu(arr, values[i])).toEqual(-1);
       } else {

@@ -60,7 +60,7 @@ export class ForceBuildModalFieldsState {
     field.setValue(value);
   }
 
-  getValue(name: string): any | null {
+  getValue(name: string): any {
     const field = this.fields.get(name);
     if (field === undefined) {
       return null;

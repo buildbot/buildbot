@@ -17,7 +17,7 @@
 
 import {observer} from 'mobx-react';
 import {useState} from 'react';
-import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
+import {buildbotSetupPlugin} from 'buildbot-plugin-support';
 import {
   Build,
   Builder,

@@ -96,7 +96,7 @@ export const LogPreview = observer(
         }
 
         pendingRequest.current = accessor.getRaw(`logs/${log.logid}/contents`, {});
-        pendingRequest.current.then((content) => {
+        void pendingRequest.current.then((content) => {
           setHtmlLog(content.logchunks[0].content);
         });
       } else {
@@ -125,7 +125,7 @@ export const LogPreview = observer(
             limit: limit,
           });
 
-          pendingRequest.current.then((response) => {
+          void pendingRequest.current.then((response) => {
             const content = response.logchunks[0].content as string;
             const lines = content.split('\n');
 
@@ -180,7 +180,17 @@ export const LogPreview = observer(
         {generateStyleElement('pre.log')}
         <Card.Header>
           <div className="flex-row">
-            <div onClick={() => setFullDisplay(!fullDisplay)} className="flex-grow-3">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setFullDisplay(!fullDisplay)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setFullDisplay(!fullDisplay);
+                }
+              }}
+              className="flex-grow-3"
+            >
               <ArrowExpander isExpanded={fullDisplay} />
               &nbsp;
               {log.name}

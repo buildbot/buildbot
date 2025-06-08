@@ -47,11 +47,11 @@ export function binarySearchGreaterEqual<T, U>(
   let l = lo === undefined ? 0 : lo | 0;
   let h = hi === undefined ? a.length - 1 : hi | 0;
 
-  var i = h + 1;
+  let i = h + 1;
   while (l <= h) {
-    var m = (l + h) >>> 1,
+    const m = (l + h) >>> 1,
       x = a[m];
-    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
+    const p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
     if (p >= 0) {
       i = m;
       h = m - 1;
@@ -73,11 +73,11 @@ export function binarySearchGreater<T, U>(
   let l = lo === undefined ? 0 : lo | 0;
   let h = hi === undefined ? a.length - 1 : hi | 0;
 
-  var i = h + 1;
+  let i = h + 1;
   while (l <= h) {
-    var m = (l + h) >>> 1,
+    const m = (l + h) >>> 1,
       x = a[m];
-    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
+    const p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
     if (p > 0) {
       i = m;
       h = m - 1;
@@ -99,11 +99,11 @@ export function binarySearchLess<T, U>(
   let l = lo === undefined ? 0 : lo | 0;
   let h = hi === undefined ? a.length - 1 : hi | 0;
 
-  var i = l - 1;
+  let i = l - 1;
   while (l <= h) {
-    var m = (l + h) >>> 1,
+    const m = (l + h) >>> 1,
       x = a[m];
-    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
+    const p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
     if (p < 0) {
       i = m;
       l = m + 1;
@@ -125,11 +125,11 @@ export function binarySearchLessEqual<T, U>(
   let l = lo === undefined ? 0 : lo | 0;
   let h = hi === undefined ? a.length - 1 : hi | 0;
 
-  var i = l - 1;
+  let i = l - 1;
   while (l <= h) {
-    var m = (l + h) >>> 1,
+    const m = (l + h) >>> 1,
       x = a[m];
-    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
+    const p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
     if (p <= 0) {
       i = m;
       l = m + 1;
@@ -152,9 +152,9 @@ export function binarySearchEqual<T, U>(
   let h = hi === undefined ? a.length - 1 : hi | 0;
 
   while (l <= h) {
-    var m = (l + h) >>> 1,
+    const m = (l + h) >>> 1,
       x = a[m];
-    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
+    const p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
     if (p === 0) {
       return m;
     }

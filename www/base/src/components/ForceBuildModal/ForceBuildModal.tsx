@@ -33,7 +33,7 @@ const visitFields = (
   fields: ForceSchedulerFieldBase[],
   callback: (field: ForceSchedulerFieldBase) => void,
 ) => {
-  for (let field of fields) {
+  for (const field of fields) {
     if (field.type === 'nested') {
       visitFields((field as ForceSchedulerFieldNested).fields, callback);
     } else {
@@ -43,7 +43,7 @@ const visitFields = (
 };
 
 const flattenFields = (fields: ForceSchedulerFieldBase[]) => {
-  let flatFields: ForceSchedulerFieldBase[] = [];
+  const flatFields: ForceSchedulerFieldBase[] = [];
   visitFields(fields, (field) => flatFields.push(field));
   return flatFields;
 };
@@ -69,7 +69,7 @@ export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceB
   });
 
   const fieldsState = useLocalObservable(() => new ForceBuildModalFieldsState());
-  for (let field of fields) {
+  for (const field of fields) {
     fieldsState.setupField(field.fullName, field.default);
   }
 
@@ -159,7 +159,7 @@ export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceB
       }
     };
 
-    forceBuildStart();
+    void forceBuildStart();
   };
 
   return (

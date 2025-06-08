@@ -21,7 +21,6 @@ import {
   Build,
   Builder,
   DataCollection,
-  Master,
   Worker,
   useDataAccessor,
   useDataApiDynamicQuery,
@@ -114,7 +113,7 @@ export const BuildersTable = observer(
 
       let workerElements: JSX.Element[] = [];
       if (builder.id in workersByFilteredBuilder) {
-        let workers = [...workersByFilteredBuilder[builder.id]];
+        const workers = [...workersByFilteredBuilder[builder.id]];
         workers.sort((a, b) => a.name.localeCompare(b.name));
         workerElements = workers.map((worker) => (
           <WorkerBadge key={worker.name} worker={worker} showWorkerName={showWorkerName} />

@@ -32,7 +32,7 @@ import {
 } from 'buildbot-data-js';
 import {useNavigate, useParams, useSearchParams} from 'react-router-dom';
 import {Tab, Tabs} from 'react-bootstrap';
-import {TopbarAction, TopbarItem, useTopbarActions, useTopbarItems} from 'buildbot-ui';
+import {TopbarAction, useTopbarActions, useTopbarItems} from 'buildbot-ui';
 import {
   displayBuildRequestEntry,
   displayBuildsetEntry,
@@ -137,7 +137,8 @@ export const BuildRequestView = observer(() => {
       const build = buildsQuery.getNthOrNull(0);
       navigate(`/builders/${build?.builderid}/builds/${build?.number}`);
     }
-  }, [buildsQuery.array.length > 0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buildsQuery.array.length > 0, buildsQuery, navigate, redirectToBuild]);
 
   const cancelBuildRequest = () => {
     if (isCancelling) {

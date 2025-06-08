@@ -65,6 +65,8 @@ const FilterControlPanel = <OptionType,>(props: FilterControlPanelProps<OptionTy
       <div className="bb-workers-actions-modal-control-container">
         {Array.isArray(props.children) && props.children[0]}
         <div
+          role="button"
+          tabIndex={0}
           className={`icon-button ${isHoveredSelectAll ? 'hovered' : ''} ${isActiveSelectAll ? 'active' : ''}`}
           onMouseEnter={() => setIsHoveredSelectAll(true)}
           onMouseLeave={() => {
@@ -87,6 +89,8 @@ const FilterControlPanel = <OptionType,>(props: FilterControlPanelProps<OptionTy
         </div>
 
         <div
+          role="button"
+          tabIndex={0}
           className={`icon-button ${isHoveredRegexSearch ? 'hovered' : ''} ${toggleRegexSearch ? 'active' : ''}`}
           onMouseEnter={() => setIsHoveredRegexSearch(true)}
           onMouseLeave={() => setIsHoveredRegexSearch(false)}
@@ -117,7 +121,7 @@ export const MultipleWorkersActionsModal = observer(
     const [errors, setErrors] = useState<string | null>(null);
     const [reasonText, setReasonText] = useState<string>('');
     const [selectedWorkers, setSelectedWorkers] = useState<Worker[]>(preselectedWorkers);
-    const [menuIsOpen, setMenuIsOpen] = useState<boolean>();
+    const [_menuIsOpen, setMenuIsOpen] = useState<boolean>();
     const [toggleRegexSearch, setToggleRegexSearch] = useState(false);
     const selectRef = useRef<SelectInstance<SelectOption, true> | null>(null);
 
@@ -137,7 +141,7 @@ export const MultipleWorkersActionsModal = observer(
       );
       const rejectedActions = results.filter((r) => r.status === 'rejected');
       if (rejectedActions.length > 0) {
-        setErrors(rejectedActions.map((r) => (r as PromiseRejectedResult).reason).join('\n'));
+        setErrors(rejectedActions.map((r) => r.reason).join('\n'));
       } else {
         onClose();
       }
@@ -182,7 +186,7 @@ export const MultipleWorkersActionsModal = observer(
         try {
           const regex = new RegExp(inputValue, 'i');
           return regex.test(option.data.label);
-        } catch (e) {
+        } catch (_e) {
           return false;
         }
       } else {
@@ -219,6 +223,7 @@ export const MultipleWorkersActionsModal = observer(
                 ref={selectRef}
                 isMulti
                 closeMenuOnSelect={false}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
                 value={selectedWorkers.map(workerToSelectOption)}
                 onChange={(
@@ -266,28 +271,36 @@ export const MultipleWorkersActionsModal = observer(
           <Button
             variant="primary"
             disabled={stopDisabled}
-            onClick={async () => await doAction('stop')}
+            onClick={() => {
+              doAction('stop').catch((err) => console.error(err));
+            }}
           >
             Graceful Shutdown
           </Button>
           <Button
             variant="primary"
             disabled={stopDisabled}
-            onClick={async () => await doAction('kill')}
+            onClick={() => {
+              doAction('kill').catch((err) => console.error(err));
+            }}
           >
             Force Shutdown
           </Button>
           <Button
             variant="primary"
             disabled={pauseDisabled}
-            onClick={async () => await doAction('pause')}
+            onClick={() => {
+              doAction('pause').catch((err) => console.error(err));
+            }}
           >
             Pause
           </Button>
           <Button
             variant="primary"
             disabled={unpauseDisabled}
-            onClick={async () => await doAction('unpause')}
+            onClick={() => {
+              doAction('unpause').catch((err) => console.error(err));
+            }}
           >
             Unpause
           </Button>

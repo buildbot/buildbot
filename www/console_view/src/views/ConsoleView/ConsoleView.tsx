@@ -519,7 +519,7 @@ export const ConsoleView = observer(() => {
                 rootClose={true}
               >
                 <FaPlusCircle
-                  onClick={(e) => openAllChanges()}
+                  onClick={(_e) => openAllChanges()}
                   className="bb-console-changes-expand-icon clickable"
                 />
               </OverlayTrigger>
@@ -535,7 +535,7 @@ export const ConsoleView = observer(() => {
                 rootClose={true}
               >
                 <FaMinusCircle
-                  onClick={(e) => closeAllChanges()}
+                  onClick={(_e) => closeAllChanges()}
                   className="bb-console-changes-expand-icon clickable"
                 />
               </OverlayTrigger>

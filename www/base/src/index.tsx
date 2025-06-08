@@ -1,6 +1,5 @@
 import './globals';
 import './globals2';
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import {initializeGlobalSetup} from './plugins/GlobalSetup';
@@ -26,7 +25,6 @@ import {
 import {HashRouter} from 'react-router-dom';
 import {SidebarStore} from './stores/SidebarStore';
 import {StoresContext} from './contexts/Stores';
-import {globalSettings} from './plugins/GlobalSettings';
 import moment from 'moment';
 import axios from 'axios';
 
@@ -88,9 +86,14 @@ if ('buildbotFrontendConfig' in windowAny) {
   doRender(windowAny.buildbotFrontendConfig);
 } else {
   // fallback during development
-  axios.get('config').then((response) => {
-    const config: Config = response.data;
-    config.isProxy = true;
-    doRender(config);
-  });
+  axios
+    .get('config')
+    .then((response) => {
+      const config: Config = response.data;
+      config.isProxy = true;
+      doRender(config);
+    })
+    .catch((error) => {
+      console.error('Error fetching config:', error);
+    });
 }

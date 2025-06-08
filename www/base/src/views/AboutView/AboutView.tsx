@@ -28,7 +28,6 @@ import {
 } from 'buildbot-data-js';
 import {ConfigContext} from 'buildbot-ui';
 import {useContext, useState} from 'react';
-import {Link} from 'react-router-dom';
 import {RawData} from '../../components/RawData/RawData';
 
 type EndpointListItemProps = {
@@ -67,9 +66,16 @@ const EndpointListItem = ({spec}: EndpointListItemProps) => {
   return (
     <li key={spec.path} className="list-group-item">
       <b
-        onClick={(e) => {
+        onClick={(_e) => {
           setShowDetail(!showDetail);
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            setShowDetail(!showDetail);
+          }
+        }}
+        role="button"
+        tabIndex={0}
       >
         /{spec.path}:
       </b>

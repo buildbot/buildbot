@@ -79,7 +79,7 @@ export function ansiSgrClassesToCss(ansiClasses: string[], cssClasses: {[key: st
     // which is a color reset code
     return {};
   }
-  let newCssClasses: {[key: string]: boolean} = {};
+  const newCssClasses: {[key: string]: boolean} = {};
   let background = '';
   let foreground = '';
   let resetForeground = false;
