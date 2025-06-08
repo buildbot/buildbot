@@ -15,12 +15,12 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
+import {describe, expect, it} from 'vitest';
 import {cleanup, render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { FieldChoiceString } from "./FieldChoiceString";
-import { ForceSchedulerFieldChoiceString } from 'buildbot-data-js';
-import { ForceBuildModalFieldsState } from '../ForceBuildModalFieldsState';
+import {FieldChoiceString} from './FieldChoiceString';
+import {ForceSchedulerFieldChoiceString} from 'buildbot-data-js';
+import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
 
 type FieldChoiceStringTestOptions = {
   defaultValue: string | string[];
@@ -28,7 +28,7 @@ type FieldChoiceStringTestOptions = {
   updateValueTo?: string[];
   multiple?: boolean;
   strict?: boolean;
-}
+};
 
 async function assertRenderToSnapshot(options: FieldChoiceStringTestOptions) {
   const field: ForceSchedulerFieldChoiceString = {
@@ -46,19 +46,19 @@ async function assertRenderToSnapshot(options: FieldChoiceStringTestOptions) {
     tooltip: 'dummy',
     choices: ['A', 'B', 'C'],
     strict: options.strict ?? true,
-  }
+  };
   const state = new ForceBuildModalFieldsState();
   state.createNewField(field.fullName, field.default);
   if (options.stateValue !== undefined) {
     state.setValue(field.fullName, options.stateValue);
   }
 
-  const component = render(
-    <FieldChoiceString field={field} fieldsState={state} />
-  );
+  const component = render(<FieldChoiceString field={field} fieldsState={state} />);
 
   // open dropdown
-  const element = component.getByTestId(`force-field-${field.fullName}`).querySelector('input[role="combobox"]');
+  const element = component
+    .getByTestId(`force-field-${field.fullName}`)
+    .querySelector('input[role="combobox"]');
   expect(element).not.toBeNull();
   if (element !== null) {
     await userEvent.click(element);
@@ -77,15 +77,14 @@ async function assertRenderToSnapshot(options: FieldChoiceStringTestOptions) {
 
     if (!field.multiple) {
       expect(expectedState.length).toBe(1);
-      const optionToSelect = allOptions.find(n => expectedState[0] === n.textContent);
+      const optionToSelect = allOptions.find((n) => expectedState[0] === n.textContent);
       expect(optionToSelect).not.toBeUndefined();
       if (optionToSelect !== undefined) {
         await userEvent.click(optionToSelect);
       }
-    }
-    else {
+    } else {
       const currentValue: string[] = state.getValue(field.fullName);
-      const valuesToDeselect = currentValue.filter(e => !expectedState.includes(e));
+      const valuesToDeselect = currentValue.filter((e) => !expectedState.includes(e));
 
       const optionsToDeselect = [
         ...component
@@ -95,17 +94,17 @@ async function assertRenderToSnapshot(options: FieldChoiceStringTestOptions) {
 
       for (const value of valuesToDeselect) {
         const label = `Remove ${value}`;
-        const option = optionsToDeselect.find(n => n.ariaLabel === label);
+        const option = optionsToDeselect.find((n) => n.ariaLabel === label);
         expect(option).not.toBeUndefined();
         if (option !== undefined) {
           await userEvent.click(option);
         }
       }
 
-      const valuesToSelect = expectedState.filter(e => !currentValue.includes(e));
+      const valuesToSelect = expectedState.filter((e) => !currentValue.includes(e));
       for (const element of allOptions) {
         const elementValue = element.textContent;
-        if (elementValue!== null && valuesToSelect.includes(elementValue)) {
+        if (elementValue !== null && valuesToSelect.includes(elementValue)) {
           await userEvent.click(element);
         }
       }
@@ -116,8 +115,7 @@ async function assertRenderToSnapshot(options: FieldChoiceStringTestOptions) {
       stateValue.sort();
       expectedState.sort();
       expect(stateValue).toStrictEqual(expectedState);
-    }
-    else {
+    } else {
       expect(state.getValue(field.fullName)).toBe(expectedState[0]);
     }
   }
@@ -125,30 +123,43 @@ async function assertRenderToSnapshot(options: FieldChoiceStringTestOptions) {
 
 describe('ForceFieldChoiceString component', function () {
   it('render default value', async () => {
-    await assertRenderToSnapshot({ defaultValue: 'A' });
+    await assertRenderToSnapshot({defaultValue: 'A'});
     cleanup();
-    await assertRenderToSnapshot({ defaultValue: 'B' });
+    await assertRenderToSnapshot({defaultValue: 'B'});
   });
 
   it('render multiple default value', async () => {
-    await assertRenderToSnapshot({ defaultValue: ['A'], multiple: true });
+    await assertRenderToSnapshot({defaultValue: ['A'], multiple: true});
     cleanup();
-    await assertRenderToSnapshot({ defaultValue: ['A', 'B'], multiple: true });
+    await assertRenderToSnapshot({defaultValue: ['A', 'B'], multiple: true});
   });
 
   it('render non-default value', async () => {
-    await assertRenderToSnapshot({ defaultValue: 'A', stateValue: 'B' });
+    await assertRenderToSnapshot({defaultValue: 'A', stateValue: 'B'});
   });
 
   it('render multiple non-default value', async () => {
-    await assertRenderToSnapshot({ defaultValue: ['A'], stateValue: ['B', 'C'], multiple: true });
+    await assertRenderToSnapshot({
+      defaultValue: ['A'],
+      stateValue: ['B', 'C'],
+      multiple: true,
+    });
   });
 
   it('change state on click', async () => {
-    await assertRenderToSnapshot({ defaultValue: 'A', stateValue: 'B', updateValueTo: ['C'] });
+    await assertRenderToSnapshot({
+      defaultValue: 'A',
+      stateValue: 'B',
+      updateValueTo: ['C'],
+    });
   });
 
   it('change multiple state on click', async () => {
-    await assertRenderToSnapshot({ defaultValue: ['A'], stateValue: ['B', 'C'], updateValueTo: ['A', 'C'], multiple: true });
+    await assertRenderToSnapshot({
+      defaultValue: ['A'],
+      stateValue: ['B', 'C'],
+      updateValueTo: ['A', 'C'],
+      multiple: true,
+    });
   });
 });

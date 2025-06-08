@@ -15,8 +15,11 @@
   Copyright Buildbot Team Members
 */
 
-export function pushIntoMapOfArrays<Key, ValueItem>(map: Map<Key, ValueItem[]>,
-                                                    key: Key, value: ValueItem) {
+export function pushIntoMapOfArrays<Key, ValueItem>(
+  map: Map<Key, ValueItem[]>,
+  key: Key,
+  value: ValueItem,
+) {
   const existingValues = map.get(key);
   if (existingValues === undefined) {
     map.set(key, [value]);

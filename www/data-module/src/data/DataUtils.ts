@@ -9,7 +9,7 @@ export function capitalize(s: string) {
   return s[0].toUpperCase() + s.slice(1).toLowerCase();
 }
 
-export function copyOrSplit(arrayOrString: any) : string[] {
+export function copyOrSplit(arrayOrString: any): string[] {
   if (Array.isArray(arrayOrString)) {
     // return a copy
     return arrayOrString.slice();
@@ -17,7 +17,9 @@ export function copyOrSplit(arrayOrString: any) : string[] {
     // split the string to get an array
     return arrayOrString.split('/');
   } else {
-    throw new TypeError(`Parameter 'arrayOrString' must be a array or a string, not ${typeof arrayOrString}`);
+    throw new TypeError(
+      `Parameter 'arrayOrString' must be a array or a string, not ${typeof arrayOrString}`,
+    );
   }
 }
 
@@ -28,28 +30,28 @@ export function socketPath(arg: string | string[]) {
   // and needs to be properties/*, not properties/*/*
   const stars = ['*'];
   // is it odd?
-  if (((a.length % 2) === 1) && (a.at(-1) !== "properties")) {
+  if (a.length % 2 === 1 && a.at(-1) !== 'properties') {
     stars.push('*');
   }
   return a.concat(stars).join('/');
 }
 
 export function socketPathRE(socketPath: string) {
-  return new RegExp(`^${socketPath.replace(/\*/g, "[^/]+")}$`);
+  return new RegExp(`^${socketPath.replace(/\*/g, '[^/]+')}$`);
 }
 
 export function restPath(arg: string | string[]) {
   let a = copyOrSplit(arg);
-  a = a.filter(e => e !== '*');
+  a = a.filter((e) => e !== '*');
   return a.join('/');
 }
 
 export function endpointPath(arg: string | string[]) {
   // if the argument count is even, the last argument is an id
   let a = copyOrSplit(arg);
-  a = a.filter(e => e !== '*');
+  a = a.filter((e) => e !== '*');
   // is it even?
-  if ((a.length % 2) === 0) {
+  if (a.length % 2 === 0) {
     a.pop();
   }
   return a.join('/');
@@ -57,7 +59,7 @@ export function endpointPath(arg: string | string[]) {
 
 export function splitOptions(args: any[]) {
   // keep defined arguments only
-  args = args.filter(e => e != null);
+  args = args.filter((e) => e != null);
 
   let query = {}; // default
   // get the query parameters
@@ -70,7 +72,7 @@ export function splitOptions(args: any[]) {
   return [args, query];
 }
 
-export function parse(object : any): any {
+export function parse(object: any): any {
   for (const k in object) {
     const v = object[k];
     try {
@@ -80,7 +82,7 @@ export function parse(object : any): any {
   return object;
 }
 
-export function numberOrString(str: string | number) : number {
+export function numberOrString(str: string | number): number {
   // if already a number
   if (typeof str === 'number') {
     return str;
@@ -95,7 +97,8 @@ export function numberOrString(str: string | number) : number {
 }
 
 export function emailInString(s: string) {
-  const emailRegex = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/;
+  const emailRegex =
+    /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/;
   try {
     return emailRegex.exec(s)?.pop() || '';
   } catch (_error) {

@@ -28,10 +28,10 @@ export type RouteConfig = {
   route: string;
   group: string | null;
   element: () => JSX.Element;
-}
+};
 
 export type SettingValue = string | number | boolean;
-export type SettingType = "string" | "integer" | "float" | "boolean" | "choice_combo";
+export type SettingType = 'string' | 'integer' | 'float' | 'boolean' | 'choice_combo';
 
 export type SettingItemConfig = {
   name: string;
@@ -39,19 +39,19 @@ export type SettingItemConfig = {
   caption: string;
   choices?: string[]; // only when type == "choice_combo"
   defaultValue: SettingValue;
-}
+};
 
 export type SettingGroupConfig = {
   name: string;
   caption: string | null;
   items: SettingItemConfig[];
-}
+};
 
 export type RegistrationCallbacks = {
   registerMenuGroup: (group: GroupSettings) => void;
   registerRoute: (route: RouteConfig) => void;
   registerSettingGroup: (group: SettingGroupConfig) => void;
-}
+};
 
 export interface ISettings {
   getIntegerSetting(selector: string): number;
@@ -61,9 +61,12 @@ export interface ISettings {
   getBooleanSetting(selector: string): boolean;
   setSetting(selector: string, value: SettingValue): void;
   save(): void;
-};
+}
 
-export type PluginRegistrationCallback = (registrationCallbacks: RegistrationCallbacks, config: any) => void;
+export type PluginRegistrationCallback = (
+  registrationCallbacks: RegistrationCallbacks,
+  config: any,
+) => void;
 
 const pluginRegistrationCallbacks: PluginRegistrationCallback[] = [];
 const pluginRegistrationConsumers: ((callback: PluginRegistrationCallback) => void)[] = [];
@@ -77,7 +80,8 @@ export function buildbotSetupPlugin(callback: PluginRegistrationCallback) {
 
 // Not intended to be used by plugins themselves
 export function registerPluginRegistrationConsumer(
-  consumer: (callback: PluginRegistrationCallback) => void) {
+  consumer: (callback: PluginRegistrationCallback) => void,
+) {
   pluginRegistrationConsumers.push(consumer);
   for (const callbacks of pluginRegistrationCallbacks) {
     consumer(callbacks);

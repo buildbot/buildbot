@@ -15,34 +15,38 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {Table} from "react-bootstrap";
-import {buildbotSetupPlugin} from "buildbot-plugin-support";
-import {Scheduler, useDataAccessor, useDataApiQuery} from "buildbot-data-js";
+import {observer} from 'mobx-react';
+import {Table} from 'react-bootstrap';
+import {buildbotSetupPlugin} from 'buildbot-plugin-support';
+import {Scheduler, useDataAccessor, useDataApiQuery} from 'buildbot-data-js';
 
 export const SchedulersView = observer(() => {
   const accessor = useDataAccessor([]);
 
-  const schedulersQuery = useDataApiQuery(
-    () => Scheduler.getAll(accessor, {query: {order: "name"}}));
+  const schedulersQuery = useDataApiQuery(() =>
+    Scheduler.getAll(accessor, {query: {order: 'name'}}),
+  );
 
   const toggleSchedulerEnabled = (scheduler: Scheduler) => {
     const newValue = !scheduler.enabled;
-    scheduler.control("enable", {enabled: newValue});
-  }
+    scheduler.control('enable', {enabled: newValue});
+  };
 
   const renderScheduler = (scheduler: Scheduler) => {
     return (
       <tr key={scheduler.name}>
         <td>
-          <input type="checkbox" checked={scheduler.enabled}
-                 onClick={() => toggleSchedulerEnabled(scheduler)}/>
+          <input
+            type="checkbox"
+            checked={scheduler.enabled}
+            onClick={() => toggleSchedulerEnabled(scheduler)}
+          />
         </td>
         <td>{scheduler.name}</td>
-        <td>{scheduler.master !== null ? scheduler.master.name : "(none)"}</td>
+        <td>{scheduler.master !== null ? scheduler.master.name : '(none)'}</td>
       </tr>
-    )
-  }
+    );
+  };
 
   return (
     <div className="container">
@@ -53,7 +57,7 @@ export const SchedulersView = observer(() => {
             <td>Scheduler Name</td>
             <td>Master</td>
           </tr>
-          {schedulersQuery.array.map(scheduler => renderScheduler(scheduler))}
+          {schedulersQuery.array.map((scheduler) => renderScheduler(scheduler))}
         </tbody>
       </Table>
     </div>
@@ -70,8 +74,8 @@ buildbotSetupPlugin((reg) => {
   });
 
   reg.registerRoute({
-    route: "schedulers",
-    group: "schedulers",
-    element: () => <SchedulersView/>,
+    route: 'schedulers',
+    group: 'schedulers',
+    element: () => <SchedulersView />,
   });
 });

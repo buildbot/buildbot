@@ -5,9 +5,9 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
-import {getWebSocketUrl, WebSocketClient} from "./WebSocketClient";
-import {MockWebSocket} from "./MockWebSocket";
+import {describe, expect, it} from 'vitest';
+import {getWebSocketUrl, WebSocketClient} from './WebSocketClient';
+import {MockWebSocket} from './MockWebSocket';
 
 describe('Web socket client', () => {
   function createMockClient(): [WebSocketClient, MockWebSocket] {
@@ -17,8 +17,7 @@ describe('Web socket client', () => {
   }
 
   function openSocket(socket: MockWebSocket) {
-    if (socket.onopen !== null)
-      socket.onopen({} as Event);
+    if (socket.onopen !== null) socket.onopen({} as Event);
   }
 
   it('should send the data, when the WebSocket is open', () => {
@@ -45,7 +44,7 @@ describe('Web socket client', () => {
     socket.readyState = WebSocket.OPEN;
     expect(socket.sendQueue.length).toBe(0);
     void client.send({});
-    expect(socket.sendQueue).toContain(JSON.stringify({'_id': 1}));
+    expect(socket.sendQueue).toContain(JSON.stringify({_id: 1}));
   });
 
   it('should resolve the promise when a response message is received with code 200', async () => {
@@ -76,9 +75,7 @@ describe('Web socket client', () => {
     await expect(promise).rejects.toBeInstanceOf(Error);
   });
 
-
   describe('getWebSocketUrl()', () => {
-
     it('should support url based on the host and port (localhost)', () => {
       const location = {
         protocol: 'http:',

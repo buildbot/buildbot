@@ -15,5 +15,5 @@
   Copyright Buildbot Team Members
 */
 
-import "buildbot-plugin-support";
+import 'buildbot-plugin-support';
 import './views/WSGIDashboardsView/WSGIDashboardsView';

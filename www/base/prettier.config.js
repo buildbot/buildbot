@@ -1,3 +1,3 @@
-import {buildbotPrettierConfig} from "build-config-buildbot";
+import {buildbotPrettierConfig} from 'build-config-buildbot';
 
 export default buildbotPrettierConfig;

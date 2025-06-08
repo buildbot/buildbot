@@ -15,53 +15,50 @@
   Copyright Buildbot Team Members
 */
 
-import './ConsoleView.scss'
-import {ObservableMap} from "mobx";
-import {observer, useLocalObservable} from "mobx-react";
-import {Link} from "react-router-dom";
-import {
-  FaExclamationCircle,
-  FaMinusCircle,
-  FaPlusCircle
-} from "react-icons/fa";
-import {OverlayTrigger, Table, Tooltip} from "react-bootstrap";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
+import './ConsoleView.scss';
+import {ObservableMap} from 'mobx';
+import {observer, useLocalObservable} from 'mobx-react';
+import {Link} from 'react-router-dom';
+import {FaExclamationCircle, FaMinusCircle, FaPlusCircle} from 'react-icons/fa';
+import {OverlayTrigger, Table, Tooltip} from 'react-bootstrap';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
 import {
   Build,
   Buildset,
   Builder,
   Buildrequest,
   Change,
-  useDataAccessor, useDataApiQuery, IDataAccessor
-} from "buildbot-data-js";
+  useDataAccessor,
+  useDataApiQuery,
+  IDataAccessor,
+} from 'buildbot-data-js';
 import {
   BuildLinkWithSummaryTooltip,
   ChangeDetails,
   LoadingIndicator,
   pushIntoMapOfArrays,
-  useWindowSize
-} from "buildbot-ui";
+  useWindowSize,
+} from 'buildbot-ui';
 
 type ChangeInfo = {
   change: Change;
   buildsByBuilderId: Map<number, Build[]>;
-}
+};
 
 export type TagTreeItem = {
   builders: Builder[];
   tag: string;
   childItems: TagTreeItem[];
-}
+};
 
 export type TagItemConfig = {
-  tag: string,
-  colSpan: number
+  tag: string;
+  colSpan: number;
 };
 
 export type TagLineConfig = TagItemConfig[];
 
-export function buildTagTree(builders: Builder[])
-{
+export function buildTagTree(builders: Builder[]) {
   const buildersByTags = new Map<string, Builder[]>();
   for (const builder of builders) {
     if (builder.tags === null) {
@@ -117,7 +114,7 @@ export function buildTagTree(builders: Builder[])
   }
 
   if (remainingBuilders.length) {
-    tagItems.push({tag: "", builders: remainingBuilders, childItems: []});
+    tagItems.push({tag: '', builders: remainingBuilders, childItems: []});
   }
 
   // if there is more than one tag in this line, we need to recurse
@@ -130,8 +127,7 @@ export function buildTagTree(builders: Builder[])
 }
 
 // Sorts and groups builders together by their tags.
-export function sortBuildersByTags(builders: Builder[]) : [Builder[], TagLineConfig[]]
-{
+export function sortBuildersByTags(builders: Builder[]): [Builder[], TagLineConfig[]] {
   // we call recursive function, which finds non-overlapping groups
   const tagLineItems = buildTagTree(builders);
 
@@ -177,7 +173,7 @@ export function sortBuildersByTags(builders: Builder[]) : [Builder[], TagLineCon
       }
       return;
     }
-    tagItem.childItems.map(item => walkItemTree(item, depth + 1));
+    tagItem.childItems.map((item) => walkItemTree(item, depth + 1));
   };
 
   for (const tagItem of tagLineItems) {
@@ -187,7 +183,7 @@ export function sortBuildersByTags(builders: Builder[]) : [Builder[], TagLineCon
   const resultTagLineConfigs: TagLineConfig[] = [];
 
   for (const tagLineItems of tagLineConfigAtDepth.values()) {
-    if (tagLineItems.length === 1 && tagLineItems[0].tag === "") {
+    if (tagLineItems.length === 1 && tagLineItems[0].tag === '') {
       continue;
     }
     resultTagLineConfigs.push(tagLineItems);
@@ -195,9 +191,12 @@ export function sortBuildersByTags(builders: Builder[]) : [Builder[], TagLineCon
   return [resultBuilders, resultTagLineConfigs];
 }
 
-function resolveFakeChange(codebase: string, revision: string, whenTimestamp: number,
-                           changesByFakeId: Map<string, ChangeInfo>): ChangeInfo
-{
+function resolveFakeChange(
+  codebase: string,
+  revision: string,
+  whenTimestamp: number,
+  changesByFakeId: Map<string, ChangeInfo>,
+): ChangeInfo {
   const fakeId = `${codebase}-${revision}`;
   const existingChange = changesByFakeId.get(fakeId);
   if (existingChange !== undefined) {
@@ -207,30 +206,33 @@ function resolveFakeChange(codebase: string, revision: string, whenTimestamp: nu
   const newChange = {
     change: new Change(undefined as unknown as IDataAccessor, {
       changeid: 0,
-      author: "",
-      branch: "",
+      author: '',
+      branch: '',
       codebase: codebase,
       comments: `Unknown revision ${revision}`,
       files: [],
       parent_changeids: [],
-      project: "",
+      project: '',
       properties: {},
-      repository: "",
+      repository: '',
       revision: revision,
       revlink: null,
       when_timestamp: whenTimestamp,
     }),
-    buildsByBuilderId: new Map<number, Build[]>
+    buildsByBuilderId: new Map<number, Build[]>(),
   };
   changesByFakeId.set(fakeId, newChange);
   return newChange;
 }
 
 // Adjusts changesByFakeId for any new fake changes that are created
-function selectChangeForBuild(build: Build, buildset: Buildset,
-                              changesBySsid: Map<number, ChangeInfo>,
-                              changesByRevision: Map<string, ChangeInfo>,
-                              changesByFakeId: Map<string, ChangeInfo>) {
+function selectChangeForBuild(
+  build: Build,
+  buildset: Buildset,
+  changesBySsid: Map<number, ChangeInfo>,
+  changesByRevision: Map<string, ChangeInfo>,
+  changesByFakeId: Map<string, ChangeInfo>,
+) {
   if (buildset.sourcestamps !== null) {
     for (const sourcestamp of buildset.sourcestamps) {
       const change = changesBySsid.get(sourcestamp.ssid);
@@ -240,16 +242,16 @@ function selectChangeForBuild(build: Build, buildset: Buildset,
     }
   }
 
-  if (build.properties !== null && ('got_revision' in build.properties)) {
+  if (build.properties !== null && 'got_revision' in build.properties) {
     const revision = build.properties['got_revision'][0];
     // got_revision can be per codebase or just the revision string
-    if (typeof(revision) === "string") {
+    if (typeof revision === 'string') {
       const change = changesByRevision.get(revision);
       if (change !== undefined) {
         return change;
       }
 
-      return resolveFakeChange("", revision, build.started_at, changesByFakeId);
+      return resolveFakeChange('', revision, build.started_at, changesByFakeId);
     }
 
     const revisionMap = revision as {[codebase: string]: string};
@@ -263,47 +265,67 @@ function selectChangeForBuild(build: Build, buildset: Buildset,
 
     const codebases = Object.keys(revisionMap);
     if (codebases.length === 0) {
-      return resolveFakeChange("unknown codebase", "", build.started_at, changesByFakeId);
+      return resolveFakeChange('unknown codebase', '', build.started_at, changesByFakeId);
     }
-    return resolveFakeChange(codebases[0], revisionMap[codebases[0]], build.started_at,
-      changesByFakeId);
+    return resolveFakeChange(
+      codebases[0],
+      revisionMap[codebases[0]],
+      build.started_at,
+      changesByFakeId,
+    );
   }
 
   const revision = `unknown revision ${build.builderid}-${build.buildid}`;
-  return resolveFakeChange("unknown codebase", revision, build.started_at, changesByFakeId);
+  return resolveFakeChange('unknown codebase', revision, build.started_at, changesByFakeId);
 }
 
 export const ConsoleView = observer(() => {
   const accessor = useDataAccessor([]);
 
   const settings = buildbotGetSettings();
-  const changeFetchLimit = settings.getIntegerSetting("Console.changeLimit");
-  const buildFetchLimit = settings.getIntegerSetting("Console.buildLimit");
+  const changeFetchLimit = settings.getIntegerSetting('Console.changeLimit');
+  const buildFetchLimit = settings.getIntegerSetting('Console.buildLimit');
 
-  const buildsetsQuery = useDataApiQuery(() => Buildset.getAll(accessor, {query: {
-      limit: buildFetchLimit,
-      order: '-submitted_at',
-    }}));
+  const buildsetsQuery = useDataApiQuery(() =>
+    Buildset.getAll(accessor, {
+      query: {
+        limit: buildFetchLimit,
+        order: '-submitted_at',
+      },
+    }),
+  );
 
-  const changesQuery = useDataApiQuery(() => Change.getAll(accessor, {query: {
-      limit: changeFetchLimit,
-      order: '-changeid',
-    }}));
+  const changesQuery = useDataApiQuery(() =>
+    Change.getAll(accessor, {
+      query: {
+        limit: changeFetchLimit,
+        order: '-changeid',
+      },
+    }),
+  );
 
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));
 
-  const buildrequestsQuery = useDataApiQuery(() => Buildrequest.getAll(accessor, {query: {
-      limit: buildFetchLimit,
-      order: '-submitted_at',
-    }}));
+  const buildrequestsQuery = useDataApiQuery(() =>
+    Buildrequest.getAll(accessor, {
+      query: {
+        limit: buildFetchLimit,
+        order: '-submitted_at',
+      },
+    }),
+  );
 
-  const buildsQuery = useDataApiQuery(() => Build.getAll(accessor, {query: {
-      limit: buildFetchLimit,
-      order: '-started_at',
-      property: ["got_revision"],
-    }}));
+  const buildsQuery = useDataApiQuery(() =>
+    Build.getAll(accessor, {
+      query: {
+        limit: buildFetchLimit,
+        order: '-started_at',
+        property: ['got_revision'],
+      },
+    }),
+  );
 
-  const windowSize = useWindowSize()
+  const windowSize = useWindowSize();
   const changeIsExpandedByChangeId = useLocalObservable(() => new ObservableMap<number, boolean>());
 
   const queriesResolved =
@@ -318,7 +340,9 @@ export const ConsoleView = observer(() => {
     builderIdsWithBuilds.add(build.builderid);
   }
 
-  const buildersWithBuilds = buildersQuery.array.filter(b => builderIdsWithBuilds.has(b.builderid));
+  const buildersWithBuilds = buildersQuery.array.filter((b) =>
+    builderIdsWithBuilds.has(b.builderid),
+  );
   const [buildersToShow, tagLineConfigs] = sortBuildersByTags(buildersWithBuilds);
 
   const changesByRevision = new Map<string, ChangeInfo>();
@@ -346,16 +370,20 @@ export const ConsoleView = observer(() => {
       continue;
     }
 
-    const change = selectChangeForBuild(build, buildset, changesBySsid, changesByRevision,
-      changesByFakeId);
+    const change = selectChangeForBuild(
+      build,
+      buildset,
+      changesBySsid,
+      changesByRevision,
+      changesByFakeId,
+    );
 
     pushIntoMapOfArrays(change.buildsByBuilderId, build.builderid, build);
   }
 
   const changesToShow = [...changesBySsid.values(), ...changesByFakeId.values()]
-    .filter(ch => ch.buildsByBuilderId.size > 0)
+    .filter((ch) => ch.buildsByBuilderId.size > 0)
     .sort((a, b) => b.change.when_timestamp - a.change.when_timestamp);
-
 
   const hasExpandedChanges = [...changeIsExpandedByChangeId.values()].includes(true);
 
@@ -367,11 +395,11 @@ export const ConsoleView = observer(() => {
   // 100% width table
   const isBigTable = () => {
     const padding = rowHeaderWidth;
-    if (((windowSize.width - padding) / buildersToShow.length) < 40) {
+    if ((windowSize.width - padding) / buildersToShow.length < 40) {
       return true;
     }
     return false;
-  }
+  };
 
   const getColHeaderHeight = () => {
     let maxBuilderName = 0;
@@ -379,7 +407,7 @@ export const ConsoleView = observer(() => {
       maxBuilderName = Math.max(builder.name.length, maxBuilderName);
     }
     return Math.max(100, maxBuilderName * 3);
-  }
+  };
 
   const openAllChanges = () => {
     for (const change of changesToShow) {
@@ -397,7 +425,7 @@ export const ConsoleView = observer(() => {
   if (!queriesResolved) {
     return (
       <div className="bb-console-container">
-        <LoadingIndicator/>
+        <LoadingIndicator />
       </div>
     );
   }
@@ -406,21 +434,21 @@ export const ConsoleView = observer(() => {
     return (
       <div className="bb-console-container">
         <p>
-          No changes. Console View needs a changesource to be setup,
-          and <Link to="/changes">changes</Link> to be in the system.
+          No changes. Console View needs a changesource to be setup, and{' '}
+          <Link to="/changes">changes</Link> to be in the system.
         </p>
       </div>
     );
   }
 
-  const builderColumns = buildersToShow.map(builder => {
+  const builderColumns = buildersToShow.map((builder) => {
     return (
       <th key={builder.name} className="column">
         <span style={{marginTop: getColHeaderHeight()}} className="bb-console-table-builder">
           <Link to={`/builders/${builder.builderid}`}>{builder.name}</Link>
         </span>
       </th>
-    )
+    );
   });
 
   const tagLineRows = tagLineConfigs.map((tagLineConfig, i) => {
@@ -437,16 +465,16 @@ export const ConsoleView = observer(() => {
         <td className="row-header"></td>
         {columns}
       </tr>
-    )
+    );
   });
 
-  const changeRows = changesToShow.map(changeInfo => {
+  const changeRows = changesToShow.map((changeInfo) => {
     const change = changeInfo.change;
 
-    const builderColumns = buildersToShow.map(builder => {
+    const builderColumns = buildersToShow.map((builder) => {
       const builds = changeInfo.buildsByBuilderId.get(builder.builderid) ?? [];
-      const buildLinks = builds.map(build => (
-        <BuildLinkWithSummaryTooltip key={build.buildid} build={build}/>
+      const buildLinks = builds.map((build) => (
+        <BuildLinkWithSummaryTooltip key={build.buildid} build={build} />
       ));
 
       return (
@@ -460,9 +488,14 @@ export const ConsoleView = observer(() => {
     return (
       <tr key={`change-${change.changeid}-${change.codebase}-${change.revision ?? ''}`}>
         <td>
-          <ChangeDetails change={change} compact={true}
-                         showDetails={changeIsExpandedByChangeId.get(change.changeid) ?? false}
-                         setShowDetails={(show: boolean) => changeIsExpandedByChangeId.set(change.changeid, show)}/>
+          <ChangeDetails
+            change={change}
+            compact={true}
+            showDetails={changeIsExpandedByChangeId.get(change.changeid) ?? false}
+            setShowDetails={(show: boolean) =>
+              changeIsExpandedByChangeId.set(change.changeid, show)
+            }
+          />
         </td>
         {builderColumns}
       </tr>
@@ -471,24 +504,40 @@ export const ConsoleView = observer(() => {
 
   return (
     <div className="container bb-console">
-      <Table striped bordered className={(isBigTable() ? 'table-fixedwidth' : '')}>
+      <Table striped bordered className={isBigTable() ? 'table-fixedwidth' : ''}>
         <thead>
           <tr className="bb-console-table-first-row first-row">
             <th className="row-header" style={{width: rowHeaderWidth}}>
-              <OverlayTrigger trigger="click" placement="top" overlay={
-                <Tooltip id="bb-console-view-open-all-changes">
-                  Open information for all changes
-                </Tooltip>
-              } rootClose={true}>
-                <FaPlusCircle onClick={e => openAllChanges()} className="bb-console-changes-expand-icon clickable"/>
+              <OverlayTrigger
+                trigger="click"
+                placement="top"
+                overlay={
+                  <Tooltip id="bb-console-view-open-all-changes">
+                    Open information for all changes
+                  </Tooltip>
+                }
+                rootClose={true}
+              >
+                <FaPlusCircle
+                  onClick={(e) => openAllChanges()}
+                  className="bb-console-changes-expand-icon clickable"
+                />
               </OverlayTrigger>
 
-              <OverlayTrigger trigger="click" placement="top" overlay={
-                <Tooltip id="bb-console-view-close-all-changes">
-                  Close information for all changes
-                </Tooltip>
-              } rootClose={true}>
-                <FaMinusCircle onClick={e => closeAllChanges()} className="bb-console-changes-expand-icon clickable"/>
+              <OverlayTrigger
+                trigger="click"
+                placement="top"
+                overlay={
+                  <Tooltip id="bb-console-view-close-all-changes">
+                    Close information for all changes
+                  </Tooltip>
+                }
+                rootClose={true}
+              >
+                <FaMinusCircle
+                  onClick={(e) => closeAllChanges()}
+                  className="bb-console-changes-expand-icon clickable"
+                />
               </OverlayTrigger>
             </th>
             {builderColumns}
@@ -503,38 +552,39 @@ export const ConsoleView = observer(() => {
   );
 });
 
-buildbotSetupPlugin(reg => {
+buildbotSetupPlugin((reg) => {
   reg.registerMenuGroup({
     name: 'console',
     caption: 'Console View',
-    icon: <FaExclamationCircle/>,
+    icon: <FaExclamationCircle />,
     order: 5,
     route: '/console',
     parentName: null,
   });
 
   reg.registerRoute({
-    route: "/console",
-    group: "console",
-    element: () => <ConsoleView/>,
+    route: '/console',
+    group: 'console',
+    element: () => <ConsoleView />,
   });
 
   reg.registerSettingGroup({
-    name: "Console",
-    caption: "Console related settings",
+    name: 'Console',
+    caption: 'Console related settings',
     items: [
       {
         type: 'integer',
         name: 'changeLimit',
         caption: 'Maximum number of changes to fetch',
-        defaultValue: 30
-      }, {
+        defaultValue: 30,
+      },
+      {
         type: 'integer',
         name: 'buildLimit',
         caption: 'Maximum number of builds to fetch',
-        defaultValue: 200
-      }
-    ]
+        defaultValue: 200,
+      },
+    ],
   });
 });
 

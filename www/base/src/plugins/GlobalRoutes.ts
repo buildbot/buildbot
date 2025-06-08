@@ -15,13 +15,13 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable, ObservableMap} from "mobx";
+import {action, makeObservable, observable, ObservableMap} from 'mobx';
 
 export type RouteConfig = {
   route: string;
   group: string | null;
   element: () => JSX.Element;
-}
+};
 
 export class GlobalRoutes {
   @observable configs = new ObservableMap<string, RouteConfig>();

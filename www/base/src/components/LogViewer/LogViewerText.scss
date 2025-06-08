@@ -6,9 +6,15 @@
   color: $bb-color-log-white;
   .padding {
     // zebra pattern
-    background: repeating-linear-gradient(-45deg,rgb(10, 10, 10),rgb(40, 40, 40) 7%, rgb(10,10,10) 10%)
+    background: repeating-linear-gradient(
+      -45deg,
+      rgb(10, 10, 10),
+      rgb(40, 40, 40) 7%,
+      rgb(10, 10, 10) 10%
+    );
   }
-  .log_o, .ansi_white {
+  .log_o,
+  .ansi_white {
     color: $bb-color-log-white;
   }
   // note: As log output window is always black and text always has to be visible, background and
@@ -18,22 +24,30 @@
   .ansi30 {
     color: $bb-color-log-white;
   }
-  .log_e, .ansi_red, .ansi31 {
+  .log_e,
+  .ansi_red,
+  .ansi31 {
     color: #c91b00;
   }
-  .ansi_green, .ansi32 {
+  .ansi_green,
+  .ansi32 {
     color: #00c200;
   }
-  .ansi_yellow, .ansi33 {
+  .ansi_yellow,
+  .ansi33 {
     color: #c7c400;
   }
-  .ansi_blue, .ansi34 {
+  .ansi_blue,
+  .ansi34 {
     color: #0225c7;
   }
-  .ansi_magenta, .ansi35 {
+  .ansi_magenta,
+  .ansi35 {
     color: #ca30c7;
   }
-  .log_h, .ansi_cyan, .ansi36 {
+  .log_h,
+  .ansi_cyan,
+  .ansi36 {
     color: #00c5c7;
   }
   // bright colors
@@ -110,7 +124,7 @@
 }
 
 .bb-logviewer-text-row {
-  font-family: "Monaco", monospace;
+  font-family: 'Monaco', monospace;
 }
 
 .bb-logviewer-text-download-log {

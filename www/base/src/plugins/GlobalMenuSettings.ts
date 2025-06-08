@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
+import {action, makeObservable, observable} from 'mobx';
 
 export type GroupSettings = {
   name: string;
@@ -30,7 +30,7 @@ export type ResolvedGroupSettings = {
   name: string;
   caption: string;
   route: string | null;
-  icon?: JSX.Element,
+  icon?: JSX.Element;
   order: number;
   subGroups: ResolvedGroupSettings[];
 };
@@ -59,14 +59,14 @@ export class GlobalMenuSettings {
       route: settings.route,
       icon: settings.icon,
       order: settings.order === null ? 99 : settings.order,
-      subGroups: []
-    }
+      subGroups: [],
+    };
 
     const listToAdd = this.findParentGroupList(settings.parentName);
 
     this.removeDuplicateSettings(listToAdd, settings);
 
-    let insertIndex = listToAdd.findIndex(s => s.order > insertSettings.order);
+    let insertIndex = listToAdd.findIndex((s) => s.order > insertSettings.order);
     insertIndex = insertIndex === -1 ? listToAdd.length : insertIndex;
     listToAdd.splice(insertIndex, 0, insertSettings);
   }
@@ -89,13 +89,15 @@ export class GlobalMenuSettings {
     }
     const group = this.findNamedGroupInListRecurse(this.groups, parentName);
     if (group === null) {
-      throw new Error(`Could not find named group ${parentName}`)
+      throw new Error(`Could not find named group ${parentName}`);
     }
     return group.subGroups;
   }
 
-  private findNamedGroupInListRecurse(groups: ResolvedGroupSettings[],
-                                      name: string): ResolvedGroupSettings | null {
+  private findNamedGroupInListRecurse(
+    groups: ResolvedGroupSettings[],
+    name: string,
+  ): ResolvedGroupSettings | null {
     for (const group of groups) {
       if (group.name === name) {
         return group;
@@ -115,24 +117,27 @@ export class GlobalMenuSettings {
   @action setFooter(items: FooterItemSettings[]) {
     this.footerItems = items;
   }
-};
+}
 
 export const globalMenuSettings = new GlobalMenuSettings();
 
 export function getBestMatchingSettingsGroupRoute(path: string, groups: ResolvedGroupSettings[]) {
-  let bestRoute: string|null = null;
+  let bestRoute: string | null = null;
 
   const checkGroup = (group: ResolvedGroupSettings) => {
-    if (group.route !== null && path.startsWith(group.route) &&
-        (path.length === group.route.length || path[group.route.length] === "/")) {
+    if (
+      group.route !== null &&
+      path.startsWith(group.route) &&
+      (path.length === group.route.length || path[group.route.length] === '/')
+    ) {
       if (bestRoute === null || group.route.length > bestRoute.length) {
         bestRoute = group.route;
       }
     }
-  }
+  };
 
-  groups.map(group => {
-    group.subGroups.map(subGroup => checkGroup(subGroup));
+  groups.map((group) => {
+    group.subGroups.map((subGroup) => checkGroup(subGroup));
     checkGroup(group);
   });
 

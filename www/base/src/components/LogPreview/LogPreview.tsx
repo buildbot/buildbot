@@ -16,22 +16,22 @@
 */
 
 import './LogPreview.scss';
-import {Card} from "react-bootstrap";
-import {Link} from "react-router-dom";
+import {Card} from 'react-bootstrap';
+import {Link} from 'react-router-dom';
 import {useEffect, useRef, useState} from 'react';
-import {ansi2html, generateStyleElement} from "../../util/AnsiEscapeCodes";
+import {ansi2html, generateStyleElement} from '../../util/AnsiEscapeCodes';
 import {action, makeObservable, observable} from 'mobx';
-import {observer, useLocalObservable} from "mobx-react";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
-import {ArrowExpander, useStateWithDefaultIfNotSet} from "buildbot-ui";
-import {CancellablePromise, Log, useDataAccessor} from "buildbot-data-js";
-import {LogDownloadButtons} from "../LogDownloadButtons/LogDownloadButtons";
+import {observer, useLocalObservable} from 'mobx-react';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
+import {ArrowExpander, useStateWithDefaultIfNotSet} from 'buildbot-ui';
+import {CancellablePromise, Log, useDataAccessor} from 'buildbot-data-js';
+import {LogDownloadButtons} from '../LogDownloadButtons/LogDownloadButtons';
 
 type RenderedLogLine = {
   content: JSX.Element[];
   class: string;
   number: number;
-}
+};
 
 class LogPreviewState {
   lines = observable.array<RenderedLogLine>();
@@ -67,166 +67,166 @@ export type LogPreviewProps = {
   stepnumber: number;
   log: Log;
   initialFullDisplay: boolean;
-}
+};
 
-export const LogPreview = observer(({builderid, buildnumber, stepnumber, log,
-                                     initialFullDisplay}: LogPreviewProps) => {
-  const previewState = useLocalObservable(() => new LogPreviewState());
+export const LogPreview = observer(
+  ({builderid, buildnumber, stepnumber, log, initialFullDisplay}: LogPreviewProps) => {
+    const previewState = useLocalObservable(() => new LogPreviewState());
 
-  const initialLoadLines = buildbotGetSettings().getIntegerSetting('LogPreview.loadlines');
-  const maximumLoadLines = buildbotGetSettings().getIntegerSetting('LogPreview.maxlines');
+    const initialLoadLines = buildbotGetSettings().getIntegerSetting('LogPreview.loadlines');
+    const maximumLoadLines = buildbotGetSettings().getIntegerSetting('LogPreview.maxlines');
 
-  const [fullDisplay, setFullDisplay] = useStateWithDefaultIfNotSet(() => initialFullDisplay);
+    const [fullDisplay, setFullDisplay] = useStateWithDefaultIfNotSet(() => initialFullDisplay);
 
-  const accessor = useDataAccessor([builderid, buildnumber, stepnumber, log.id]);
+    const accessor = useDataAccessor([builderid, buildnumber, stepnumber, log.id]);
 
-  const [htmlLog, setHtmlLog] = useState('');
+    const [htmlLog, setHtmlLog] = useState('');
 
-  const pendingRequest = useRef<CancellablePromise<any> | null>(null);
+    const pendingRequest = useRef<CancellablePromise<any> | null>(null);
 
-  useEffect(() => {
-    if (!fullDisplay) {
-      previewState.clearLines();
-      return;
-    }
-
-    if (log.type === 'h') {
-      if (pendingRequest.current !== null) {
-        pendingRequest.current.cancel()
+    useEffect(() => {
+      if (!fullDisplay) {
+        previewState.clearLines();
+        return;
       }
 
-      pendingRequest.current = accessor.getRaw(`logs/${log.logid}/contents`, {});
-      pendingRequest.current.then(content => {
-        setHtmlLog(content.logchunks[0].content);
-      });
-    } else {
-      {
-        let limit = 0;
-        let offset = 0;
-
-        const lineCountLimit = previewState.lines.length === 0
-          ? initialLoadLines : maximumLoadLines;
-        const firstLineToLoad = previewState.lines.length === 0
-          ? 0 : previewState.maxNumber + 1;
-
-        if (log.num_lines - firstLineToLoad <= lineCountLimit) {
-          offset = firstLineToLoad;
-          limit = log.num_lines;
-        } else {
-          offset = log.num_lines - lineCountLimit
-          limit = lineCountLimit
+      if (log.type === 'h') {
+        if (pendingRequest.current !== null) {
+          pendingRequest.current.cancel();
         }
 
-        if (limit === 0) {
-          return;
-        }
-
-        pendingRequest.current = accessor.getRaw(`logs/${log.logid}/contents`, {
-          offset: offset,
-          limit: limit
+        pendingRequest.current = accessor.getRaw(`logs/${log.logid}/contents`, {});
+        pendingRequest.current.then((content) => {
+          setHtmlLog(content.logchunks[0].content);
         });
+      } else {
+        {
+          let limit = 0;
+          let offset = 0;
 
-        pendingRequest.current.then(response => {
-          const content = response.logchunks[0].content as string;
-          const lines = content.split("\n");
+          const lineCountLimit =
+            previewState.lines.length === 0 ? initialLoadLines : maximumLoadLines;
+          const firstLineToLoad = previewState.lines.length === 0 ? 0 : previewState.maxNumber + 1;
 
-          // there is a trailing '\n' that generates an empty line in the end
-          if (lines.length > 1) {
-            lines.pop();
+          if (log.num_lines - firstLineToLoad <= lineCountLimit) {
+            offset = firstLineToLoad;
+            limit = log.num_lines;
+          } else {
+            offset = log.num_lines - lineCountLimit;
+            limit = lineCountLimit;
           }
 
-          let number = offset;
-          for (let line of lines) {
-            let logclass = "o";
-            if ((line.length > 0) && (log.type === 's')) {
-              logclass = line[0];
-              line = line.slice(1);
+          if (limit === 0) {
+            return;
+          }
+
+          pendingRequest.current = accessor.getRaw(`logs/${log.logid}/contents`, {
+            offset: offset,
+            limit: limit,
+          });
+
+          pendingRequest.current.then((response) => {
+            const content = response.logchunks[0].content as string;
+            const lines = content.split('\n');
+
+            // there is a trailing '\n' that generates an empty line in the end
+            if (lines.length > 1) {
+              lines.pop();
             }
-            // we just push the lines in the end, and will apply sort eventually
-            previewState.addLine({
-              content: ansi2html(line),
-              class: `log_${logclass}`,
-              number: number
-            });
-            number += 1;
-          }
-          previewState.sortLines(maximumLoadLines);
-        });
-      };
-    }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [log.num_lines, fullDisplay]);
+            let number = offset;
+            for (let line of lines) {
+              let logclass = 'o';
+              if (line.length > 0 && log.type === 's') {
+                logclass = line[0];
+                line = line.slice(1);
+              }
+              // we just push the lines in the end, and will apply sort eventually
+              previewState.addLine({
+                content: ansi2html(line),
+                class: `log_${logclass}`,
+                number: number,
+              });
+              number += 1;
+            }
+            previewState.sortLines(maximumLoadLines);
+          });
+        }
+      }
 
-  const renderLogContent = () => {
-    if (log.type === 'h') {
-      return (
-        <Card.Body dangerouslySetInnerHTML={{__html: htmlLog}}/>
-      );
-    }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [log.num_lines, fullDisplay]);
 
-    const lineElements = previewState.lines.map(line => {
-      return (
-        <div key={line.number} className="logline">
-          <span data-linenumber-content={line.number} className={`${line.class}`}>
-            {line.content}
-          </span>
-        </div>
-      );
-    });
+    const renderLogContent = () => {
+      if (log.type === 'h') {
+        return <Card.Body dangerouslySetInnerHTML={{__html: htmlLog}} />;
+      }
+
+      const lineElements = previewState.lines.map((line) => {
+        return (
+          <div key={line.number} className="logline">
+            <span data-linenumber-content={line.number} className={`${line.class}`}>
+              {line.content}
+            </span>
+          </div>
+        );
+      });
+
+      return <pre className="bb-log-preview-contents select-content log">{lineElements}</pre>;
+    };
 
     return (
-      <pre className="bb-log-preview-contents select-content log">
-        {lineElements}
-      </pre>
-    );
-  }
-
-  return (
-    <Card bg={log.name === 'err.html' ? 'danger' : 'light'} className="logpreview">
-      {generateStyleElement("pre.log")}
-      <Card.Header>
-        <div className="flex-row">
-          <div onClick={() => setFullDisplay(!fullDisplay)} className="flex-grow-3">
-            <ArrowExpander isExpanded={fullDisplay}/>
-            &nbsp;
-            {log.name}
-          </div>
-          <div className="flex-grow-1">
-            <div className="bb-log-preview-download">
-              <Link to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}>
-                view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}&nbsp;
-              </Link>
-              <LogDownloadButtons log={log}/>
+      <Card bg={log.name === 'err.html' ? 'danger' : 'light'} className="logpreview">
+        {generateStyleElement('pre.log')}
+        <Card.Header>
+          <div className="flex-row">
+            <div onClick={() => setFullDisplay(!fullDisplay)} className="flex-grow-3">
+              <ArrowExpander isExpanded={fullDisplay} />
+              &nbsp;
+              {log.name}
+            </div>
+            <div className="flex-grow-1">
+              <div className="bb-log-preview-download">
+                <Link
+                  to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}
+                >
+                  view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}
+                  &nbsp;
+                </Link>
+                <LogDownloadButtons log={log} />
+              </div>
             </div>
           </div>
-        </div>
-      </Card.Header>
-      {fullDisplay ? <div>{renderLogContent()}</div> : <></>}
-    </Card>
-  );
-});
+        </Card.Header>
+        {fullDisplay ? <div>{renderLogContent()}</div> : <></>}
+      </Card>
+    );
+  },
+);
 
 buildbotSetupPlugin((reg) => {
   reg.registerSettingGroup({
     name: 'LogPreview',
     caption: 'LogPreview related settings',
-    items: [{
-      type: 'integer',
-      name: 'loadlines',
-      caption: 'Initial number of lines to load',
-      defaultValue: 40
-    }, {
-      type: 'integer',
-      name: 'maxlines',
-      caption: 'Maximum number of lines to show',
-      defaultValue: 40
-    }, {
-      type: 'string',
-      name: 'expand_logs',
-      caption: 'Expand logs with these names (use ; as separator)',
-      defaultValue: 'summary'
-    }
-    ]
+    items: [
+      {
+        type: 'integer',
+        name: 'loadlines',
+        caption: 'Initial number of lines to load',
+        defaultValue: 40,
+      },
+      {
+        type: 'integer',
+        name: 'maxlines',
+        caption: 'Maximum number of lines to show',
+        defaultValue: 40,
+      },
+      {
+        type: 'string',
+        name: 'expand_logs',
+        caption: 'Expand logs with these names (use ; as separator)',
+        defaultValue: 'summary',
+      },
+    ],
   });
-})
+});

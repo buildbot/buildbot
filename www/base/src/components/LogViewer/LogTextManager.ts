@@ -15,49 +15,56 @@
   Copyright Buildbot Team Members
 */
 
-import {ListOnItemsRenderedProps} from "react-window";
-import {CancellablePromise} from "buildbot-data-js";
-import {escapeClassesToHtml} from "../../util/AnsiEscapeCodes";
-import {repositionPositionedArray} from "../../util/Array";
-import {binarySearchGreater, binarySearchLessEqual} from "../../util/BinarySearch";
+import {ListOnItemsRenderedProps} from 'react-window';
+import {CancellablePromise} from 'buildbot-data-js';
+import {escapeClassesToHtml} from '../../util/AnsiEscapeCodes';
+import {repositionPositionedArray} from '../../util/Array';
+import {binarySearchGreater, binarySearchLessEqual} from '../../util/BinarySearch';
 import {
-  ChunkCssClasses, mergeChunks,
+  ChunkCssClasses,
+  mergeChunks,
   parseCssClassesForChunk,
   ParsedLogChunk,
-  parseLogChunk
-} from "../../util/LogChunkParsing";
+  parseLogChunk,
+} from '../../util/LogChunkParsing';
 import {
   ChunkSearchOptions,
-  ChunkSearchResults, findNextSearchResult, findPrevSearchResult, findTextInChunk,
-  overlaySearchResultsOnLine
-} from "../../util/LogChunkSearch";
+  ChunkSearchResults,
+  findNextSearchResult,
+  findPrevSearchResult,
+  findTextInChunk,
+  overlaySearchResultsOnLine,
+} from '../../util/LogChunkSearch';
 import {
   alignCeil,
   alignFloor,
   areRangesOverlapping,
   expandRange,
   isRangeWithinAnother,
-  limitRangeToSize
-} from "../../util/Math";
-import {LineCssClasses} from "../../util/LineCssClasses";
+  limitRangeToSize,
+} from '../../util/Math';
+import {LineCssClasses} from '../../util/LineCssClasses';
 
 export type PendingRequest = {
   promise: CancellablePromise<any>;
   startIndex: number;
   endIndex: number;
-}
+};
 
-export type LineRenderer = (index: number, lineType: string, style: React.CSSProperties,
-                            lineContent: JSX.Element[]) => JSX.Element;
+export type LineRenderer = (
+  index: number,
+  lineType: string,
+  style: React.CSSProperties,
+  lineContent: JSX.Element[],
+) => JSX.Element;
 
-export type EmptyLineRenderer =
-  (index: number, style: React.CSSProperties) => JSX.Element;
+export type EmptyLineRenderer = (index: number, style: React.CSSProperties) => JSX.Element;
 
 export class LogTextManager {
   renderedLinesStartIndex = 0;
-  renderedLines: (JSX.Element|undefined)[] = [];
+  renderedLines: (JSX.Element | undefined)[] = [];
   // Valid only if searchString !== null
-  renderedLinesForSearch: (JSX.Element|null|undefined)[] = [];
+  renderedLinesForSearch: (JSX.Element | null | undefined)[] = [];
 
   dataGetter: (offset: number, limit: number) => CancellablePromise<any>;
   logType: string;
@@ -81,12 +88,12 @@ export class LogTextManager {
 
   logNumLines = 0; // kept up to date
 
-  pendingRequest: PendingRequest|null = null;
+  pendingRequest: PendingRequest | null = null;
 
   chunks: ParsedLogChunk[] = [];
   // Represents cached chunk CSS class information for each chunk. The array must have the same size
   // as the `chunks` array at all times.
-  chunkToCssClasses: (ChunkCssClasses|null)[] = [];
+  chunkToCssClasses: (ChunkCssClasses | null)[] = [];
 
   // The maximum size of a chunk. This controls the size of the chunk as requested from the API and
   // the size of chunks selected for merging.
@@ -111,8 +118,8 @@ export class LogTextManager {
   searchWasEnabled = false;
 
   // Current search string or null if no search is being performed at the moment
-  searchString: string|null = null;
-  searchOptions: ChunkSearchOptions = {caseInsensitive: false, useRegex: false}
+  searchString: string | null = null;
+  searchOptions: ChunkSearchOptions = {caseInsensitive: false, useRegex: false};
   // Valid only if searchString !== null. Indices are the same as this.chunks
   chunkSearchResults: ChunkSearchResults[] = [];
   // Valid only if searchString !== null
@@ -133,13 +140,16 @@ export class LogTextManager {
   lastRenderStartIndex = 0;
   lastRenderEndIndex = 0;
 
-  constructor(dataGetter: (offset: number, limit: number) => CancellablePromise<any>,
-              logType: string,
-              downloadInitiateOverscanRowCount: number,
-              downloadOverscanRowCount: number, cachedDownloadOverscanRowCount: number,
-              cacheRenderedOverscanRowCount: number,
-              maxChunkLinesCount: number,
-              onStateChange: () => void) {
+  constructor(
+    dataGetter: (offset: number, limit: number) => CancellablePromise<any>,
+    logType: string,
+    downloadInitiateOverscanRowCount: number,
+    downloadOverscanRowCount: number,
+    cachedDownloadOverscanRowCount: number,
+    cacheRenderedOverscanRowCount: number,
+    maxChunkLinesCount: number,
+    onStateChange: () => void,
+  ) {
     this.dataGetter = dataGetter;
     this.logType = logType;
     this.downloadInitiateOverscanRowCount = downloadInitiateOverscanRowCount;
@@ -154,26 +164,46 @@ export class LogTextManager {
     if (this.searchWasEnabled) {
       return [0, this.logNumLines];
     }
-    return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
-      this.downloadInitiateOverscanRowCount);
+    return expandRange(
+      this.currVisibleStartIndex,
+      this.currVisibleEndIndex,
+      0,
+      this.logNumLines,
+      this.downloadInitiateOverscanRowCount,
+    );
   }
 
   downloadLineRange(): [number, number] {
     if (this.searchWasEnabled) {
       return [0, this.logNumLines];
     }
-    return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
-      this.downloadOverscanRowCount);
+    return expandRange(
+      this.currVisibleStartIndex,
+      this.currVisibleEndIndex,
+      0,
+      this.logNumLines,
+      this.downloadOverscanRowCount,
+    );
   }
 
   cachedDownloadLineRange(): [number, number] {
-    return expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex, 0, this.logNumLines,
-      this.cachedDownloadOverscanRowCount);
+    return expandRange(
+      this.currVisibleStartIndex,
+      this.currVisibleEndIndex,
+      0,
+      this.logNumLines,
+      this.cachedDownloadOverscanRowCount,
+    );
   }
 
   cachedRenderedLineRange(): [number, number] {
-    const [start, end] = expandRange(this.currVisibleStartIndex, this.currVisibleEndIndex,
-      0, this.logNumLines, this.cacheRenderedOverscanRowCount);
+    const [start, end] = expandRange(
+      this.currVisibleStartIndex,
+      this.currVisibleEndIndex,
+      0,
+      this.logNumLines,
+      this.cacheRenderedOverscanRowCount,
+    );
     const cacheBoundStep = 128;
     return [alignFloor(start, cacheBoundStep), alignCeil(end, cacheBoundStep)];
   }
@@ -229,14 +259,20 @@ export class LogTextManager {
     }
 
     const oldRenderedLinesStartIndex = this.renderedLinesStartIndex;
-    [this.renderedLines, this.renderedLinesStartIndex] =
-      repositionPositionedArray(this.renderedLines, oldRenderedLinesStartIndex,
-        newStartIndex, newEndIndex);
+    [this.renderedLines, this.renderedLinesStartIndex] = repositionPositionedArray(
+      this.renderedLines,
+      oldRenderedLinesStartIndex,
+      newStartIndex,
+      newEndIndex,
+    );
 
     if (this.searchString !== null) {
-      this.renderedLinesForSearch =
-        repositionPositionedArray(this.renderedLinesForSearch, oldRenderedLinesStartIndex,
-          newStartIndex, newEndIndex)[0];
+      this.renderedLinesForSearch = repositionPositionedArray(
+        this.renderedLinesForSearch,
+        oldRenderedLinesStartIndex,
+        newStartIndex,
+        newEndIndex,
+      )[0];
     }
   }
 
@@ -245,8 +281,10 @@ export class LogTextManager {
       return;
     }
     const [currStart, currEnd] = this.cachedDownloadLineRange();
-    if (this.chunks[0].firstLine >= currEnd ||
-      this.chunks[this.chunks.length - 1].lastLine <= currStart) {
+    if (
+      this.chunks[0].firstLine >= currEnd ||
+      this.chunks[this.chunks.length - 1].lastLine <= currStart
+    ) {
       // Does not fall within the range at all
       this.chunks = [];
       this.chunkToCssClasses = [];
@@ -281,8 +319,11 @@ export class LogTextManager {
       return;
     }
 
-    const insertIndex = binarySearchGreater(this.chunks, chunk.firstLine,
-      (ch, line) => ch.firstLine - line);
+    const insertIndex = binarySearchGreater(
+      this.chunks,
+      chunk.firstLine,
+      (ch, line) => ch.firstLine - line,
+    );
 
     // The inserted chunk must always be contiguous with already existing chunks. If this is not the
     // case, then the API returned wrong data.
@@ -290,8 +331,10 @@ export class LogTextManager {
       const prevChunk = this.chunks[insertIndex - 1];
       if (prevChunk.lastLine !== chunk.firstLine) {
         this.disableDownloadDueToError = true;
-        throw Error(`Received incontiguous chunk range ${chunk.firstLine}..${chunk.lastLine} vs ` +
-          `${prevChunk.firstLine}..${prevChunk.lastLine}`);
+        throw Error(
+          `Received incontiguous chunk range ${chunk.firstLine}..${chunk.lastLine} vs ` +
+            `${prevChunk.firstLine}..${prevChunk.lastLine}`,
+        );
       }
     }
 
@@ -299,8 +342,10 @@ export class LogTextManager {
       const nextChunk = this.chunks[insertIndex];
       if (nextChunk.firstLine !== chunk.lastLine) {
         this.disableDownloadDueToError = true;
-        throw Error(`Received incontiguous chunk range ${chunk.firstLine}..${chunk.lastLine} vs ` +
-          `${nextChunk.firstLine}..${nextChunk.lastLine}`);
+        throw Error(
+          `Received incontiguous chunk range ${chunk.firstLine}..${chunk.lastLine} vs ` +
+            `${nextChunk.firstLine}..${nextChunk.lastLine}`,
+        );
       }
     }
 
@@ -339,7 +384,7 @@ export class LogTextManager {
       const chunkCssClasses = parseCssClassesForChunk(chunk, chunk.firstLine, chunk.lastLine);
       this.chunkToCssClasses[mergeIndex] = {
         ...chunkCssClasses,
-        ...this.chunkToCssClasses[mergeIndex]
+        ...this.chunkToCssClasses[mergeIndex],
       };
     }
     this.maybeMergeChunkSearchResults(mergeIndex, prepend);
@@ -353,17 +398,24 @@ export class LogTextManager {
     this.renderedLinesForSearch[this.renderedLines.length] = undefined; // preallocate
   }
 
-  getRenderedLineContent(index: number, style: React.CSSProperties,
-                         renderer: LineRenderer, emptyRenderer: EmptyLineRenderer) {
+  getRenderedLineContent(
+    index: number,
+    style: React.CSSProperties,
+    renderer: LineRenderer,
+    emptyRenderer: EmptyLineRenderer,
+  ) {
     if (this.searchString !== null) {
-      const renderedLineForSearch = this.renderedLinesForSearch[index - this.renderedLinesStartIndex];
+      const renderedLineForSearch =
+        this.renderedLinesForSearch[index - this.renderedLinesStartIndex];
       if (renderedLineForSearch === null) {
         const renderedLine = this.renderedLines[index - this.renderedLinesStartIndex];
         if (renderedLine !== undefined) {
           return renderedLine;
         }
-      } else if (renderedLineForSearch !== undefined &&
-          index !== this.getCurrentSearchResultLine()) {
+      } else if (
+        renderedLineForSearch !== undefined &&
+        index !== this.getCurrentSearchResultLine()
+      ) {
         return renderedLineForSearch;
       }
     } else {
@@ -381,16 +433,23 @@ export class LogTextManager {
     }
 
     // Chunks form a contiguous range so at this point line is guaranteed to point to a valid chunk
-    const chunkIndex = binarySearchLessEqual(this.chunks, index,
-      (ch, index) => ch.firstLine - index);
+    const chunkIndex = binarySearchLessEqual(
+      this.chunks,
+      index,
+      (ch, index) => ch.firstLine - index,
+    );
     const chunk = this.chunks[chunkIndex];
     const lineIndexInChunk = index - chunk.firstLine;
     const lineType = chunk.lineTypes[lineIndexInChunk];
     const lineStartInChunk = chunk.textLineBounds[lineIndexInChunk];
     const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1] - 1; // exclude trailing newline
     const lineCssClassesWithText = this.getCssClassesForChunk(chunkIndex)[lineIndexInChunk];
-    const lineContent = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
-      lineCssClassesWithText);
+    const lineContent = escapeClassesToHtml(
+      chunk.text,
+      lineStartInChunk,
+      lineEndInChunk,
+      lineCssClassesWithText,
+    );
 
     const renderedContent = renderer(index, lineType, style, lineContent);
     if (index >= this.renderedLinesStartIndex) {
@@ -400,10 +459,15 @@ export class LogTextManager {
     if (this.searchString !== null) {
       const chunkSearchResults = this.chunkSearchResults[chunkIndex];
       const lineLength = lineEndInChunk - lineStartInChunk;
-      const lineCssClassesForSearch =
-        overlaySearchResultsOnLine(chunkSearchResults, index, lineLength,
-          lineCssClassesWithText === undefined ? null : lineCssClassesWithText[1],
-          "bb-logviewer-result-begin", "bb-logviewer-result", "bb-logviewer-result-end");
+      const lineCssClassesForSearch = overlaySearchResultsOnLine(
+        chunkSearchResults,
+        index,
+        lineLength,
+        lineCssClassesWithText === undefined ? null : lineCssClassesWithText[1],
+        'bb-logviewer-result-begin',
+        'bb-logviewer-result',
+        'bb-logviewer-result-end',
+      );
 
       if (lineCssClassesForSearch === null) {
         if (index >= this.renderedLinesStartIndex) {
@@ -412,12 +476,19 @@ export class LogTextManager {
         return renderedContent;
       }
 
-      const lineContentForSearch = escapeClassesToHtml(chunk.text, lineStartInChunk, lineEndInChunk,
-        [lineCssClassesWithText === undefined ? null : lineCssClassesWithText[0],
-          lineCssClassesForSearch]);
+      const lineContentForSearch = escapeClassesToHtml(
+        chunk.text,
+        lineStartInChunk,
+        lineEndInChunk,
+        [
+          lineCssClassesWithText === undefined ? null : lineCssClassesWithText[0],
+          lineCssClassesForSearch,
+        ],
+      );
       const renderedContentForSearch = renderer(index, lineType, style, lineContentForSearch);
       if (index >= this.renderedLinesStartIndex) {
-        this.renderedLinesForSearch[index - this.renderedLinesStartIndex] = renderedContentForSearch;
+        this.renderedLinesForSearch[index - this.renderedLinesStartIndex] =
+          renderedContentForSearch;
       }
 
       if (index === this.getCurrentSearchResultLine()) {
@@ -425,16 +496,26 @@ export class LogTextManager {
         const fakeHighlightedChunkResult: ChunkSearchResults = {
           results: [this.getCurrentSearchChunkResult()!],
           lineIndexToFirstChunkIndex: new Map<number, number>([[index, 0]]),
-        }
-        const lineCssClassesForSearchHighlight =
-            overlaySearchResultsOnLine(fakeHighlightedChunkResult, index,
-                lineLength, lineCssClassesForSearch,
-                "", "bb-logviewer-result-current", "");
+        };
+        const lineCssClassesForSearchHighlight = overlaySearchResultsOnLine(
+          fakeHighlightedChunkResult,
+          index,
+          lineLength,
+          lineCssClassesForSearch,
+          '',
+          'bb-logviewer-result-current',
+          '',
+        );
 
         const lineContentForSearchHighlight = escapeClassesToHtml(
-            chunk.text, lineStartInChunk, lineEndInChunk,
-            [lineCssClassesWithText === undefined ? null : lineCssClassesWithText[0],
-              lineCssClassesForSearchHighlight]);
+          chunk.text,
+          lineStartInChunk,
+          lineEndInChunk,
+          [
+            lineCssClassesWithText === undefined ? null : lineCssClassesWithText[0],
+            lineCssClassesForSearchHighlight,
+          ],
+        );
         return renderer(index, lineType, style, lineContentForSearchHighlight);
       }
       return renderedContentForSearch;
@@ -470,7 +551,7 @@ export class LogTextManager {
     this.onSearchInputChanged();
   }
 
-  setSearchString(searchString: string|null) {
+  setSearchString(searchString: string | null) {
     if (searchString === this.searchString) {
       return;
     }
@@ -538,8 +619,11 @@ export class LogTextManager {
       this.currentSearchResultIndex = 0;
     }
     [this.currentSearchResultChunkIndex, this.currentSearchResultIndexInChunk] =
-      findNextSearchResult(this.chunkSearchResults, this.currentSearchResultChunkIndex,
-        this.currentSearchResultIndexInChunk);
+      findNextSearchResult(
+        this.chunkSearchResults,
+        this.currentSearchResultChunkIndex,
+        this.currentSearchResultIndexInChunk,
+      );
     this.onStateChange();
   }
 
@@ -553,8 +637,11 @@ export class LogTextManager {
     }
     this.currentSearchResultIndex--;
     [this.currentSearchResultChunkIndex, this.currentSearchResultIndexInChunk] =
-      findPrevSearchResult(this.chunkSearchResults, this.currentSearchResultChunkIndex,
-        this.currentSearchResultIndexInChunk);
+      findPrevSearchResult(
+        this.chunkSearchResults,
+        this.currentSearchResultChunkIndex,
+        this.currentSearchResultIndexInChunk,
+      );
     this.onStateChange();
   }
 
@@ -562,7 +649,11 @@ export class LogTextManager {
     if (this.searchString === null) {
       return;
     }
-    const newResult = findTextInChunk(this.chunks[insertIndex], this.searchString!, this.searchOptions);
+    const newResult = findTextInChunk(
+      this.chunks[insertIndex],
+      this.searchString!,
+      this.searchOptions,
+    );
     this.chunkSearchResults.splice(insertIndex, 0, newResult);
     this.totalSearchResultCount += newResult.results.length;
 
@@ -583,7 +674,11 @@ export class LogTextManager {
       return;
     }
     const prevResult = this.chunkSearchResults[mergeIndex];
-    const newResult = findTextInChunk(this.chunks[mergeIndex], this.searchString!, this.searchOptions);
+    const newResult = findTextInChunk(
+      this.chunks[mergeIndex],
+      this.searchString!,
+      this.searchOptions,
+    );
     const additionalResultsCount = newResult.results.length - prevResult!.results.length;
 
     this.chunkSearchResults[mergeIndex] = newResult;
@@ -613,22 +708,34 @@ export class LogTextManager {
     return cssClasses;
   }
 
-  static shouldKeepPendingRequest(downloadedStart: number, downloadedEnd: number,
-                                  downloadedPinned: boolean,
-                                  requestedStart: number, requestedEnd: number,
-                                  visibleStart: number, visibleEnd: number) {
-    if (downloadedPinned ||
-        isRangeWithinAnother(visibleStart, visibleEnd, downloadedStart, downloadedEnd)) {
+  static shouldKeepPendingRequest(
+    downloadedStart: number,
+    downloadedEnd: number,
+    downloadedPinned: boolean,
+    requestedStart: number,
+    requestedEnd: number,
+    visibleStart: number,
+    visibleEnd: number,
+  ) {
+    if (
+      downloadedPinned ||
+      isRangeWithinAnother(visibleStart, visibleEnd, downloadedStart, downloadedEnd)
+    ) {
       return true;
     }
     return areRangesOverlapping(visibleStart, visibleEnd, requestedStart, requestedEnd);
   }
 
-  static selectChunkDownloadRange(downloadStart: number, downloadEnd: number,
-                                  downloadedStart: number, downloadedEnd: number,
-                                  visibleStart: number, visibleEnd: number,
-                                  cachedDownloadOverscanRowCount: number,
-                                  maxSizeLimit: number): [number, number] {
+  static selectChunkDownloadRange(
+    downloadStart: number,
+    downloadEnd: number,
+    downloadedStart: number,
+    downloadedEnd: number,
+    visibleStart: number,
+    visibleEnd: number,
+    cachedDownloadOverscanRowCount: number,
+    maxSizeLimit: number,
+  ): [number, number] {
     const visibleCenter = Math.floor((visibleStart + visibleEnd) / 2);
     if (downloadedStart >= downloadedEnd) {
       return limitRangeToSize(downloadStart, downloadEnd, maxSizeLimit, visibleCenter);
@@ -641,8 +748,14 @@ export class LogTextManager {
     const expandedDownloadedStart = downloadedStart - cachedDownloadOverscanRowCount;
     const expandedDownloadedEnd = downloadedEnd + cachedDownloadOverscanRowCount;
 
-    if (!areRangesOverlapping(downloadStart, downloadEnd,
-        expandedDownloadedStart, expandedDownloadedEnd)) {
+    if (
+      !areRangesOverlapping(
+        downloadStart,
+        downloadEnd,
+        expandedDownloadedStart,
+        expandedDownloadedEnd,
+      )
+    ) {
       // In case of pinned downloaded range, the download range must extend the downloaded range,
       // so there's guarantee that there are no gaps.
       return limitRangeToSize(downloadStart, downloadEnd, maxSizeLimit, visibleCenter);
@@ -670,10 +783,18 @@ export class LogTextManager {
     const lastPartStart = downloadedEnd;
     const lastPartEnd = downloadEnd;
 
-    const firstPartWithVisible =
-      areRangesOverlapping(firstPartStart, firstPartEnd, visibleStart, visibleEnd);
-    const lastPartWithVisible =
-      areRangesOverlapping(lastPartStart, lastPartEnd, visibleStart, visibleEnd);
+    const firstPartWithVisible = areRangesOverlapping(
+      firstPartStart,
+      firstPartEnd,
+      visibleStart,
+      visibleEnd,
+    );
+    const lastPartWithVisible = areRangesOverlapping(
+      lastPartStart,
+      lastPartEnd,
+      visibleStart,
+      visibleEnd,
+    );
 
     if ((firstPartWithVisible && lastPartWithVisible) || !firstPartWithVisible) {
       return limitRangeToSize(lastPartStart, lastPartEnd, maxSizeLimit, lastPartStart);
@@ -703,23 +824,42 @@ export class LogTextManager {
         return;
       }
 
-      if (isRangeWithinAnother(overscanStartIndex, overscanEndIndex,
-        downloadedStartIndex, downloadedEndIndex)) {
+      if (
+        isRangeWithinAnother(
+          overscanStartIndex,
+          overscanEndIndex,
+          downloadedStartIndex,
+          downloadedEndIndex,
+        )
+      ) {
         return;
       }
     }
 
     const [initiateStartIndex, initiateEndIndex] = this.downloadInitiateLineRange();
-    if (isRangeWithinAnother(initiateStartIndex, initiateEndIndex,
-        downloadedStartIndex, downloadedEndIndex)) {
+    if (
+      isRangeWithinAnother(
+        initiateStartIndex,
+        initiateEndIndex,
+        downloadedStartIndex,
+        downloadedEndIndex,
+      )
+    ) {
       return;
     }
 
     if (this.pendingRequest) {
-      if (LogTextManager.shouldKeepPendingRequest(
-            downloadedStartIndex, downloadedEndIndex, this.searchWasEnabled,
-            this.pendingRequest.startIndex, this.pendingRequest.endIndex,
-            this.currVisibleStartIndex, this.currVisibleEndIndex)) {
+      if (
+        LogTextManager.shouldKeepPendingRequest(
+          downloadedStartIndex,
+          downloadedEndIndex,
+          this.searchWasEnabled,
+          this.pendingRequest.startIndex,
+          this.pendingRequest.endIndex,
+          this.currVisibleStartIndex,
+          this.currVisibleEndIndex,
+        )
+      ) {
         return;
       }
       this.pendingRequest.promise.cancel();
@@ -728,34 +868,44 @@ export class LogTextManager {
 
     const [downloadStartIndex, downloadEndIndex] = this.downloadLineRange();
     const [chunkDownloadStartIndex, chunkDownloadEndIndex] =
-      LogTextManager.selectChunkDownloadRange(downloadStartIndex, downloadEndIndex,
-        downloadedStartIndex, downloadedEndIndex,
-        this.currVisibleStartIndex, this.currVisibleEndIndex, this.cachedDownloadOverscanRowCount,
-        this.maxChunkLinesCount);
+      LogTextManager.selectChunkDownloadRange(
+        downloadStartIndex,
+        downloadEndIndex,
+        downloadedStartIndex,
+        downloadedEndIndex,
+        this.currVisibleStartIndex,
+        this.currVisibleEndIndex,
+        this.cachedDownloadOverscanRowCount,
+        this.maxChunkLinesCount,
+      );
 
     if (chunkDownloadStartIndex >= chunkDownloadEndIndex) {
       return;
     }
 
     this.pendingRequest = {
-      promise: this.dataGetter(chunkDownloadStartIndex,
-          chunkDownloadEndIndex - chunkDownloadStartIndex),
+      promise: this.dataGetter(
+        chunkDownloadStartIndex,
+        chunkDownloadEndIndex - chunkDownloadStartIndex,
+      ),
       startIndex: chunkDownloadStartIndex,
       endIndex: chunkDownloadEndIndex,
     };
-    this.pendingRequest.promise.then(response => {
-      const content = response.logchunks[0].content as string;
-      const chunk = parseLogChunk(chunkDownloadStartIndex, content, this.logType);
-      this.cleanupDownloadedLines();
-      this.addChunk(chunk);
-      this.onStateChange();
-      this.pendingRequest = null;
-      this.maybeUpdatePendingRequest(this.currVisibleStartIndex, this.currVisibleEndIndex);
-    }).catch((e: Error) => {
-      if (e.name === "CanceledError") {
-        return;
-      }
-      throw e;
-    })
+    this.pendingRequest.promise
+      .then((response) => {
+        const content = response.logchunks[0].content as string;
+        const chunk = parseLogChunk(chunkDownloadStartIndex, content, this.logType);
+        this.cleanupDownloadedLines();
+        this.addChunk(chunk);
+        this.onStateChange();
+        this.pendingRequest = null;
+        this.maybeUpdatePendingRequest(this.currVisibleStartIndex, this.currVisibleEndIndex);
+      })
+      .catch((e: Error) => {
+        if (e.name === 'CanceledError') {
+          return;
+        }
+        throw e;
+      });
   }
 }

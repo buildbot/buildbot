@@ -15,33 +15,33 @@
   Copyright Buildbot Team Members
 */
 
-import {useMemo} from "react";
-import {StepUrl} from "buildbot-data-js";
+import {useMemo} from 'react';
+import {StepUrl} from 'buildbot-data-js';
 
 export type BuildInfoByUrls = {
   builderid: string;
   buildnumber: string;
-}
+};
 
 export type BuildRequestInfoByUrls = {
   buildrequestid: string;
-}
+};
 
 export type StepInfoByUrls = {
   buildrequests: BuildRequestInfoByUrls[];
   builds: BuildInfoByUrls[];
   otherUrls: StepUrl[];
-}
+};
 
 const execRegexesGetFirstResult = (regexes: RegExp[], text: string) => {
   for (const regex of regexes) {
-    const res = regex.exec(text)
+    const res = regex.exec(text);
     if (res) {
-      return res
+      return res;
     }
   }
-  return null
-}
+  return null;
+};
 
 export type StepUrlAnalyzer = {
   buildrequest: RegExp[];
@@ -50,11 +50,13 @@ export type StepUrlAnalyzer = {
 
 export function useStepUrlAnalyzer(baseUrls: string[]): StepUrlAnalyzer {
   const buildrequestRegexes = useMemo(
-    () => baseUrls.map(url => new RegExp(`${url}#/buildrequests/([0-9]+)$`)),
-    [baseUrls]);
+    () => baseUrls.map((url) => new RegExp(`${url}#/buildrequests/([0-9]+)$`)),
+    [baseUrls],
+  );
   const buildRegexes = useMemo(
-    () => baseUrls.map(url => new RegExp(`${url}#/builders/([0-9]+)/builds/([0-9]+)$`)),
-    [baseUrls]);
+    () => baseUrls.map((url) => new RegExp(`${url}#/builders/([0-9]+)/builds/([0-9]+)$`)),
+    [baseUrls],
+  );
 
   return {
     buildrequest: buildrequestRegexes,
@@ -70,19 +72,19 @@ export function analyzeStepUrls(analyzer: StepUrlAnalyzer, urls: StepUrl[]): Ste
   };
 
   for (const url of urls) {
-    const brRes = execRegexesGetFirstResult(analyzer.buildrequest, url.url)
+    const brRes = execRegexesGetFirstResult(analyzer.buildrequest, url.url);
     if (brRes !== null) {
       info.buildrequests.push({
         buildrequestid: brRes[1],
-      })
+      });
       continue;
     }
-    const buildRes = execRegexesGetFirstResult(analyzer.build, url.url)
+    const buildRes = execRegexesGetFirstResult(analyzer.build, url.url);
     if (buildRes !== null) {
       info.builds.push({
         builderid: buildRes[1],
         buildnumber: buildRes[2],
-      })
+      });
       continue;
     }
 

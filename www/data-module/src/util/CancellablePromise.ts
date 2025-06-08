@@ -8,13 +8,17 @@
 export class CancellablePromise<T> extends Promise<T> {
   private onCancel: (() => void) | null;
 
-  constructor(executor: (
+  constructor(
+    executor: (
       resolve: (value: T | PromiseLike<T>) => void,
       reject: (reason?: any) => void,
-      onCancel: (cancelCallback: () => void) => void) => void) {
+      onCancel: (cancelCallback: () => void) => void,
+    ) => void,
+  ) {
     let onCancel: (() => void) | null = null;
-    super((resolve, reject) => executor(resolve, reject,
-      (callback: () => void) => onCancel = callback));
+    super((resolve, reject) =>
+      executor(resolve, reject, (callback: () => void) => (onCancel = callback)),
+    );
     this.onCancel = onCancel;
   }
 

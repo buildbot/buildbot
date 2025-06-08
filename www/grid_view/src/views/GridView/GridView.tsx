@@ -15,11 +15,11 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {useState} from "react";
-import {Link} from "react-router-dom";
-import {FaCubes} from "react-icons/fa";
-import {Form} from "react-bootstrap";
+import {observer} from 'mobx-react';
+import {useState} from 'react';
+import {Link} from 'react-router-dom';
+import {FaCubes} from 'react-icons/fa';
+import {Form} from 'react-bootstrap';
 import {
   Build,
   Buildset,
@@ -31,17 +31,17 @@ import {
   allResults,
   intToResultText,
   useDataAccessor,
-  useDataApiQuery
-} from "buildbot-data-js";
+  useDataApiQuery,
+} from 'buildbot-data-js';
 import {
   useTagFilterManager,
   BuildLinkWithSummaryTooltip,
   ChangeDetails,
-  LoadingIndicator
-} from "buildbot-ui";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
+  LoadingIndicator,
+} from 'buildbot-ui';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
 
-const RESULT_FILTER_ALL_TEXT = "(all)";
+const RESULT_FILTER_ALL_TEXT = '(all)';
 
 const resultsOptions = new Map<string, number>();
 resultsOptions.set(RESULT_FILTER_ALL_TEXT, UNKNOWN);
@@ -49,7 +49,7 @@ for (const result of allResults) {
   resultsOptions.set(intToResultText[result], result);
 }
 
-export const BRANCH_FILTER_ALL_TEXT = "(all)";
+export const BRANCH_FILTER_ALL_TEXT = '(all)';
 
 export type ChangeInfo = {
   change: Change;
@@ -61,18 +61,18 @@ export type BuilderInfo = {
   buildsByChangeId: Map<number, Build[]>;
 };
 
-export function resolveGridData(buildsetsQuery: DataCollection<Buildset>,
-                                changesQuery: DataCollection<Change>,
-                                buildersQuery: DataCollection<Builder>,
-                                buildrequestsQuery: DataCollection<Buildrequest>,
-                                buildsQuery: DataCollection<Build>,
-                                branchesFilterText: string,
-                                resultsFilter: number,
-                                leftToRight: boolean,
-                                revisionLimit: number,
-                                shouldShowBuilder: (tags: string[]) => boolean):
-  [string[], ChangeInfo[], BuilderInfo[]] {
-
+export function resolveGridData(
+  buildsetsQuery: DataCollection<Buildset>,
+  changesQuery: DataCollection<Change>,
+  buildersQuery: DataCollection<Builder>,
+  buildrequestsQuery: DataCollection<Buildrequest>,
+  buildsQuery: DataCollection<Build>,
+  branchesFilterText: string,
+  resultsFilter: number,
+  leftToRight: boolean,
+  revisionLimit: number,
+  shouldShowBuilder: (tags: string[]) => boolean,
+): [string[], ChangeInfo[], BuilderInfo[]] {
   const changesBySsid = new Map<number, ChangeInfo>();
   const branchesSet = new Set<string>();
 
@@ -98,8 +98,10 @@ export function resolveGridData(buildsetsQuery: DataCollection<Buildset>,
     changeInfo.buildsets.set(buildset.bsid, buildset);
     branchesSet.add(changeInfo.change.branch!);
 
-    if (branchesFilterText !== BRANCH_FILTER_ALL_TEXT &&
-      changeInfo.change.branch !== branchesFilterText) {
+    if (
+      branchesFilterText !== BRANCH_FILTER_ALL_TEXT &&
+      changeInfo.change.branch !== branchesFilterText
+    ) {
       continue;
     }
 
@@ -157,8 +159,9 @@ export function resolveGridData(buildsetsQuery: DataCollection<Buildset>,
       }
 
       for (const br of requests) {
-        const builds = (buildsByBrid.get(br.buildrequestid) ?? [])
-          .filter(b => resultsFilter === UNKNOWN || b.results === resultsFilter);
+        const builds = (buildsByBrid.get(br.buildrequestid) ?? []).filter(
+          (b) => resultsFilter === UNKNOWN || b.results === resultsFilter,
+        );
 
         if (builds.length === 0) {
           continue;
@@ -191,40 +194,56 @@ export function resolveGridData(buildsetsQuery: DataCollection<Buildset>,
 export const GridView = observer(() => {
   const accessor = useDataAccessor([]);
 
-  const filterManager = useTagFilterManager("tags");
+  const filterManager = useTagFilterManager('tags');
 
   const settings = buildbotGetSettings();
-  const revisionLimit = settings.getIntegerSetting("Grid.revisionLimit");
-  const changeFetchLimit = settings.getIntegerSetting("Grid.changeFetchLimit");
-  const buildFetchLimit = settings.getIntegerSetting("Grid.buildFetchLimit");
-  const fullChanges = settings.getBooleanSetting("Grid.fullChanges");
-  const leftToRight = settings.getBooleanSetting("Grid.leftToRight");
+  const revisionLimit = settings.getIntegerSetting('Grid.revisionLimit');
+  const changeFetchLimit = settings.getIntegerSetting('Grid.changeFetchLimit');
+  const buildFetchLimit = settings.getIntegerSetting('Grid.buildFetchLimit');
+  const fullChanges = settings.getBooleanSetting('Grid.fullChanges');
+  const leftToRight = settings.getBooleanSetting('Grid.leftToRight');
 
   const [resultsFilterText, setResultsFilterText] = useState(RESULT_FILTER_ALL_TEXT);
   const [branchesFilterText, setBranchesFilterText] = useState(BRANCH_FILTER_ALL_TEXT);
   const resultsFilter = resultsOptions.get(resultsFilterText);
 
-  const buildsetsQuery = useDataApiQuery(() => Buildset.getAll(accessor, {query: {
-      limit: buildFetchLimit,
-      order: '-bsid',
-    }}));
+  const buildsetsQuery = useDataApiQuery(() =>
+    Buildset.getAll(accessor, {
+      query: {
+        limit: buildFetchLimit,
+        order: '-bsid',
+      },
+    }),
+  );
 
-  const changesQuery = useDataApiQuery(() => Change.getAll(accessor, {query: {
-      limit: changeFetchLimit,
-      order: '-changeid',
-    }}));
+  const changesQuery = useDataApiQuery(() =>
+    Change.getAll(accessor, {
+      query: {
+        limit: changeFetchLimit,
+        order: '-changeid',
+      },
+    }),
+  );
 
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));
 
-  const buildrequestsQuery = useDataApiQuery(() => Buildrequest.getAll(accessor, {query: {
-      limit: buildFetchLimit,
-      order: '-buildrequestid',
-    }}));
+  const buildrequestsQuery = useDataApiQuery(() =>
+    Buildrequest.getAll(accessor, {
+      query: {
+        limit: buildFetchLimit,
+        order: '-buildrequestid',
+      },
+    }),
+  );
 
-  const buildsQuery = useDataApiQuery(() => Build.getAll(accessor, {query: {
-      limit: buildFetchLimit,
-      order: '-buildrequestid',
-    }}));
+  const buildsQuery = useDataApiQuery(() =>
+    Build.getAll(accessor, {
+      query: {
+        limit: buildFetchLimit,
+        order: '-buildrequestid',
+      },
+    }),
+  );
 
   const queriesResolved =
     buildsetsQuery.resolved &&
@@ -237,7 +256,7 @@ export const GridView = observer(() => {
   if (!queriesResolved) {
     return (
       <div className="bb-grid-container">
-        <LoadingIndicator/>
+        <LoadingIndicator />
       </div>
     );
   }
@@ -246,47 +265,56 @@ export const GridView = observer(() => {
     return (
       <div className="bb-grid-container">
         <p>
-          No changes. Grid View needs a changesource to be setup,
-          and <Link to="/changes"> changes</Link> to be in the system.
+          No changes. Grid View needs a changesource to be setup, and{' '}
+          <Link to="/changes"> changes</Link> to be in the system.
         </p>
       </div>
     );
   }
 
   const [branchOptions, changesToShow, buildersToShow] = resolveGridData(
-    buildsetsQuery, changesQuery, buildersQuery, buildrequestsQuery, buildsQuery,
-    branchesFilterText, resultsFilter!, leftToRight, revisionLimit,
-    tags => filterManager.shouldShowByTags(tags)
+    buildsetsQuery,
+    changesQuery,
+    buildersQuery,
+    buildrequestsQuery,
+    buildsQuery,
+    branchesFilterText,
+    resultsFilter!,
+    leftToRight,
+    revisionLimit,
+    (tags) => filterManager.shouldShowByTags(tags),
   );
 
-
   const changeColumns = changesToShow
-      .slice()
-      .sort((a, b) => b.change.changeid - a.change.changeid)
-      .map(ch => {
-    return (
-      <th className="change">
-        <ChangeDetails change={ch.change} compact={!fullChanges}
-                       showDetails={false} setShowDetails={() => {}}/>
-      </th>
-    )
-  });
+    .slice()
+    .sort((a, b) => b.change.changeid - a.change.changeid)
+    .map((ch) => {
+      return (
+        <th className="change">
+          <ChangeDetails
+            change={ch.change}
+            compact={!fullChanges}
+            showDetails={false}
+            setShowDetails={() => {}}
+          />
+        </th>
+      );
+    });
 
-  const builderRowElements = buildersToShow.map(builderInfo => {
+  const builderRowElements = buildersToShow.map((builderInfo) => {
     const builder = builderInfo.builder;
     const buildsByChangeId = builderInfo.buildsByChangeId;
 
-    const changeColumnElements = changesToShow.map(changeInfo => {
+    const changeColumnElements = changesToShow.map((changeInfo) => {
       const change = changeInfo.change;
       const buildsForChange = [...(buildsByChangeId.get(change.changeid) ?? [])];
       buildsForChange.sort((a, b) => a.buildid - b.buildid);
 
       return (
         <td key={change.changeid}>
-          {buildsForChange.map(build => (
-            <BuildLinkWithSummaryTooltip key={build.id} build={build}/>
-           ))
-          }
+          {buildsForChange.map((build) => (
+            <BuildLinkWithSummaryTooltip key={build.id} build={build} />
+          ))}
         </td>
       );
     });
@@ -296,9 +324,7 @@ export const GridView = observer(() => {
         <th>
           <Link to={`/builders/${builder.builderid}`}>{builder.name}</Link>
         </th>
-        <td>
-          {filterManager.getElementsForTags(builder.tags)}
-        </td>
+        <td>{filterManager.getElementsForTags(builder.tags)}</td>
         {changeColumnElements}
       </tr>
     );
@@ -308,82 +334,98 @@ export const GridView = observer(() => {
     <div className="container grid">
       <Form inline className="mb-sm-2">
         <Form.Label className="mr-sm-2">Branch</Form.Label>
-        <Form.Control className="mr-sm-2" as="select" multiple={false} value={branchesFilterText}
-                      onChange={event => setBranchesFilterText(event.target.value)}>
-          {branchOptions.map(branch => (<option>{branch}</option>))}
+        <Form.Control
+          className="mr-sm-2"
+          as="select"
+          multiple={false}
+          value={branchesFilterText}
+          onChange={(event) => setBranchesFilterText(event.target.value)}
+        >
+          {branchOptions.map((branch) => (
+            <option>{branch}</option>
+          ))}
         </Form.Control>
         <Form.Label className="mr-sm-2">Results</Form.Label>
-        <Form.Control className="mr-sm-2" as="select" multiple={false} value={resultsFilterText}
-                      onChange={event => setResultsFilterText(event.target.value)}>
-          {[...resultsOptions.keys()].map(text => (<option>{text}</option>))}
+        <Form.Control
+          className="mr-sm-2"
+          as="select"
+          multiple={false}
+          value={resultsFilterText}
+          onChange={(event) => setResultsFilterText(event.target.value)}
+        >
+          {[...resultsOptions.keys()].map((text) => (
+            <option>{text}</option>
+          ))}
         </Form.Control>
       </Form>
       <table className="table table-condensed table-striped table-hover">
         <thead>
-        <tr>
-          <th>Builder</th>
-          <th>
-            {filterManager.getFiltersHelpElement()}
-            {filterManager.getEnabledFiltersElements()}
-          </th>
-          {changeColumns}
-        </tr>
+          <tr>
+            <th>Builder</th>
+            <th>
+              {filterManager.getFiltersHelpElement()}
+              {filterManager.getEnabledFiltersElements()}
+            </th>
+            {changeColumns}
+          </tr>
         </thead>
-        <tbody>
-          {builderRowElements}
-        </tbody>
+        <tbody>{builderRowElements}</tbody>
       </table>
     </div>
   );
 });
 
-buildbotSetupPlugin(reg => {
+buildbotSetupPlugin((reg) => {
   reg.registerMenuGroup({
     name: 'grid',
     caption: 'Grid View',
-    icon: <FaCubes/>,
+    icon: <FaCubes />,
     order: 4,
     route: '/grid',
     parentName: null,
   });
 
   reg.registerRoute({
-    route: "/grid",
-    group: "grid",
-    element: () => <GridView/>,
+    route: '/grid',
+    group: 'grid',
+    element: () => <GridView />,
   });
 
   reg.registerSettingGroup({
-    name: "Grid",
-    caption: "Grid related settings",
+    name: 'Grid',
+    caption: 'Grid related settings',
     items: [
       {
         type: 'boolean',
         name: 'fullChanges',
         caption: 'Show avatar and time ago in change details',
-        defaultValue: false
-      }, {
+        defaultValue: false,
+      },
+      {
         type: 'boolean',
         name: 'leftToRight',
         caption: 'Show most recent changes on the right',
-        defaultValue: false
-      }, {
+        defaultValue: false,
+      },
+      {
         type: 'integer',
         name: 'revisionLimit',
         caption: 'Maximum number of revisions to display',
-        defaultValue: 5
-      }, {
+        defaultValue: 5,
+      },
+      {
         type: 'integer',
         name: 'changeFetchLimit',
         caption: 'Maximum number of changes to fetch',
-        defaultValue: 100
-      }, {
+        defaultValue: 100,
+      },
+      {
         type: 'integer',
         name: 'buildFetchLimit',
         caption: 'Maximum number of builds to fetch',
-        defaultValue: 1000
-      }
-    ]
+        defaultValue: 1000,
+      },
+    ],
   });
 });
 

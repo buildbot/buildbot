@@ -7,11 +7,11 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
 
 export class Changesource extends BaseClass {
   @observable changesourceid!: number;
@@ -19,7 +19,7 @@ export class Changesource extends BaseClass {
   @observable name!: string;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "changesources", String(object.changesourceid));
+    super(accessor, 'changesources', String(object.changesourceid));
     this.update(object);
     makeObservable(this);
   }
@@ -39,13 +39,13 @@ export class Changesource extends BaseClass {
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get<Changesource>("changesources", query, changesourceDescriptor);
+    return accessor.get<Changesource>('changesources', query, changesourceDescriptor);
   }
 }
 
 export class ChangesourceDescriptor implements IDataDescriptor<Changesource> {
-  restArrayField = "changesources";
-  fieldId: string = "changesourceid";
+  restArrayField = 'changesources';
+  fieldId: string = 'changesourceid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Changesource(accessor, object);

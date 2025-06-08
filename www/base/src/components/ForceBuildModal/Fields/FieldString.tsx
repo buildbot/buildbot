@@ -15,17 +15,17 @@
   Copyright Buildbot Team Members
 */
 
-import {ForceSchedulerFieldString} from "buildbot-data-js";
-import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
-import {FaRegQuestionCircle} from "react-icons/fa";
-import {observer} from "mobx-react";
-import {FieldBase} from "./FieldBase";
-import {Tooltip} from 'react-tooltip'
+import {ForceSchedulerFieldString} from 'buildbot-data-js';
+import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
+import {FaRegQuestionCircle} from 'react-icons/fa';
+import {observer} from 'mobx-react';
+import {FieldBase} from './FieldBase';
+import {Tooltip} from 'react-tooltip';
 
 type FieldStringProps = {
   field: ForceSchedulerFieldString;
   fieldsState: ForceBuildModalFieldsState;
-}
+};
 
 export const FieldString = observer(({field, fieldsState}: FieldStringProps) => {
   const state = fieldsState.fields.get(field.fullName)!;
@@ -36,16 +36,21 @@ export const FieldString = observer(({field, fieldsState}: FieldStringProps) => 
         {field.label}
         {field.tooltip && (
           <span data-tooltip-id="my-tooltip" data-tooltip-html={field.tooltip}>
-            <FaRegQuestionCircle className="tooltip-icon"/>
+            <FaRegQuestionCircle className="tooltip-icon" />
           </span>
         )}
-        <Tooltip id="my-tooltip" clickable/>
+        <Tooltip id="my-tooltip" clickable />
       </label>
       <div className="col-sm-10">
-        <input data-bb-test-id={`force-field-${field.fullName}`}
-               type="text" id={field.fullName} autoComplete="on" className="form-control"
-               value={state.value}
-               onChange={event => fieldsState.setValue(field.fullName, event.target.value)}/>
+        <input
+          data-bb-test-id={`force-field-${field.fullName}`}
+          type="text"
+          id={field.fullName}
+          autoComplete="on"
+          className="form-control"
+          value={state.value}
+          onChange={(event) => fieldsState.setValue(field.fullName, event.target.value)}
+        />
       </div>
     </FieldBase>
   );

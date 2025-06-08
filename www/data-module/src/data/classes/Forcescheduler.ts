@@ -5,11 +5,11 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
 
 // Union types are not used because this makes it impossible to inherit properties and share
 // behaviors across related types.
@@ -26,52 +26,52 @@ export type ForceSchedulerFieldBase = {
   maxsize: number | null;
   autopopulate: boolean | null;
   tooltip: string;
-}
+};
 
 export type ForceSchedulerFieldFixed = ForceSchedulerFieldBase & {
   // type: 'fixed'
-}
+};
 
 export type ForceSchedulerFieldString = ForceSchedulerFieldBase & {
   // type: 'text'
   size: number;
-}
+};
 
 export type ForceSchedulerFieldText = ForceSchedulerFieldString & {
   // type: 'textarea'
   rows: number;
   cols: number;
-}
+};
 
 export type ForceSchedulerFieldInt = ForceSchedulerFieldString & {
   // type: 'int'
-}
+};
 
 export type ForceSchedulerFieldBoolean = ForceSchedulerFieldBase & {
   // type: 'bool'
-}
+};
 
 export type ForceSchedulerFieldUserName = ForceSchedulerFieldString & {
   // type: 'username'
-}
+};
 
 export type ForceSchedulerFieldChoiceString = ForceSchedulerFieldBase & {
   // type: 'list'
   choices: string[];
   strict: boolean;
-}
+};
 
 // Not properly supported yet
 export type ForceSchedulerFieldInheritBuild = ForceSchedulerFieldChoiceString & {
   // type: 'inherit'
-}
+};
 
 export type ForceSchedulerFieldNested = ForceSchedulerFieldBase & {
   // type: 'nested'
   layout: string;
   columns: number | null;
   fields: ForceSchedulerFieldBase[];
-}
+};
 
 export class Forcescheduler extends BaseClass {
   @observable name!: string;
@@ -82,7 +82,7 @@ export class Forcescheduler extends BaseClass {
   @observable tooltip!: string;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "forceschedulers", object.name);
+    super(accessor, 'forceschedulers', object.name);
     this.update(object);
     makeObservable(this);
   }
@@ -108,13 +108,13 @@ export class Forcescheduler extends BaseClass {
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get<Forcescheduler>("forceschedulers", query, forceschedulerDescriptor);
+    return accessor.get<Forcescheduler>('forceschedulers', query, forceschedulerDescriptor);
   }
 }
 
 export class ForceschedulerDescriptor implements IDataDescriptor<Forcescheduler> {
-  restArrayField = "forceschedulers";
-  fieldId: string = "name";
+  restArrayField = 'forceschedulers';
+  fieldId: string = 'name';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Forcescheduler(accessor, object);

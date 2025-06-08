@@ -15,48 +15,51 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {
-  Buildrequest,
-  useDataAccessor,
-  useDataApiQuery
-} from "buildbot-data-js";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
-import {useLoadMoreItemsState} from "../../../../ui";
-import {LoadingSpan} from "../../components/LoadingSpan/LoadingSpan";
-import {
-  PendingBuildRequestsTable
-} from "../../components/PendingBuildRequestsTable/PendingBuildRequestsTable";
-import {TableHeading} from "../../components/TableHeading/TableHeading";
+import {observer} from 'mobx-react';
+import {Buildrequest, useDataAccessor, useDataApiQuery} from 'buildbot-data-js';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
+import {useLoadMoreItemsState} from '../../../../ui';
+import {LoadingSpan} from '../../components/LoadingSpan/LoadingSpan';
+import {PendingBuildRequestsTable} from '../../components/PendingBuildRequestsTable/PendingBuildRequestsTable';
+import {TableHeading} from '../../components/TableHeading/TableHeading';
 
 export const PendingBuildRequestsView = observer(() => {
   const accessor = useDataAccessor([]);
 
-  const initialRequestsFetchLimit = buildbotGetSettings().getIntegerSetting("BuildRequests.buildrequestFetchLimit");
-  const [requestsFetchLimit, onLoadMoreRequests] =
-    useLoadMoreItemsState(initialRequestsFetchLimit, initialRequestsFetchLimit);
+  const initialRequestsFetchLimit = buildbotGetSettings().getIntegerSetting(
+    'BuildRequests.buildrequestFetchLimit',
+  );
+  const [requestsFetchLimit, onLoadMoreRequests] = useLoadMoreItemsState(
+    initialRequestsFetchLimit,
+    initialRequestsFetchLimit,
+  );
 
-  const buildRequestsQuery = useDataApiQuery(
-    () => Buildrequest.getAll(accessor, {query: {
-      limit: requestsFetchLimit,
-      order: ['-priority', '-submitted_at'],
-      claimed: false
-    }}));
+  const buildRequestsQuery = useDataApiQuery(() =>
+    Buildrequest.getAll(accessor, {
+      query: {
+        limit: requestsFetchLimit,
+        order: ['-priority', '-submitted_at'],
+        claimed: false,
+      },
+    }),
+  );
 
   const renderContents = () => {
     if (!buildRequestsQuery.resolved) {
-      return <LoadingSpan/>;
+      return <LoadingSpan />;
     }
     if (buildRequestsQuery.array.length === 0) {
-      return <span>None</span>
+      return <span>None</span>;
     }
 
     return (
-      <PendingBuildRequestsTable buildRequestsQuery={buildRequestsQuery}
-                                 fetchLimit={requestsFetchLimit}
-                                 onLoadMore={onLoadMoreRequests}/>
+      <PendingBuildRequestsTable
+        buildRequestsQuery={buildRequestsQuery}
+        fetchLimit={requestsFetchLimit}
+        onLoadMore={onLoadMoreRequests}
+      />
     );
-  }
+  };
 
   return (
     <div className="container">
@@ -76,19 +79,21 @@ buildbotSetupPlugin((reg) => {
   });
 
   reg.registerRoute({
-    route: "pendingbuildrequests",
-    group: "builds",
-    element: () => <PendingBuildRequestsView/>,
+    route: 'pendingbuildrequests',
+    group: 'builds',
+    element: () => <PendingBuildRequestsView />,
   });
 
   reg.registerSettingGroup({
     name: 'BuildRequests',
     caption: 'Buildrequests page related settings',
-    items: [{
-      type: 'integer',
-      name: 'buildrequestFetchLimit',
-      caption: 'Maximum number of pending buildrequests to fetch',
-      defaultValue: 50
-    }]
+    items: [
+      {
+        type: 'integer',
+        name: 'buildrequestFetchLimit',
+        caption: 'Maximum number of pending buildrequests to fetch',
+        defaultValue: 50,
+      },
+    ],
   });
 });

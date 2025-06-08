@@ -5,9 +5,9 @@
   Copyright Buildbot Team Members
 */
 
-import {action} from "mobx";
-import {BaseClass} from "./classes/BaseClass";
-import {DataCollection} from "./DataCollection";
+import {action} from 'mobx';
+import {BaseClass} from './classes/BaseClass';
+import {DataCollection} from './DataCollection';
 
 /** A simplified wrapper around DataCollection that is useful in tests.
     No query filtering is done, the test data must be already in correct order and have correct

@@ -5,16 +5,16 @@
   Copyright Buildbot Team Members
 */
 
-import {DataQuery, Query} from "./DataQuery";
-import {endpointPath, socketPath, socketPathRE} from "./DataUtils";
-import {WebSocketClient} from "./WebSocketClient";
-import {BaseClass} from "./classes/BaseClass";
-import {IDataDescriptor} from "./classes/DataDescriptor";
-import {IDataAccessor} from "./DataAccessor";
-import {action, IObservableArray, ObservableMap, makeObservable, observable} from "mobx";
-import {DataMultiCollection} from "./DataMultiCollection";
-import {DataPropertiesCollection} from "./DataPropertiesCollection";
-import {DataMultiPropertiesCollection} from "./DataMultiPropertiesCollection";
+import {DataQuery, Query} from './DataQuery';
+import {endpointPath, socketPath, socketPathRE} from './DataUtils';
+import {WebSocketClient} from './WebSocketClient';
+import {BaseClass} from './classes/BaseClass';
+import {IDataDescriptor} from './classes/DataDescriptor';
+import {IDataAccessor} from './DataAccessor';
+import {action, IObservableArray, ObservableMap, makeObservable, observable} from 'mobx';
+import {DataMultiCollection} from './DataMultiCollection';
+import {DataPropertiesCollection} from './DataPropertiesCollection';
+import {DataMultiPropertiesCollection} from './DataMultiPropertiesCollection';
 
 export interface IDataCollection {
   // A valid data collection is one that listens to data changes from the API. The initial set of data objects may
@@ -80,8 +80,13 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     return this.webSocketClient.subscribe(this.socketPath, this);
   }
 
-  open(restPath: string, query: Query, accessor: IDataAccessor,
-       descriptor: IDataDescriptor<DataType>, webSocketClient: WebSocketClient) {
+  open(
+    restPath: string,
+    query: Query,
+    accessor: IDataAccessor,
+    descriptor: IDataDescriptor<DataType>,
+    webSocketClient: WebSocketClient,
+  ) {
     this.restPath = restPath;
     this.query = query;
     this.accessor = accessor;
@@ -101,27 +106,45 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     if (this.isOpen) {
       this.isOpen = false;
       this.accessor.unregisterCollection(this);
-      this.webSocketClient.unsubscribe(this.socketPath, this)
-        .catch(error => console.error('Unsubscription error:', error));
+      this.webSocketClient
+        .unsubscribe(this.socketPath, this)
+        .catch((error) => console.error('Unsubscription error:', error));
     }
   }
 
   getRelated<ChildDataType extends BaseClass>(
-      callback: (parent: DataType) => DataCollection<ChildDataType>) {
-    return new DataMultiCollection<DataType, ChildDataType>(this.accessor, this.array, null, null,
-      callback);
+    callback: (parent: DataType) => DataCollection<ChildDataType>,
+  ) {
+    return new DataMultiCollection<DataType, ChildDataType>(
+      this.accessor,
+      this.array,
+      null,
+      null,
+      callback,
+    );
   }
 
   getRelatedProperties(callback: (child: DataType) => DataPropertiesCollection) {
-    return new DataMultiPropertiesCollection<DataType>(this.accessor, this.array, null, null,
-      callback);
+    return new DataMultiPropertiesCollection<DataType>(
+      this.accessor,
+      this.array,
+      null,
+      null,
+      callback,
+    );
   }
 
   getRelatedOfFiltered<ChildDataType extends BaseClass>(
-      filteredIds: IObservableArray<string>,
-      callback: (child: DataType) => DataCollection<ChildDataType>) {
-    return new DataMultiCollection<DataType, ChildDataType>(this.accessor, this.array, null,
-      filteredIds, callback);
+    filteredIds: IObservableArray<string>,
+    callback: (child: DataType) => DataCollection<ChildDataType>,
+  ) {
+    return new DataMultiCollection<DataType, ChildDataType>(
+      this.accessor,
+      this.array,
+      null,
+      filteredIds,
+      callback,
+    );
   }
 
   getNthOrNull(index: number): DataType | null {
@@ -160,10 +183,11 @@ export class DataCollection<DataType extends BaseClass> implements IDataCollecti
     if (old !== undefined) {
       if (!this.queryExecutor.isAllowedByFilters(element)) {
         // existing item, but updated data has property that filters out the element outright
-        if (this.queryExecutor.limit !== null &&
+        if (
+          this.queryExecutor.limit !== null &&
           this.array.length === this.queryExecutor.limit &&
-          this.byId.size > this.array.length)
-        {
+          this.byId.size > this.array.length
+        ) {
           // Array was limited, however there are more up-to-date data in byId that can be filled
           // in.
           this.byId.delete(String(id));

@@ -15,69 +15,60 @@
   Copyright Buildbot Team Members
 */
 
-import {Table} from "react-bootstrap";
-import {observer} from "mobx-react";
-import {Link} from "react-router-dom";
-import {
-  BadgeRound,
-  dateFormat,
-  durationFromNowFormat,
-  useCurrentTime
-} from "buildbot-ui";
+import {Table} from 'react-bootstrap';
+import {observer} from 'mobx-react';
+import {Link} from 'react-router-dom';
+import {BadgeRound, dateFormat, durationFromNowFormat, useCurrentTime} from 'buildbot-ui';
 import {
   Buildrequest,
   DataCollection,
   getPropertyValueArrayOrEmpty,
-  getPropertyValueOrDefault
-} from "buildbot-data-js";
+  getPropertyValueOrDefault,
+} from 'buildbot-data-js';
 
 type BuildRequestsTableProps = {
   buildrequests: DataCollection<Buildrequest>;
-}
+};
 
 export const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableProps) => {
   const now = useCurrentTime();
   const tableElement = () => {
-
-    const sortedBuildrequests = buildrequests.array.slice()
-      .sort((a, b) => {
-        const byPriority = a.priority - b.priority;
-        if (byPriority !== 0) {
-          return byPriority;
-        }
-        return a.submitted_at - b.submitted_at;
-      });
-
-    const rowElements = sortedBuildrequests.filter(br => !br.claimed).map(br => {
-      const owners = [
-        getPropertyValueOrDefault(br.properties, "owner", null),
-        ...getPropertyValueArrayOrEmpty(br.properties, "owners")
-      ];
-
-      const ownerElements = owners.filter(o => o !== null).map(owner => <span>{owner}</span>);
-
-      return (
-        <tr key={br.buildrequestid}>
-          <td>
-            <Link to={`/buildrequests/${br.buildrequestid}`}>
-              <BadgeRound className=''>{br.buildrequestid.toString()}</BadgeRound>
-            </Link>
-          </td>
-          <td>
-            {br.priority}
-          </td>
-          <td>
-            <span title={dateFormat(br.submitted_at)}>
-              {durationFromNowFormat(br.submitted_at, now)}
-            </span>
-          </td>
-          <td>
-            {ownerElements}
-          </td>
-          <td></td>
-        </tr>
-      );
+    const sortedBuildrequests = buildrequests.array.slice().sort((a, b) => {
+      const byPriority = a.priority - b.priority;
+      if (byPriority !== 0) {
+        return byPriority;
+      }
+      return a.submitted_at - b.submitted_at;
     });
+
+    const rowElements = sortedBuildrequests
+      .filter((br) => !br.claimed)
+      .map((br) => {
+        const owners = [
+          getPropertyValueOrDefault(br.properties, 'owner', null),
+          ...getPropertyValueArrayOrEmpty(br.properties, 'owners'),
+        ];
+
+        const ownerElements = owners.filter((o) => o !== null).map((owner) => <span>{owner}</span>);
+
+        return (
+          <tr key={br.buildrequestid}>
+            <td>
+              <Link to={`/buildrequests/${br.buildrequestid}`}>
+                <BadgeRound className="">{br.buildrequestid.toString()}</BadgeRound>
+              </Link>
+            </td>
+            <td>{br.priority}</td>
+            <td>
+              <span title={dateFormat(br.submitted_at)}>
+                {durationFromNowFormat(br.submitted_at, now)}
+              </span>
+            </td>
+            <td>{ownerElements}</td>
+            <td></td>
+          </tr>
+        );
+      });
 
     return (
       <Table hover striped size="sm">
@@ -93,7 +84,7 @@ export const BuildRequestsTable = observer(({buildrequests}: BuildRequestsTableP
         </tbody>
       </Table>
     );
-  }
+  };
 
   return buildrequests.array.length === 0 ? <span>None</span> : tableElement();
 });

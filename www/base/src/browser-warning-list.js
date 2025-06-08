@@ -18,17 +18,17 @@
 // The browser list here must correspond to the browser list in
 // babel config which is located at vite.config.ts
 outdatedBrowserRework({
-   browserSupport: {
-       'Chrome': 56, // Includes Chrome for mobile devices
-       'Chromium': 56, // same as Chrome, but needs to be listed explicitly
-                       // (https://github.com/mikemaccana/outdated-browser-rework/issues/49)
-       'Edge': 15,
-       'Safari': 10,
-       'Mobile Safari': 10,
-       'Firefox': 54,
-       'Opera': 43, // uses Chrome 56 internally
-       'IE': false
-   },
-   requireChromeOnAndroid: false,
-   isUnknownBrowserOK: true,
+  browserSupport: {
+    Chrome: 56, // Includes Chrome for mobile devices
+    Chromium: 56, // same as Chrome, but needs to be listed explicitly
+    // (https://github.com/mikemaccana/outdated-browser-rework/issues/49)
+    Edge: 15,
+    Safari: 10,
+    'Mobile Safari': 10,
+    Firefox: 54,
+    Opera: 43, // uses Chrome 56 internally
+    IE: false,
+  },
+  requireChromeOnAndroid: false,
+  isUnknownBrowserOK: true,
 });

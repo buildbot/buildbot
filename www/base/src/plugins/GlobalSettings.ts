@@ -15,14 +15,14 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {Config} from "buildbot-ui";
+import {action, makeObservable, observable} from 'mobx';
+import {Config} from 'buildbot-ui';
 import {
   ISettings,
   SettingGroupConfig,
   SettingValue,
-  registerBuildbotSettingsSingleton
-} from "buildbot-plugin-support";
+  registerBuildbotSettingsSingleton,
+} from 'buildbot-plugin-support';
 
 export type SettingItem = {
   name: string;
@@ -32,13 +32,13 @@ export type SettingItem = {
   defaultValue: SettingValue;
   choices?: string[]; // only when type == "choice_combo"
   caption: string;
-}
+};
 
 export type SettingGroup = {
   name: string;
   caption: string | null;
   items: {[name: string]: SettingItem};
-}
+};
 
 export type SettingGroups = {[name: string]: SettingGroup};
 
@@ -62,8 +62,7 @@ export class GlobalSettings implements ISettings {
     for (const [selector, value] of Object.entries(uiConfig)) {
       if (filterGroup !== undefined) {
         const groupAndSetting = this.splitSelector(selector);
-        if (groupAndSetting === null || groupAndSetting[0] != filterGroup)
-          continue;
+        if (groupAndSetting === null || groupAndSetting[0] != filterGroup) continue;
       }
       this.setSettingDefaultValue(selector, value);
     }
@@ -90,8 +89,8 @@ export class GlobalSettings implements ISettings {
     }
     return {
       group: this.groups[groupName],
-      settingName: settingName
-    }
+      settingName: settingName,
+    };
   }
 
   @action load(filterGroup?: string) {
@@ -102,8 +101,7 @@ export class GlobalSettings implements ISettings {
     try {
       const storedGroups = JSON.parse(settings) as StoredSettingGroups;
       for (const [groupName, storedGroup] of Object.entries(storedGroups)) {
-        if (filterGroup !== undefined && groupName != filterGroup)
-           continue;
+        if (filterGroup !== undefined && groupName != filterGroup) continue;
         if (!(groupName in this.groups)) {
           console.log(`Ignoring unknown loaded setting group ${groupName}`);
           continue;
@@ -117,7 +115,6 @@ export class GlobalSettings implements ISettings {
           this.setSettingItem(group.items[itemName], item, true);
         }
       }
-
     } catch (e) {
       console.error(`Got error ${e} when parsing settings`);
     }
@@ -185,7 +182,11 @@ export class GlobalSettings implements ISettings {
     return this.getTypedSettingOrDefault(selector, 'choice_combo', '');
   }
 
-  @action private setSettingItemNoCheck(item: SettingItem, value: SettingValue, setValueIsSet: boolean) {
+  @action private setSettingItemNoCheck(
+    item: SettingItem,
+    value: SettingValue,
+    setValueIsSet: boolean,
+  ) {
     item.value = value;
     if (setValueIsSet) {
       item.valueIsSet = true;
@@ -194,11 +195,11 @@ export class GlobalSettings implements ISettings {
 
   private setSettingItem(item: SettingItem, value: SettingValue, setValueIsSet: boolean) {
     switch (item.type) {
-      case "string":
-      case "choice_combo":
+      case 'string':
+      case 'choice_combo':
         this.setSettingItemNoCheck(item, value.toString(), setValueIsSet);
         break;
-      case "integer": {
+      case 'integer': {
         const newValue = Number.parseInt(value.toString());
         if (!isNaN(newValue)) {
           this.setSettingItemNoCheck(item, newValue, setValueIsSet);
@@ -207,7 +208,7 @@ export class GlobalSettings implements ISettings {
         }
         break;
       }
-      case "float": {
+      case 'float': {
         const newValue = Number.parseFloat(value.toString());
         if (!isNaN(newValue)) {
           this.setSettingItemNoCheck(item, newValue, setValueIsSet);
@@ -216,10 +217,10 @@ export class GlobalSettings implements ISettings {
         }
         break;
       }
-      case "boolean":
-        if (value.toString() === "true") {
+      case 'boolean':
+        if (value.toString() === 'true') {
           this.setSettingItemNoCheck(item, true, setValueIsSet);
-        } else if (value.toString() === "false") {
+        } else if (value.toString() === 'false') {
           this.setSettingItemNoCheck(item, false, setValueIsSet);
         } else {
           console.error(`Invalid bool setting value ${value}`);
@@ -299,7 +300,7 @@ export class GlobalSettings implements ISettings {
       items: items,
     };
   }
-};
+}
 
 export const globalSettings = new GlobalSettings();
 

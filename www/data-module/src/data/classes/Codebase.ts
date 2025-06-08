@@ -5,13 +5,13 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
-import {CodebaseCommit, codebaseCommitDescriptor} from "./CodebaseCommit";
-import {CodebaseBranch, codebaseBranchDescriptor} from "./CodebaseBranch";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
+import {CodebaseCommit, codebaseCommitDescriptor} from './CodebaseCommit';
+import {CodebaseBranch, codebaseBranchDescriptor} from './CodebaseBranch';
 
 export class Codebase extends BaseClass {
   @observable codebaseid!: number;
@@ -20,7 +20,7 @@ export class Codebase extends BaseClass {
   @observable projectid!: number;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "codebases", String(object.codebaseid));
+    super(accessor, 'codebases', String(object.codebaseid));
     this.update(object);
     makeObservable(this);
   }
@@ -42,21 +42,21 @@ export class Codebase extends BaseClass {
   }
 
   getCommits(query: RequestQuery = {}) {
-    return this.get<CodebaseCommit>("commits", query, codebaseCommitDescriptor);
+    return this.get<CodebaseCommit>('commits', query, codebaseCommitDescriptor);
   }
 
   getBranches(query: RequestQuery = {}) {
-    return this.get<CodebaseBranch>("branches", query, codebaseBranchDescriptor);
+    return this.get<CodebaseBranch>('branches', query, codebaseBranchDescriptor);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get("codebases", query, codebaseDescriptor);
+    return accessor.get('codebases', query, codebaseDescriptor);
   }
 }
 
 export class CodebaseDescriptor implements IDataDescriptor<Codebase> {
-  restArrayField = "codebases";
-  fieldId: string = "codebaseid";
+  restArrayField = 'codebases';
+  fieldId: string = 'codebaseid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Codebase(accessor, object);

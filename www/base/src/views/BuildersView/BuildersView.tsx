@@ -16,30 +16,29 @@
 */
 
 import './BuildersView.scss';
-import {observer} from "mobx-react";
-import {useState} from "react";
-import {FaCogs} from "react-icons/fa";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
+import {observer} from 'mobx-react';
+import {useState} from 'react';
+import {FaCogs} from 'react-icons/fa';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
 import {
   Builder,
   DataCollection,
   Master,
   Worker,
   useDataAccessor,
-  useDataApiQuery
-} from "buildbot-data-js";
-import {
-  TagFilterManager,
-  hasActiveMaster,
-  useTagFilterManager,
-  useTopbarItems,
-} from "buildbot-ui";
-import {BuildersTable} from "../../components/BuildersTable/BuildersTable";
-import {SettingCheckbox} from "../../components/SettingCheckbox/SettingCheckbox";
-import {makePagination} from "../../util/Pagination";
+  useDataApiQuery,
+} from 'buildbot-data-js';
+import {TagFilterManager, hasActiveMaster, useTagFilterManager, useTopbarItems} from 'buildbot-ui';
+import {BuildersTable} from '../../components/BuildersTable/BuildersTable';
+import {SettingCheckbox} from '../../components/SettingCheckbox/SettingCheckbox';
+import {makePagination} from '../../util/Pagination';
 
-const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
-                           masters: DataCollection<Master>, showOldBuilders: boolean) => {
+const isBuilderFiltered = (
+  builder: Builder,
+  filterManager: TagFilterManager,
+  masters: DataCollection<Master>,
+  showOldBuilders: boolean,
+) => {
   if (!showOldBuilders && !hasActiveMaster(builder, masters)) {
     return false;
   }
@@ -49,15 +48,13 @@ const isBuilderFiltered = (builder: Builder, filterManager: TagFilterManager,
 export const BuildersView = observer(() => {
   const accessor = useDataAccessor([]);
 
-  const filterManager = useTagFilterManager("tags");
-  const [builderNameFilter, setBuilderNameFilter] = useState("");
+  const filterManager = useTagFilterManager('tags');
+  const [builderNameFilter, setBuilderNameFilter] = useState('');
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  useTopbarItems([
-    {caption: "Builders", route: "/builders"}
-  ]);
+  useTopbarItems([{caption: 'Builders', route: '/builders'}]);
 
-  const showOldBuilders = buildbotGetSettings().getBooleanSetting("Builders.show_old_builders");
+  const showOldBuilders = buildbotGetSettings().getBooleanSetting('Builders.show_old_builders');
 
   // as there is usually lots of builders, its better to get the overall
   // list of workers, masters, and builds and then associate by builder
@@ -65,31 +62,46 @@ export const BuildersView = observer(() => {
   const masters = useDataApiQuery(() => Master.getAll(accessor));
   const workers = useDataApiQuery(() => Worker.getAll(accessor));
 
-  const filteredBuilders = builders.array.filter(builder => {
-    return isBuilderFiltered(builder, filterManager, masters, showOldBuilders) &&
+  const filteredBuilders = builders.array
+    .filter((builder) => {
+      return (
+        isBuilderFiltered(builder, filterManager, masters, showOldBuilders) &&
         (builderNameFilter === null || builder.name.indexOf(builderNameFilter) >= 0)
-  }).sort((a, b) => a.name.localeCompare(b.name));
+      );
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const [paginatedBuilders, paginationElement] = makePagination(
-    currentPage, setCurrentPage,
-    buildbotGetSettings().getIntegerSetting("Builders.page_size"),
-    filteredBuilders
+    currentPage,
+    setCurrentPage,
+    buildbotGetSettings().getIntegerSetting('Builders.page_size'),
+    filteredBuilders,
   );
 
   return (
     <div className="bb-builders-view-container">
-      <form role="search" style={{width: "150px"}}>
-        <input type="text" value={builderNameFilter}
-               onChange={e => setBuilderNameFilter(e.target.value)}
-               placeholder="Search for builders" className="bb-builders-view-form-control"/>
+      <form role="search" style={{width: '150px'}}>
+        <input
+          type="text"
+          value={builderNameFilter}
+          onChange={(e) => setBuilderNameFilter(e.target.value)}
+          placeholder="Search for builders"
+          className="bb-builders-view-form-control"
+        />
       </form>
-      <BuildersTable builders={paginatedBuilders} allWorkers={workers}
-                     isLoading={!builders.isResolved() || !workers.isResolved()}
-                     filterManager={filterManager}/>
+      <BuildersTable
+        builders={paginatedBuilders}
+        allWorkers={workers}
+        isLoading={!builders.isResolved() || !workers.isResolved()}
+        filterManager={filterManager}
+      />
       <div>
         {paginationElement}
-        <SettingCheckbox value={showOldBuilders} label="Show old builders"
-                         settingSelector="Builders.show_old_builders"/>
+        <SettingCheckbox
+          value={showOldBuilders}
+          label="Show old builders"
+          settingSelector="Builders.show_old_builders"
+        />
       </div>
     </div>
   );
@@ -100,7 +112,7 @@ buildbotSetupPlugin((reg) => {
     name: 'builds',
     parentName: null,
     caption: 'Builds',
-    icon: <FaCogs/>,
+    icon: <FaCogs />,
     order: 10,
     route: null,
   });
@@ -114,34 +126,39 @@ buildbotSetupPlugin((reg) => {
   });
 
   reg.registerRoute({
-    route: "builders",
-    group: "builders",
-    element: () => <BuildersView/>,
+    route: 'builders',
+    group: 'builders',
+    element: () => <BuildersView />,
   });
 
   reg.registerSettingGroup({
     name: 'Builders',
     caption: 'Builders page related settings',
-    items: [{
-      type: 'boolean',
-      name: 'show_old_builders',
-      caption: 'Show old builders',
-      defaultValue: false
-    }, {
-      type: 'boolean',
-      name: 'show_workers_name',
-      caption: 'Show workers name',
-      defaultValue: false
-    }, {
-      type: 'integer',
-      name: 'buildFetchLimit',
-      caption: 'Maximum number of builds to fetch',
-      defaultValue: 200
-    }, {
-      type:'integer',
-      name:'page_size',
-      caption:'Number of builders to show per page',
-      defaultValue: 100
-    }
-  ]});
+    items: [
+      {
+        type: 'boolean',
+        name: 'show_old_builders',
+        caption: 'Show old builders',
+        defaultValue: false,
+      },
+      {
+        type: 'boolean',
+        name: 'show_workers_name',
+        caption: 'Show workers name',
+        defaultValue: false,
+      },
+      {
+        type: 'integer',
+        name: 'buildFetchLimit',
+        caption: 'Maximum number of builds to fetch',
+        defaultValue: 200,
+      },
+      {
+        type: 'integer',
+        name: 'page_size',
+        caption: 'Number of builders to show per page',
+        defaultValue: 100,
+      },
+    ],
+  });
 });

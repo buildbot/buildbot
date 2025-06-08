@@ -12,7 +12,6 @@ export class Stream<T> {
   listeners: StreamListener<T>[] = [];
 
   subscribe(listener: StreamListener<T>) {
-
     this.listeners.push(listener);
 
     // unsubscribe

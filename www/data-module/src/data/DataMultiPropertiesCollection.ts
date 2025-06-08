@@ -5,13 +5,13 @@
   Copyright Buildbot Team Members
 */
 
-import {BaseClass} from "./classes/BaseClass";
-import {BasicDataMultiCollection} from "./BasicDataMultiCollection";
-import {DataPropertiesCollection} from "./DataPropertiesCollection";
+import {BaseClass} from './classes/BaseClass';
+import {BasicDataMultiCollection} from './BasicDataMultiCollection';
+import {DataPropertiesCollection} from './DataPropertiesCollection';
 
-export class DataMultiPropertiesCollection<ParentDataType extends BaseClass>
-  extends BasicDataMultiCollection<ParentDataType, DataPropertiesCollection> {
-
+export class DataMultiPropertiesCollection<
+  ParentDataType extends BaseClass,
+> extends BasicDataMultiCollection<ParentDataType, DataPropertiesCollection> {
   getParentCollectionOrEmpty(parentId: string): DataPropertiesCollection {
     const collection = this.byParentId.get(parentId);
     if (collection === undefined) {

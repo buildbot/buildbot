@@ -5,24 +5,19 @@
   Copyright Buildbot Team Members
 */
 
-import {BaseClass} from "./classes/BaseClass";
-import {
-  action,
-  autorun,
-  IObservableArray,
-  makeObservable,
-  observable,
-  ObservableMap
-} from "mobx";
-import {DataCollection, IDataCollection} from "./DataCollection";
-import {IReactionDisposer} from "mobx";
-import {IDataAccessor} from "./DataAccessor";
+import {BaseClass} from './classes/BaseClass';
+import {action, autorun, IObservableArray, makeObservable, observable, ObservableMap} from 'mobx';
+import {DataCollection, IDataCollection} from './DataCollection';
+import {IReactionDisposer} from 'mobx';
+import {IDataAccessor} from './DataAccessor';
 
 /* This class wraps multiple DataCollections of the same thing.
  */
-export class BasicDataMultiCollection<ParentDataType extends BaseClass,
-  Collection extends IDataCollection> implements IDataCollection {
-
+export class BasicDataMultiCollection<
+  ParentDataType extends BaseClass,
+  Collection extends IDataCollection,
+> implements IDataCollection
+{
   accessor: IDataAccessor;
   parentArray: IObservableArray<ParentDataType> | null;
   parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null;
@@ -33,11 +28,13 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
   callback: (parent: ParentDataType) => Collection;
   private disposer: IReactionDisposer;
 
-  constructor(accessor: IDataAccessor,
-              parentArray: IObservableArray<ParentDataType> | null,
-              parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
-              parentFilteredIds: IObservableArray<string> | null,
-              callback: (parent: ParentDataType) => Collection) {
+  constructor(
+    accessor: IDataAccessor,
+    parentArray: IObservableArray<ParentDataType> | null,
+    parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
+    parentFilteredIds: IObservableArray<string> | null,
+    callback: (parent: ParentDataType) => Collection,
+  ) {
     makeObservable(this);
 
     this.accessor = accessor;
@@ -88,7 +85,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
         }
       });
     } else {
-      throw Error("Either parentArray or parentArrayMap must not be null");
+      throw Error('Either parentArray or parentArrayMap must not be null');
     }
   }
 

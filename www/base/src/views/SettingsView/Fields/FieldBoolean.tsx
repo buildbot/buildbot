@@ -15,23 +15,27 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {SettingValue} from "buildbot-plugin-support";;
-import {SettingItem} from "../../../plugins/GlobalSettings";
+import {observer} from 'mobx-react';
+import {SettingValue} from 'buildbot-plugin-support';
+import {SettingItem} from '../../../plugins/GlobalSettings';
 
 type FieldBooleanProps = {
   item: SettingItem;
-  setSetting: (value: SettingValue) => void
+  setSetting: (value: SettingValue) => void;
 };
 
 export const FieldBoolean = observer(({item, setSetting}: FieldBooleanProps) => {
   return (
     <div className="form-group">
       <label className="checkbox-inline">
-        <input data-bb-test-id={`settings-field-${item.name}`}
-               type="checkbox" name={item.name} checked={item.value as boolean}
-               onChange={event => setSetting(event.target.checked)}
-        /> {item.caption}
+        <input
+          data-bb-test-id={`settings-field-${item.name}`}
+          type="checkbox"
+          name={item.name}
+          checked={item.value as boolean}
+          onChange={(event) => setSetting(event.target.checked)}
+        />{' '}
+        {item.caption}
       </label>
     </div>
   );

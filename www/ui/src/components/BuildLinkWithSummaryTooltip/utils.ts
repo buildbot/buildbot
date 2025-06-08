@@ -15,27 +15,26 @@
   Copyright Buildbot Team Members
 */
 
-import {buildbotGetSettings} from "buildbot-plugin-support";
-import {Build} from "buildbot-data-js";
-import {fillTemplate, parseTemplate} from "../../util/TemplateFormat";
+import {buildbotGetSettings} from 'buildbot-plugin-support';
+import {Build} from 'buildbot-data-js';
+import {fillTemplate, parseTemplate} from '../../util/TemplateFormat';
 
 export const getBuildLinkDisplayProperties = () => {
   const template = buildbotGetSettings().getStringSetting('Links.build_link_template');
-  if (template === "")
-    return [];
+  if (template === '') return [];
   return [...parseTemplate(template).replacements.values()]
-    .filter(x => x.startsWith("prop:"))
-    .map(x => x.substring(5));
-}
+    .filter((x) => x.startsWith('prop:'))
+    .map((x) => x.substring(5));
+};
 
 export const formatBuildLinkText = (build: Build): string => {
   const template = buildbotGetSettings().getStringSetting('Links.build_link_template');
-  if (template === "") {
+  if (template === '') {
     return `${build.number}`;
   }
   const replacements = new Map<string, string>([['build_number', `${build.number}`]]);
   for (const repl of parseTemplate(template).replacements.values()) {
-    if (repl.startsWith("prop:")) {
+    if (repl.startsWith('prop:')) {
       const prop = repl.substring(5);
       const value = build.properties[prop];
       if (value === undefined || value === null || value === '') {
@@ -46,4 +45,4 @@ export const formatBuildLinkText = (build: Build): string => {
   }
 
   return fillTemplate(template, replacements);
-}
+};

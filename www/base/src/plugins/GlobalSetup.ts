@@ -20,24 +20,33 @@ import {
   registerPluginRegistrationConsumer,
   RegistrationCallbacks,
   RouteConfig,
-  SettingGroupConfig
-} from "buildbot-plugin-support";
-import {Config} from "buildbot-ui";
-import {globalMenuSettings} from "./GlobalMenuSettings";
-import {globalRoutes} from "./GlobalRoutes";
-import {globalSettings} from "./GlobalSettings";
+  SettingGroupConfig,
+} from 'buildbot-plugin-support';
+import {Config} from 'buildbot-ui';
+import {globalMenuSettings} from './GlobalMenuSettings';
+import {globalRoutes} from './GlobalRoutes';
+import {globalSettings} from './GlobalSettings';
 
 export function initializeGlobalSetup(config: Config) {
-  const onBuildbotSetupPlugin = (callback: (registrationCallbacks: RegistrationCallbacks, config: Config) => void) => {
-    callback({
-      registerMenuGroup: (group: GroupSettings) => { globalMenuSettings.addGroup(group); },
-      registerRoute: (route: RouteConfig) => { globalRoutes.addRoute(route); },
-      registerSettingGroup: (group: SettingGroupConfig) => {
-        globalSettings.addGroup(group);
-        globalSettings.applyBuildbotConfig(config, group.name);
-        globalSettings.load(group.name);
+  const onBuildbotSetupPlugin = (
+    callback: (registrationCallbacks: RegistrationCallbacks, config: Config) => void,
+  ) => {
+    callback(
+      {
+        registerMenuGroup: (group: GroupSettings) => {
+          globalMenuSettings.addGroup(group);
+        },
+        registerRoute: (route: RouteConfig) => {
+          globalRoutes.addRoute(route);
+        },
+        registerSettingGroup: (group: SettingGroupConfig) => {
+          globalSettings.addGroup(group);
+          globalSettings.applyBuildbotConfig(config, group.name);
+          globalSettings.load(group.name);
+        },
       },
-    }, config);
-  }
+      config,
+    );
+  };
   registerPluginRegistrationConsumer(onBuildbotSetupPlugin);
 }

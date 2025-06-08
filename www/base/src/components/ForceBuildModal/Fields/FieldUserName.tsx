@@ -15,18 +15,16 @@
   Copyright Buildbot Team Members
 */
 
-import {ForceSchedulerFieldUserName} from "buildbot-data-js";
-import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
-import {observer} from "mobx-react";
-import {FieldString} from "./FieldString";
+import {ForceSchedulerFieldUserName} from 'buildbot-data-js';
+import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
+import {observer} from 'mobx-react';
+import {FieldString} from './FieldString';
 
 type FieldUserNameProps = {
   field: ForceSchedulerFieldUserName;
   fieldsState: ForceBuildModalFieldsState;
-}
+};
 
 export const FieldUserName = observer(({field, fieldsState}: FieldUserNameProps) => {
-  return (
-    <FieldString field={field} fieldsState={fieldsState}/>
-  );
+  return <FieldString field={field} fieldsState={fieldsState} />;
 });

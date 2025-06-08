@@ -44,12 +44,10 @@
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
 
-const now = hasNativePerformanceNow
-  ? () => performance.now()
-  : () => Date.now();
+const now = hasNativePerformanceNow ? () => performance.now() : () => Date.now();
 
 export type TimeoutID = {
-  id: number
+  id: number;
 };
 
 export function cancelTimeout(timeoutID: TimeoutID) {

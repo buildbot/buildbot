@@ -21,10 +21,12 @@ type BadgeStatusProps = {
   className: string;
   children?: JSX.Element | JSX.Element[] | string;
   title?: string;
-}
+};
 
 export const BadgeStatus = ({className, children, title, ...props}: BadgeStatusProps) => {
   return (
-    <div {...props} title={title} className={"bb-badge-status " + className}>{children}</div>
+    <div {...props} title={title} className={'bb-badge-status ' + className}>
+      {children}
+    </div>
   );
-}
+};

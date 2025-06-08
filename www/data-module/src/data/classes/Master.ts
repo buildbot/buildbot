@@ -5,20 +5,20 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
 
 export class Master extends BaseClass {
   @observable masterid!: number;
   @observable active!: boolean;
-  @observable last_active!: number|null;
+  @observable last_active!: number | null;
   @observable name!: string;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "masters", String(object.masterid));
+    super(accessor, 'masters', String(object.masterid));
     this.update(object);
     makeObservable(this);
   }
@@ -40,13 +40,13 @@ export class Master extends BaseClass {
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get<Master>("masters", query, masterDescriptor);
+    return accessor.get<Master>('masters', query, masterDescriptor);
   }
 }
 
 export class MasterDescriptor implements IDataDescriptor<Master> {
-  restArrayField = "masters";
-  fieldId: string = "masterid";
+  restArrayField = 'masters';
+  fieldId: string = 'masterid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Master(accessor, object);

@@ -19,10 +19,8 @@ import './TableHeading.scss';
 
 type TableHeadingProps = {
   children: React.ReactNode;
-}
+};
 
 export const TableHeading = ({children}: TableHeadingProps) => {
-  return (
-    <h4 className="bb-table-heading">{children}</h4>
-  );
-}
+  return <h4 className="bb-table-heading">{children}</h4>;
+};

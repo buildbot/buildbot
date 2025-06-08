@@ -23,12 +23,18 @@ export class MockWebSocket implements WebSocket {
   readonly OPEN = WebSocket.OPEN;
 
   addEventListener<K extends keyof WebSocketEventMap>(
-    _type: K, _listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
-    _options?: boolean | AddEventListenerOptions) {}
+    _type: K,
+    _listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
+    _options?: boolean | AddEventListenerOptions,
+  ) {}
   removeEventListener<K extends keyof WebSocketEventMap>(
-    _type: K, _listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
-    _options?: boolean | EventListenerOptions): void {}
-  dispatchEvent(_event: Event): boolean { return true; }
+    _type: K,
+    _listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
+    _options?: boolean | EventListenerOptions,
+  ): void {}
+  dispatchEvent(_event: Event): boolean {
+    return true;
+  }
 
   sendQueue: string[] = [];
   parsedSendQueue: any[] = [];

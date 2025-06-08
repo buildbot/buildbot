@@ -15,18 +15,18 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
-import {regexEscape} from "./Regex";
+import {describe, expect, it} from 'vitest';
+import {regexEscape} from './Regex';
 
 describe('Regex', () => {
   describe('escape', () => {
-
     it('no change', () => {
-      expect(regexEscape("this is a simple test")).toStrictEqual("this is a simple test");
+      expect(regexEscape('this is a simple test')).toStrictEqual('this is a simple test');
     });
     it('escapes symbols', () => {
-      expect(regexEscape("/ \\ [ ] ( ) - ^ $ . | ? + * { }"))
-        .toStrictEqual("\\/ \\\\ \\[ \\] \\( \\) \\- \\^ \\$ \\. \\| \\? \\+ \\* \\{ \\}");
+      expect(regexEscape('/ \\ [ ] ( ) - ^ $ . | ? + * { }')).toStrictEqual(
+        '\\/ \\\\ \\[ \\] \\( \\) \\- \\^ \\$ \\. \\| \\? \\+ \\* \\{ \\}',
+      );
     });
   });
 });

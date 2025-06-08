@@ -5,30 +5,30 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
-import {Build, buildDescriptor} from "./Build";
-import {Buildrequest, buildrequestDescriptor} from "./Buildrequest";
-import {Forcescheduler, forceschedulerDescriptor} from "./Forcescheduler";
-import {Worker, workerDescriptor} from "./Worker";
-import {Master, masterDescriptor} from "./Master";
-import {TestResultSet, testResultSetDescriptor} from "./TestResultSet";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
+import {Build, buildDescriptor} from './Build';
+import {Buildrequest, buildrequestDescriptor} from './Buildrequest';
+import {Forcescheduler, forceschedulerDescriptor} from './Forcescheduler';
+import {Worker, workerDescriptor} from './Worker';
+import {Master, masterDescriptor} from './Master';
+import {TestResultSet, testResultSetDescriptor} from './TestResultSet';
 
 export class Builder extends BaseClass {
   @observable builderid!: number;
-  @observable description!: string|null;
-  @observable description_format!: string|null;
-  @observable description_html!: string|null;
+  @observable description!: string | null;
+  @observable description_format!: string | null;
+  @observable description_html!: string | null;
   @observable masterids!: number[];
   @observable name!: string;
   @observable tags!: string[];
-  @observable projectid!: string|null;
+  @observable projectid!: string | null;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "builders", String(object.builderid));
+    super(accessor, 'builders', String(object.builderid));
     this.update(object);
     makeObservable(this);
   }
@@ -56,37 +56,37 @@ export class Builder extends BaseClass {
   }
 
   getBuilds(query: RequestQuery = {}) {
-    return this.get<Build>("builds", query, buildDescriptor);
+    return this.get<Build>('builds', query, buildDescriptor);
   }
 
   getBuildrequests(query: RequestQuery = {}) {
-    return this.get<Buildrequest>("buildrequests", query, buildrequestDescriptor);
+    return this.get<Buildrequest>('buildrequests', query, buildrequestDescriptor);
   }
 
   getForceschedulers(query: RequestQuery = {}) {
-    return this.get<Forcescheduler>("forceschedulers", query, forceschedulerDescriptor);
+    return this.get<Forcescheduler>('forceschedulers', query, forceschedulerDescriptor);
   }
 
   getWorkers(query: RequestQuery = {}) {
-    return this.get<Worker>("workers", query, workerDescriptor);
+    return this.get<Worker>('workers', query, workerDescriptor);
   }
 
   getMasters(query: RequestQuery = {}) {
-    return this.get<Master>("masters", query, masterDescriptor);
+    return this.get<Master>('masters', query, masterDescriptor);
   }
 
   getTestResultSets(query: RequestQuery = {}) {
-    return this.get<TestResultSet>("test_result_sets", query, testResultSetDescriptor);
+    return this.get<TestResultSet>('test_result_sets', query, testResultSetDescriptor);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get<Builder>("builders", query, builderDescriptor);
+    return accessor.get<Builder>('builders', query, builderDescriptor);
   }
 }
 
 export class BuilderDescriptor implements IDataDescriptor<Builder> {
-  restArrayField = "builders";
-  fieldId: string = "builderid";
+  restArrayField = 'builders';
+  fieldId: string = 'builderid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Builder(accessor, object);

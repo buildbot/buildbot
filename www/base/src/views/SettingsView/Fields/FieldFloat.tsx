@@ -15,22 +15,27 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {SettingValue} from "buildbot-plugin-support";;
-import {SettingItem} from "../../../plugins/GlobalSettings";
+import {observer} from 'mobx-react';
+import {SettingValue} from 'buildbot-plugin-support';
+import {SettingItem} from '../../../plugins/GlobalSettings';
 
 type FieldFloatProps = {
   item: SettingItem;
-  setSetting: (value: SettingValue) => void
+  setSetting: (value: SettingValue) => void;
 };
 
 export const FieldFloat = observer(({item, setSetting}: FieldFloatProps) => {
   return (
     <div className="form-group">
       <label>{item.caption}</label>
-      <input data-bb-test-id={`settings-field-${item.name}`}
-             type="number" name={item.name} className="form-control" value={item.value as number}
-             onChange={event => setSetting(event.target.value)}/>
+      <input
+        data-bb-test-id={`settings-field-${item.name}`}
+        type="number"
+        name={item.name}
+        className="form-control"
+        value={item.value as number}
+        onChange={(event) => setSetting(event.target.value)}
+      />
     </div>
   );
 });

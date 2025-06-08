@@ -15,8 +15,8 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import moment from "moment";
+import {action, makeObservable, observable} from 'mobx';
+import moment from 'moment';
 
 export class TimeStore {
   @observable now: number = 0;

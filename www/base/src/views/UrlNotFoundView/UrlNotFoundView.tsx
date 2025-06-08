@@ -24,15 +24,13 @@ export const UrlNotFoundView = () => {
         <div>
           <h1>404</h1>
         </div>
-        <div className="break"/>
+        <div className="break" />
         <div>
           <b>Page Not Found</b>
         </div>
-        <div className="break"/>
-        <div>
-          Make sure the address is correct
-        </div>
+        <div className="break" />
+        <div>Make sure the address is correct</div>
       </div>
     </div>
   );
-}
+};
