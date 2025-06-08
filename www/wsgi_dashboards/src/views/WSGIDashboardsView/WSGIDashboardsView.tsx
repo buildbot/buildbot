@@ -98,7 +98,7 @@ export default function WSGIDashboardsView({name}: WSGIDashboardsViewProps) {
 
 function getIcon(iconNames: string[]): IconType | undefined {
   for (const iconName in iconNames) {
-    // @ts-ignore
+    // @ts-expect-error Ts does not understand accessing module imports by [] operator
     const icon = fa[iconName];
     if (icon !== undefined) {
       return icon;
