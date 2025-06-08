@@ -1,6 +1,5 @@
 import './globals';
 import './globals2';
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import {initializeGlobalSetup} from './plugins/GlobalSetup';
@@ -26,7 +25,6 @@ import {
 import {HashRouter} from 'react-router-dom';
 import {SidebarStore} from './stores/SidebarStore';
 import {StoresContext} from './contexts/Stores';
-import {globalSettings} from './plugins/GlobalSettings';
 import moment from 'moment';
 import axios from 'axios';
 

@@ -1,5 +1,5 @@
 import {observer} from 'mobx-react';
-import React, {useContext, useEffect} from 'react';
+import {useContext, useEffect} from 'react';
 import './App.css';
 import './styles/styles.scss';
 import 'bootstrap';

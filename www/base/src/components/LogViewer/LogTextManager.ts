@@ -43,7 +43,6 @@ import {
   isRangeWithinAnother,
   limitRangeToSize,
 } from '../../util/Math';
-import {LineCssClasses} from '../../util/LineCssClasses';
 
 export type PendingRequest = {
   promise: CancellablePromise<any>;

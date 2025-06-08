@@ -28,7 +28,6 @@ import {
 } from 'buildbot-data-js';
 import {ConfigContext} from 'buildbot-ui';
 import {useContext, useState} from 'react';
-import {Link} from 'react-router-dom';
 import {RawData} from '../../components/RawData/RawData';
 
 type EndpointListItemProps = {

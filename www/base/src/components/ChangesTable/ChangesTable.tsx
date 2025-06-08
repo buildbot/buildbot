@@ -24,7 +24,6 @@ import {ChangeDetails} from 'buildbot-ui';
 import {observer, useLocalObservable} from 'mobx-react';
 import {resizeArray} from '../../util/Array';
 import {LoadingSpan} from '../LoadingSpan/LoadingSpan';
-import {Button} from 'react-bootstrap';
 import {LoadMoreListItem} from '../LoadMoreListItem/LoadMoreListItem';
 
 class ChangesTableState {

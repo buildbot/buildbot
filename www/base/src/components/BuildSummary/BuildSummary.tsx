@@ -26,7 +26,6 @@ import {
   BadgeStatus,
   ConfigContext,
   analyzeStepUrls,
-  stepDurationFormatWithLocks,
   useCurrentTime,
   useStateWithParentTrackingWithDefaultIfNotSet,
   useStepUrlAnalyzer,

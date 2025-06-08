@@ -32,7 +32,7 @@ import {
 } from 'buildbot-data-js';
 import {useNavigate, useParams, useSearchParams} from 'react-router-dom';
 import {Tab, Tabs} from 'react-bootstrap';
-import {TopbarAction, TopbarItem, useTopbarActions, useTopbarItems} from 'buildbot-ui';
+import {TopbarAction, useTopbarActions, useTopbarItems} from 'buildbot-ui';
 import {
   displayBuildRequestEntry,
   displayBuildsetEntry,
