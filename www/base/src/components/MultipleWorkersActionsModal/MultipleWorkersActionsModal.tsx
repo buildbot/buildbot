@@ -141,7 +141,7 @@ export const MultipleWorkersActionsModal = observer(
       );
       const rejectedActions = results.filter((r) => r.status === 'rejected');
       if (rejectedActions.length > 0) {
-        setErrors(rejectedActions.map((r) => (r as PromiseRejectedResult).reason).join('\n'));
+        setErrors(rejectedActions.map((r) => r.reason).join('\n'));
       } else {
         onClose();
       }

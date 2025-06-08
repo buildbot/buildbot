@@ -19,7 +19,6 @@ import {observer} from 'mobx-react';
 import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
 import {
   ForceSchedulerFieldBase,
-  ForceSchedulerFieldBoolean,
   ForceSchedulerFieldChoiceString,
   ForceSchedulerFieldInt,
   ForceSchedulerFieldNested,
@@ -51,7 +50,7 @@ export const FieldAny = observer(({field, fieldsState}: FieldAnyProps) => {
     return <FieldInt field={field as ForceSchedulerFieldInt} fieldsState={fieldsState} />;
   }
   if (field.type === 'bool') {
-    return <FieldBoolean field={field as ForceSchedulerFieldBoolean} fieldsState={fieldsState} />;
+    return <FieldBoolean field={field} fieldsState={fieldsState} />;
   }
   if (field.type === 'username') {
     return <FieldUserName field={field as ForceSchedulerFieldUserName} fieldsState={fieldsState} />;
