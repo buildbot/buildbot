@@ -205,7 +205,7 @@ const ResponsibleUsersTabWidget = ({build, propertiesQuery}: ResponsibleUsersTab
   );
 };
 
-const BuildView = observer(() => {
+export const BuildView = observer(() => {
   const builderid = useParams<'builderid'>().builderid;
   const buildnumber = Number.parseInt(useParams<'buildnumber'>().buildnumber ?? '');
   const navigate = useNavigate();
@@ -334,7 +334,7 @@ const BuildView = observer(() => {
 
     build!.control('rebuild').then(
       (res) => {
-        const brid = Object.values(res.result[1])[0];
+        const brid: any = Object.values(res.result[1])[0];
         navigate(`/buildrequests/${brid}?redirect_to_build=true`);
       },
       (reason) => {
