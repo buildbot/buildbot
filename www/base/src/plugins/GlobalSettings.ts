@@ -115,7 +115,7 @@ export class GlobalSettings implements ISettings {
           this.setSettingItem(group.items[itemName], item, true);
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(`Got error ${e} when parsing settings`);
     }
   }
