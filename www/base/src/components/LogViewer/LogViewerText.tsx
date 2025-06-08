@@ -84,7 +84,7 @@ export const LogViewerText = observer(
         () => setRenderCounter((c) => c + 1),
       );
     }
-    const manager = managerRef.current!;
+    const manager = managerRef.current;
 
     manager.setLogNumLines(log.num_lines);
 

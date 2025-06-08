@@ -212,7 +212,7 @@ export function mergeChunks(chunk1: ParsedLogChunk, chunk2: ParsedLogChunk): Par
       );
     }
 
-    textNoEscapes = chunk1TextNoEscapes + chunk2TextNoEscapes!;
+    textNoEscapes = chunk1TextNoEscapes + chunk2TextNoEscapes;
     textNoEscapesLineBounds = [
       ...chunk1TextNoEscapesLineBounds,
       ...chunk2TextNoEscapesLineBounds.map((b) => b + chunk1TextNoEscapes.length),
@@ -289,7 +289,7 @@ export function parseCssClassesForChunk(
 
       const [strippedLine, lineCssClasses] = parseEscapeCodesToClasses(chunkLine);
       if (lineCssClasses !== null) {
-        cssClasses[lineI] = [strippedLine, lineCssClasses!];
+        cssClasses[lineI] = [strippedLine, lineCssClasses];
       }
     }
   }
