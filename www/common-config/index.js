@@ -59,7 +59,7 @@ export const buildbotEslintConfig = tseslint.config(
       '@typescript-eslint/triple-slash-reference': 'warn',
       '@typescript-eslint/unbound-method': 'warn',
 
-      'react-refresh/only-export-components': 'warn',
+      'react-refresh/only-export-components': 'off',
 
       'jsx-a11y/click-events-have-key-events': 'warn',
       'jsx-a11y/no-autofocus': 'warn',
