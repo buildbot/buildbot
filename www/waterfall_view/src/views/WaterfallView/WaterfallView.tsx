@@ -203,6 +203,7 @@ export const WaterfallView = observer(() => {
       visualizer.onData(buildersToShow, buildGroups, builderToBuilds);
     });
     // FIXME: buildsQuery could be improved
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showOldBuilders, buildsQuery.array.length, filterManager.tags]);
 
   useEffect(() => {
@@ -222,6 +223,7 @@ export const WaterfallView = observer(() => {
     return autorun(() => {
       visualizer.onHoveredBuildSteps(buildStepsQuery.array);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buildStepsQuery]);
 
   const onScroll = () => {
