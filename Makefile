@@ -32,6 +32,7 @@ WWW_PURE_DEP_PKGS := www/common-config
 ALL_PKGS := master worker pkg $(WWW_PKGS)
 
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_PRETTIER := $(filter-out www/plugin_support www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
@@ -99,6 +100,14 @@ hooks:
 	cp common/hooks/* `git rev-parse --git-dir`/hooks
 rmpyc:
 	find master worker \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
+
+prettier: check_for_yarn
+	for subdir in $(WWW_PKGS_FOR_PRETTIER); do \
+		cd $$subdir; \
+		echo "Running prettier in $$subdir"; \
+		$(YARN) run prettier -w src *.ts *.js; \
+		cd - > /dev/null; \
+	done
 
 ruff:
 	ruff format .
