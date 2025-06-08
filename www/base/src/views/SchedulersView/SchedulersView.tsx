@@ -29,7 +29,7 @@ export const SchedulersView = observer(() => {
 
   const toggleSchedulerEnabled = (scheduler: Scheduler) => {
     const newValue = !scheduler.enabled;
-    scheduler.control('enable', {enabled: newValue});
+    void scheduler.control('enable', {enabled: newValue});
   };
 
   const renderScheduler = (scheduler: Scheduler) => {

@@ -159,7 +159,7 @@ export const ForceBuildModal = observer(({scheduler, builderid, onClose}: ForceB
       }
     };
 
-    forceBuildStart();
+    void forceBuildStart();
   };
 
   return (

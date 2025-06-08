@@ -38,7 +38,7 @@ export const LogViewerHtml = ({log}: LogViewerHtmlProps) => {
     }
 
     pendingRequest.current = accessor.getRaw(`logs/${log.logid}/contents`, {});
-    pendingRequest.current.then((content) => {
+    void pendingRequest.current.then((content) => {
       setHtmlLog(content.logchunks[0].content);
     });
 
