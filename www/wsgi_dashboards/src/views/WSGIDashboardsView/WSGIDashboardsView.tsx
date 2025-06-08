@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import axios, {AxiosRequestConfig} from 'axios';
+import axios from 'axios';
 import {createElement, useEffect, useRef, useState} from 'react';
 import * as fa from 'react-icons/fa';
 import {IconType} from 'react-icons';
