@@ -33,7 +33,7 @@ def main():
                     "https://github.com/buildbot/buildbot",
                     f"refs/pull/{pr['number']}/head",
                 ])
-                subprocess.check_call(["git", "cherry-pick", "FETCH_HEAD"])
+                subprocess.check_call(["git", "cherry-pick", "master..FETCH_HEAD"])
                 pr_text += f"#{pr['number']}: {pr['title']}\n"
     except Exception as e:
         print('GOT ERROR', e)
