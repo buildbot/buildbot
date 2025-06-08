@@ -109,7 +109,7 @@ export const WaterfallView = observer(() => {
   const showBuildersWithoutBuilds = settings.getBooleanSetting(
     'Waterfall.show_builders_without_builds',
   );
-  const [showOldBuilders, setShowOldBuilders] = useState(() =>
+  const [showOldBuilders, _setShowOldBuilders] = useState(() =>
     settings.getBooleanSetting('Waterfall.show_old_builders'),
   );
 
