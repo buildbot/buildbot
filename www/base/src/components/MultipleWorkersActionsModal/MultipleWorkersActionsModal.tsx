@@ -121,7 +121,7 @@ export const MultipleWorkersActionsModal = observer(
     const [errors, setErrors] = useState<string | null>(null);
     const [reasonText, setReasonText] = useState<string>('');
     const [selectedWorkers, setSelectedWorkers] = useState<Worker[]>(preselectedWorkers);
-    const [menuIsOpen, setMenuIsOpen] = useState<boolean>();
+    const [_menuIsOpen, setMenuIsOpen] = useState<boolean>();
     const [toggleRegexSearch, setToggleRegexSearch] = useState(false);
     const selectRef = useRef<SelectInstance<SelectOption, true> | null>(null);
 
@@ -186,7 +186,7 @@ export const MultipleWorkersActionsModal = observer(
         try {
           const regex = new RegExp(inputValue, 'i');
           return regex.test(option.data.label);
-        } catch (e) {
+        } catch (_e) {
           return false;
         }
       } else {

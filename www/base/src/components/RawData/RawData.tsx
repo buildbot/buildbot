@@ -37,7 +37,7 @@ export const displayBuildRequestEntry = (key: string, value: any): string => {
   if (key === 'claimed_at' || key === 'complete_at' || key === 'submitted_at') {
     try {
       return `${value} (${moment(Number.parseInt(value.toString()) * 1000).format()})`;
-    } catch (error) {
+    } catch (_error) {
       return value.toString();
     }
   }
@@ -49,7 +49,7 @@ export const displayBuildsetEntry = (key: string, value: any): string => {
     // created_at is for dictionaries in sourcestamps list
     try {
       return `${value} (${moment(Number.parseInt(value.toString()) * 1000).format()})`;
-    } catch (error) {
+    } catch (_error) {
       return value.toString();
     }
   }

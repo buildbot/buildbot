@@ -64,13 +64,13 @@ const knownWidgets: KnownWidgetsConfig = {
   builders: (projectid, filterManager) => (
     <ProjectBuildersWidget key="builders" projectid={projectid} filterManager={filterManager} />
   ),
-  description: (projectid, filterManager) => (
+  description: (projectid, _filterManager) => (
     <ProjectDescriptionWidget key="description" projectid={projectid} />
   ),
-  pending_build_requests: (projectid, filterManager) => (
+  pending_build_requests: (projectid, _filterManager) => (
     <ProjectPendingBuildRequestsWidget key="pending_build_requests" projectid={projectid} />
   ),
-  changes: (projectid, filterManager) => (
+  changes: (projectid, _filterManager) => (
     <ProjectChangesWidget key="changes" projectid={projectid} />
   ),
 };
