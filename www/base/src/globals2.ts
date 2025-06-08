@@ -8,8 +8,10 @@ import * as BuildbotDataJs from 'buildbot-data-js';
 import * as BuildbotUi from 'buildbot-ui';
 
 declare global {
-  let BuildbotDataJs: any;
-  let BuildbotUi: any;
+  /* eslint-disable no-var */
+  var BuildbotDataJs: any;
+  var BuildbotUi: any;
+  /* eslint-enable no-var */
 }
 
 window.BuildbotDataJs = BuildbotDataJs;

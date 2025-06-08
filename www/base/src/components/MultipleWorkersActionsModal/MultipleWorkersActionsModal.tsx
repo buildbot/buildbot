@@ -223,6 +223,7 @@ export const MultipleWorkersActionsModal = observer(
                 ref={selectRef}
                 isMulti
                 closeMenuOnSelect={false}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
                 value={selectedWorkers.map(workerToSelectOption)}
                 onChange={(
