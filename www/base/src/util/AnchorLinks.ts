@@ -32,6 +32,7 @@ export function useScrollToAnchor(dependencies: (string | number)[]) {
     }
   };
 
+  const dependencyString = dependencies.join('-');
   useEffect(() => {
     let anchorName = '';
     if (location.hash) {
@@ -61,5 +62,5 @@ export function useScrollToAnchor(dependencies: (string | number)[]) {
     setTimeout(() => {
       el?.scrollIntoView({behavior: 'smooth', block: 'start'});
     }, 100);
-  }, [location, dependencies.join('-')]);
+  }, [location, dependencyString]);
 }

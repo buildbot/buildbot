@@ -97,7 +97,7 @@ export const LogViewerText = observer(
     const containerRef = useRef<HTMLDivElement>(null);
     const checkSelection = useCallback(() => {
       manager.setIsSelectionActive(isSelectionActiveWithinElement(containerRef.current));
-    }, []);
+    }, [manager]);
 
     const getRangeToRenderOverride = (
       overscanStartIndex: number,
@@ -161,7 +161,7 @@ export const LogViewerText = observer(
             {...props}
           />
         )),
-      [],
+      [checkSelection],
     );
 
     const LogTextArea: React.FC<Size> = ({height, width}) => (

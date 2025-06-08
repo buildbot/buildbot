@@ -137,7 +137,8 @@ export const BuildRequestView = observer(() => {
       const build = buildsQuery.getNthOrNull(0);
       navigate(`/builders/${build?.builderid}/builds/${build?.number}`);
     }
-  }, [buildsQuery.array.length > 0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buildsQuery.array.length > 0, buildsQuery, navigate, redirectToBuild]);
 
   const cancelBuildRequest = () => {
     if (isCancelling) {
