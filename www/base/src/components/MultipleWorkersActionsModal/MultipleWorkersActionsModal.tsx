@@ -65,6 +65,8 @@ const FilterControlPanel = <OptionType,>(props: FilterControlPanelProps<OptionTy
       <div className="bb-workers-actions-modal-control-container">
         {Array.isArray(props.children) && props.children[0]}
         <div
+          role="button"
+          tabIndex={0}
           className={`icon-button ${isHoveredSelectAll ? 'hovered' : ''} ${isActiveSelectAll ? 'active' : ''}`}
           onMouseEnter={() => setIsHoveredSelectAll(true)}
           onMouseLeave={() => {
@@ -87,6 +89,8 @@ const FilterControlPanel = <OptionType,>(props: FilterControlPanelProps<OptionTy
         </div>
 
         <div
+          role="button"
+          tabIndex={0}
           className={`icon-button ${isHoveredRegexSearch ? 'hovered' : ''} ${toggleRegexSearch ? 'active' : ''}`}
           onMouseEnter={() => setIsHoveredRegexSearch(true)}
           onMouseLeave={() => setIsHoveredRegexSearch(false)}

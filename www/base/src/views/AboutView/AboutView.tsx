@@ -66,9 +66,16 @@ const EndpointListItem = ({spec}: EndpointListItemProps) => {
   return (
     <li key={spec.path} className="list-group-item">
       <b
-        onClick={(e) => {
+        onClick={(_e) => {
           setShowDetail(!showDetail);
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            setShowDetail(!showDetail);
+          }
+        }}
+        role="button"
+        tabIndex={0}
       >
         /{spec.path}:
       </b>

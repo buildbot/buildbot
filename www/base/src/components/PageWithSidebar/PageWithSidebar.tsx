@@ -164,9 +164,16 @@ export const PageWithSidebar = observer(
     return (
       <div className={pageWithSidebarClass}>
         <div
+          role="button"
+          tabIndex={0}
           onMouseEnter={() => sidebarStore.enter()}
           onMouseLeave={() => sidebarStore.leave()}
           onClick={() => sidebarStore.show()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              sidebarStore.show();
+            }
+          }}
           className="sidebar"
         >
           <ul>

@@ -150,7 +150,16 @@ export const LogViewerText = observer(
     const outerElementType = useMemo(
       () =>
         forwardRef<HTMLDivElement, FixedSizeListOuterProps>((props, ref) => (
-          <div ref={ref} onMouseDown={checkSelection} onMouseUp={checkSelection} {...props} />
+          <div
+            ref={ref}
+            role="button"
+            tabIndex={0}
+            onMouseDown={checkSelection}
+            onMouseUp={checkSelection}
+            onKeyDown={checkSelection}
+            onKeyUp={checkSelection}
+            {...props}
+          />
         )),
       [],
     );

@@ -180,7 +180,17 @@ export const LogPreview = observer(
         {generateStyleElement('pre.log')}
         <Card.Header>
           <div className="flex-row">
-            <div onClick={() => setFullDisplay(!fullDisplay)} className="flex-grow-3">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setFullDisplay(!fullDisplay)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setFullDisplay(!fullDisplay);
+                }
+              }}
+              className="flex-grow-3"
+            >
               <ArrowExpander isExpanded={fullDisplay} />
               &nbsp;
               {log.name}

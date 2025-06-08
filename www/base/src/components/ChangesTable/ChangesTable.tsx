@@ -94,14 +94,20 @@ export const ChangesTable = observer(({changes, fetchLimit, onLoadMore}: Changes
           <div className="navbar-form navbar-right">
             <div className="form-group">
               <div
+                role="button"
+                tabIndex={0}
                 onClick={() => tableState.setShowDetailsAll(false)}
+                onKeyDown={() => tableState.setShowDetailsAll(false)}
                 title="Collapse all"
                 className="btn btn-default"
               >
                 <FaMinus />
               </div>
               <div
+                role="button"
+                tabIndex={0}
                 onClick={() => tableState.setShowDetailsAll(true)}
+                onKeyDown={() => tableState.setShowDetailsAll(true)}
                 title="Expand all"
                 className="btn btn-default"
               >
