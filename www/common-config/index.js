@@ -28,18 +28,7 @@ export const buildbotEslintConfig = tseslint.config(
       },
     },
     rules: {
-      // Disabled to make build work, to check
-      'prefer-const': 'warn',
-      'no-var': 'warn',
-
-      '@typescript-eslint/ban-ts-comment': 'warn',
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-for-in-array': 'warn',
-      '@typescript-eslint/no-misused-promises': 'warn',
-      '@typescript-eslint/no-redundant-type-constituents': 'warn',
-      '@typescript-eslint/no-this-alias': 'warn',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
@@ -54,16 +43,7 @@ export const buildbotEslintConfig = tseslint.config(
           "caughtErrorsIgnorePattern": "^_"
         }
       ],
-      '@typescript-eslint/no-wrapper-object-types': 'warn',
-      '@typescript-eslint/restrict-template-expressions': 'warn',
-      '@typescript-eslint/triple-slash-reference': 'warn',
-      '@typescript-eslint/unbound-method': 'warn',
-
       'react-refresh/only-export-components': 'off',
-
-      'jsx-a11y/click-events-have-key-events': 'warn',
-      'jsx-a11y/no-autofocus': 'warn',
-      'jsx-a11y/no-static-element-interactions': 'warn',
     },
   },
 )
