@@ -48,7 +48,7 @@ Mako==1.3.10
 MarkupSafe==3.0.2
 moto==5.1.5
 msgpack==1.1.0
-mypy-extensions==1.0.0
+mypy-extensions==1.1.0
 packaging==25.0
 parameterized==0.9.0
 pyasn1==0.6.1
