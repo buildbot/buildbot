@@ -41,7 +41,7 @@ export const getWorkerStatusIcon = (worker: Worker, onClick: () => void) => {
 };
 
 const anyWorkerPaused = (workers: Worker[]) => {
-  for (let w of workers) {
+  for (const w of workers) {
     if (w.paused) {
       return true;
     }

@@ -33,7 +33,7 @@ export function useScrollToAnchor(dependencies: (string | number)[]) {
   };
 
   useEffect(() => {
-    var anchorName = '';
+    let anchorName = '';
     if (location.hash) {
       anchorName = location.hash.slice(1);
     }
@@ -43,7 +43,7 @@ export function useScrollToAnchor(dependencies: (string | number)[]) {
       return;
     }
 
-    var el = document.getElementById(anchorName);
+    const el = document.getElementById(anchorName);
     if (el === null) {
       clearCurrentHighlightedElement();
       return;

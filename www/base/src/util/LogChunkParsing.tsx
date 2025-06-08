@@ -65,7 +65,7 @@ function convertTextToNoEscapes(
   textLineBounds: number[],
 ): [string, number[]] {
   let textNoEscapes = '';
-  let textNoEscapesLineBounds = [];
+  const textNoEscapesLineBounds = [];
   for (let i = 0; i < lineCount; ++i) {
     // text contains lines that have already had their lineType symbol removed.
     const iLine = text.slice(textLineBounds[i], textLineBounds[i + 1]);
