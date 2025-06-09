@@ -23,9 +23,12 @@ def main():
     prs = r.json()
 
     pr_text = "This PR collects dependabot PRs:\n\n"
-    try:
-        for pr in prs:
-            if 'dependabot' in pr['user']['login']:
+    for pr in prs:
+        if 'dependabot' in pr['user']['login']:
+            commit_before = (
+                subprocess.check_output(["git", "rev-parse", "HEAD"]).decode('utf-8').strip()
+            )
+            try:
                 print(pr['number'], pr['title'])
                 subprocess.check_call([
                     "git",
@@ -33,10 +36,12 @@ def main():
                     "https://github.com/buildbot/buildbot",
                     f"refs/pull/{pr['number']}/head",
                 ])
-                subprocess.check_call(["git", "cherry-pick", "FETCH_HEAD"])
+                subprocess.check_call(["git", "cherry-pick", "master..FETCH_HEAD"])
                 pr_text += f"#{pr['number']}: {pr['title']}\n"
-    except Exception as e:
-        print('GOT ERROR', e)
+            except Exception as e:
+                print('GOT ERROR, skipping PR', e)
+                subprocess.check_call(["git", "cherry-pick", "--abort"])
+                subprocess.check_call(["git", "reset", "--hard", commit_before])
 
     print("===========")
     print(pr_text)
