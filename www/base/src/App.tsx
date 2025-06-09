@@ -12,7 +12,7 @@ import {globalMenuSettings} from './plugins/GlobalMenuSettings';
 import {globalRoutes} from './plugins/GlobalRoutes';
 import {Topbar} from './components/Topbar/Topbar';
 import {TopbarActions} from './components/TopbarActions/TopbarActions';
-import {Loginbar} from './components/Loginbar/Loginbar';
+import {LoginBar} from './components/LoginBar/LoginBar';
 
 // import the views so that they register themselves in the plugin system
 import './views/AboutView/AboutView';
@@ -32,6 +32,8 @@ import './views/SettingsView/SettingsView';
 import './views/SchedulersView/SchedulersView';
 import './views/WorkersView/WorkersView';
 import './views/WorkerView/WorkerView';
+import {AccessForbiddenView} from './views/AccessForbiddenView/AccessForbiddenView';
+import {LoginView} from './views/LoginView/LoginView';
 import {UrlNotFoundView} from './views/UrlNotFoundView/UrlNotFoundView';
 
 export const App = observer(() => {
@@ -50,11 +52,22 @@ export const App = observer(() => {
   });
   routeElements.push(<Route key="*" path="*" element={<UrlNotFoundView />} />);
 
+  if (!config.user_any_access_allowed) {
+    return (
+      <div className="bb-app-container">
+        <Topbar store={topbarStore} appTitle={globalMenuSettings.appTitle}>
+          <TopbarActions store={topbarStore} />
+        </Topbar>
+        {config.user.anonymous ? <LoginView /> : <AccessForbiddenView />}
+      </div>
+    );
+  }
+
   return (
     <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
       <Topbar store={topbarStore} appTitle={globalMenuSettings.appTitle}>
         <TopbarActions store={topbarStore} />
-        <Loginbar />
+        <LoginBar />
       </Topbar>
       <Routes>{routeElements}</Routes>
     </PageWithSidebar>

@@ -15,50 +15,16 @@
   Copyright Buildbot Team Members
 */
 
-import './Loginbar.scss';
+import './LoginBar.scss';
 import {useContext} from 'react';
-import {
-  FaCogs,
-  FaSignInAlt,
-  FaSignOutAlt,
-  FaUser,
-  FaGithub,
-  FaGitlab,
-  FaBitbucket,
-  FaGoogle,
-  FaFacebook,
-  FaLinkedin,
-  FaMicrosoft,
-} from 'react-icons/fa';
+import {FaSignInAlt, FaSignOutAlt, FaUser} from 'react-icons/fa';
 import {useLocation} from 'react-router-dom';
 import {Nav, NavDropdown} from 'react-bootstrap';
 import {ConfigContext} from 'buildbot-ui';
 import {getBaseUrl} from 'buildbot-data-js';
+import {LoginIcon} from '../LoginIcon/LoginIcon';
 
-function getAuthIcon(faIcon: string) {
-  switch (faIcon) {
-    case 'fa-github':
-      return <FaGithub />;
-    case 'fa-gitlab':
-      return <FaGitlab />;
-    case 'fa-bitbucket':
-      return <FaBitbucket />;
-    case 'fa-google':
-      return <FaGoogle />;
-    case 'fa-facebook':
-      return <FaFacebook />;
-    case 'fa-linkedin':
-      return <FaLinkedin />;
-    case 'fa-microsoft':
-      return <FaMicrosoft />;
-    case '':
-      return <></>;
-    default:
-      return <FaCogs />;
-  }
-}
-
-export const Loginbar = () => {
+export const LoginBar = () => {
   const config = useContext(ConfigContext);
   const location = useLocation();
 
@@ -79,7 +45,8 @@ export const Loginbar = () => {
           >
             {config.auth.oauth2 ? (
               <span>
-                {getAuthIcon(config.auth.fa_icon)}&nbsp;Login with {config.auth.name}
+                <LoginIcon iconName={config.auth.fa_icon} />
+                &nbsp;Login with {config.auth.name}
               </span>
             ) : (
               <span>

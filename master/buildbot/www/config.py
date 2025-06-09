@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import json
 import os
-import typing
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -27,10 +26,12 @@ from twisted.web.error import Error
 
 from buildbot.interfaces import IConfigured
 from buildbot.util import unicode2bytes
+from buildbot.www import auth
 from buildbot.www import resource
 
 if TYPE_CHECKING:
     from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 def get_environment_versions() -> list[tuple[str, str]]:
@@ -161,7 +162,15 @@ class IndexResource(resource.Resource):
         return self.asyncRenderHelper(request, self.renderIndex)
 
     @defer.inlineCallbacks
-    def renderIndex(self, request: Any) -> typing.Generator[Any, None, bytes]:
+    def _get_any_access_allowed(self, user_info: dict[str, Any]) -> InlineCallbacksType[bool]:
+        try:
+            yield auth.assert_user_allowed_any_access(self.master.www.authz, user_info)
+            return True
+        except Exception:
+            return False
+
+    @defer.inlineCallbacks
+    def renderIndex(self, request: Any) -> InlineCallbacksType[bytes]:
         config = {}
         request.setHeader(b"content-type", b'text/html')
         request.setHeader(b"Cache-Control", b"public,max-age=0")
@@ -171,8 +180,12 @@ class IndexResource(resource.Resource):
         except Error as e:
             config["on_load_warning"] = e.message
 
+        user_info = self.master.www.getUserInfos(request)
+        any_access_allowed = yield self._get_any_access_allowed(user_info)
+
         config.update(self.frontend_config)
-        config.update({"user": self.master.www.getUserInfos(request)})
+        config.update({"user": user_info})
+        config.update({"user_any_access_allowed": any_access_allowed})
 
         serialized_config = serialize_www_frontend_config_dict_to_json(config)
         serialized_css = serialize_www_frontend_theme_to_css(config, indent=8)

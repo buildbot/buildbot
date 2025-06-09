@@ -204,8 +204,7 @@ class WsProtocol(WebSocketServerProtocol):
             else:
                 user_info = auth.parse_user_info_from_token(token, www.site.session_secret)
 
-            # assume that if user cannot access /masters endpoint, then it can't access anything
-            yield www.authz.assertUserAllowed('masters', 'get', {}, user_info)
+            yield auth.assert_user_allowed_any_access(www.authz, user_info)
         except Exception as e:
             raise ConnectionDeny(403, "Forbidden") from e
 
