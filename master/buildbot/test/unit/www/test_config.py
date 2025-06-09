@@ -26,6 +26,8 @@ from buildbot.test.util import www
 from buildbot.util import bytes2unicode
 from buildbot.www import auth
 from buildbot.www import config
+from buildbot.www.authz.authz import Authz
+from buildbot.www.authz.authz import Forbidden
 
 
 class Utils(unittest.TestCase):
@@ -116,15 +118,17 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         return json.loads(config_json)
 
     @parameterized.expand([
-        ('anonymous_user', None, {'anonymous': True}),
+        ('anonymous_user_cant_read', False, None, {'anonymous': True}),
+        ('anonymous_user', True, None, {'anonymous': True}),
         (
             'logged_in_user',
+            True,
             {"name": 'me', "email": 'me@me.org'},
             {"email": "me@me.org", "name": "me"},
         ),
     ])
     @defer.inlineCallbacks
-    def test_render(self, name, user_info, expected_user):
+    def test_render(self, name, allowed_read_something, user_info, expected_user):
         _auth = auth.NoAuth()
         _auth.maybeAutoLogin = mock.Mock()
 
@@ -135,6 +139,11 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
         if user_info is not None:
             master.session.user_info = user_info
+
+        # See https://github.com/python/cpython/issues/100739 why unsafe=True is needed
+        master.www.authz = mock.Mock(spec=Authz, unsafe=True)
+        if not allowed_read_something:
+            master.www.authz.assertUserAllowed = mock.Mock(side_effect=Forbidden(b'forbidden'))
 
         # IndexResource only uses static path to get index.html. In the source checkout
         # index.html resides not in www/base/public but in www/base. Thus
@@ -155,6 +164,7 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             "title": "Buildbot",
             "auth": {"name": "NoAuth"},
             "user": expected_user,
+            "user_any_access_allowed": allowed_read_something,
             "buildbotURL": "h:/a/b/",
             "multiMaster": False,
             "port": None,

@@ -52,6 +52,7 @@ export type Config = {
   avatar_methods: AvatarConfig[];
   plugins: {[key: string]: any};
   user: UserConfig;
+  user_any_access_allowed: boolean;
   project_widgets: ProjectWidgetsConfig[];
   port: string;
   // Added by the frontend itself if it's running via a proxy.
