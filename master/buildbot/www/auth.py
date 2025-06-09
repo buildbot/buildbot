@@ -50,6 +50,7 @@ from buildbot.www import resource
 
 if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.www.authz.authz import Authz
 
 
 class AuthRootResource(resource.Resource):
@@ -302,3 +303,8 @@ def build_cookie_name(is_secure: bool, sitepath: list[bytes]) -> bytes:
         cookie_string = b"TWISTED_SECURE_SESSION"
 
     return b"_".join([cookie_string, *sitepath])
+
+
+def assert_user_allowed_any_access(authz: Authz, user_info: dict[str, Any]) -> defer.Deferred:
+    # assume that if user cannot access /masters endpoint, then it can't access anything
+    return authz.assertUserAllowed('masters', 'get', {}, user_info)
