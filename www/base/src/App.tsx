@@ -12,7 +12,7 @@ import {globalMenuSettings} from './plugins/GlobalMenuSettings';
 import {globalRoutes} from './plugins/GlobalRoutes';
 import {Topbar} from './components/Topbar/Topbar';
 import {TopbarActions} from './components/TopbarActions/TopbarActions';
-import {Loginbar} from './components/Loginbar/Loginbar';
+import {LoginBar} from './components/LoginBar/LoginBar';
 
 // import the views so that they register themselves in the plugin system
 import './views/AboutView/AboutView';
@@ -54,7 +54,7 @@ export const App = observer(() => {
     <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
       <Topbar store={topbarStore} appTitle={globalMenuSettings.appTitle}>
         <TopbarActions store={topbarStore} />
-        <Loginbar />
+        <LoginBar />
       </Topbar>
       <Routes>{routeElements}</Routes>
     </PageWithSidebar>

@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import './Loginbar.scss';
+import './LoginBar.scss';
 import {useContext} from 'react';
 import {FaSignInAlt, FaSignOutAlt, FaUser} from 'react-icons/fa';
 import {useLocation} from 'react-router-dom';
@@ -24,7 +24,7 @@ import {ConfigContext} from 'buildbot-ui';
 import {getBaseUrl} from 'buildbot-data-js';
 import {LoginIcon} from '../LoginIcon/LoginIcon';
 
-export const Loginbar = () => {
+export const LoginBar = () => {
   const config = useContext(ConfigContext);
   const location = useLocation();
 
