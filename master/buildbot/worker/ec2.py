@@ -82,32 +82,77 @@ class EC2LatentWorker(AbstractLatentWorker):
         session=None,
         **kwargs,
     ):
-        if not boto3:
-            config.error("The python module 'boto3' is needed to use a EC2LatentWorker")
+        self._validate_requirements(keypair_name, security_name, subnet_id)
+        self._initialize_defaults(volumes, tags)
 
+        super().__init__(name, password, **kwargs)
+        self._validate_security(security_name, subnet_id)
+        self._validate_and_process_ami_filters(self, ami, valid_ami_owners, valid_ami_location_regex)
+
+        if spot_instance and price_multiplier is None and max_spot_price is None:
+            raise ValueError(
+                'You must provide either one, or both, of price_multiplier or max_spot_price'
+            )
+        
+        self.valid_ami_owners = None
+        if valid_ami_owners:
+            self.valid_ami_owners = [str(o) for o in valid_ami_owners]
+        self.valid_ami_location_regex = valid_ami_location_regex
+        self.instance_type = instance_type
+        self.keypair_name = keypair_name
+        self.security_name = security_name
+        self.user_data = user_data
+        self.spot_instance = spot_instance
+        self.max_spot_price = max_spot_price
+        self.volumes = volumes
+        self.price_multiplier = price_multiplier
+        self.product_description = product_description
+
+        self._build_placement(region, placement)
+
+        self._setup_aws_id(identifier, secret_identifier, aws_id_file_path)
+        self._setup_ec2_connection(
+            session,
+            region,
+            identifier,
+            secret_identifier
+        )
+
+        self._ensure_keypair()
+        self._ensure_security_group()
+        
+        self._determine_image(elastic_ip)
+
+        self.subnet_id = subnet_id
+        self.security_group_ids = security_group_ids
+        self.classic_security_groups = [self.security_name] if self.security_name else None
+        self.instance_profile_name = instance_profile_name
+        self.tags = tags
+        self.block_device_map = (
+            self.create_block_device_mapping(block_device_map) if block_device_map else None
+        )
+
+    def _validate_requirements(self, keypair_name, security_name, subnet_id):
+        if not boto3:
+            config.error("The python module 'boto3' is needed to use EC2LatentWorker")
         if keypair_name is None:
             config.error("EC2LatentWorker: 'keypair_name' parameter must be specified")
-
         if security_name is None and not subnet_id:
             config.error("EC2LatentWorker: 'security_name' parameter must be specified")
 
+    def _initialize_defaults(self, volumes, tags):
         if volumes is None:
             volumes = []
-
         if tags is None:
             tags = {}
-
-        super().__init__(name, password, **kwargs)
-
+    
+    def _validate_security(self, security_name, subnet_id):
         if security_name and subnet_id:
             raise ValueError(
-                'security_name (EC2 classic security groups) is not supported '
-                'in a VPC.  Use security_group_ids instead.'
-            )
-        if not (
-            (ami is not None)
-            ^ (valid_ami_owners is not None or valid_ami_location_regex is not None)
-        ):
+                'security_name (EC2 classic) not supported in a VPC; use security_group_ids')
+            
+    def _validate_and_process_ami_filters(self, ami, valid_ami_owners, valid_ami_location_regex):
+        if not ((ami is not None) ^ (valid_ami_owners is not None or valid_ami_location_regex is not None)):
             raise ValueError(
                 'You must provide either a specific ami, or one or both of '
                 'valid_ami_location_regex and valid_ami_owners'
@@ -126,133 +171,12 @@ class EC2LatentWorker(AbstractLatentWorker):
             if not isinstance(valid_ami_location_regex, str):
                 raise ValueError('valid_ami_location_regex should be a string')
             # pre-compile the regex
-            valid_ami_location_regex = re.compile(valid_ami_location_regex)
-        if spot_instance and price_multiplier is None and max_spot_price is None:
-            raise ValueError(
-                'You must provide either one, or both, of price_multiplier or max_spot_price'
-            )
-        self.valid_ami_owners = None
-        if valid_ami_owners:
-            self.valid_ami_owners = [str(o) for o in valid_ami_owners]
-        self.valid_ami_location_regex = valid_ami_location_regex
-        self.instance_type = instance_type
-        self.keypair_name = keypair_name
-        self.security_name = security_name
-        self.user_data = user_data
-        self.spot_instance = spot_instance
-        self.max_spot_price = max_spot_price
-        self.volumes = volumes
-        self.price_multiplier = price_multiplier
-        self.product_description = product_description
-
-        if None not in [placement, region]:
-            self.placement = f'{region}{placement}'
-        else:
-            self.placement = None
-        if identifier is None:
-            assert secret_identifier is None, (
-                'supply both or neither of identifier, secret_identifier'
-            )
-            if aws_id_file_path is None:
-                home = os.environ['HOME']
-                default_path = os.path.join(home, '.ec2', 'aws_id')
-                if os.path.exists(default_path):
-                    aws_id_file_path = default_path
-            if aws_id_file_path:
-                log.msg('WARNING: EC2LatentWorker is using deprecated aws_id file')
-                with open(aws_id_file_path, encoding='utf-8') as aws_file:
-                    identifier = aws_file.readline().strip()
-                    secret_identifier = aws_file.readline().strip()
-        else:
-            assert aws_id_file_path is None, (
-                'if you supply the identifier and secret_identifier, '
-                'do not specify the aws_id_file_path'
-            )
-            assert secret_identifier is not None, (
-                'supply both or neither of identifier, secret_identifier'
-            )
-
-
-        # Make the EC2 connection.
-        self._setup_ec2_connection(session,region,identifier,secret_identifier)
-
-        # Make a keypair
-        #
-        # We currently discard the keypair data because we don't need it.
-        # If we do need it in the future, we will always recreate the keypairs
-        # because there is no way to
-        # programmatically retrieve the private key component, unless we
-        # generate it and store it on the filesystem, which is an unnecessary
-        # usage requirement.
-        try:
-            self.ec2.KeyPair(self.keypair_name).load()
-            # key_pair.delete() # would be used to recreate
-        except ClientError as e:
-            if 'InvalidKeyPair.NotFound' not in str(e):
-                if 'AuthFailure' in str(e):
-                    log.msg(
-                        'POSSIBLE CAUSES OF ERROR:\n'
-                        '  Did you supply your AWS credentials?\n'
-                        '  Did you sign up for EC2?\n'
-                        '  Did you put a credit card number in your AWS '
-                        'account?\n'
-                        'Please doublecheck before reporting a problem.\n'
-                    )
-                raise
-            # make one; we would always do this, and stash the result, if we
-            # needed the key (for instance, to SSH to the box).  We'd then
-            # use paramiko to use the key to connect.
-            self.ec2.create_key_pair(KeyName=keypair_name)
-
-        # create security group
-        if security_name:
-            try:
-                self.ec2_client.describe_security_groups(GroupNames=[security_name])
-            except ClientError as e:
-                if 'InvalidGroup.NotFound' in str(e):
-                    self.security_group = self.ec2.create_security_group(
-                        GroupName=security_name,
-                        Description='Authorization to access the buildbot instance.',
-                    )
-                    # Authorize the master as necessary
-                    # TODO this is where we'd open the hole to do the reverse pb
-                    # connect to the buildbot
-                    # ip = urllib.urlopen(
-                    #     'http://checkip.amazonaws.com').read().strip()
-                    # self.security_group.authorize('tcp', 22, 22, '{}/32'.format(ip))
-                    # self.security_group.authorize('tcp', 80, 80, '{}/32'.format(ip))
-                else:
-                    raise
-
-        # get the image
-        if self.ami is not None:
-            self.image = self.ec2.Image(self.ami)
-        else:
-            # verify we have access to at least one acceptable image
-            discard = self.get_image()
-            assert discard
-
-        # get the specified elastic IP, if any
-        if elastic_ip is not None:
-            # Using ec2.vpc_addresses.filter(PublicIps=[elastic_ip]) throws a
-            # NotImplementedError("Filtering not supported in describe_address.") in moto
-            # https://github.com/spulec/moto/blob/100ec4e7c8aa3fde87ff6981e2139768816992e4/moto/ec2/responses/elastic_ip_addresses.py#L52
-            addresses = self.ec2.meta.client.describe_addresses(PublicIps=[elastic_ip])['Addresses']
-            if not addresses:
-                raise ValueError('Could not find EIP for IP: ' + elastic_ip)
-            allocation_id = addresses[0]['AllocationId']
-            elastic_ip = self.ec2.VpcAddress(allocation_id)
-        self.elastic_ip = elastic_ip
-        self.subnet_id = subnet_id
-        self.security_group_ids = security_group_ids
-        self.classic_security_groups = [self.security_name] if self.security_name else None
-        self.instance_profile_name = instance_profile_name
-        self.tags = tags
-        self.block_device_map = (
-            self.create_block_device_mapping(block_device_map) if block_device_map else None
-        )
-
-    def _setup_ec2_connection(self,session,region,identifier,secret_identifier): 
+            valid_ami_location_regex = re.compile(valid_ami_location_regex)        
+        
+    def _build_placement(self, region, placement):
+        self.placement = f"{region}{placement}" if region and placement else None
+    
+    def _setup_ec2_connection(self, session, region, identifier, secret_identifier): 
         # Make the EC2 connection.
         self.session = session
         if self.session is None:
@@ -283,7 +207,8 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         self.ec2 = self.session.resource('ec2')
         self.ec2_client = self.session.client('ec2')
-    def _setup_aws_id(self,identifier,secret_identifier,aws_id_file_path):
+    
+    def _setup_aws_id(self, identifier, secret_identifier, aws_id_file_path):
         if identifier is None:
             assert secret_identifier is None, (
                 'supply both or neither of identifier, secret_identifier'
@@ -307,6 +232,73 @@ class EC2LatentWorker(AbstractLatentWorker):
                 'supply both or neither of identifier, secret_identifier'
             )
 
+    def _ensure_keypair(self, keypair_name):
+        # We currently discard the keypair data because we don't need it.
+        # If we do need it in the future, we will always recreate the keypairs
+        # because there is no way to
+        # programmatically retrieve the private key component, unless we
+        # generate it and store it on the filesystem, which is an unnecessary
+        # usage requirement.
+        try:
+            self.ec2.KeyPair(self.keypair_name).load()
+            # key_pair.delete() # would be used to recreate
+        except ClientError as e:
+            if 'InvalidKeyPair.NotFound' not in str(e):
+                if 'AuthFailure' in str(e):
+                    log.msg(
+                        'POSSIBLE CAUSES OF ERROR:\n'
+                        '  Did you supply your AWS credentials?\n'
+                        '  Did you sign up for EC2?\n'
+                        '  Did you put a credit card number in your AWS '
+                        'account?\n'
+                        'Please doublecheck before reporting a problem.\n'
+                    )
+                raise
+            # make one; we would always do this, and stash the result, if we
+            # needed the key (for instance, to SSH to the box).  We'd then
+            # use paramiko to use the key to connect.
+            self.ec2.create_key_pair(KeyName=keypair_name)
+
+    def _ensure_security_group(self, security_name):
+        if security_name:
+            try:
+                self.ec2_client.describe_security_groups(GroupNames=[security_name])
+            except ClientError as e:
+                if 'InvalidGroup.NotFound' in str(e):
+                    self.security_group = self.ec2.create_security_group(
+                        GroupName=security_name,
+                        Description='Authorization to access the buildbot instance.',
+                    )
+                    # Authorize the master as necessary
+                    # TODO this is where we'd open the hole to do the reverse pb
+                    # connect to the buildbot
+                    # ip = urllib.urlopen(
+                    #     'http://checkip.amazonaws.com').read().strip()
+                    # self.security_group.authorize('tcp', 22, 22, '{}/32'.format(ip))
+                    # self.security_group.authorize('tcp', 80, 80, '{}/32'.format(ip))
+                else:
+                    raise
+
+    def _determine_image(self, elastic_ip):
+        if self.ami is not None:
+            self.image = self.ec2.Image(self.ami)
+        else:
+            # verify we have access to at least one acceptable image
+            discard = self.get_image()
+            assert discard
+
+        # get the specified elastic IP, if any
+        if elastic_ip is not None:
+            # Using ec2.vpc_addresses.filter(PublicIps=[elastic_ip]) throws a
+            # NotImplementedError("Filtering not supported in describe_address.") in moto
+            # https://github.com/spulec/moto/blob/100ec4e7c8aa3fde87ff6981e2139768816992e4/moto/ec2/responses/elastic_ip_addresses.py#L52
+            addresses = self.ec2.meta.client.describe_addresses(PublicIps=[elastic_ip])['Addresses']
+            if not addresses:
+                raise ValueError('Could not find EIP for IP: ' + elastic_ip)
+            allocation_id = addresses[0]['AllocationId']
+            elastic_ip = self.ec2.VpcAddress(allocation_id)
+        self.elastic_ip = elastic_ip
+    
     def create_block_device_mapping(self, mapping_definitions):
         if not isinstance(mapping_definitions, list):
             config.error("EC2LatentWorker: 'block_device_map' must be a list")
