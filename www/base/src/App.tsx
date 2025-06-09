@@ -32,6 +32,8 @@ import './views/SettingsView/SettingsView';
 import './views/SchedulersView/SchedulersView';
 import './views/WorkersView/WorkersView';
 import './views/WorkerView/WorkerView';
+import {AccessForbiddenView} from './views/AccessForbiddenView/AccessForbiddenView';
+import {LoginView} from './views/LoginView/LoginView';
 import {UrlNotFoundView} from './views/UrlNotFoundView/UrlNotFoundView';
 
 export const App = observer(() => {
@@ -49,6 +51,17 @@ export const App = observer(() => {
     return <Route key={config.route} path={config.route} element={config.element()} />;
   });
   routeElements.push(<Route key="*" path="*" element={<UrlNotFoundView />} />);
+
+  if (!config.user_any_access_allowed) {
+    return (
+      <div className="bb-app-container">
+        <Topbar store={topbarStore} appTitle={globalMenuSettings.appTitle}>
+          <TopbarActions store={topbarStore} />
+        </Topbar>
+        {config.user.anonymous ? <LoginView /> : <AccessForbiddenView />}
+      </div>
+    );
+  }
 
   return (
     <PageWithSidebar menuSettings={globalMenuSettings} sidebarStore={stores.sidebar}>
