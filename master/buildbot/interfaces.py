@@ -27,9 +27,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Generic
+from typing import Protocol
+from typing import TypeVar
+from typing import Union
 
 from zope.interface import Attribute
 from zope.interface import Interface
+
+T = TypeVar('T')
 
 if TYPE_CHECKING:
     from twisted.internet.defer import Deferred
@@ -223,6 +229,13 @@ class IMachineAction(Interface):
 
 class ILatentMachine(IMachine):
     """A machine that is not always running, but can be started when requested."""
+
+
+class IRenderableType(Protocol, Generic[T]):
+    def getRenderingFor(self, iprops: IProperties) -> Deferred[T]: ...
+
+
+IMaybeRenderableType = Union[IRenderableType[T], T]
 
 
 class IRenderable(Interface):

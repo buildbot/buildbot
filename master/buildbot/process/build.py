@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from copy import deepcopy
 from functools import reduce
 from typing import TYPE_CHECKING
@@ -50,7 +51,6 @@ from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
     from collections.abc import Iterator
     from collections.abc import Sequence
     from pathlib import PurePath
@@ -59,6 +59,7 @@ if TYPE_CHECKING:
 
     from buildbot.interfaces import IBuildStep
     from buildbot.interfaces import IBuildStepFactory
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.interfaces import IProperties
     from buildbot.locks import BaseLock
     from buildbot.locks import BaseLockId
@@ -116,7 +117,7 @@ class Build(properties.PropertiesMixin):
         self.master = builder.master
         self.workerforbuilder: AbstractWorkerForBuilder | None = None
 
-        self.locks: list[BaseLockId] = []  # list of lock accesses
+        self.locks: IMaybeRenderableType[Iterable[BaseLockId]] = []  # list of lock accesses
 
         # list of (real_lock, access) tuples
         self._locks_to_acquire: list[tuple[BaseLock, str]] = []
@@ -164,8 +165,12 @@ class Build(properties.PropertiesMixin):
     def getProperties(self) -> IProperties:
         return self.properties
 
-    def setLocks(self, lockList: Iterable[BaseLockId]) -> None:
-        self.locks = list(lockList)
+    def setLocks(self, locks: IMaybeRenderableType[Iterable[BaseLockId]]) -> None:
+        if isinstance(locks, Iterable):
+            # copy the passed list so that changes by the caller do not modify stored instance
+            self.locks = list(locks)
+        else:
+            self.locks = locks
 
     @defer.inlineCallbacks
     def _setup_locks(self) -> InlineCallbacksType[None]:

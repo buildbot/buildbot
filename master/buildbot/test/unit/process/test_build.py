@@ -31,6 +31,7 @@ from buildbot.process.buildstep import create_step_from_step_or_factory
 from buildbot.process.locks import get_real_locks_from_accesses
 from buildbot.process.metrics import MetricLogObserver
 from buildbot.process.properties import Properties
+from buildbot.process.properties import renderer
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -400,6 +401,32 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         lock.access = lambda mode: lock_access
 
         b.setLocks([lock_access])
+        yield b._setup_locks()
+
+        self._setup_lock_claim_log(b._locks_to_acquire[0][0], claim_log)
+
+        step = self.create_fake_build_step()
+        b.setStepFactories([FakeStepFactory(step)])
+
+        b.startBuild(self.workerforbuilder)
+
+        self.assertEqual(b.results, SUCCESS)
+        self.assertEqual(len(claim_log), 1)
+
+    @defer.inlineCallbacks
+    def test_build_locks_acquired_renderable(self):
+        b = self.build
+
+        lock = WorkerLock('lock')
+        claim_log = []
+        lock_access = lock.access('counting')
+        lock.access = lambda mode: lock_access
+
+        @renderer
+        def render_locks(props):
+            return [lock_access]
+
+        b.setLocks(render_locks)
         yield b._setup_locks()
 
         self._setup_lock_claim_log(b._locks_to_acquire[0][0], claim_log)
