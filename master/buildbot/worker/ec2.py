@@ -172,41 +172,9 @@ class EC2LatentWorker(AbstractLatentWorker):
                 'supply both or neither of identifier, secret_identifier'
             )
 
-        region_found = None
 
         # Make the EC2 connection.
-        self.session = session
-        if self.session is None:
-            if region is not None:
-                for r in boto3.Session(
-                    aws_access_key_id=identifier, aws_secret_access_key=secret_identifier
-                ).get_available_regions('ec2'):
-                    if r == region:
-                        region_found = r
-
-                if region_found is not None:
-                    self.session = boto3.Session(
-                        region_name=region,
-                        aws_access_key_id=identifier,
-                        aws_secret_access_key=secret_identifier,
-                    )
-                else:
-                    raise ValueError('The specified region does not exist: ' + region)
-
-            else:
-                # boto2 defaulted to us-east-1 when region was unset, we
-                # mimic this here in boto3
-                region = botocore.session.get_session().get_config_variable('region')
-                if region is None:
-                    region = 'us-east-1'
-                self.session = boto3.Session(
-                    aws_access_key_id=identifier,
-                    aws_secret_access_key=secret_identifier,
-                    region_name=region,
-                )
-
-        self.ec2 = self.session.resource('ec2')
-        self.ec2_client = self.session.client('ec2')
+        self._setup_ec2_connection(session,region,identifier,secret_identifier)
 
         # Make a keypair
         #
@@ -283,6 +251,61 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.block_device_map = (
             self.create_block_device_mapping(block_device_map) if block_device_map else None
         )
+
+    def _setup_ec2_connection(self,session,region,identifier,secret_identifier): 
+        # Make the EC2 connection.
+        self.session = session
+        if self.session is None:
+            if region is not None:
+                avalaible_regions=boto3.Session(
+                    aws_access_key_id=identifier, aws_secret_access_key=secret_identifier
+                ).get_available_regions('ec2')
+                if region in avalaible_regions:
+                    self.session = boto3.Session(
+                        region_name=region,
+                        aws_access_key_id=identifier,
+                        aws_secret_access_key=secret_identifier,
+                    )
+                else:
+                    raise ValueError('The specified region does not exist: ' + region)
+
+            else:
+                # boto2 defaulted to us-east-1 when region was unset, we
+                # mimic this here in boto3
+                region = botocore.session.get_session().get_config_variable('region')
+                if region is None:
+                    region = 'us-east-1'
+                self.session = boto3.Session(
+                    aws_access_key_id=identifier,
+                    aws_secret_access_key=secret_identifier,
+                    region_name=region,
+                )
+
+        self.ec2 = self.session.resource('ec2')
+        self.ec2_client = self.session.client('ec2')
+    def _setup_aws_id(self,identifier,secret_identifier,aws_id_file_path):
+        if identifier is None:
+            assert secret_identifier is None, (
+                'supply both or neither of identifier, secret_identifier'
+            )
+            if aws_id_file_path is None:
+                home = os.environ['HOME']
+                default_path = os.path.join(home, '.ec2', 'aws_id')
+                if os.path.exists(default_path):
+                    aws_id_file_path = default_path
+            if aws_id_file_path:
+                log.msg('WARNING: EC2LatentWorker is using deprecated aws_id file')
+                with open(aws_id_file_path, encoding='utf-8') as aws_file:
+                    identifier = aws_file.readline().strip()
+                    secret_identifier = aws_file.readline().strip()
+        else:
+            assert aws_id_file_path is None, (
+                'if you supply the identifier and secret_identifier, '
+                'do not specify the aws_id_file_path'
+            )
+            assert secret_identifier is not None, (
+                'supply both or neither of identifier, secret_identifier'
+            )
 
     def create_block_device_mapping(self, mapping_definitions):
         if not isinstance(mapping_definitions, list):
