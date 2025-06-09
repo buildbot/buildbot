@@ -540,60 +540,75 @@ class EC2LatentWorker(AbstractLatentWorker):
     def _thd_wait_for_request(self, reservation):
         duration = 0
         interval = self._poll_resolution
+        request_id = reservation['SpotInstanceRequestId']
 
         while True:
             # Sometimes it can take a second or so for the spot request to be
             # ready.  If it isn't ready, you will get a "Spot instance request
             # ID 'sir-abcd1234' does not exist" exception.
-            try:
-                requests = self.ec2.meta.client.describe_spot_instance_requests(
-                    SpotInstanceRequestIds=[reservation['SpotInstanceRequestId']]
-                )
-            except ClientError as e:
-                if 'InvalidSpotInstanceRequestID.NotFound' in str(e):
-                    requests = None
-                else:
-                    raise
 
-            if requests is not None:
-                request = requests['SpotInstanceRequests'][0]
-                request_status = request['Status']['Code']
-                if request_status not in SPOT_REQUEST_PENDING_STATES:
-                    break
+            request = self._get_spot_request_status(request_id)     
 
-            time.sleep(interval)
-            duration += interval
-            if duration % 10 == 0:
+            if request is None: 
+                time.sleep(interval)
+                duration += interval
+                if duration % 10 == 0:
+                    log.msg(
+                        f"{self.__class__.__name__} {self.workername} has waited {duration} "
+                        f"seconds for spot request {request_id}"
+                    )
+                continue
+
+            status = request['Status']['Code']
+
+            if status in SPOT_REQUEST_PENDING_STATES:
+                time.sleep(interval)
+                duration += interval
+                continue
+
+            elif status == FULFILLED:
+                minutes = duration // 60
+                seconds = duration % 60
                 log.msg(
-                    f"{self.__class__.__name__} {self.workername} has waited {duration} "
-                    f"seconds for spot request {reservation['SpotInstanceRequestId']}"
+                    f"{self.__class__.__name__} {self.workername} spot request "
+                    f"{request_id} fulfilled in about {minutes} minutes "
+                    f"{seconds} seconds"
+                )
+                return request, True
+            
+            elif status == PRICE_TOO_LOW:
+
+                self._cancel_spot_request(request_id)
+
+                log.msg(
+                    f'{self.__class__.__name__} {self.workername} spot request rejected, spot '
+                    'price too low'
                 )
 
-        if request_status == FULFILLED:
-            minutes = duration // 60
-            seconds = duration % 60
-            log.msg(
-                f"{self.__class__.__name__} {self.workername} spot request "
-                f"{request['SpotInstanceRequestId']} fulfilled in about {minutes} minutes "
-                f"{seconds} seconds"
+                raise LatentWorkerFailedToSubstantiate(request_id, status)
+            
+            else:
+                log.msg(
+                    f"{self.__class__.__name__} {self.workername} failed to fulfill spot request "
+                    f"{request_id} with status {status}"
+                )
+                # try to cancel, just for good measure
+                self._cancel_spot_request(request_id)
+
+                raise LatentWorkerFailedToSubstantiate(request_id, status)
+               
+    def _get_spot_request_status(self, request_id):
+        try:
+            response = self.ec2.meta.client.describe_spot_instance_requests(
+                SpotInstanceRequestIds=[request_id]
             )
-            return request, True
-        elif request_status == PRICE_TOO_LOW:
-            self.ec2.meta.client.cancel_spot_instance_requests(
-                SpotInstanceRequestIds=[request['SpotInstanceRequestId']]
-            )
-            log.msg(
-                f'{self.__class__.__name__} {self.workername} spot request rejected, spot '
-                'price too low'
-            )
-            raise LatentWorkerFailedToSubstantiate(request['SpotInstanceRequestId'], request_status)
-        else:
-            log.msg(
-                f"{self.__class__.__name__} {self.workername} failed to fulfill spot request "
-                f"{request['SpotInstanceRequestId']} with status {request_status}"
-            )
-            # try to cancel, just for good measure
-            self.ec2.meta.client.cancel_spot_instance_requests(
-                SpotInstanceRequestIds=[request['SpotInstanceRequestId']]
-            )
-            raise LatentWorkerFailedToSubstantiate(request['SpotInstanceRequestId'], request_status)
+            return response['SpotInstanceRequests'][0]
+        except ClientError as e:
+            if 'InvalidSpotInstanceRequestID.NotFound' in str(e):
+                return None
+            raise
+
+    def _cancel_spot_request(self, request_id):
+        self.ec2.meta.client.cancel_spot_instance_requests(
+                    SpotInstanceRequestIds=[request_id]
+        )
