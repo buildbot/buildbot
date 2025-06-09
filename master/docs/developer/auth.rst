@@ -17,13 +17,13 @@ Buildbot's authentication subsystem is designed to support several authenticatio
 * Simple username/password authentication.
     The Buildbot UI prompts for a username and password and the backend verifies them.
 
-* External authentication by an HTTP Proxy.
-    An HTTP proxy in front of Buildbot performs the authentication and passes the verified username
-    to Buildbot in an HTTP Header.
-
 * Authentication by a third-party website.
     Buildbot sends the user to another site such as GitHub to authenticate and receives a trustworthy
     assertion of the user's identity from that site.
+
+* External authentication by an HTTP Proxy.
+    An HTTP proxy in front of Buildbot performs the authentication and passes the verified username
+    to Buildbot in an HTTP Header.
 
 Implementation
 --------------
@@ -44,6 +44,30 @@ failure message from the session.
 
 Subsequent access is authorized based on the information in the session; the authentication
 credentials are not sent again.
+
+Third-Party Authentication
+--------------------------
+
+Third-party authentication involves Buildbot redirecting a user's browser to another site to
+establish the user's identity. Once that is complete, that site redirects the user back to
+Buildbot, including a cryptographically signed assertion about the user's identity.
+
+The most common implementation of this sort of authentication is oAuth2.
+Many big internet service companies are providing oAuth2 services to identify their users.
+Most oAuth2 services provide authentication and user information in the same API.
+
+The following process is used for third-party authentication:
+
+* The web browser connects to the Buildbot UI
+* A session cookie is created, but the user is not yet authenticated.
+  The UI adds a widget entitled ``Login via GitHub`` (or whatever third party is configured)
+* When the user clicks on the widget, the UI fetches ``/auth/login``, which returns a bare URL on ``github.com``.
+  The UI loads that URL in the browser, with an effect similar to a redirect.
+* GitHub authenticates the user, if necessary, and requests permission for Buildbot to access the user's information.
+* On success, the GitHub web page redirects back to Buildbot's ``/auth/login?code=..``, with an authentication code.
+* Buildbot uses this code to request more information from GitHub, and stores the results in the server-side session.
+  Finally, Buildbot returns a redirect response, sending the user's browser to the root of the Buildbot UI.
+  The UI code will fetch ``/config.js``, which contains the login data from the session.
 
 External Authentication
 -----------------------
@@ -75,30 +99,6 @@ corporate directory cooperate in a secure manner to share the authentication to 
 mechanism only takes care of the authentication problem, and no user information is shared other
 than the username. The kerberos authentication is supported by an Apache front-end in
 ``mod_kerberos``.
-
-Third-Party Authentication
---------------------------
-
-Third-party authentication involves Buildbot redirecting a user's browser to another site to
-establish the user's identity. Once that is complete, that site redirects the user back to
-Buildbot, including a cryptographically signed assertion about the user's identity.
-
-The most common implementation of this sort of authentication is oAuth2.
-Many big internet service companies are providing oAuth2 services to identify their users.
-Most oAuth2 services provide authentication and user information in the same API.
-
-The following process is used for third-party authentication:
-
-* The web browser connects to the Buildbot UI
-* A session cookie is created, but the user is not yet authenticated.
-  The UI adds a widget entitled ``Login via GitHub`` (or whatever third party is configured)
-* When the user clicks on the widget, the UI fetches ``/auth/login``, which returns a bare URL on ``github.com``.
-  The UI loads that URL in the browser, with an effect similar to a redirect.
-* GitHub authenticates the user, if necessary, and requests permission for Buildbot to access the user's information.
-* On success, the GitHub web page redirects back to Buildbot's ``/auth/login?code=..``, with an authentication code.
-* Buildbot uses this code to request more information from GitHub, and stores the results in the server-side session.
-  Finally, Buildbot returns a redirect response, sending the user's browser to the root of the Buildbot UI.
-  The UI code will fetch ``/config.js``, which contains the login data from the session.
 
 Logout
 ------
