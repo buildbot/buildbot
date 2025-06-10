@@ -933,6 +933,39 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
+    def _callable_property(build):
+        return '%BasePath%\\' + build.getProperty('path2suffix')
+
+    def test_rebuild_project_with_properties(self):
+        self.setup_step(
+            vstudio.MsBuild141(
+                projectfile='pf',
+                config='cfg',
+                platform='Win32',
+                project='pj',
+                properties={
+                    'Prop1': 'Prop1Val',
+                    'Path1': (lambda build: build.getProperty('path1')),
+                    'Path2': type(self)._callable_property,
+                },
+            )
+        )
+
+        self.build.setProperty('path1', 'ABC', 'Test')
+        self.build.setProperty('path2suffix', 'XYZ', 'Test')
+        self.expect_commands(
+            ExpectShell(
+                workdir='wkdir',
+                command='FOR /F "tokens=*" %%I in (\'vswhere.exe -version "[15.0,16.0)" -products * -property installationPath\')  do "%%I\\%VCENV_BAT%" x86 && msbuild "pf" /p:Configuration="cfg" /p:Platform="Win32" /maxcpucount /t:"pj" /p:Prop1="Prop1Val" /p:Path1="ABC" /p:Path2="%BasePath%\\XYZ"',
+                env={
+                    'VCENV_BAT': r'\VC\Auxiliary\Build\vcvarsall.bat',
+                    'PATH': 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\;C:\\Program Files\\Microsoft Visual Studio\\Installer\\;${PATH};',
+                },
+            ).exit(0)
+        )
+        self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
+        return self.run_step()
+
     def test_rebuild_solution(self):
         self.setup_step(vstudio.MsBuild141(projectfile='pf', config='cfg', platform='x64'))
 
