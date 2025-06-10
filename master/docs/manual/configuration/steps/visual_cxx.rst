@@ -119,6 +119,11 @@ The available constructor arguments are
     That one is only available with the MsBuild family of classes.
     It allows to define pre-processor constants used by the compiler.
 
+``properties``
+    That one is only available with the MsBuild family of classes.
+    It allows to define custom build properties (Visual Studio user macros).
+    It is a dict, mapping the properties names to theirs values. Values can be strings, or callables taking the build object as a parameter and returning strings.
+
 Here is an example on how to drive compilation with Visual Studio 2013:
 
 .. code-block:: python
@@ -147,3 +152,21 @@ Here is a similar example using "MsBuild12":
     f.addStep(
         steps.MsBuild12(projectfile="trunk.sln", config='Debug', platform='x64',
                 workdir="trunk"))
+
+Here is an example of usage of the ``properties`` param in "MsBuild141":
+
+.. code-block:: python
+
+    from buildbot.plugins import steps
+
+    def get_property2_value(build):
+        return f'ValuePath\\{build.getProperty('got_revision')}'
+    
+    # Build one project in Release/Win32, while defining or overriding 
+    f.addStep(
+        steps.MsBuild141(projectfile="trunk.sln", config="Release", platform="Win32",
+                workdir="trunk",
+                project="tools\\protoc",
+                properties= { "CustomProperty1" : "Value", "CustomProperty2" : get_property2_value }
+                ))
+
