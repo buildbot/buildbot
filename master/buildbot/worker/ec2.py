@@ -299,17 +299,13 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         if self.image is not None:
             return self.image
-        images = self.ec2.images.all()
-        if self.valid_ami_owners:
-            images = images.filter(Owners=self.valid_ami_owners)
+        images = self._get_all_images()
+
         if self.valid_ami_location_regex:
             level = 0
             options = []
             get_match = self.valid_ami_location_regex.match
             for image in images:
-                # Image must be available
-                if image.state != 'available':
-                    continue
                 # Image must match regex
                 match = get_match(image.image_location)
                 if not match:
@@ -339,6 +335,12 @@ class EC2LatentWorker(AbstractLatentWorker):
         if not options:
             raise ValueError('no available images match constraints')
         return options[-1][-1]
+
+    def _get_all_images(self):
+        images = self.ec2.images.all()
+        if self.valid_ami_owners:
+            images = images.filter(Owners=self.valid_ami_owners)
+        return [img for img in images if img.state == 'available']
 
     def _dns(self):
         if self.instance is None:
