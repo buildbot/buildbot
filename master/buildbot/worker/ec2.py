@@ -87,30 +87,25 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         super().__init__(name, password, **kwargs)
         self._validate_security(security_name, subnet_id)
-        self._validate_and_process_ami_filters(self, ami, valid_ami_owners, valid_ami_location_regex)
+        self._validate_and_process_ami_filters(ami, valid_ami_owners, valid_ami_location_regex)
 
         if spot_instance and price_multiplier is None and max_spot_price is None:
             raise ValueError(
                 'You must provide either one, or both, of price_multiplier or max_spot_price'
             )
         
-        self.valid_ami_owners = None
-        if valid_ami_owners:
-            self.valid_ami_owners = [str(o) for o in valid_ami_owners]
-        self.valid_ami_location_regex = valid_ami_location_regex
         self.instance_type = instance_type
         self.keypair_name = keypair_name
         self.security_name = security_name
         self.user_data = user_data
         self.spot_instance = spot_instance
         self.max_spot_price = max_spot_price
-        self.volumes = volumes
         self.price_multiplier = price_multiplier
         self.product_description = product_description
 
         self._build_placement(region, placement)
 
-        self._setup_aws_id(identifier, secret_identifier, aws_id_file_path)
+        identifier, secret_identifier = self._setup_aws_id(identifier, secret_identifier, aws_id_file_path)
         self._setup_ec2_connection(
             session,
             region,
@@ -118,16 +113,16 @@ class EC2LatentWorker(AbstractLatentWorker):
             secret_identifier
         )
 
-        self._ensure_keypair()
-        self._ensure_security_group()
+        self._ensure_keypair(keypair_name)
+        self._ensure_security_group(security_name)
         
-        self._determine_image(elastic_ip)
+        self._define_image(elastic_ip)
 
         self.subnet_id = subnet_id
         self.security_group_ids = security_group_ids
         self.classic_security_groups = [self.security_name] if self.security_name else None
         self.instance_profile_name = instance_profile_name
-        self.tags = tags
+
         self.block_device_map = (
             self.create_block_device_mapping(block_device_map) if block_device_map else None
         )
@@ -145,6 +140,8 @@ class EC2LatentWorker(AbstractLatentWorker):
             volumes = []
         if tags is None:
             tags = {}
+        self.volumes = volumes
+        self.tags = tags
     
     def _validate_security(self, security_name, subnet_id):
         if security_name and subnet_id:
@@ -171,7 +168,9 @@ class EC2LatentWorker(AbstractLatentWorker):
             if not isinstance(valid_ami_location_regex, str):
                 raise ValueError('valid_ami_location_regex should be a string')
             # pre-compile the regex
-            valid_ami_location_regex = re.compile(valid_ami_location_regex)        
+            valid_ami_location_regex = re.compile(valid_ami_location_regex)
+        self.valid_ami_owners = [str(o) for o in valid_ami_owners] if valid_ami_owners else None
+        self.valid_ami_location_regex = valid_ami_location_regex  
         
     def _build_placement(self, region, placement):
         self.placement = f"{region}{placement}" if region and placement else None
@@ -231,6 +230,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             assert secret_identifier is not None, (
                 'supply both or neither of identifier, secret_identifier'
             )
+        return identifier, secret_identifier
 
     def _ensure_keypair(self, keypair_name):
         # We currently discard the keypair data because we don't need it.
@@ -279,7 +279,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 else:
                     raise
 
-    def _determine_image(self, elastic_ip):
+    def _define_image(self, elastic_ip):
         if self.ami is not None:
             self.image = self.ec2.Image(self.ami)
         else:
