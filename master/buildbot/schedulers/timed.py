@@ -575,6 +575,15 @@ class NightlyBase(Timed):
         return croniter.croniter.match(
             cron_string, self._time_to_croniter_tz_time(current_actuation_time)
         )
+        from buildbot.plugins import schedulers, util
+
+schedulers.Nightly(
+    name='rebuild',
+    change_filter=util.ChangeFilter(branch='main', project='project'),
+    createAbsoluteSourceStamps=True,
+    onlyIfChanged=False,
+    minute=range(0, 60, 10),
+    builderNames=['project-builder']
 
 
 class Nightly(NightlyBase):
