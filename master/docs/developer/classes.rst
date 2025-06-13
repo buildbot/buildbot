@@ -13,7 +13,7 @@ The sections contained here document classes that can be used or subclassed.
 
     cls-build
     cls-worker
-..autoclass:: buildbot.worker.Worker
+.. autoclass:: buildbot.worker.Worker
     :members:
     cls-buildfactory
     cls-changesources
