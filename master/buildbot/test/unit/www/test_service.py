@@ -38,6 +38,9 @@ from buildbot.www import service
 class FakeChannel:
     transport = None
 
+    def __init__(self, site: service.BuildbotSite) -> None:
+        self.site = site
+
     def isSecure(self):
         return False
 
@@ -258,7 +261,7 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
 
     def test_updateSession(self):
         session = self.site.makeSession()
-        request = Request(FakeChannel(), False)
+        request = Request(FakeChannel(self.site), False)
         request.sitepath = [b"bb"]
         session.updateSession(request)
         self.assertEqual(len(request.cookies), 1)
@@ -268,5 +271,5 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         self.assertIn('exp', decoded)
 
     def test_absentServerHeader(self):
-        request = Request(FakeChannel(), False)
+        request = Request(FakeChannel(self.site), False)
         self.assertEqual(request.responseHeaders.hasHeader('Server'), False)

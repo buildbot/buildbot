@@ -68,7 +68,7 @@ service-identity==24.2.0
 six==1.17.0
 SQLAlchemy==2.0.41
 treq==25.5.0
-Twisted==24.11.0
+Twisted==25.5.0
 txaio==23.1.1
 txrequests==0.9.6
 typing_extensions==4.13.2
