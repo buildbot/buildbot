@@ -80,11 +80,14 @@ class Dispatcher(BaseDispatcher):
 
     @defer.inlineCallbacks
     def requestAvatarId(self, creds: IUsernamePassword) -> InlineCallbacksType[bytes | tuple[()]]:
+        # self.master may become None during master shutdown and subsequent service tree tear down.
+        master = self.master
+
         p = Properties()
-        p.master = self.master
+        p.master = master
         username = bytes2unicode(creds.username)
         try:
-            yield self.master.acquire_lock()
+            yield master.acquire_lock()
             if username in self.users:
                 password, _ = self.users[username]
                 password = yield p.render(password)
@@ -96,7 +99,7 @@ class Dispatcher(BaseDispatcher):
             log.msg(f"invalid login from unknown user '{username}'")
             raise error.UnauthorizedLogin()
         finally:
-            self.master.release_lock()
+            master.release_lock()
 
 
 class PBManager(BaseManager[Dispatcher]):

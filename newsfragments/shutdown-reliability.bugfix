@@ -1,0 +1,1 @@
+Fixed a race condition when a worker attempts to connect during master shutdown
