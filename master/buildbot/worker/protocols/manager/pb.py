@@ -30,7 +30,6 @@ from zope.interface import implementer
 from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
-from buildbot.util.eventual import eventually
 from buildbot.worker.protocols.manager.base import BaseDispatcher
 from buildbot.worker.protocols.manager.base import BaseManager
 
@@ -81,11 +80,14 @@ class Dispatcher(BaseDispatcher):
 
     @defer.inlineCallbacks
     def requestAvatarId(self, creds: IUsernamePassword) -> InlineCallbacksType[bytes | tuple[()]]:
+        # self.master may become None during master shutdown and subsequent service tree tear down.
+        master = self.master
+
         p = Properties()
-        p.master = self.master
+        p.master = master
         username = bytes2unicode(creds.username)
         try:
-            yield self.master.initLock.acquire()
+            yield master.acquire_lock()
             if username in self.users:
                 password, _ = self.users[username]
                 password = yield p.render(password)
@@ -97,9 +99,7 @@ class Dispatcher(BaseDispatcher):
             log.msg(f"invalid login from unknown user '{username}'")
             raise error.UnauthorizedLogin()
         finally:
-            # brake the callback stack by returning to the reactor
-            # before waking up other waiters
-            eventually(self.master.initLock.release)
+            master.release_lock()
 
 
 class PBManager(BaseManager[Dispatcher]):

@@ -28,7 +28,6 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import deferwaiter
-from buildbot.util.eventual import eventually
 from buildbot.worker.protocols.manager.base import BaseDispatcher
 from buildbot.worker.protocols.manager.base import BaseManager
 from buildbot.worker.protocols.msgpack import Connection
@@ -113,7 +112,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     def initialize(self) -> InlineCallbacksType[None]:
         try:
             dispatcher = self.get_dispatcher()
-            yield dispatcher.master.initLock.acquire()
+            yield dispatcher.master.acquire_lock()
 
             if self.worker_name in dispatcher.users:
                 _, afactory = dispatcher.users[self.worker_name]
@@ -125,7 +124,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             log.msg(f"Connection opening failed: {e}")
             self.sendClose()
         finally:
-            eventually(dispatcher.master.initLock.release)
+            dispatcher.master.release_lock()
 
     @defer.inlineCallbacks
     def call_update(self, msg: dict[str, Any]) -> InlineCallbacksType[None]:
@@ -379,7 +378,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
         try:
             dispatcher = self.get_dispatcher()
-            yield dispatcher.master.initLock.acquire()
+            yield dispatcher.master.acquire_lock()
 
             if username in dispatcher.users:
                 pwd, _ = dispatcher.users[username]
@@ -393,7 +392,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         except Exception as e:
             raise RuntimeError("Internal error") from e
         finally:
-            eventually(dispatcher.master.initLock.release)
+            dispatcher.master.release_lock()
 
         if not authentication:
             raise ConnectionDeny(401, "Unauthorized")

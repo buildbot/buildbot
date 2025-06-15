@@ -105,7 +105,6 @@ class FakeMaster(service.MasterService):
         self.config = MasterConfig()
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
-        self.initLock = defer.DeferredLock()
         self.basedir = basedir
         self.botmaster = FakeBotMaster()
         self.botmaster.setServiceParent(self)
@@ -138,6 +137,12 @@ class FakeMaster(service.MasterService):
 
     def subscribeToBuildRequests(self, callback):
         pass
+
+    def acquire_lock(self) -> defer.Deferred[None]:
+        return defer.succeed(None)
+
+    def release_lock(self) -> None:
+        return None
 
     @defer.inlineCallbacks
     def stopService(self):
