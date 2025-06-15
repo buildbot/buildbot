@@ -200,13 +200,10 @@ class ProtocolCommandPb(ProtocolCommandBase):
 
     @defer.inlineCallbacks
     def protocol_complete(self, failure: Failure | None) -> InlineCallbacksType[None]:
-        d_update = self.flush_command_output()
+        self.flush_command_output()
         assert self.command_ref is not None
         self.command_ref.dontNotifyOnDisconnect(self.on_lost_remote_step)
-        d_complete = self.command_ref.callRemote("complete", failure)
-
-        yield d_update
-        yield d_complete
+        yield self.command_ref.callRemote("complete", failure)
 
     def protocol_update_upload_file_close(self, writer: RemoteReference) -> Deferred:
         return writer.callRemote("close")
@@ -574,11 +571,7 @@ class BotMsgpack(BotBase):
             # command that wasn't actually running
             log.msg(" .. but none was running")
             return
-        d = self.protocol_commands[command_id].flush_command_output()
-        d.addErrback(
-            self.protocol_commands[command_id]._ack_failed,
-            "ProtocolCommandMsgpack.flush_command_output",
-        )
+        self.protocol_commands[command_id].flush_command_output()
         self.protocol_commands[command_id].command.doInterrupt()
 
 

@@ -129,16 +129,14 @@ class ProtocolCommandMsgpack(ProtocolCommandBase):
 
     @defer.inlineCallbacks
     def protocol_complete(self, failure: Failure | None) -> InlineCallbacksType[None]:
-        d_update = self.flush_command_output()
+        self.flush_command_output()
         if failure is not None:
             failure = str(failure)  # type: ignore[assignment]
-        d_complete: Deferred = self.protocol.get_message_result({
+        yield self.protocol.get_message_result({
             'op': 'complete',
             'args': failure,
             'command_id': self.command_id,
         })
-        yield d_update
-        yield d_complete
 
     def protocol_update_upload_file_close(self, writer: RemoteReference) -> Deferred:
         return self.protocol.get_message_result({
