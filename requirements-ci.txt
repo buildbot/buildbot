@@ -5,7 +5,7 @@
 buildbot-www==4.3.0
 
 Markdown==3.8
-coverage==7.8.2
+coverage==7.9.1
 docker==7.1.0
 hvac==2.3.0
 ldap3==2.9.1
