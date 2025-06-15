@@ -36,7 +36,14 @@ if TYPE_CHECKING:
 
 
 class FakeMaster:
-    initLock = defer.DeferredLock()
+    def __init__(self) -> None:
+        self.lock = defer.DeferredLock()
+
+    def acquire_lock(self) -> defer.Deferred[defer.DeferredLock]:
+        return self.lock.acquire()
+
+    def release_lock(self) -> None:
+        self.lock.release()
 
     def addService(self, svc: PBManager) -> None:
         pass
@@ -134,13 +141,13 @@ class TestPBManager(unittest.TestCase):
 
         try:
             # simulate a reconfig/restart in progress
-            yield self.pbm.master.initLock.acquire()
+            yield self.pbm.master.acquire_lock()
             # try to authenticate while the lock is locked
             d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
             self.assertFalse(d.called, "requestAvatarId should block until the lock is released")
         finally:
             # release the lock, it should allow for auth to proceed
-            yield self.pbm.master.initLock.release()
+            self.pbm.master.release_lock()
 
         self.assertTrue(
             d.called, "requestAvatarId should have been called after the lock was released"

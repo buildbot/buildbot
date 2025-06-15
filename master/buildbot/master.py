@@ -209,6 +209,17 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         # master should advertise itself only at that time
 
     # setup and reconfig handling
+    def acquire_lock(self) -> defer.Deferred[None]:
+        return self.initLock.acquire()
+
+    def release_lock(self) -> None:
+        # break the callback stack by returning to the reactor
+        # before waking up other waiters. This could be important when
+        # there are many conturrent waiters for the initlock
+        eventually(self.initLock.release)
+
+    def release_lock_sync(self) -> None:
+        self.initLock.release()
 
     _already_started = False
 
@@ -240,7 +251,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         startup_succeed = False
         try:
-            yield self.initLock.acquire()
+            yield self.acquire_lock()
             # load the configuration file, treating errors as fatal
             try:
                 # run the master.cfg in thread, so that it can use blocking
@@ -342,7 +353,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             else:
                 log.msg("BuildMaster startup failed")
 
-            yield self.initLock.release()
+            self.release_lock_sync()
             self._master_initialized = True
 
     def sendBuildbotNetUsageData(self):
@@ -353,7 +364,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     @defer.inlineCallbacks
     def stopService(self):
         try:
-            yield self.initLock.acquire()
+            yield self.acquire_lock()
 
             if self.running:
                 yield self.botmaster.cleanShutdown(quickMode=True, stopReactor=False)
@@ -371,7 +382,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             log.msg("BuildMaster is stopped")
             self._master_initialized = False
         finally:
-            yield self.initLock.release()
+            self.release_lock_sync()
             if self.db.running:
                 yield self.db.stopService()
 
@@ -419,7 +430,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         changes_made = False
         failed = False
         try:
-            yield self.initLock.acquire()
+            yield self.acquire_lock()
             # Run the master.cfg in thread, so that it can use blocking code
             new_config = yield threads.deferToThreadPool(
                 self.reactor, self.reactor.getThreadPool(), self.config_loader.loadConfig
@@ -440,7 +451,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             failed = True
 
         finally:
-            yield self.initLock.release()
+            self.release_lock()
 
         if failed:
             if changes_made:
