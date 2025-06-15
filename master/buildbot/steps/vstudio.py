@@ -447,6 +447,16 @@ def _msbuild_format_defines_parameter(defines):
     return f' /p:DefineConstants="{";".join(defines)}"'
 
 
+def _msbuild_format_properties_parameters(build, properties):
+    if properties is None or len(properties) == 0:
+        return ""
+    command = ''
+    for name, value in properties.items():
+        strvalue = value(build) if callable(value) else value
+        command += f' /p:{name}="{strvalue}"' if strvalue != '' else ''
+    return command
+
+
 def _msbuild_format_target_parameter(mode, project):
     modestring = None
     if mode == "clean":
@@ -471,13 +481,15 @@ def _msbuild_format_target_parameter(mode, project):
 class MsBuild4(VisualStudio):
     platform = None
     defines = None
+    properties = None
     vcenv_bat = r"${VS110COMNTOOLS}..\..\VC\vcvarsall.bat"
     renderables = ['platform']
     description = 'building'
 
-    def __init__(self, platform, defines=None, **kwargs):
+    def __init__(self, platform, defines=None, properties=None, **kwargs):
         self.platform = platform
         self.defines = defines
+        self.properties = properties
         super().__init__(**kwargs)
 
     def setupEnvironment(self):
@@ -510,6 +522,7 @@ class MsBuild4(VisualStudio):
 
         command += _msbuild_format_target_parameter(self.mode, self.project)
         command += _msbuild_format_defines_parameter(self.defines)
+        command += _msbuild_format_properties_parameters(self.build, self.properties)
 
         self.command = command
 
@@ -531,13 +544,15 @@ class MsBuild14(MsBuild4):
 class MsBuild141(VisualStudio):
     platform = None
     defines = None
+    properties = None
     vcenv_bat = r"\VC\Auxiliary\Build\vcvarsall.bat"
     renderables = ['platform']
     version_range = "[15.0,16.0)"
 
-    def __init__(self, platform, defines=None, **kwargs):
+    def __init__(self, platform, defines=None, properties=None, **kwargs):
         self.platform = platform
         self.defines = defines
+        self.properties = properties
         super().__init__(**kwargs)
 
     def setupEnvironment(self):
@@ -572,6 +587,7 @@ class MsBuild141(VisualStudio):
 
         command += _msbuild_format_target_parameter(self.mode, self.project)
         command += _msbuild_format_defines_parameter(self.defines)
+        command += _msbuild_format_properties_parameters(self.build, self.properties)
 
         self.command = command
 
