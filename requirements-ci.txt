@@ -32,7 +32,7 @@ cffi==1.17.1
 charset-normalizer==3.4.2
 constantly==23.10.4
 croniter==6.0.0
-cryptography==45.0.3
+cryptography==45.0.4
 dill==0.4.0
 evalidate==2.0.5
 greenlet==3.2.3
