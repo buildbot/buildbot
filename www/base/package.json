@@ -38,7 +38,7 @@
     "react-refresh": "^0.17.0",
     "react-router-dom": "^6.3.0",
     "react-select": "^5.8.1",
-    "react-tooltip": "^5.28.1",
+    "react-tooltip": "^5.29.1",
     "react-virtualized-auto-sizer": "^1.0.26",
     "resolve": "1.22.10",
     "ts-pnp": "1.2.0",
