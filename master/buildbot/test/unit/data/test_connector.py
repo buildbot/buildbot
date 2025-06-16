@@ -38,7 +38,16 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_get(self):
         @self.assertArgSpecMatches(self.data.get)
-        def get(self, path, filters=None, fields=None, order=None, limit=None, offset=None):
+        def get(
+            self,
+            path,
+            filters=None,
+            fields=None,
+            order=None,
+            limit=None,
+            offset=None,
+            properties=None,
+        ):
             pass
 
     def test_signature_getEndpoint(self):
