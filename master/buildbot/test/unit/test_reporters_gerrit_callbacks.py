@@ -1,4 +1,4 @@
-import pytest
+from twisted.trial import unittest
 
 from buildbot.reporters.generators.gerrit import (
     GerritBuildStartStatusGenerator,
