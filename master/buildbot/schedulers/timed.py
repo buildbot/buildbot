@@ -34,8 +34,6 @@ from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 
-from buildbot.plugins import schedulers
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -580,6 +578,7 @@ class NightlyBase(Timed):
         from buildbot.plugins import schedulers, util
 
 schedulers.Nightly(
+    from buildbot.plugins import schedulers # this line is new added
     name='rebuild',
     change_filter=util.ChangeFilter(branch='main', project='project'),
     createAbsoluteSourceStamps=True,
