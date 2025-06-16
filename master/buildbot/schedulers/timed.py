@@ -36,8 +36,12 @@ from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 
+import buildbot.schedulers as schedulers
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+
 
 # States of objects which have to be observed are registered in the data base table `object_state`.
 # `objectid` in the `object_state` refers to the object from the `object` table.
