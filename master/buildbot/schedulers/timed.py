@@ -583,7 +583,9 @@ class NightlyBase(Timed):
         )
         from buildbot.plugins import schedulers, util
 
-schedulers.Nightly(
+from buildbot.schedulers.timed import Nightly
+
+Nightly(
     name='rebuild',
     change_filter=util.ChangeFilter(branch='main', project='project'),
     createAbsoluteSourceStamps=True,
