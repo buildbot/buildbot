@@ -743,3 +743,10 @@ class NightlyTriggerable(NightlyBase):
             parent_relationship=parent_relationship,
             priority=self.priority,
         )
+        schedulers.Nightly(Add commentMore actions
+            name='rebuild',
+            change_filter=util.ChangeFilter(branch='main', project='project'),
+            createAbsoluteSourceStamps=True,
+            onlyIfChanged=False,
+            minute=range(0, 60, 10),
+            builderNames=['project-builder']Add commentMore actions
