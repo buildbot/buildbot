@@ -25,6 +25,8 @@ from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implementer
 
+from buildbot.plugins import schedulers # this line is new added
+
 from buildbot import config
 from buildbot import util
 from buildbot.changes.filter import ChangeFilter
@@ -578,7 +580,6 @@ class NightlyBase(Timed):
         from buildbot.plugins import schedulers, util
 
 schedulers.Nightly(
-    from buildbot.plugins import schedulers # this line is new added
     name='rebuild',
     change_filter=util.ChangeFilter(branch='main', project='project'),
     createAbsoluteSourceStamps=True,
