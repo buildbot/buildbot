@@ -1,9 +1,10 @@
-from twisted.trial import unittest
+# from twisted.trial import unittest
 
+# Gerrit builds are sorted alphabetically
 from buildbot.reporters.generators.gerrit import (
-    GerritBuildStartStatusGenerator,
     GerritBuildEndStatusGenerator,
     GerritBuildSetStatusGenerator,
+    GerritBuildStartStatusGenerator,
 )
 
 # Define a sample callback
