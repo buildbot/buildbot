@@ -584,7 +584,7 @@ schedulers.Nightly(
     onlyIfChanged=False,
     minute=range(0, 60, 10),
     builderNames=['project-builder']
-
+)
 
 class Nightly(NightlyBase):
     def checkConfig(
