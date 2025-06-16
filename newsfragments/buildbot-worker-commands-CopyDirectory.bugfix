@@ -1,0 +1,1 @@
+``:class:CopyDirectory`` now provides the correct options when run on AIX (remove -v)

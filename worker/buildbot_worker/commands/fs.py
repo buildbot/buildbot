@@ -217,7 +217,7 @@ class CopyDirectory(base.Command):
                     f"cp target '{to_path}' already exists -- cp will not do what you think!"
                 )
 
-            if platform.system().lower().find('solaris') >= 0:
+            if platform.system().lower().find('solaris') >= 0 or platform.system().lower() == 'aix':
                 command = ['cp', '-R', '-P', '-p', from_path, to_path]
             else:
                 command = ['cp', '-R', '-P', '-p', '-v', from_path, to_path]
