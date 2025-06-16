@@ -34,6 +34,8 @@ from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 
+from buildbot.plugins import schedulers
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
