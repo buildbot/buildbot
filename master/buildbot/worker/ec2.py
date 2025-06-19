@@ -51,6 +51,7 @@ PRICE_TOO_LOW = 'price-too-low'
 class EC2LatentWorker(AbstractLatentWorker):
     instance = image = None
     _poll_resolution = 5  # hook point for tests
+    _max_runtime = 600
 
     def __init__(
         self,
@@ -546,6 +547,14 @@ class EC2LatentWorker(AbstractLatentWorker):
             # Sometimes it can take a second or so for the spot request to be
             # ready.  If it isn't ready, you will get a "Spot instance request
             # ID 'sir-abcd1234' does not exist" exception.
+
+            if duration > self._max_runtime:
+                log.msg(
+                    f"{self.__class__.__name__} {self.workername} spot request {request_id} timed out "
+                    f"after waiting {duration} seconds"
+                )
+                self._cancel_spot_request(request_id)
+                raise LatentWorkerFailedToSubstantiate(request_id, "timeout-waiting-for-fulfillment")
 
             request = self._get_spot_request_status(request_id)     
 
