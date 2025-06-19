@@ -430,7 +430,14 @@ class BuildRequest:
             # TODO: select the sourcestamp that best represents the merge,
             # preferably the latest one.  This used to be accomplished by
             # looking at changeids and picking the highest-numbered.
-            all_merged_sources[codebase] = all_sources[-1]
+            all_merged_sources[codebase] = TempSourceStamp(all_sources[-1].asSSDict())
+
+            # collapse all changes into this to have proper information on files changed
+            all_merged_sources[codebase].changes = list(
+                {
+                    change.changeid: change for source in all_sources for change in source.changes
+                }.values()
+            )
 
         return list(all_merged_sources.values())
 
