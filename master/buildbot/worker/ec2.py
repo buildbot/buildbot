@@ -556,55 +556,46 @@ class EC2LatentWorker(AbstractLatentWorker):
                 self._cancel_spot_request(request_id)
                 raise LatentWorkerFailedToSubstantiate(request_id, "timeout-waiting-for-fulfillment")
 
-            request = self._get_spot_request_status(request_id)     
+            request = self._get_spot_request_status(request_id)
 
-            if request is None: 
-                time.sleep(interval)
-                duration += interval
-                if duration % 10 == 0:
-                    log.msg(
-                        f"{self.__class__.__name__} {self.workername} has waited {duration} "
-                        f"seconds for spot request {request_id}"
-                    )
-                continue
+            if request is not None:
+                status = request['Status']['Code']
+                if status not in SPOT_REQUEST_PENDING_STATES:
+                    break
 
-            status = request['Status']['Code']
-
-            if status in SPOT_REQUEST_PENDING_STATES:
-                time.sleep(interval)
-                duration += interval
-                continue
-
-            elif status == FULFILLED:
-                minutes = duration // 60
-                seconds = duration % 60
+            time.sleep(interval)
+            duration += interval
+            if duration % 10 == 0:
                 log.msg(
-                    f"{self.__class__.__name__} {self.workername} spot request "
-                    f"{request_id} fulfilled in about {minutes} minutes "
-                    f"{seconds} seconds"
-                )
-                return request, True
-            
-            elif status == PRICE_TOO_LOW:
-
-                self._cancel_spot_request(request_id)
-
-                log.msg(
-                    f'{self.__class__.__name__} {self.workername} spot request rejected, spot '
-                    'price too low'
+                    f"{self.__class__.__name__} {self.workername} has waited {duration} "
+                    f"seconds for spot request {request_id}"
                 )
 
-                raise LatentWorkerFailedToSubstantiate(request_id, status)
-            
-            else:
-                log.msg(
-                    f"{self.__class__.__name__} {self.workername} failed to fulfill spot request "
-                    f"{request_id} with status {status}"
-                )
-                # try to cancel, just for good measure
-                self._cancel_spot_request(request_id)
-
-                raise LatentWorkerFailedToSubstantiate(request_id, status)
+        if status == FULFILLED:
+            minutes = duration // 60
+            seconds = duration % 60
+            log.msg(
+                f"{self.__class__.__name__} {self.workername} spot request "
+                f"{request_id} fulfilled in about {minutes} minutes "
+                f"{seconds} seconds"
+            )
+            return request, True
+        
+        elif status == PRICE_TOO_LOW:
+            log.msg(
+                f'{self.__class__.__name__} {self.workername} spot request rejected, spot '
+                'price too low'
+            )
+            self._cancel_spot_request(request_id)
+            raise LatentWorkerFailedToSubstantiate(request_id, status)
+        
+        else:
+            log.msg(
+                f"{self.__class__.__name__} {self.workername} failed to fulfill spot request "
+                f"{request_id} with status {status}"
+            )
+            self._cancel_spot_request(request_id)
+            raise LatentWorkerFailedToSubstantiate(request_id, status)
                
     def _get_spot_request_status(self, request_id):
         try:
