@@ -17,7 +17,7 @@
 import os
 
 from twisted.trial import unittest
-
+from unittest.mock import MagicMock
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -67,6 +67,11 @@ class TestEC2LatentWorker(unittest.TestCase):
         super().setUp()
         if boto3 is None:
             raise unittest.SkipTest("moto not found")
+        # Mocking a worker
+        self.worker = MagicMock()
+        self.worker._get_all_images = MagicMock()
+        self.worker._sort_images_options = MagicMock()
+        self.worker._extract_sort = MagicMock()
 
     def botoSetup(self, name='latent_buildbot_worker'):
         # the proxy system is also not properly mocked, so we need to delete environment variables
@@ -132,6 +137,62 @@ class TestEC2LatentWorker(unittest.TestCase):
             fake_describe_spot_instance_requests,
         )
 
+    def get_image(self):
+        if self.image is not None:
+            return self.image
+        images = self._get_all_images()
+
+        images_options_sorted = self._sort_images_options(images)
+
+        candidate_images = [f'{candidate[-1].id} ({candidate[-1].image_location})' for candidate in images_options_sorted]
+        log.msg(f"sorted images (last is chosen): {', '.join(candidate_images)}")
+        if not images_options_sorted:
+            raise ValueError('no available images match constraints')
+        return images_options_sorted[-1][-1]
+
+    def _get_all_images(self):
+        images = self.ec2.images.all()
+        if self.valid_ami_owners:
+            images = images.filter(Owners=self.valid_ami_owners)
+        return [img for img in images if img.state == 'available']
+
+    def _extract_sort(self, level, match):
+        # Gather sorting information
+        alpha_sort = int_sort = None
+        if level < 2:
+            try:
+                alpha_sort = match.group(1)
+            except IndexError:
+                return None, None, 2
+            else:
+                if level == 0:
+                    try:
+                        int_sort = int(alpha_sort)
+                    except ValueError:
+                        return None, None, 1
+        return alpha_sort, int_sort, level
+
+    def _sort_images_options(self, images):
+        if self.valid_ami_location_regex:
+            level = 0
+            options = []
+            get_match = self.valid_ami_location_regex.match
+            for image in images:
+                # Image must match regex
+                match = get_match(image.image_location)
+                if not match:
+                    continue
+
+                alpha_sort, int_sort, level = self._extract_sort(level, match)
+
+                options.append([int_sort, alpha_sort, image.image_location, image.id, image])
+            if level:
+                log.msg(f'sorting images at level {level}')
+                options = [candidate[level:] for candidate in options]
+        else:
+            options = [(image.image_location, image.id, image) for image in images]
+        return options.sort()
+    
     @mock_aws
     def test_constructor_minimal(self):
         _, r = self.botoSetup('latent_buildbot_slave')
@@ -642,3 +703,75 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
             )
         self.assertEqual(bs.keypair_name, 'test_keypair')
         self.assertEqual(bs.security_name, 'test_security_group')
+
+     @mock_aws
+    def test_get_image_when_image_is_cached(self):
+        # Simulating a worker with a cached image
+        self.worker.image = "cached-image-id"
+        result = self.worker.get_image()
+        self.assertEqual(result, "cached-image-id")
+    
+    @mock_aws
+    def test_get_image_when_no_image_found(self):
+        # Simulating no cached image and an empty response from _get_all_images
+        self.worker._get_all_images.return_value = []
+        with self.assertRaises(ValueError):
+            self.worker.get_image()
+
+    @mock_aws
+    def test_get_image_when_images_are_available(self):
+        # Simulating available images with sorted options
+        mock_images = [MagicMock(id="ami-123"), MagicMock(id="ami-456")]
+        self.worker._get_all_images.return_value = mock_images
+        self.worker._sort_images_options.return_value = [(1, 2, "location1", "ami-456", mock_images[1])]
+        result = self.worker.get_image()
+        self.assertEqual(result.id, "ami-456")
+
+    @mock_aws
+    def test_get_all_images_with_valid_ami_owners(self):
+        # Simulating images with valid owners
+        mock_images = [MagicMock(id="ami-123", state="available", owner_id="1234")]
+        self.worker.valid_ami_owners = ["1234"]
+        self.worker.ec2.images.all.return_value = mock_images
+        result = self.worker._get_all_images()
+        self.assertEqual(result[0].id, "ami-123")
+
+    @mock_aws
+    def test_get_all_images_with_invalid_ami_owners(self):
+        # Simulating no matching owners
+        mock_images = [MagicMock(id="ami-123", state="available", owner_id="5678")]
+        self.worker.valid_ami_owners = ["1234"]
+        self.worker.ec2.images.all.return_value = mock_images
+        result = self.worker._get_all_images()
+        self.assertEqual(result, [])
+
+    def test_extract_sort_with_valid_data(self):
+        # Simulating a match with a string that can be converted to an integer
+        match = MagicMock()
+        match.group.return_value = "123"
+        level = 0
+        result = self.worker._extract_sort(level, match)
+        self.assertEqual(result, ("123", 123, 1))
+
+    def test_extract_sort_with_invalid_data(self):
+        # Simulating an invalid string that cannot be converted to an integer
+        match = MagicMock()
+        match.group.return_value = "abc"
+        level = 0
+        result = self.worker._extract_sort(level, match)
+        self.assertEqual(result, ("abc", None, 1))
+
+    def test_sort_images_options_with_valid_regex(self):
+        # Simulating sorting with valid regex
+        mock_images = [MagicMock(id="ami-123", image_location="amazon/foo")]
+        self.worker.valid_ami_location_regex = MagicMock()
+        self.worker.valid_ami_location_regex.match.return_value = True
+        self.worker._sort_images_options(mock_images)
+        self.worker.valid_ami_location_regex.match.assert_called()
+
+    def test_sort_images_options_without_regex(self):
+        # Simulating sorting without regex
+        mock_images = [MagicMock(id="ami-123", image_location="amazon/foo")]
+        self.worker.valid_ami_location_regex = None
+        sorted_images = self.worker._sort_images_options(mock_images)
+        self.assertEqual(sorted_images[0][1], "ami-123")
