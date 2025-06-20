@@ -82,58 +82,63 @@ class EC2LatentWorker(AbstractLatentWorker):
         session=None,
         **kwargs,
     ):
-        self._validate_requirements(keypair_name, security_name, subnet_id)
+        self._validate_requirements(
+            keypair_name, 
+            security_name, 
+            subnet_id, 
+            spot_instance, 
+            price_multiplier, 
+            max_spot_price,
+        )
         self._initialize_defaults(volumes, tags)
 
         super().__init__(name, password, **kwargs)
-        self._validate_security(security_name, subnet_id)
-        self._validate_and_process_ami_filters(ami, valid_ami_owners, valid_ami_location_regex)
 
-        if spot_instance and price_multiplier is None and max_spot_price is None:
-            raise ValueError(
-                'You must provide either one, or both, of price_multiplier or max_spot_price'
-            )
-        
-        self.instance_type = instance_type
+        self._validate_and_process_ami_filters(ami, valid_ami_owners, valid_ami_location_regex)
+        self._build_placement(region, placement)
+        id, secret = self._setup_aws_id(identifier, secret_identifier, aws_id_file_path)
+        self._setup_ec2_connection(
+            session,
+            region,
+            id,
+            secret,
+        )
+
         self.keypair_name = keypair_name
+        self._ensure_keypair(keypair_name)
+
+        self._ensure_security_group(security_name)
+        self._define_image(elastic_ip)
+
+        self.instance_type = instance_type
         self.security_name = security_name
         self.user_data = user_data
         self.spot_instance = spot_instance
         self.max_spot_price = max_spot_price
         self.price_multiplier = price_multiplier
         self.product_description = product_description
-
-        self._build_placement(region, placement)
-
-        identifier, secret_identifier = self._setup_aws_id(identifier, secret_identifier, aws_id_file_path)
-        self._setup_ec2_connection(
-            session,
-            region,
-            identifier,
-            secret_identifier
-        )
-
-        self._ensure_keypair(keypair_name)
-        self._ensure_security_group(security_name)
-        
-        self._define_image(elastic_ip)
-
         self.subnet_id = subnet_id
         self.security_group_ids = security_group_ids
         self.classic_security_groups = [self.security_name] if self.security_name else None
         self.instance_profile_name = instance_profile_name
-
         self.block_device_map = (
             self.create_block_device_mapping(block_device_map) if block_device_map else None
         )
 
-    def _validate_requirements(self, keypair_name, security_name, subnet_id):
+    def _validate_requirements(self, keypair_name, security_name, subnet_id, spot_instance, price_multiplier, max_spot_price):
         if not boto3:
             config.error("The python module 'boto3' is needed to use EC2LatentWorker")
         if keypair_name is None:
             config.error("EC2LatentWorker: 'keypair_name' parameter must be specified")
         if security_name is None and not subnet_id:
             config.error("EC2LatentWorker: 'security_name' parameter must be specified")
+        if security_name and subnet_id:
+            raise ValueError(
+                'security_name (EC2 classic) not supported in a VPC; use security_group_ids')
+        if (spot_instance) and (price_multiplier is None) and (max_spot_price is None):
+            raise ValueError(
+                'You must provide either one, or both, of price_multiplier or max_spot_price'
+            )
 
     def _initialize_defaults(self, volumes, tags):
         if volumes is None:
@@ -142,11 +147,6 @@ class EC2LatentWorker(AbstractLatentWorker):
             tags = {}
         self.volumes = volumes
         self.tags = tags
-    
-    def _validate_security(self, security_name, subnet_id):
-        if security_name and subnet_id:
-            raise ValueError(
-                'security_name (EC2 classic) not supported in a VPC; use security_group_ids')
             
     def _validate_and_process_ami_filters(self, ami, valid_ami_owners, valid_ami_location_regex):
         if not ((ami is not None) ^ (valid_ami_owners is not None or valid_ami_location_regex is not None)):
