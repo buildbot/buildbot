@@ -203,11 +203,10 @@ class Build(properties.PropertiesMixin):
 
     def allFiles(self) -> list[str]:
         # return a list of all source files that were changed
-        files: list[str] = []
+        files: set[str] = set()
         for c in self.allChanges():
-            for f in c.files:
-                files.append(f)
-        return files
+            files.update(c.files)
+        return list(files)
 
     def __repr__(self) -> str:
         return (

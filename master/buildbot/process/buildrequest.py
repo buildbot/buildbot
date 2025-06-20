@@ -411,30 +411,39 @@ class BuildRequest:
 
         return True
 
-    def mergeSourceStampsWith(self, others: Iterable[BuildRequest]) -> list[TempSourceStamp]:
-        """Returns one merged sourcestamp for every codebase"""
+    @staticmethod
+    def merge_source_stamps(requests: Iterable[BuildRequest]) -> list[TempSourceStamp]:
         # get all codebases from all requests
-        all_codebases = set(self.sources)
-        for other in others:
-            all_codebases |= set(other.sources)
+        all_codebases: set[str] = set()
+        for request in requests:
+            all_codebases.update(request.sources)
 
         all_merged_sources: dict[str, TempSourceStamp] = {}
         # walk along the codebases
         for codebase in all_codebases:
             all_sources: list[TempSourceStamp] = []
-            if codebase in self.sources:
-                all_sources.append(self.sources[codebase])
-            for other in others:
-                if codebase in other.sources:
-                    all_sources.append(other.sources[codebase])
+            for request in requests:
+                if codebase in request.sources:
+                    all_sources.append(request.sources[codebase])
             assert all_sources, "each codebase should have at least one sourcestamp"
 
             # TODO: select the sourcestamp that best represents the merge,
             # preferably the latest one.  This used to be accomplished by
             # looking at changeids and picking the highest-numbered.
-            all_merged_sources[codebase] = all_sources[-1]
+            all_merged_sources[codebase] = TempSourceStamp(all_sources[-1].asSSDict())
+
+            # collapse all changes into this to have proper information on files changed
+            all_merged_sources[codebase].changes = list(
+                {
+                    change.changeid: change for source in all_sources for change in source.changes
+                }.values()
+            )
 
         return list(all_merged_sources.values())
+
+    def mergeSourceStampsWith(self, others: Iterable[BuildRequest]) -> list[TempSourceStamp]:
+        """Returns one merged sourcestamp for every codebase"""
+        return BuildRequest.merge_source_stamps((self, *others))
 
     def mergeReasons(self, others: list[BuildRequest]) -> str:
         """Return a reason for the merged build request."""

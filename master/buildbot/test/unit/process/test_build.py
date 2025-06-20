@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import operator
 import posixpath
+from datetime import datetime
+from itertools import count
 from pathlib import PurePosixPath
+from typing import TYPE_CHECKING
+from typing import cast
 from unittest.mock import Mock
 from unittest.mock import call
 
@@ -26,6 +31,9 @@ from zope.interface import implementer
 from buildbot import interfaces
 from buildbot.locks import WorkerLock
 from buildbot.process.build import Build
+from buildbot.process.buildrequest import BuildRequest
+from buildbot.process.buildrequest import TempChange
+from buildbot.process.buildrequest import TempSourceStamp
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import create_step_from_step_or_factory
 from buildbot.process.locks import get_real_locks_from_accesses
@@ -43,6 +51,9 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.reactor import TestReactorMixin
+
+if TYPE_CHECKING:
+    from buildbot.process.builder import Builder
 
 
 class FakeChange:
@@ -1138,3 +1149,88 @@ class TestSetupProperties_SingleSource(TestReactorMixin, unittest.TestCase):
         Build.setupBuildProperties(self.build.getProperties(), [self.r], self.r.sources)
         project = self.props["Build"]["project"]
         self.assertEqual(project, '')
+
+
+class TestBuildFiles(unittest.TestCase):
+    def setUp(self) -> None:
+        self.builder = FakeBuilder(master=Mock())
+
+        sstamp_id_next = count(start=1)
+        change_id_next = count(start=1)
+
+        def _tmp_sstamp(repository: str = "", codebase: str = "") -> TempSourceStamp:
+            return TempSourceStamp({
+                "ssid": next(sstamp_id_next),
+                "branch": None,
+                "revision": None,
+                "project": "",
+                "repository": repository,
+                "codebase": codebase,
+                "created_at": datetime.now(),
+                "patch": None,
+            })
+
+        def _add_tmp_change(sstamp: TempSourceStamp, author: str, files: list[str]) -> TempChange:
+            return TempChange({
+                "changeid": next(change_id_next),
+                "author": author,
+                "committer": None,
+                "comments": "",
+                "branch": sstamp.branch,
+                "revision": sstamp.revision,
+                "revlink": None,
+                "when_timestamp": 0,
+                "category": None,
+                "parent_changeids": [],
+                "repository": sstamp.repository,
+                "codebase": sstamp.codebase,
+                "project": sstamp.project,
+                "files": files,
+                "sourcestamp": sstamp.asSSDict(),
+                "properties": {},
+            })
+
+        self.source_by_me = _tmp_sstamp(repository="repoA", codebase="A")
+        self.source_by_me.changes = [
+            _add_tmp_change(self.source_by_me, author="me", files=["a/1"]),
+            _add_tmp_change(self.source_by_me, author="me", files=["a/2"]),
+        ]
+
+        self.source_by_him = _tmp_sstamp(repository="repoB", codebase="B")
+        self.source_by_him.changes = [
+            _add_tmp_change(self.source_by_me, author="him", files=["b/1"]),
+            _add_tmp_change(self.source_by_me, author="him", files=["b/2"]),
+        ]
+
+        self.source_by_other = _tmp_sstamp(repository="repoB", codebase="B")
+        self.source_by_other.changes = [
+            _add_tmp_change(self.source_by_me, author="other", files=["b/3"]),
+            _add_tmp_change(self.source_by_me, author="other", files=["b/2"]),
+        ]
+
+    def test_files_merged_buildrequests(self) -> None:
+        def _buildrequest(sources) -> BuildRequest:
+            return BuildRequest(
+                id=1,
+                bsid=1,
+                buildername=self.builder.name,
+                builderid=self.builder.builderid,
+                priority=0,
+                submitted_at=0,
+                master=self.builder.master,
+                waited_for=True,
+                reason=None,
+                properties=Properties(),
+                sources=sources,
+            )
+
+        first_request = _buildrequest({
+            self.source_by_me.codebase: self.source_by_me,
+            self.source_by_him.codebase: self.source_by_him,
+        })
+        second_request = _buildrequest({self.source_by_other.codebase: self.source_by_other})
+
+        build = Build([first_request, second_request], cast("Builder", self.builder))
+        files = build.allFiles()
+        files.sort()
+        self.assertEqual(files, ["a/1", "a/2", "b/1", "b/2", "b/3"])
