@@ -500,8 +500,8 @@ class TestEC2LatentWorker(unittest.TestCase):
             security_name='security_name',
             ami=amis[0].id,
             spot_instance=True,
-            max_spot_price=0.5, 
-            price_multiplier=None # Skipping _bid_price_from_spot_price_history
+            max_spot_price=0.5,
+            price_multiplier=None,  # Skipping _bid_price_from_spot_price_history
         )
         bs._poll_resolution = 0
 
@@ -527,8 +527,8 @@ class TestEC2LatentWorker(unittest.TestCase):
             security_name='security_name',
             ami=amis[0].id,
             spot_instance=True,
-            max_spot_price=0.5, 
-            price_multiplier=None # Skipping _bid_price_from_spot_price_history
+            max_spot_price=0.5,
+            price_multiplier=None,  # Skipping _bid_price_from_spot_price_history
         )
         bs._poll_resolution = 0
 
@@ -554,13 +554,15 @@ class TestEC2LatentWorker(unittest.TestCase):
             security_name='security_name',
             ami=amis[0].id,
             spot_instance=True,
-            max_spot_price=0.5, 
-            price_multiplier=None # Skipping _bid_price_from_spot_price_history
+            max_spot_price=0.5,
+            price_multiplier=None,  # Skipping _bid_price_from_spot_price_history
         )
         bs._poll_resolution = 1
         bs._max_runtime = 2
 
-        self._patch_moto_describe_spot_instance_requests(c, r, bs, target_status='pending-fulfillment')
+        self._patch_moto_describe_spot_instance_requests(
+            c, r, bs, target_status='pending-fulfillment'
+        )
         self.patch(bs, "_cancel_spot_request", lambda x: None)
 
         with self.assertRaises(ec2.LatentWorkerFailedToSubstantiate) as exc:

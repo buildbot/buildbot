@@ -554,7 +554,9 @@ class EC2LatentWorker(AbstractLatentWorker):
                     f"after waiting {duration} seconds"
                 )
                 self._cancel_spot_request(request_id)
-                raise LatentWorkerFailedToSubstantiate(request_id, "timeout-waiting-for-fulfillment")
+                raise LatentWorkerFailedToSubstantiate(
+                    request_id, "timeout-waiting-for-fulfillment"
+                )
 
             request = self._get_spot_request_status(request_id)
 
@@ -580,7 +582,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 f"{seconds} seconds"
             )
             return request, True
-        
+
         elif status == PRICE_TOO_LOW:
             log.msg(
                 f'{self.__class__.__name__} {self.workername} spot request rejected, spot '
@@ -588,7 +590,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             )
             self._cancel_spot_request(request_id)
             raise LatentWorkerFailedToSubstantiate(request_id, status)
-        
+
         else:
             log.msg(
                 f"{self.__class__.__name__} {self.workername} failed to fulfill spot request "
@@ -596,7 +598,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             )
             self._cancel_spot_request(request_id)
             raise LatentWorkerFailedToSubstantiate(request_id, status)
-               
+
     def _get_spot_request_status(self, request_id):
         try:
             response = self.ec2.meta.client.describe_spot_instance_requests(
@@ -609,6 +611,4 @@ class EC2LatentWorker(AbstractLatentWorker):
             raise
 
     def _cancel_spot_request(self, request_id):
-        self.ec2.meta.client.cancel_spot_instance_requests(
-                    SpotInstanceRequestIds=[request_id]
-        )
+        self.ec2.meta.client.cancel_spot_instance_requests(SpotInstanceRequestIds=[request_id])
