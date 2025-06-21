@@ -530,3 +530,78 @@ It produces one status update:
 ``rc``
 
     0 if the ``os.remove`` does not raise exception, otherwise the corresponding errno.
+
+Worker Lifecycle and Control Methods
+------------------------------------
+
+This section describes internal methods the master calls on the Worker
+to manage lifecycle events, concurrency, locking, and shutdown logic.
+
+These methods are part of the runtime protocol and should be
+considered when modifying the master-worker behavior.
+
+.. py:method:: updateWorker()
+
+   Called to add or remove builders after the worker has connected.
+   
+   Also called after botmaster's builders are initially set.
+   
+   @return: a Deferred that indicates when an attached worker has
+   accepted the new builders and/or released the old ones.
+
+.. py:method:: checkConfig()
+
+   @param name: botname this machine will supply when it connects
+   @param password: password this machine will supply when
+   it connects
+   @param max_builds: maximum number of simultaneous builds that will
+   be run concurrently on this worker (the
+   default is None for no limit)
+   @param properties: properties that will be applied to builds run on
+   this worker
+   @type properties: dictionary
+   @param defaultProperties: properties that will be applied to builds
+   run on this worker only if the property
+   has not been set by another source
+   @type defaultProperties: dictionary
+   @param locks: A list of locks that must be acquired before this worker
+   can be used
+   @type locks: dictionary
+   @param machine_name: The name of the machine to associate with the
+   worker.
+
+.. py:method:: updateLocks()
+
+   Convert the L{LockAccess} objects in C{self.locks} into real lock objects, while also maintaining the subscriptions to lock releases.
+
+.. py:method:: locksAvailable()
+
+   I am called to see if all the locks I depend on are available, in which I return True, otherwise I return False
+
+.. py:method:: acquireLocks()
+
+   I am called when a build is preparing to run. I try to claim all the locks that are needed for a build to happen. If I can't, then my caller should give up the build and try to get another worker to look at it.
+
+.. py:method:: releaseLocks()
+
+   I am called to release any locks after a build has finished
+
+.. py:method:: buildFinished()
+
+   This is called when a build on this worker is finished.
+
+.. py:method:: canStartBuild()
+
+   I am called when a build is requested to see if this worker
+   can start a build.  This function can be used to limit overall
+   concurrency on the worker.
+   
+   Note for subclassers: if a worker can become willing to start a build
+   without any action on that worker (for example, by a resource in use on
+   another worker becoming available), then you must arrange for
+   L{maybeStartBuildsForWorker} to be called at that time, or builds on
+   this worker will not start.
+
+.. py:method:: maybeShutdown()
+
+   Shut down this worker if it has been asked to shut down gracefully, and has no active builders.
