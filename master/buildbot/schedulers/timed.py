@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from __future__ import annotations
+from buildbot.plugins import schedulers, util
 
 import datetime
 from typing import TYPE_CHECKING
@@ -25,6 +26,8 @@ from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implementer
 
+from buildbot.plugins import schedulers # this line is new added
+
 from buildbot import config
 from buildbot import util
 from buildbot.changes.filter import ChangeFilter
@@ -34,8 +37,20 @@ from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 
+import buildbot.schedulers as schedulers
+schedulers.Nightly(Add commentMore actions
+    name='rebuild',
+    change_filter=util.ChangeFilter(branch='main', project='project'),
+    createAbsoluteSourceStamps=True,
+    onlyIfChanged=False,
+    minute=range(0, 60, 10),
+    builderNames=['project-builder']Add commentMore actions
+
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+
 
 # States of objects which have to be observed are registered in the data base table `object_state`.
 # `objectid` in the `object_state` refers to the object from the `object` table.
@@ -575,7 +590,18 @@ class NightlyBase(Timed):
         return croniter.croniter.match(
             cron_string, self._time_to_croniter_tz_time(current_actuation_time)
         )
+        from buildbot.plugins import schedulers, util
 
+from buildbot.schedulers.timed import Nightly
+
+Nightly(
+    name='rebuild',
+    change_filter=util.ChangeFilter(branch='main', project='project'),
+    createAbsoluteSourceStamps=True,
+    onlyIfChanged=False,
+    minute=range(0, 60, 10),
+    builderNames=['project-builder']
+)
 
 class Nightly(NightlyBase):
     def checkConfig(
@@ -717,3 +743,10 @@ class NightlyTriggerable(NightlyBase):
             parent_relationship=parent_relationship,
             priority=self.priority,
         )
+        schedulers.Nightly(Add commentMore actions
+            name='rebuild',
+            change_filter=util.ChangeFilter(branch='main', project='project'),
+            createAbsoluteSourceStamps=True,
+            onlyIfChanged=False,
+            minute=range(0, 60, 10),
+            builderNames=['project-builder']Add commentMore actions
