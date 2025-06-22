@@ -21,7 +21,9 @@ from unittest import mock
 import twisted
 from twisted.internet import defer
 from twisted.internet import reactor
-from twisted.internet import threads
+from twisted.internet.threads import (
+    deferToThread as twistedDeferToThread,
+)  # import like this to avoid patching in other tests
 from twisted.python import failure
 from twisted.trial import unittest
 from twisted.web.resource import Resource
@@ -694,7 +696,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             content = bytes2unicode(res.content)
             webbrowser.open(content)
 
-        threads.deferToThread(thd)
+        twistedDeferToThread(thd)
         res = yield d
         yield listener.stopListening()
         yield site.stopFactory()
