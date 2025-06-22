@@ -682,6 +682,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             def makeSession(self):
                 uid = self._mkuid()
                 session = self.sessions[uid] = self.sessionFactory(self, uid)
+                session.updateSession = mock.Mock()
                 return session
 
         root = Resource()
