@@ -675,7 +675,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
                 reactor.callLater(0, d.callback, info)
                 return (
                     b"<html><script>setTimeout(close,1000)</script><body>WORKED: "
-                    + info
+                    + str(info).encode('utf-8')
                     + b"</body></html>"
                 )
 
