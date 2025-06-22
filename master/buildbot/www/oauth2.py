@@ -145,13 +145,15 @@ class OAuth2Auth(auth.AuthBase):
         sorted_oauth_params = sorted(oauth_params.items(), key=lambda val: val[0])
         return f"{self.authUri}?{urlencode(sorted_oauth_params)}"
 
-    def createSessionFromToken(self, token: dict[str, Any]) -> requests.Session:
-        s: requests.Session = requests.Session()
+    def check_token_error(self, token: dict[str, Any]) -> None:
         error = token.get("error")
         if error:
             error_description = token.get("error_description") or error
             msg = f"OAuth2 session: creation failed: {error_description}".encode()
             raise Error(503, msg)
+
+    def createSessionFromToken(self, token: dict[str, Any]) -> requests.Session:
+        s: requests.Session = requests.Session()
         s.params = {'access_token': token['access_token']}
         s.verify = self.ssl_verify
         return s
@@ -186,6 +188,8 @@ class OAuth2Auth(auth.AuthBase):
                     content[k] = v[0]
             except TypeError:
                 content = responseContent
+
+            self.check_token_error(content)
 
             session = self.createSessionFromToken(content)
             return self.getUserInfoFromOAuthClient(session)
