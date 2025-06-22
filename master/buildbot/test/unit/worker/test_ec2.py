@@ -740,7 +740,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         regex_mock.match.assert_called_with("amazon/foo")
 
-        self.assertEqual(result[0][1], "ami-123")
+        self.assertEqual(result[0][1], "123")
 
     @mock_aws
     def test_sort_images_options_without_regex(self):
