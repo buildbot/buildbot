@@ -638,41 +638,6 @@ class TestEC2LatentWorker(unittest.TestCase):
         with self.assertRaises(ValueError):
             create_worker()
 
-    # @mock_aws
-    # def test_get_image_when_image_is_cached(self):
-    #     # Simulando um worker com uma imagem em cache
-    #     self.worker.image = "cached-image-id"
-    #     result = self.worker.get_image()
-    #     self.assertEqual(result, "cached-image-id")
-
-
-    # @mock_aws
-    # def test_get_image_when_no_image_found(self):
-    #     # Simulando a falta de imagem em cache e resposta vazia de _get_all_images
-    #     self.worker._get_all_images.return_value = []
-        
-    #     # Certificando-se de que uma exceção ValueError é lançada
-    #     with self.assertRaises(ValueError):
-    #         self.worker.get_image()
-
-
-    # @mock_aws
-    # def test_get_image_when_images_are_available(self):
-    #     # Simulando imagens disponíveis com opções de imagens ordenadas
-    #     mock_images = [MagicMock(id="ami-123"), MagicMock(id="ami-456")]
-        
-    #     # Configurando o retorno de _get_all_images
-    #     self.worker._get_all_images.return_value = mock_images
-        
-    #     # Configurando a ordenação de imagens
-    #     self.worker._sort_images_options.return_value = [(1, 2, "location1", "ami-456", mock_images[1])]
-        
-    #     result = self.worker.get_image()
-        
-    #     # Garantindo que a imagem correta seja retornada
-    #     self.assertEqual(result.id, "ami-456")
-
-
     @mock_aws
     def test_get_all_images_with_valid_ami_owners(self):
         _, r = self.botoSetup('latent_buildbot_worker')
