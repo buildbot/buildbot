@@ -160,6 +160,12 @@ class OAuth2Auth(auth.AuthBase):
 
     def get(self, session: requests.Session, path: str) -> Any:
         ret = session.get(self.resourceEndpoint + path)
+        if ret.status_code >= 400:
+            msg = f'OAuth2 session: error accessing resource {path}: {ret.status_code}'
+            extra_info = ret.headers.get('www-authenticate', None)
+            if extra_info:
+                msg += f' www-authenticate: {extra_info}'
+            raise Error(503, msg.encode('utf-8'))
         return ret.json()
 
     # based on https://github.com/maraujop/requests-oauth
