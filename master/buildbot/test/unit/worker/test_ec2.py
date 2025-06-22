@@ -208,23 +208,22 @@ class TestEC2LatentWorker(unittest.TestCase):
         with self.assertRaises(ValueError):
             create_worker()
 
-    @patch("buildbot.worker.ec2.boto3", None)
-    @patch("buildbot.worker.ec2.config")
-    def test_constructor_no_boto3(self, mock_config):
-        from buildbot.worker.ec2 import EC2LatentWorker
+    @mock_aws
+    def test_constructor_no_boto3(self):
 
-        worker = EC2LatentWorker.__new__(EC2LatentWorker)
-        worker._validate_requirements(
-            keypair_name="k",
-            security_name="s",
-            subnet_id=None,
-            spot_instance=False,
-            price_multiplier=1.2,
-            max_spot_price=1.6,
-        )
-        mock_config.error.assert_called_once_with(
-            "The python module 'boto3' is needed to use EC2LatentWorker"
-        )
+        self.patch(ec2, "boto3", None)
+
+        with self.assertRaises(ec2.config.ConfigErrors) as error:
+            ec2.EC2LatentWorker(
+                name='bot1',
+                password='secret',
+                instance_type='m5.large',
+                ami='ami-123456',
+                keypair_name='keypair',
+                security_name='security-group'
+            )
+
+        self.assertEqual(error.exception.args[0][0], "The python module 'boto3' is needed to use EC2LatentWorker")
 
     @mock_aws
     def test_constructor_fail_requirements_no_keypair(self):
@@ -329,40 +328,28 @@ class TestEC2LatentWorker(unittest.TestCase):
                 valid_ami_location_regex=invalid_regex,
             )
 
-    @patch("buildbot.worker.ec2.boto3")
-    def test_constructor_setup_ec2_invalid_region(self, mock_boto3):
-        mock_session = mock_boto3.Session.return_value
-        mock_session.get_available_regions.return_value = ['us-east-1', 'us-west-2']
-        mock_session.resource.return_value = mock_session
-        mock_session.client.return_value = mock_session
+    @mock_aws
+    def test_constructor_setup_ec2_invalid_region(self):
 
         region = 'invalid-region'
-        amis = ['ami-12345678']
 
-        with self.assertRaisesRegex(
-            ValueError, "The specified region does not exist: invalid-region"
-        ):
+        with self.assertRaises(ValueError) as error:
             ec2.EC2LatentWorker(
                 name="bot1",
                 password="sekrit",
                 instance_type="m1.large",
                 keypair_name="keypair_name",
                 security_name="security_name",
-                ami=amis[0],
+                ami='ami-123456',
                 region=region,
                 identifier="id",
                 secret_identifier="secret",
             )
 
-    @patch("buildbot.worker.ec2.boto3")
-    @patch("buildbot.worker.ec2.botocore")
-    def test_constructor_setup_ec2_default_region(self, mock_botocore, mock_boto3):
-        mock_botocore.session.get_session.return_value.get_config_variable.return_value = None
-        mock_session = mock_boto3.Session.return_value
-        mock_session.resource.return_value = mock_session
-        mock_session.client.return_value = mock_session
-        mock_session.get_available_regions.return_value = ['us-east-1']
-        mock_session.region_name = 'us-east-1'
+        self.assertEqual(error.exception.args[0], f'The specified region does not exist: {region}')
+
+    @mock_aws
+    def test_constructor_setup_ec2_default_region(self):
 
         _ = ec2.EC2LatentWorker(
             name="bot1",
@@ -376,9 +363,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             region=None,
         )
 
-        mock_boto3.Session.assert_called_with(
-            aws_access_key_id="id", aws_secret_access_key="secret", region_name="us-east-1"
-        )
+        self.assertEqual(_.session.region_name, 'us-east-1')
 
     @patch("buildbot.worker.ec2.log")
     @patch("builtins.open", new_callable=mock_open, read_data="id\nsecret\n")
