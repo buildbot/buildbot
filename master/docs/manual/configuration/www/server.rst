@@ -4,10 +4,6 @@
 Web Server
 ==========
 
-.. note::
-
-   As of Buildbot 0.9.0, the built-in web server replaces the old ``WebStatus`` plugin.
-
 Buildbot contains a built-in web server.
 This server is configured with the ``www`` configuration key, which specifies a dictionary with the following keys:
 
