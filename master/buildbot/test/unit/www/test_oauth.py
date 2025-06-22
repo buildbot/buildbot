@@ -36,7 +36,6 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.site import SiteWithClose
-from buildbot.util import bytes2unicode
 
 try:
     import requests
@@ -694,9 +693,9 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         listener = reactor.listenTCP(5000, site)
 
         def thd():
-            res = requests.get('http://localhost:5000/auth/login', timeout=30)
-            content = bytes2unicode(res.content)
-            webbrowser.open(content)
+            self.assertTrue(
+                webbrowser.open('http://localhost:5000/auth/login'), "Could not open web browser"
+            )
 
         twistedDeferToThread(thd)
         res = yield d
