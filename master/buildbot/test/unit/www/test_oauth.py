@@ -15,10 +15,12 @@
 
 import json
 import os
+import warnings
 import webbrowser
 from unittest import mock
 
 import twisted
+import urllib3
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.threads import (
@@ -621,6 +623,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
 
 class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     authClass = "GitHubAuth"
+    ssl_verify = True
 
     def _instantiateAuth(self, cls, config):
         return cls(config["CLIENTID"], config["CLIENTSECRET"])
@@ -698,8 +701,11 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
                 webbrowser.open('http://localhost:5000/auth/login'), "Could not open web browser"
             )
 
-        twistedDeferToThread(thd)
-        res = yield d
+        with warnings.catch_warnings():
+            if not self.ssl_verify:
+                warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
+            twistedDeferToThread(thd)
+            res = yield d
         yield listener.stopListening()
         yield site.stopFactory()
         yield site.close_connections()
