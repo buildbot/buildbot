@@ -197,6 +197,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 # mimic this here in boto3
                 region = botocore.session.get_session().get_config_variable('region')
                 if region is None:
+                    log.msg("No AWS region specified, defaulting to 'us-east-1'")
                     region = 'us-east-1'
                 self.session = boto3.Session(
                     aws_access_key_id=identifier,
