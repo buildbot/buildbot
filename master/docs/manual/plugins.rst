@@ -39,7 +39,7 @@ Available ``kind``\s are:
     utility classes.
     For example, :doc:`BuilderConfig <configuration/builders>`, :doc:`configuration/buildfactories`, :ref:`ChangeFilter <ChangeFilter>` and :doc:`Locks <configuration/interlocks>` are accessible through ``util``.
 
-Web interface plugins are not used directly: as described in :doc:`web server configuration <configuration/www>` section, they are listed in the corresponding section of the web server configuration dictionary.
+Web interface plugins are not used directly: as described in :doc:`web server configuration <configuration/www/index>` section, they are listed in the corresponding section of the web server configuration dictionary.
 
 .. note::
 
