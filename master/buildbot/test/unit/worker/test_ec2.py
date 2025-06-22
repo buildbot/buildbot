@@ -773,6 +773,34 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         self.assertEqual(result, [mocked_image])
 
+    @mock_aws
+    def test_sort_images_options_without_regex(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = list(r.images.all())[0]
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.image_location = "amazon/foo"
+        mocked_image.id = "ami-123"
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami="ami-123",
+        )
+
+        worker.valid_ami_location_regex = None
+
+        sorted_images = worker._sort_images_options([mocked_image])
+
+        self.assertEqual(sorted_images[0][1], "ami-123")
+
+
 class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
     ec2_connection = None
 
