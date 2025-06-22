@@ -11,7 +11,7 @@ Testing Utilities
     reactor
     steps
 
-This section outlives various utilities that are useful when testing configuration written for Buildbot.
+This section lists various utilities that are useful when testing configuration written for Buildbot.
 
 .. note::
     At this moment the APIs outlined here are experimental and subject to change.
