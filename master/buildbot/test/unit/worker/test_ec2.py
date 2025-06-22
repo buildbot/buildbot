@@ -207,11 +207,12 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             create_worker()
-    
+
     @patch("buildbot.worker.ec2.boto3", None)
     @patch("buildbot.worker.ec2.config")
     def test_constructor_no_boto3(self, mock_config):
         from buildbot.worker.ec2 import EC2LatentWorker
+
         worker = EC2LatentWorker.__new__(EC2LatentWorker)
         worker._validate_requirements(
             keypair_name="k",
@@ -221,17 +222,21 @@ class TestEC2LatentWorker(unittest.TestCase):
             price_multiplier=1.2,
             max_spot_price=1.6,
         )
-        mock_config.error.assert_called_once_with("The python module 'boto3' is needed to use EC2LatentWorker")
+        mock_config.error.assert_called_once_with(
+            "The python module 'boto3' is needed to use EC2LatentWorker"
+        )
 
     @mock_aws
     def test_constructor_fail_requirements_no_keypair(self):
         amis = list(boto3.resource('ec2').images.all())
         with self.assertRaises(Exception):
             ec2.EC2LatentWorker(
-                'bot1', 'sekrit', 'm1.large',
+                'bot1',
+                'sekrit',
+                'm1.large',
                 security_name='security_name',
                 ami=amis[0].id,
-                keypair_name=None
+                keypair_name=None,
             )
 
     @mock_aws
@@ -239,7 +244,9 @@ class TestEC2LatentWorker(unittest.TestCase):
         amis = list(boto3.resource('ec2').images.all())
         with self.assertRaises(Exception):
             ec2.EC2LatentWorker(
-                'bot1', 'sekrit', 'm1.large',
+                'bot1',
+                'sekrit',
+                'm1.large',
                 keypair_name='keypair_name',
                 security_name=None,
                 subnet_id=None,
@@ -251,7 +258,9 @@ class TestEC2LatentWorker(unittest.TestCase):
         amis = list(boto3.resource('ec2').images.all())
         with self.assertRaises(ValueError):
             ec2.EC2LatentWorker(
-                'bot1', 'sekrit', 'm1.large',
+                'bot1',
+                'sekrit',
+                'm1.large',
                 keypair_name='keypair_name',
                 security_name='security_name',
                 ami=amis[0].id,
@@ -281,7 +290,9 @@ class TestEC2LatentWorker(unittest.TestCase):
     def test_constructor_ami_params_invalid(self):
         with self.assertRaises(ValueError):
             ec2.EC2LatentWorker(
-                'bot1', 'sekrit', 'm1.large',
+                'bot1',
+                'sekrit',
+                'm1.large',
                 keypair_name='keypair_name',
                 security_name='security_name',
                 ami=None,
@@ -293,7 +304,9 @@ class TestEC2LatentWorker(unittest.TestCase):
     def test_constructor_ami_invalid_owner_type(self):
         with self.assertRaises(ValueError):
             ec2.EC2LatentWorker(
-                'bot1', 'sekrit', 'm1.large',
+                'bot1',
+                'sekrit',
+                'm1.large',
                 keypair_name='keypair_name',
                 security_name='security_name',
                 ami=None,
@@ -306,7 +319,9 @@ class TestEC2LatentWorker(unittest.TestCase):
         invalid_regex = 468
         with self.assertRaises(ValueError):
             ec2.EC2LatentWorker(
-                'bot1', 'sekrit', 'm1.large',
+                'bot1',
+                'sekrit',
+                'm1.large',
                 keypair_name='keypair_name',
                 security_name='security_name',
                 ami=None,
@@ -324,7 +339,9 @@ class TestEC2LatentWorker(unittest.TestCase):
         region = 'invalid-region'
         amis = ['ami-12345678']
 
-        with self.assertRaisesRegex(ValueError, "The specified region does not exist: invalid-region"):
+        with self.assertRaisesRegex(
+            ValueError, "The specified region does not exist: invalid-region"
+        ):
             ec2.EC2LatentWorker(
                 name="bot1",
                 password="sekrit",
@@ -334,7 +351,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                 ami=amis[0],
                 region=region,
                 identifier="id",
-                secret_identifier="secret"
+                secret_identifier="secret",
             )
 
     @patch("buildbot.worker.ec2.boto3")
@@ -360,9 +377,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         )
 
         mock_boto3.Session.assert_called_with(
-            aws_access_key_id="id",
-            aws_secret_access_key="secret",
-            region_name="us-east-1"
+            aws_access_key_id="id", aws_secret_access_key="secret", region_name="us-east-1"
         )
 
     @patch("buildbot.worker.ec2.log")
@@ -436,7 +451,9 @@ class TestEC2LatentWorker(unittest.TestCase):
         mock_session.region_name = 'us-east-1'
         mock_session.meta.client.describe_addresses.return_value = {'Addresses': []}
 
-        with unittest.TestCase().assertRaisesRegex(ValueError, "Could not find EIP for IP: 1.2.3.4"):
+        with unittest.TestCase().assertRaisesRegex(
+            ValueError, "Could not find EIP for IP: 1.2.3.4"
+        ):
             ec2.EC2LatentWorker(
                 name="bot1",
                 password="sekrit",
@@ -447,9 +464,9 @@ class TestEC2LatentWorker(unittest.TestCase):
                 identifier="id",
                 secret_identifier="secret",
                 region="us-east-1",
-                elastic_ip="1.2.3.4"
+                elastic_ip="1.2.3.4",
             )
-    
+
     @mock_aws
     def test_start_vpc_instance(self):
         _, r = self.botoSetup()

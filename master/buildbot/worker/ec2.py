@@ -83,11 +83,11 @@ class EC2LatentWorker(AbstractLatentWorker):
         **kwargs,
     ):
         self._validate_requirements(
-            keypair_name, 
-            security_name, 
-            subnet_id, 
-            spot_instance, 
-            price_multiplier, 
+            keypair_name,
+            security_name,
+            subnet_id,
+            spot_instance,
+            price_multiplier,
             max_spot_price,
         )
         self._initialize_defaults(volumes, tags)
@@ -125,7 +125,15 @@ class EC2LatentWorker(AbstractLatentWorker):
             self.create_block_device_mapping(block_device_map) if block_device_map else None
         )
 
-    def _validate_requirements(self, keypair_name, security_name, subnet_id, spot_instance, price_multiplier, max_spot_price):
+    def _validate_requirements(
+        self,
+        keypair_name,
+        security_name,
+        subnet_id,
+        spot_instance,
+        price_multiplier,
+        max_spot_price,
+    ):
         if not boto3:
             config.error("The python module 'boto3' is needed to use EC2LatentWorker")
         if keypair_name is None:
@@ -134,7 +142,8 @@ class EC2LatentWorker(AbstractLatentWorker):
             config.error("EC2LatentWorker: 'security_name' parameter must be specified")
         if security_name and subnet_id:
             raise ValueError(
-                'security_name (EC2 classic) not supported in a VPC; use security_group_ids')
+                'security_name (EC2 classic) not supported in a VPC; use security_group_ids'
+            )
         if (spot_instance) and (price_multiplier is None) and (max_spot_price is None):
             raise ValueError(
                 'You must provide either one, or both, of price_multiplier or max_spot_price'
@@ -147,9 +156,12 @@ class EC2LatentWorker(AbstractLatentWorker):
             tags = {}
         self.volumes = volumes
         self.tags = tags
-            
+
     def _validate_and_process_ami_filters(self, ami, valid_ami_owners, valid_ami_location_regex):
-        if not ((ami is not None) ^ (valid_ami_owners is not None or valid_ami_location_regex is not None)):
+        if not (
+            (ami is not None)
+            ^ (valid_ami_owners is not None or valid_ami_location_regex is not None)
+        ):
             raise ValueError(
                 'You must provide either a specific ami, or one or both of '
                 'valid_ami_location_regex and valid_ami_owners'
@@ -170,17 +182,17 @@ class EC2LatentWorker(AbstractLatentWorker):
             # pre-compile the regex
             valid_ami_location_regex = re.compile(valid_ami_location_regex)
         self.valid_ami_owners = [str(o) for o in valid_ami_owners] if valid_ami_owners else None
-        self.valid_ami_location_regex = valid_ami_location_regex  
-        
+        self.valid_ami_location_regex = valid_ami_location_regex
+
     def _build_placement(self, region, placement):
         self.placement = f"{region}{placement}" if region and placement else None
-    
-    def _setup_ec2_connection(self, session, region, identifier, secret_identifier): 
+
+    def _setup_ec2_connection(self, session, region, identifier, secret_identifier):
         # Make the EC2 connection.
         self.session = session
         if self.session is None:
             if region is not None:
-                avalaible_regions=boto3.Session(
+                avalaible_regions = boto3.Session(
                     aws_access_key_id=identifier, aws_secret_access_key=secret_identifier
                 ).get_available_regions('ec2')
                 if region in avalaible_regions:
@@ -207,7 +219,7 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         self.ec2 = self.session.resource('ec2')
         self.ec2_client = self.session.client('ec2')
-    
+
     def _setup_aws_id(self, identifier, secret_identifier, aws_id_file_path):
         if identifier is None:
             assert secret_identifier is None, (
@@ -299,7 +311,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             allocation_id = addresses[0]['AllocationId']
             elastic_ip = self.ec2.VpcAddress(allocation_id)
         self.elastic_ip = elastic_ip
-    
+
     def create_block_device_mapping(self, mapping_definitions):
         if not isinstance(mapping_definitions, list):
             config.error("EC2LatentWorker: 'block_device_map' must be a list")
