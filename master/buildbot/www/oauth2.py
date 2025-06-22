@@ -458,3 +458,39 @@ class BitbucketAuth(OAuth2Auth):
             "username": user['username'],
             "groups": [org['slug'] for org in orgs["values"]],
         }
+
+
+class KeyCloakAuth(OAuth2Auth):
+    name = "KeyCloak"
+    faIcon = "fa-key"
+
+    authUriAdditionalParams = {"scope": "openid"}
+
+    def __init__(
+        self, instance_uri: str, realm: str, client_id: str, client_secret: str, **kwargs: Any
+    ) -> None:
+        uri = instance_uri.rstrip("/")
+        self.authUri = f"{uri}/realms/{realm}/protocol/openid-connect/auth"
+        self.tokenUri = f"{uri}/realms/{realm}/protocol/openid-connect/token"
+        self.resourceEndpoint = f"{uri}/realms/{realm}"
+        super().__init__(client_id, client_secret, **kwargs)
+
+    def createSessionFromToken(self, token: dict[str, Any]) -> requests.Session:
+        s = requests.Session()
+        s.headers = {
+            'Authorization': 'Bearer ' + token['access_token'],
+            'User-Agent': f'buildbot/{buildbot.version}',
+        }
+        s.verify = self.ssl_verify
+        return s
+
+    def getUserInfoFromOAuthClient(self, c: requests.Session) -> dict[str, Any]:
+        user = self.get(c, "/protocol/openid-connect/userinfo")
+        log.info('qqq {user}', user=user)
+        return {
+            "full_name": user.get("name", ""),
+            "username": user.get("preferred_username", ""),
+            "email": user.get("email", ""),
+            "avatar_url": user.get("picture", ""),
+            "groups": list(user.get("groups", [])),
+        }

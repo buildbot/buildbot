@@ -1,0 +1,20 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2
+    environment:
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+      - KC_DB=dev-file
+      - KC_DB_USERNAME=user
+      - KC_DB_PASSWORD=pass
+      - KC_HOSTNAME=localhost
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "127.0.0.1:8089:8443"
+      - "127.0.0.1:9000:9000"
+    volumes:
+      - ./data:/opt/keycloak/data
+      - ./key.pem:/key.pem
+      - ./cert.pem:/cert.pem
+    command: start --https-port=8443 --https-certificate-file=/cert.pem --https-certificate-key-file=/key.pem

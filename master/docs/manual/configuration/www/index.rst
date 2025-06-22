@@ -18,6 +18,7 @@ Web server configuration
     auth/gitlab_auth
     auth/google_auth
     auth/htpasswd_auth
+    auth/keycloak_auth
     auth/remote_user_auth
     auth/user_password_auth
 
@@ -84,6 +85,7 @@ The available classes are described here:
 * :ref:`WWW-Auth-GoogleAuth`
 * :ref:`WWW-Auth-GitHubAuth`
 * :ref:`WWW-Auth-GitLabAuth`
+* :ref:`WWW-Auth-KeyCloakAuth`
 * :ref:`WWW-Auth-RemoteUserAuth`
 
 .. _User-Information:

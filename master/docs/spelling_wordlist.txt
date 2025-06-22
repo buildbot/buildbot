@@ -970,6 +970,7 @@ userdicts
 useRevisions
 userid
 userids
+userinfo
 userInfoProvider
 userlist
 UserModel

@@ -598,6 +598,73 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
 
+class TestKeyCloakAuth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
+    def setUp(self):
+        self.setup_test_reactor()
+        if requests is None:
+            raise unittest.SkipTest("Need to install requests to test oauth2")
+
+        self.patch(requests, 'request', mock.Mock(spec=requests.request))
+        self.patch(requests, 'post', mock.Mock(spec=requests.post))
+        self.patch(requests, 'get', mock.Mock(spec=requests.get))
+
+    @defer.inlineCallbacks
+    def setup_keycloak_auth(self):
+        auth = oauth2.KeyCloakAuth("instance_uri", "realm", "client_id", "client_secret")
+        master = yield self.make_master(url='http://localhost:5000/', auth=auth)
+        auth.reconfigAuth(master, master.config)
+        return auth
+
+    @defer.inlineCallbacks
+    def test_get_key_cloak_verify_code(self):
+        auth = yield self.setup_keycloak_auth()
+
+        res = yield auth.getLoginURL('http://redir')
+        exp = (
+            "instance_uri/realms/realm/protocol/openid-connect/auth?client_id=client_id&"
+            "redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fauth%2Flogin&response_type=code&"
+            "scope=openid&"
+            "state=redirect%3Dhttp%253A%252F%252Fredir"
+        )
+        self.assertEqual(res, exp)
+        res = yield auth.getLoginURL(None)
+        exp = (
+            "instance_uri/realms/realm/protocol/openid-connect/auth?client_id=client_id&"
+            "redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fauth%2Flogin&response_type=code&"
+            "scope=openid"
+        )
+        self.assertEqual(res, exp)
+
+    @defer.inlineCallbacks
+    def test_key_cloak_verify_code(self):
+        auth = yield self.setup_keycloak_auth()
+
+        requests.get.side_effect = []
+        requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
+        auth.get = mock.Mock(
+            side_effect=[
+                {
+                    "name": 'foo bar',
+                    "preferred_username": 'bar',
+                    "email": 'bar@foo',
+                    "picture": 'http://pic',
+                    "groups": ['group1', 'group2'],
+                }
+            ]
+        )
+        res = yield auth.verifyCode("code!")
+        self.assertEqual(
+            {
+                'avatar_url': 'http://pic',
+                'email': 'bar@foo',
+                'full_name': 'foo bar',
+                'username': 'bar',
+                'groups': ["group1", "group2"],
+            },
+            res,
+        )
+
+
 # unit tests are not very useful to write new oauth support
 # so following is an e2e test, which opens a browser, and do the oauth
 # negotiation. The browser window close in the end of the test
@@ -615,6 +682,12 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
 #  }
 #  "GitLabAuth": {
 #     "INSTANCEURI": "XX",
+#     "CLIENTID": "XX",
+#     "CLIENTSECRET": "XX"
+#  }
+#  "KeyCloakAuth": {
+#     "INSTANCEURI": "XX",
+#     "REALM": "XX",
 #     "CLIENTID": "XX",
 #     "CLIENTSECRET": "XX"
 #  }
@@ -725,3 +798,17 @@ class OAuth2AuthGitLabE2E(OAuth2AuthGitHubE2E):
 
     def _instantiateAuth(self, cls, config):
         return cls(config["INSTANCEURI"], config["CLIENTID"], config["CLIENTSECRET"])
+
+
+class OAuth2AuthKeyCloakE2E(OAuth2AuthGitHubE2E):
+    authClass = "KeyCloakAuth"
+    ssl_verify = False
+
+    def _instantiateAuth(self, cls, config):
+        return cls(
+            config["INSTANCEURI"],
+            config["REALM"],
+            config["CLIENTID"],
+            config["CLIENTSECRET"],
+            ssl_verify=False,  # self-hosted instance uses self-signed certificate
+        )
