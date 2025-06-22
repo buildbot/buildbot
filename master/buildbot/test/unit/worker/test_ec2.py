@@ -708,73 +708,40 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].id, image.id)
 
-    # @mock_aws
-    # def test_get_all_images_with_invalid_ami_owners(self):
-    #     # Simulando imagens com owners inválidos
-    #     mock_images = [MagicMock(id="ami-123", state="available", owner_id="5678")]
-        
-    #     # Definindo owners válidos
-    #     self.worker.valid_ami_owners = ["1234"]
-        
-    #     # Configurando o retorno de ec2.images.all
-    #     self.worker.ec2.images.all.return_value = mock_images
-        
-    #     # Chamando _get_all_images
-    #     result = self.worker._get_all_images()
-        
-    #     # Verificando que nenhuma imagem foi retornada, pois owner_id não é válido
-    #     self.assertEqual(result, [])
+    @mock_aws
+    def test_get_all_images_with_invalid_ami_owners(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
 
-    # def test_extract_sort_with_valid_data(self):
-    #     # Simulando uma correspondência que pode ser convertida para inteiro
-    #     match = MagicMock()
-    #     match.group.return_value = "123"
-    #     level = 0
-    #     result = self.worker._extract_sort(level, match)
-        
-    #     # Garantindo que o retorno seja o esperado
-    #     self.assertEqual(result, ("123", 123, 1))
+        image = list(r.images.all())[0]
 
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.owner_id = "5678"
+        mocked_image.state = 'available'
+        mocked_image.id = image.id
 
-    # def test_extract_sort_with_invalid_data(self):
-    #     # Simulando uma string inválida que não pode ser convertida para inteiro
-    #     match = MagicMock()
-    #     match.group.return_value = "abc"
-    #     level = 0
-    #     result = self.worker._extract_sort(level, match)
-        
-    #     # Garantindo que o valor seja retornado como string e None para a conversão
-    #     self.assertEqual(result, ("abc", None, 1))
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami=image.id,
+        )
+        worker.valid_ami_owners = ["1234"]
 
+        mocked_image_collection = MagicMock()
+        mocked_image_collection.filter.return_value = []
 
-    # @mock_aws
-    # def test_sort_images_options_with_valid_regex(self):
-    #     # Simulando imagens com localização válida
-    #     mock_images = [MagicMock(id="ami-123", image_location="amazon/foo")]
-        
-    #     # Simulando o regex válido
-    #     self.worker.valid_ami_location_regex = MagicMock()
-    #     self.worker.valid_ami_location_regex.match.return_value = True
-        
-    #     # Chamando _sort_images_options
-    #     self.worker._sort_images_options(mock_images)
-        
-    #     # Verificando se o regex foi chamado
-    #     self.worker.valid_ami_location_regex.match.assert_called()
+        ec2_mock = MagicMock()
+        ec2_mock.images.all.return_value = mocked_image_collection
+        worker.ec2 = ec2_mock
 
-    # @mock_aws
-    # def test_sort_images_options_without_regex(self):
-    #     # Simulando imagens com localização válida
-    #     mock_images = [MagicMock(id="ami-123", image_location="amazon/foo")]
-        
-    #     # Garantindo que o regex não é utilizado
-    #     self.worker.valid_ami_location_regex = None
-        
-    #     # Chamando _sort_images_options
-    #     sorted_images = self.worker._sort_images_options(mock_images)
-        
-    #     # Garantindo que a imagem correta foi retornada
-    #     self.assertEqual(sorted_images[0][1], "ami-123")
+        result = worker._get_all_images()
+
+        self.assertEqual(result, [])
+
 
 class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
     ec2_connection = None
