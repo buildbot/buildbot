@@ -313,7 +313,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         images = self.ec2.images.all()
         if self.valid_ami_owners:
             images = images.filter(Owners=self.valid_ami_owners)
-        return [img for img in images if img.state == 'available']
+        return [img for img in images if img and img.state == 'available']
 
     def _extract_sort(self, level, match):
         # Gather sorting information
@@ -348,9 +348,10 @@ class EC2LatentWorker(AbstractLatentWorker):
             if level:
                 log.msg(f'sorting images at level {level}')
                 options = [candidate[level:] for candidate in options]
+            options.sort()
         else:
-            options = [(image.image_location, image.id, image) for image in images]
-        return options.sort()
+            options = [(image.image_location, image.id, image) for image in images if image]
+        return options
 
     def _dns(self):
         if self.instance is None:
