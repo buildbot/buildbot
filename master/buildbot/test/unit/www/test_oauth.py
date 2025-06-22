@@ -640,7 +640,9 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
         with open(os.environ['OAUTHCONF'], encoding='utf-8') as f:
             jsonData = f.read()
-        config = json.loads(jsonData)[self.authClass]
+        config = json.loads(jsonData).get(self.authClass, None)
+        if config is None:
+            raise unittest.SkipTest(f"{self.authClass} is not in OAUTHCONF file")
         from buildbot.www import oauth2
 
         self.auth = self._instantiateAuth(getattr(oauth2, self.authClass), config)
