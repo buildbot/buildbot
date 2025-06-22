@@ -715,7 +715,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         mocked_image = MagicMock(wraps=image)
         mocked_image.image_location = "amazon/foo"
-        mocked_image.id = image.id
+        mocked_image.id = "ami-123"
 
         worker = ec2.EC2LatentWorker(
             'bot1',
@@ -725,18 +725,22 @@ class TestEC2LatentWorker(unittest.TestCase):
             secret_identifier='privatekey',
             keypair_name="latent_buildbot_worker",
             security_name='latent_buildbot_worker',
-            ami=image.id,
+            ami="ami-123",
         )
 
+        match_mock = MagicMock()
+        match_mock.group.return_value = "123"
+
         regex_mock = MagicMock()
-        regex_mock.match.return_value = True
+        regex_mock.match.return_value = match_mock
+
         worker.valid_ami_location_regex = regex_mock
 
         result = worker._sort_images_options([mocked_image])
 
         regex_mock.match.assert_called_with("amazon/foo")
 
-        self.assertEqual(result, [mocked_image])
+        self.assertEqual(result[0][1], "ami-123")
 
     @mock_aws
     def test_sort_images_options_without_regex(self):
