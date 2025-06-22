@@ -623,6 +623,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
 
 class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     authClass = "GitHubAuth"
+    timeout = 60
     ssl_verify = True
 
     def _instantiateAuth(self, cls, config):
