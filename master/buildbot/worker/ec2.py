@@ -83,28 +83,82 @@ class EC2LatentWorker(AbstractLatentWorker):
         session=None,
         **kwargs,
     ):
-        if not boto3:
-            config.error("The python module 'boto3' is needed to use a EC2LatentWorker")
-
-        if keypair_name is None:
-            config.error("EC2LatentWorker: 'keypair_name' parameter must be specified")
-
-        if security_name is None and not subnet_id:
-            config.error("EC2LatentWorker: 'security_name' parameter must be specified")
-
-        if volumes is None:
-            volumes = []
-
-        if tags is None:
-            tags = {}
+        self._validate_requirements(
+            keypair_name,
+            security_name,
+            subnet_id,
+            spot_instance,
+            price_multiplier,
+            max_spot_price,
+        )
+        self._initialize_defaults(volumes, tags)
 
         super().__init__(name, password, **kwargs)
 
+        self._validate_and_process_ami_filters(ami, valid_ami_owners, valid_ami_location_regex)
+        self._build_placement(region, placement)
+        id, secret = self._setup_aws_id(identifier, secret_identifier, aws_id_file_path)
+        self._setup_ec2_connection(
+            session,
+            region,
+            id,
+            secret,
+        )
+
+        self.keypair_name = keypair_name
+        self._ensure_keypair(keypair_name)
+
+        self._ensure_security_group(security_name)
+        self._define_image(elastic_ip)
+
+        self.instance_type = instance_type
+        self.security_name = security_name
+        self.user_data = user_data
+        self.spot_instance = spot_instance
+        self.max_spot_price = max_spot_price
+        self.price_multiplier = price_multiplier
+        self.product_description = product_description
+        self.subnet_id = subnet_id
+        self.security_group_ids = security_group_ids
+        self.classic_security_groups = [self.security_name] if self.security_name else None
+        self.instance_profile_name = instance_profile_name
+        self.block_device_map = (
+            self.create_block_device_mapping(block_device_map) if block_device_map else None
+        )
+
+    def _validate_requirements(
+        self,
+        keypair_name,
+        security_name,
+        subnet_id,
+        spot_instance,
+        price_multiplier,
+        max_spot_price,
+    ):
+        if not boto3:
+            config.error("The python module 'boto3' is needed to use EC2LatentWorker")
+        if keypair_name is None:
+            config.error("EC2LatentWorker: 'keypair_name' parameter must be specified")
+        if security_name is None and not subnet_id:
+            config.error("EC2LatentWorker: 'security_name' parameter must be specified")
         if security_name and subnet_id:
             raise ValueError(
-                'security_name (EC2 classic security groups) is not supported '
-                'in a VPC.  Use security_group_ids instead.'
+                'security_name (EC2 classic) not supported in a VPC; use security_group_ids'
             )
+        if (spot_instance) and (price_multiplier is None) and (max_spot_price is None):
+            raise ValueError(
+                'You must provide either one, or both, of price_multiplier or max_spot_price'
+            )
+
+    def _initialize_defaults(self, volumes, tags):
+        if volumes is None:
+            volumes = []
+        if tags is None:
+            tags = {}
+        self.volumes = volumes
+        self.tags = tags
+
+    def _validate_and_process_ami_filters(self, ami, valid_ami_owners, valid_ami_location_regex):
         if not (
             (ami is not None)
             ^ (valid_ami_owners is not None or valid_ami_location_regex is not None)
@@ -128,28 +182,46 @@ class EC2LatentWorker(AbstractLatentWorker):
                 raise ValueError('valid_ami_location_regex should be a string')
             # pre-compile the regex
             valid_ami_location_regex = re.compile(valid_ami_location_regex)
-        if spot_instance and price_multiplier is None and max_spot_price is None:
-            raise ValueError(
-                'You must provide either one, or both, of price_multiplier or max_spot_price'
-            )
-        self.valid_ami_owners = None
-        if valid_ami_owners:
-            self.valid_ami_owners = [str(o) for o in valid_ami_owners]
+        self.valid_ami_owners = [str(o) for o in valid_ami_owners] if valid_ami_owners else None
         self.valid_ami_location_regex = valid_ami_location_regex
-        self.instance_type = instance_type
-        self.keypair_name = keypair_name
-        self.security_name = security_name
-        self.user_data = user_data
-        self.spot_instance = spot_instance
-        self.max_spot_price = max_spot_price
-        self.volumes = volumes
-        self.price_multiplier = price_multiplier
-        self.product_description = product_description
 
-        if None not in [placement, region]:
-            self.placement = f'{region}{placement}'
-        else:
-            self.placement = None
+    def _build_placement(self, region, placement):
+        self.placement = f"{region}{placement}" if region and placement else None
+
+    def _setup_ec2_connection(self, session, region, identifier, secret_identifier):
+        # Make the EC2 connection.
+        self.session = session
+        if self.session is None:
+            if region is not None:
+                avalaible_regions = boto3.Session(
+                    aws_access_key_id=identifier, aws_secret_access_key=secret_identifier
+                ).get_available_regions('ec2')
+                if region in avalaible_regions:
+                    self.session = boto3.Session(
+                        region_name=region,
+                        aws_access_key_id=identifier,
+                        aws_secret_access_key=secret_identifier,
+                    )
+                else:
+                    raise ValueError('The specified region does not exist: ' + region)
+
+            else:
+                # boto2 defaulted to us-east-1 when region was unset, we
+                # mimic this here in boto3
+                region = botocore.session.get_session().get_config_variable('region')
+                if region is None:
+                    log.msg("No AWS region specified, defaulting to 'us-east-1'")
+                    region = 'us-east-1'
+                self.session = boto3.Session(
+                    aws_access_key_id=identifier,
+                    aws_secret_access_key=secret_identifier,
+                    region_name=region,
+                )
+
+        self.ec2 = self.session.resource('ec2')
+        self.ec2_client = self.session.client('ec2')
+
+    def _setup_aws_id(self, identifier, secret_identifier, aws_id_file_path):
         if identifier is None:
             assert secret_identifier is None, (
                 'supply both or neither of identifier, secret_identifier'
@@ -172,45 +244,9 @@ class EC2LatentWorker(AbstractLatentWorker):
             assert secret_identifier is not None, (
                 'supply both or neither of identifier, secret_identifier'
             )
+        return identifier, secret_identifier
 
-        region_found = None
-
-        # Make the EC2 connection.
-        self.session = session
-        if self.session is None:
-            if region is not None:
-                for r in boto3.Session(
-                    aws_access_key_id=identifier, aws_secret_access_key=secret_identifier
-                ).get_available_regions('ec2'):
-                    if r == region:
-                        region_found = r
-
-                if region_found is not None:
-                    self.session = boto3.Session(
-                        region_name=region,
-                        aws_access_key_id=identifier,
-                        aws_secret_access_key=secret_identifier,
-                    )
-                else:
-                    raise ValueError('The specified region does not exist: ' + region)
-
-            else:
-                # boto2 defaulted to us-east-1 when region was unset, we
-                # mimic this here in boto3
-                region = botocore.session.get_session().get_config_variable('region')
-                if region is None:
-                    region = 'us-east-1'
-                self.session = boto3.Session(
-                    aws_access_key_id=identifier,
-                    aws_secret_access_key=secret_identifier,
-                    region_name=region,
-                )
-
-        self.ec2 = self.session.resource('ec2')
-        self.ec2_client = self.session.client('ec2')
-
-        # Make a keypair
-        #
+    def _ensure_keypair(self, keypair_name):
         # We currently discard the keypair data because we don't need it.
         # If we do need it in the future, we will always recreate the keypairs
         # because there is no way to
@@ -237,7 +273,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             # use paramiko to use the key to connect.
             self.ec2.create_key_pair(KeyName=keypair_name)
 
-        # create security group
+    def _ensure_security_group(self, security_name):
         if security_name:
             try:
                 self.ec2_client.describe_security_groups(GroupNames=[security_name])
@@ -257,7 +293,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 else:
                     raise
 
-        # get the image
+    def _define_image(self, elastic_ip):
         if self.ami is not None:
             self.image = self.ec2.Image(self.ami)
         else:
@@ -276,14 +312,6 @@ class EC2LatentWorker(AbstractLatentWorker):
             allocation_id = addresses[0]['AllocationId']
             elastic_ip = self.ec2.VpcAddress(allocation_id)
         self.elastic_ip = elastic_ip
-        self.subnet_id = subnet_id
-        self.security_group_ids = security_group_ids
-        self.classic_security_groups = [self.security_name] if self.security_name else None
-        self.instance_profile_name = instance_profile_name
-        self.tags = tags
-        self.block_device_map = (
-            self.create_block_device_mapping(block_device_map) if block_device_map else None
-        )
 
     def create_block_device_mapping(self, mapping_definitions):
         if not isinstance(mapping_definitions, list):

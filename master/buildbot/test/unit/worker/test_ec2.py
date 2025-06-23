@@ -17,7 +17,7 @@
 import os
 
 from twisted.trial import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch, mock_open, MagicMock
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -209,6 +209,250 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             create_worker()
+
+    @mock_aws
+    def test_constructor_no_boto3(self):
+
+        self.patch(ec2, "boto3", None)
+
+        with self.assertRaises(ec2.config.ConfigErrors) as error:
+            ec2.EC2LatentWorker(
+                name='bot1',
+                password='secret',
+                instance_type='m5.large',
+                ami='ami-123456',
+                keypair_name='keypair',
+                security_name='security-group'
+            )
+
+        self.assertEqual(error.exception.args[0][0], "The python module 'boto3' is needed to use EC2LatentWorker")
+
+    @mock_aws
+    def test_constructor_fail_requirements_no_keypair(self):
+        amis = list(boto3.resource('ec2').images.all())
+        with self.assertRaises(Exception):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                security_name='security_name',
+                ami=amis[0].id,
+                keypair_name=None,
+            )
+
+    @mock_aws
+    def test_constructor_fail_requirements_no_security(self):
+        amis = list(boto3.resource('ec2').images.all())
+        with self.assertRaises(Exception):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name=None,
+                subnet_id=None,
+                ami=amis[0].id,
+            )
+
+    @mock_aws
+    def test_constructor_fail_requirements_spot_instance(self):
+        amis = list(boto3.resource('ec2').images.all())
+        with self.assertRaises(ValueError):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name='security_name',
+                ami=amis[0].id,
+                spot_instance=True,
+                price_multiplier=None,
+                max_spot_price=None,
+            )
+
+    @mock_aws
+    def test_constructor_valid_ami_owners_one_account(self):
+        _, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
+        ami_owner = int(amis[0].owner_id)
+        bs = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="keypair_name",
+            security_name='security_name',
+            valid_ami_owners=ami_owner,
+        )
+        self.assertEqual(bs.valid_ami_owners, [str(ami_owner)])
+
+    @mock_aws
+    def test_constructor_ami_params_invalid(self):
+        with self.assertRaises(ValueError):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name='security_name',
+                ami=None,
+                valid_ami_owners=None,
+                valid_ami_location_regex=None,
+            )
+
+    @mock_aws
+    def test_constructor_ami_invalid_owner_type(self):
+        with self.assertRaises(ValueError):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name='security_name',
+                ami=None,
+                valid_ami_owners=['not-an-int'],
+                valid_ami_location_regex='amazon/.*',
+            )
+
+    @mock_aws
+    def test_constructor_ami_invalid_location_type(self):
+        invalid_regex = 468
+        with self.assertRaises(ValueError):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name='security_name',
+                ami=None,
+                valid_ami_owners=[123],
+                valid_ami_location_regex=invalid_regex,
+            )
+
+    @mock_aws
+    def test_constructor_setup_ec2_invalid_region(self):
+
+        region = 'invalid-region'
+
+        with self.assertRaises(ValueError) as error:
+            ec2.EC2LatentWorker(
+                name="bot1",
+                password="sekrit",
+                instance_type="m1.large",
+                keypair_name="keypair_name",
+                security_name="security_name",
+                ami='ami-123456',
+                region=region,
+                identifier="id",
+                secret_identifier="secret",
+            )
+
+        self.assertEqual(error.exception.args[0], f'The specified region does not exist: {region}')
+
+    @mock_aws
+    def test_constructor_setup_ec2_default_region(self):
+
+        _ = ec2.EC2LatentWorker(
+            name="bot1",
+            password="sekrit",
+            instance_type="m1.large",
+            keypair_name="keypair_name",
+            security_name="security_name",
+            ami="ami-123",
+            identifier="id",
+            secret_identifier="secret",
+            region=None,
+        )
+
+        self.assertEqual(_.session.region_name, 'us-east-1')
+
+    @patch("buildbot.worker.ec2.log")
+    @patch("builtins.open", new_callable=mock_open, read_data="id\nsecret\n")
+    @patch("os.path.exists", return_value=True)
+    @patch.dict("os.environ", {"HOME": "/tmp"})
+    @patch("buildbot.worker.ec2.boto3")
+    def test_constructor_reads_aws_id_file(self, mock_boto3, mock_exists, mock_open_file, mock_log):
+        mock_session = mock_boto3.Session.return_value
+        mock_session.resource.return_value = mock_session
+        mock_session.client.return_value = mock_session
+        mock_session.get_available_regions.return_value = ['us-east-1']
+        mock_session.region_name = 'us-east-1'
+
+        _ = ec2.EC2LatentWorker(
+            name="bot1",
+            password="sekrit",
+            instance_type="m1.large",
+            keypair_name="keypair_name",
+            security_name="security_name",
+            ami="ami-123",
+            identifier=None,
+            secret_identifier=None,
+            aws_id_file_path=None,
+        )
+
+        mock_log.msg.assert_any_call('WARNING: EC2LatentWorker is using deprecated aws_id file')
+
+    @patch("buildbot.worker.ec2.log")
+    @patch("buildbot.worker.ec2.boto3")
+    def test_constructor_keypair_authfailure(self, mock_boto3, mock_log):
+        mock_session = mock_boto3.Session.return_value
+        mock_session.resource.return_value = mock_session
+        mock_session.client.return_value = mock_session
+        mock_session.get_available_regions.return_value = ['us-east-1']
+        mock_session.region_name = 'us-east-1'
+
+        error_response = {"Error": {"Code": "AuthFailure", "Message": "AuthFailure"}}
+        client_error = ClientError(error_response, "load")
+        mock_keypair = mock_session.KeyPair.return_value
+        mock_keypair.load.side_effect = client_error
+
+        with self.assertRaises(ClientError):
+            ec2.EC2LatentWorker(
+                name="bot1",
+                password="sekrit",
+                instance_type="m1.large",
+                keypair_name="keypair_name",
+                security_name="security_name",
+                ami="ami-123",
+                identifier="id",
+                secret_identifier="secret",
+                region="us-east-1",
+            )
+
+        mock_log.msg.assert_any_call(
+            'POSSIBLE CAUSES OF ERROR:\n'
+            '  Did you supply your AWS credentials?\n'
+            '  Did you sign up for EC2?\n'
+            '  Did you put a credit card number in your AWS '
+            'account?\n'
+            'Please doublecheck before reporting a problem.\n'
+        )
+
+    @patch("buildbot.worker.ec2.boto3")
+    def test_constructor_elastic_ip_not_found(self, mock_boto3):
+        mock_session = mock_boto3.Session.return_value
+        mock_session.resource.return_value = mock_session
+        mock_session.client.return_value = mock_session
+        mock_session.get_available_regions.return_value = ['us-east-1']
+        mock_session.region_name = 'us-east-1'
+        mock_session.meta.client.describe_addresses.return_value = {'Addresses': []}
+
+        with unittest.TestCase().assertRaisesRegex(
+            ValueError, "Could not find EIP for IP: 1.2.3.4"
+        ):
+            ec2.EC2LatentWorker(
+                name="bot1",
+                password="sekrit",
+                instance_type="m1.large",
+                keypair_name="keypair_name",
+                security_name="security_name",
+                ami="ami-123",
+                identifier="id",
+                secret_identifier="secret",
+                region="us-east-1",
+                elastic_ip="1.2.3.4",
+            )
 
     @mock_aws
     def test_start_vpc_instance(self):
