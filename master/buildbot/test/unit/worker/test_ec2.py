@@ -21,6 +21,7 @@ from unittest.mock import patch
 
 from twisted.trial import unittest
 
+from buildbot.config.errors import ConfigErrors
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -234,7 +235,7 @@ class TestEC2LatentWorker(unittest.TestCase):
     @mock_aws
     def test_constructor_fail_requirements_no_keypair(self):
         amis = list(boto3.resource('ec2').images.all())
-        with self.assertRaises(Exception):
+        with self.assertRaises(ConfigErrors):
             ec2.EC2LatentWorker(
                 'bot1',
                 'sekrit',
@@ -247,7 +248,7 @@ class TestEC2LatentWorker(unittest.TestCase):
     @mock_aws
     def test_constructor_fail_requirements_no_security(self):
         amis = list(boto3.resource('ec2').images.all())
-        with self.assertRaises(Exception):
+        with self.assertRaises(ConfigErrors):
             ec2.EC2LatentWorker(
                 'bot1',
                 'sekrit',
