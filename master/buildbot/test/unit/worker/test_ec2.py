@@ -17,7 +17,7 @@
 import os
 
 from twisted.trial import unittest
-
+from unittest.mock import MagicMock, patch
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -668,6 +668,137 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             create_worker()
+
+    @mock_aws
+    def test_get_all_images_with_valid_ami_owners(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = list(r.images.all())[0]
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.owner_id = "1234"
+        mocked_image.state = 'available'
+        mocked_image.id = image.id
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami=image.id,
+        )
+        worker.valid_ami_owners = ("1234",)
+
+        mocked_image_collection = MagicMock()
+        mocked_image_collection.filter.return_value = [mocked_image]
+
+        ec2_mock = MagicMock()
+        ec2_mock.images.all.return_value = mocked_image_collection
+        worker.ec2 = ec2_mock
+
+        result = worker._get_all_images()
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].id, image.id)
+
+    @mock_aws
+    def test_get_all_images_with_invalid_ami_owners(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = list(r.images.all())[0]
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.owner_id = "5678"
+        mocked_image.state = 'available'
+        mocked_image.id = image.id
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami=image.id,
+        )
+        worker.valid_ami_owners = ["1234"]
+
+        mocked_image_collection = MagicMock()
+        mocked_image_collection.filter.return_value = []
+
+        ec2_mock = MagicMock()
+        ec2_mock.images.all.return_value = mocked_image_collection
+        worker.ec2 = ec2_mock
+
+        result = worker._get_all_images()
+
+        self.assertEqual(result, [])
+
+    @mock_aws
+    def test_sort_images_options_with_valid_regex(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = list(r.images.all())[0]
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.image_location = "amazon/foo"
+        mocked_image.id = "ami-123"
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami="ami-123",
+        )
+
+        match_mock = MagicMock()
+        match_mock.group.return_value = "123"
+
+        regex_mock = MagicMock()
+        regex_mock.match.return_value = match_mock
+
+        worker.valid_ami_location_regex = regex_mock
+
+        result = worker._sort_images_options([mocked_image])
+
+        regex_mock.match.assert_called_with("amazon/foo")
+
+        self.assertEqual(result[0][1], "123")
+
+    @mock_aws
+    def test_sort_images_options_without_regex(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = list(r.images.all())[0]
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.image_location = "amazon/foo"
+        mocked_image.id = "ami-123"
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami="ami-123",
+        )
+
+        worker.valid_ami_location_regex = None
+
+        sorted_images = worker._sort_images_options([mocked_image])
+
+        self.assertEqual(sorted_images[0][1], "ami-123")
 
 
 class TestEC2LatentWorkerDefaultKeypairSecurityGroup(unittest.TestCase):
