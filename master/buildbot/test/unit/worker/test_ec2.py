@@ -212,7 +212,6 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_aws
     def test_constructor_no_boto3(self):
-
         self.patch(ec2, "boto3", None)
 
         with self.assertRaises(ec2.config.ConfigErrors) as error:
@@ -222,10 +221,12 @@ class TestEC2LatentWorker(unittest.TestCase):
                 instance_type='m5.large',
                 ami='ami-123456',
                 keypair_name='keypair',
-                security_name='security-group'
+                security_name='security-group',
             )
 
-        self.assertEqual(error.exception.args[0][0], "The python module 'boto3' is needed to use EC2LatentWorker")
+        self.assertEqual(
+            error.exception.args[0][0], "The python module 'boto3' is needed to use EC2LatentWorker"
+        )
 
     @mock_aws
     def test_constructor_fail_requirements_no_keypair(self):
@@ -332,7 +333,6 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_aws
     def test_constructor_setup_ec2_invalid_region(self):
-
         region = 'invalid-region'
 
         with self.assertRaises(ValueError) as error:
@@ -352,7 +352,6 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_aws
     def test_constructor_setup_ec2_default_region(self):
-
         _ = ec2.EC2LatentWorker(
             name="bot1",
             password="sekrit",
@@ -393,19 +392,39 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         mock_log.msg.assert_any_call('WARNING: EC2LatentWorker is using deprecated aws_id file')
 
-    @patch("buildbot.worker.ec2.log")
-    @patch("buildbot.worker.ec2.boto3")
-    def test_constructor_keypair_authfailure(self, mock_boto3, mock_log):
-        mock_session = mock_boto3.Session.return_value
-        mock_session.resource.return_value = mock_session
-        mock_session.client.return_value = mock_session
-        mock_session.get_available_regions.return_value = ['us-east-1']
-        mock_session.region_name = 'us-east-1'
+    def test_constructor_keypair_authfailure(self):
+        class FakeLog:
+            def __init__(self):
+                self.calls = []
+
+            def msg(self, *args, **kwargs):
+                self.calls.append((args, kwargs))
+
+            def assert_any_call(self, msg):
+                for args, _ in self.calls:
+                    if msg in args:
+                        return
+                raise AssertionError(f"msg '{msg}' not found in calls: {self.calls}")
+
+        class FakeKeyPair:
+            def __init__(self, client_error):
+                self.load = lambda: (_ for _ in ()).throw(client_error)
+
+        class FakeSession:
+            def __init__(self, client_error):
+                self.resource = lambda *a, **k: self
+                self.client = lambda *a, **k: self
+                self.get_available_regions = lambda *a, **k: ['us-east-1']
+                self.region_name = 'us-east-1'
+                self.KeyPair = lambda *a, **k: FakeKeyPair(client_error)
 
         error_response = {"Error": {"Code": "AuthFailure", "Message": "AuthFailure"}}
         client_error = ClientError(error_response, "load")
-        mock_keypair = mock_session.KeyPair.return_value
-        mock_keypair.load.side_effect = client_error
+
+        fake_log = FakeLog()
+        self.patch(ec2, "log", fake_log)
+        fake_boto3 = type("FakeBoto3", (), {"Session": lambda *a, **k: FakeSession(client_error)})()
+        self.patch(ec2, "boto3", fake_boto3)
 
         with self.assertRaises(ClientError):
             ec2.EC2LatentWorker(
@@ -420,7 +439,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                 region="us-east-1",
             )
 
-        mock_log.msg.assert_any_call(
+        fake_log.assert_any_call(
             'POSSIBLE CAUSES OF ERROR:\n'
             '  Did you supply your AWS credentials?\n'
             '  Did you sign up for EC2?\n'
@@ -429,18 +448,46 @@ class TestEC2LatentWorker(unittest.TestCase):
             'Please doublecheck before reporting a problem.\n'
         )
 
-    @patch("buildbot.worker.ec2.boto3")
-    def test_constructor_elastic_ip_not_found(self, mock_boto3):
-        mock_session = mock_boto3.Session.return_value
-        mock_session.resource.return_value = mock_session
-        mock_session.client.return_value = mock_session
-        mock_session.get_available_regions.return_value = ['us-east-1']
-        mock_session.region_name = 'us-east-1'
-        mock_session.meta.client.describe_addresses.return_value = {'Addresses': []}
+    def test_constructor_elastic_ip_not_found(self):
+        class FakeMetaClient:
+            def describe_addresses(self, *a, **k):
+                return {'Addresses': []}
 
-        with unittest.TestCase().assertRaisesRegex(
-            ValueError, "Could not find EIP for IP: 1.2.3.4"
-        ):
+        class FakeMeta:
+            client = FakeMetaClient()
+
+        class FakeKeyPair:
+            def load(self):
+                pass
+
+        class FakeSession:
+            def __init__(self):
+                self.resource = lambda *a, **k: self
+                self.client = lambda *a, **k: self
+                self.get_available_regions = lambda *a, **k: ['us-east-1']
+                self.region_name = 'us-east-1'
+                self.meta = FakeMeta()
+
+            def KeyPair(self, *a, **k):
+                return FakeKeyPair()
+
+            def describe_security_groups(self, *a, **k):
+                # Retorne uma resposta fake adequada para o teste
+                return {'SecurityGroups': []}
+
+            def Image(self, ami):
+                class FakeImage:
+                    def __init__(self, ami):
+                        self.id = ami
+                        self.owner_id = "123456789012"
+                        self.image_location = "amazon/fake"
+
+                return FakeImage(ami)
+
+        fake_boto3 = type("FakeBoto3", (), {"Session": lambda *a, **k: FakeSession()})()
+        self.patch(ec2, "boto3", fake_boto3)
+
+        with self.assertRaisesRegex(ValueError, "Could not find EIP for IP: 1.2.3.4"):
             ec2.EC2LatentWorker(
                 name="bot1",
                 password="sekrit",
