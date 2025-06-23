@@ -967,7 +967,7 @@ class TestEC2LatentWorker(unittest.TestCase):
     def test_get_all_images_with_valid_ami_owners(self):
         _, r = self.botoSetup('latent_buildbot_worker')
 
-        image = list(r.images.all())[0]
+        image = next(iter(r.images.all()))
 
         mocked_image = MagicMock(wraps=image)
         mocked_image.owner_id = "1234"
@@ -1002,7 +1002,7 @@ class TestEC2LatentWorker(unittest.TestCase):
     def test_get_all_images_with_invalid_ami_owners(self):
         _, r = self.botoSetup('latent_buildbot_worker')
 
-        image = list(r.images.all())[0]
+        image = next(iter(r.images.all()))
 
         mocked_image = MagicMock(wraps=image)
         mocked_image.owner_id = "5678"
@@ -1036,7 +1036,7 @@ class TestEC2LatentWorker(unittest.TestCase):
     def test_sort_images_options_with_valid_regex(self):
         _, r = self.botoSetup('latent_buildbot_worker')
 
-        image = list(r.images.all())[0]
+        image = next(iter(r.images.all()))
 
         mocked_image = MagicMock(wraps=image)
         mocked_image.image_location = "amazon/foo"
@@ -1071,7 +1071,7 @@ class TestEC2LatentWorker(unittest.TestCase):
     def test_sort_images_options_without_regex(self):
         _, r = self.botoSetup('latent_buildbot_worker')
 
-        image = list(r.images.all())[0]
+        image = next(iter(r.images.all()))
 
         mocked_image = MagicMock(wraps=image)
         mocked_image.image_location = "amazon/foo"
