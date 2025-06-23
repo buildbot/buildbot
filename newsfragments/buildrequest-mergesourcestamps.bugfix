@@ -1,0 +1,2 @@
+``BuildRequest.mergeSourceStampsWith`` now correctly merge sourcestamps changes instead of only keeping changes from the latest request.
+This in turn fixes various ``Build`` methods that were relying on this function. Such as (but not limited to) ``allChanges``, and ``allFiles``.
