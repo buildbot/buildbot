@@ -16,5 +16,5 @@
 */
 
 export function regexEscape(src: string) {
-  return src.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
+  return src.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
 }

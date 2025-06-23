@@ -17,8 +17,7 @@
 import os
 
 from twisted.trial import unittest
-from unittest.mock import patch, mock_open
-
+from unittest.mock import patch, mock_open, MagicMock
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
@@ -101,14 +100,19 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         self.patch(bs.ec2.meta.client, "describe_spot_price_history", fake_describe_price)
 
-    def _patch_moto_describe_spot_instance_requests(self, c, r, bs):
+    def _patch_moto_describe_spot_instance_requests(self, c, r, bs, target_status='fulfilled'):
         this_call = [0]
-
         orig_describe_instance = bs.ec2.meta.client.describe_spot_instance_requests
 
         def fake_describe_spot_instance_requests(*args, **kwargs):
             curr_call = this_call[0]
             this_call[0] += 1
+
+            if target_status != 'fullfilled':
+                response = orig_describe_instance(*args, **kwargs)
+                response['SpotInstanceRequests'][0]['Status']['Code'] = target_status
+                return response
+
             if curr_call == 0:
                 raise ClientError(
                     {'Error': {'Code': 'InvalidSpotInstanceRequestID.NotFound'}},
@@ -118,12 +122,10 @@ class TestEC2LatentWorker(unittest.TestCase):
                 return orig_describe_instance(*args, **kwargs)
 
             response = orig_describe_instance(*args, **kwargs)
-
+            response['SpotInstanceRequests'][0]['Status']['Code'] = target_status
             instances = r.instances.filter(
                 Filters=[{'Name': 'instance-state-name', 'Values': ['running']}]
             )
-
-            response['SpotInstanceRequests'][0]['Status']['Code'] = 'fulfilled'
             response['SpotInstanceRequests'][0]['InstanceId'] = next(iter(instances)).id
             return response
 
@@ -729,6 +731,90 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertIsNone(instances[0].tags)
 
     @mock_aws
+    def test_start_spot_instance_price_too_low(self):
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
+        bs = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name='keypair_name',
+            security_name='security_name',
+            ami=amis[0].id,
+            spot_instance=True,
+            max_spot_price=0.5,
+            price_multiplier=None,  # Skipping _bid_price_from_spot_price_history
+        )
+        bs._poll_resolution = 0
+
+        self._patch_moto_describe_spot_instance_requests(c, r, bs, target_status='price-too-low')
+        self.patch(bs, "_cancel_spot_request", lambda x: None)
+
+        with self.assertRaises(ec2.LatentWorkerFailedToSubstantiate) as exc:
+            bs._request_spot_instance()
+
+        self.assertEqual(exc.exception.args[1], 'price-too-low')
+
+    @mock_aws
+    def test_start_spot_instance_generic_error(self):
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
+        bs = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name='keypair_name',
+            security_name='security_name',
+            ami=amis[0].id,
+            spot_instance=True,
+            max_spot_price=0.5,
+            price_multiplier=None,  # Skipping _bid_price_from_spot_price_history
+        )
+        bs._poll_resolution = 0
+
+        self._patch_moto_describe_spot_instance_requests(c, r, bs, target_status='generic-error')
+        self.patch(bs, "_cancel_spot_request", lambda x: None)
+
+        with self.assertRaises(ec2.LatentWorkerFailedToSubstantiate) as exc:
+            bs._request_spot_instance()
+
+        self.assertEqual(exc.exception.args[1], 'generic-error')
+
+    @mock_aws
+    def test_start_spot_instance_timeout(self):
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
+        bs = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name='keypair_name',
+            security_name='security_name',
+            ami=amis[0].id,
+            spot_instance=True,
+            max_spot_price=0.5,
+            price_multiplier=None,  # Skipping _bid_price_from_spot_price_history
+        )
+        bs._poll_resolution = 1
+        bs._max_runtime = 2
+
+        self._patch_moto_describe_spot_instance_requests(
+            c, r, bs, target_status='pending-fulfillment'
+        )
+        self.patch(bs, "_cancel_spot_request", lambda x: None)
+
+        with self.assertRaises(ec2.LatentWorkerFailedToSubstantiate) as exc:
+            bs._request_spot_instance()
+
+        self.assertEqual(exc.exception.args[1], 'timeout-waiting-for-fulfillment')
+
+    @mock_aws
     def test_get_image_ami(self):
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
@@ -827,8 +913,139 @@ class TestEC2LatentWorker(unittest.TestCase):
         with self.assertRaises(ValueError):
             create_worker()
 
+    @mock_aws
+    def test_get_all_images_with_valid_ami_owners(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
 
-class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
+        image = list(r.images.all())[0]
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.owner_id = "1234"
+        mocked_image.state = 'available'
+        mocked_image.id = image.id
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami=image.id,
+        )
+        worker.valid_ami_owners = ("1234",)
+
+        mocked_image_collection = MagicMock()
+        mocked_image_collection.filter.return_value = [mocked_image]
+
+        ec2_mock = MagicMock()
+        ec2_mock.images.all.return_value = mocked_image_collection
+        worker.ec2 = ec2_mock
+
+        result = worker._get_all_images()
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].id, image.id)
+
+    @mock_aws
+    def test_get_all_images_with_invalid_ami_owners(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = list(r.images.all())[0]
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.owner_id = "5678"
+        mocked_image.state = 'available'
+        mocked_image.id = image.id
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami=image.id,
+        )
+        worker.valid_ami_owners = ["1234"]
+
+        mocked_image_collection = MagicMock()
+        mocked_image_collection.filter.return_value = []
+
+        ec2_mock = MagicMock()
+        ec2_mock.images.all.return_value = mocked_image_collection
+        worker.ec2 = ec2_mock
+
+        result = worker._get_all_images()
+
+        self.assertEqual(result, [])
+
+    @mock_aws
+    def test_sort_images_options_with_valid_regex(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = list(r.images.all())[0]
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.image_location = "amazon/foo"
+        mocked_image.id = "ami-123"
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami="ami-123",
+        )
+
+        match_mock = MagicMock()
+        match_mock.group.return_value = "123"
+
+        regex_mock = MagicMock()
+        regex_mock.match.return_value = match_mock
+
+        worker.valid_ami_location_regex = regex_mock
+
+        result = worker._sort_images_options([mocked_image])
+
+        regex_mock.match.assert_called_with("amazon/foo")
+
+        self.assertEqual(result[0][1], "123")
+
+    @mock_aws
+    def test_sort_images_options_without_regex(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = list(r.images.all())[0]
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.image_location = "amazon/foo"
+        mocked_image.id = "ami-123"
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami="ami-123",
+        )
+
+        worker.valid_ami_location_regex = None
+
+        sorted_images = worker._sort_images_options([mocked_image])
+
+        self.assertEqual(sorted_images[0][1], "ami-123")
+
+
+class TestEC2LatentWorkerDefaultKeypairSecurityGroup(unittest.TestCase):
     ec2_connection = None
 
     def setUp(self):

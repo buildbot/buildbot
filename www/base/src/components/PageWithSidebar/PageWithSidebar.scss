@@ -2,7 +2,7 @@
 $gl-sidebar-transition-time: 0.2s;
 $gl-sidebar-small-threshold: 600px;
 $gl-sidebar-width: 600px;
-.bb-rotate-45{
+.bb-rotate-45 {
   transform: rotate(45deg);
   -webkit-transform: rotate(45deg);
 }
@@ -36,7 +36,7 @@ $gl-sidebar-width: 600px;
       color: var(--bb-sidebar-title-text-color);
     }
   }
-  &.active:not(.pinned) .sidebar{
+  &.active:not(.pinned) .sidebar {
     transform: translate(180px, 0px);
     -webkit-transform: translate(180px, 0px);
   }
@@ -44,8 +44,7 @@ $gl-sidebar-width: 600px;
   &.active .sidebar ul {
     overflow-y: auto;
   }
-  &:not(.active){
-
+  &:not(.active) {
     .sidebar {
       ul.sidebar .sidebar-title.separator {
         background: #273759;
@@ -59,7 +58,7 @@ $gl-sidebar-width: 600px;
         display: block;
         margin: 13px 0;
       }
-      .sidebar-list .bb-sidebar-button:hover span{
+      .sidebar-list .bb-sidebar-button:hover span {
         border-left: 3px solid #e99d1a;
         text-indent: 22px;
       }
@@ -68,7 +67,7 @@ $gl-sidebar-width: 600px;
       display: none;
     }
   }
-  &.pinned{
+  &.pinned {
     > .content {
       margin-left: 180px;
     }
@@ -78,18 +77,18 @@ $gl-sidebar-width: 600px;
     }
   }
   // use ngAnimate for the sidebar
-  &.active-add, &.active-remove {
+  &.active-add,
+  &.active-remove {
     // ngAnimate wants an animation on the object it watches
     //  even if it is not actually animated
     transition: all $gl-sidebar-transition-time ease-out 0s;
     .sidebar {
       transition: all $gl-sidebar-transition-time ease-out 0s;
-
     }
   }
   /* sidebar */
   .sidebar {
-    z-index:3000;
+    z-index: 3000;
     user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
@@ -159,7 +158,7 @@ $gl-sidebar-width: 600px;
           font-size: 15px;
           color: var(--bb-sidebar-button-text-color);
           line-height: 40px;
-          >svg {
+          > svg {
             margin-left: -1em;
           }
         }
@@ -193,17 +192,19 @@ $gl-sidebar-width: 600px;
         &.subitem {
           transition: height $gl-sidebar-transition-time ease-out 0s;
           .bb-sidebar-item {
-            padding-left:20px;
-            transition: line-height $gl-sidebar-transition-time ease-out 0s, color $gl-sidebar-transition-time ease-out 0s,  background $gl-sidebar-transition-time ease-out 0s;;
+            padding-left: 20px;
+            transition:
+              line-height $gl-sidebar-transition-time ease-out 0s,
+              color $gl-sidebar-transition-time ease-out 0s,
+              background $gl-sidebar-transition-time ease-out 0s;
           }
           &:not(.active) {
             height: 0px;
             .bb-sidebar-item {
               line-height: 0px;
-              color: rgba(255, 0, 0, 0.0);
+              color: rgba(255, 0, 0, 0);
             }
           }
-
         }
       }
     }

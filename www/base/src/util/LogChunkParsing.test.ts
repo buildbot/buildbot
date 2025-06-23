@@ -15,172 +15,193 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
-import {mergeChunks, parseCssClassesForChunk, parseLogChunk} from "./LogChunkParsing";
+import {describe, expect, it} from 'vitest';
+import {mergeChunks, parseCssClassesForChunk, parseLogChunk} from './LogChunkParsing';
 
 describe('LogChunkParsing', () => {
   it('basic', () => {
-    const text = "o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-      "o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n";
+    const text =
+      'o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+      'o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n';
     const chunk = parseLogChunk(20, text, 's');
     expect(chunk).toEqual({
       firstLine: 20,
       lastLine: 23,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      text:
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n',
       textLineBounds: [0, 56, 77, 99],
       linesWithEscapes: [0, 1, 2],
-      lineTypes: "ooh",
+      lineTypes: 'ooh',
       textNoEscapes: null,
       textNoEscapesLineBounds: null,
     });
 
     const chunkCssClasses = parseCssClassesForChunk(chunk, 20, 23);
     expect(chunkCssClasses).toEqual({
-      20: ["DEBUG [plugin]: Loading plugin karma-jasmine.",
+      20: [
+        'DEBUG [plugin]: Loading plugin karma-jasmine.',
         [
-          {cssClasses: "ansi36", firstPos: 0, lastPos: 16},
-          {cssClasses: "", firstPos: 16, lastPos: 45},
+          {cssClasses: 'ansi36', firstPos: 0, lastPos: 16},
+          {cssClasses: '', firstPos: 16, lastPos: 45},
         ],
       ],
-      21: [".F",
+      21: [
+        '.F',
         [
-          {cssClasses: "ansi32", firstPos: 0, lastPos: 1},
-          {cssClasses: "ansi31", firstPos: 1, lastPos: 2},
+          {cssClasses: 'ansi32', firstPos: 0, lastPos: 1},
+          {cssClasses: 'ansi31', firstPos: 1, lastPos: 2},
         ],
       ],
-      22: ["..",
+      22: [
+        '..',
         [
-          {cssClasses: "ansi32", firstPos: 0, lastPos: 1},
-          {cssClasses: "ansi32", firstPos: 1, lastPos: 2},
+          {cssClasses: 'ansi32', firstPos: 0, lastPos: 1},
+          {cssClasses: 'ansi32', firstPos: 1, lastPos: 2},
         ],
       ],
     });
   });
 
   it('basicForceTextNoEscapes', () => {
-    const text = "o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-      "o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n";
+    const text =
+      'o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+      'o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n';
     const chunk = parseLogChunk(20, text, 's', true);
     expect(chunk).toEqual({
       firstLine: 20,
       lastLine: 23,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      text:
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n',
       textLineBounds: [0, 56, 77, 99],
       linesWithEscapes: null,
-      lineTypes: "ooh",
-      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n",
-      textNoEscapesLineBounds: [0, 46, 49]
+      lineTypes: 'ooh',
+      textNoEscapes: 'DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n',
+      textNoEscapesLineBounds: [0, 46, 49],
     });
 
     const chunkCssClasses = parseCssClassesForChunk(chunk, 20, 23);
     expect(chunkCssClasses).toEqual({
-      0: ["DEBUG [plugin]: Loading plugin karma-jasmine.",
+      0: [
+        'DEBUG [plugin]: Loading plugin karma-jasmine.',
         [
-          {cssClasses: "ansi36", firstPos: 0, lastPos: 16},
-          {cssClasses: "", firstPos: 16, lastPos: 45},
+          {cssClasses: 'ansi36', firstPos: 0, lastPos: 16},
+          {cssClasses: '', firstPos: 16, lastPos: 45},
         ],
       ],
-      1: [".F",
+      1: [
+        '.F',
         [
-          {cssClasses: "ansi32", firstPos: 0, lastPos: 1},
-          {cssClasses: "ansi31", firstPos: 1, lastPos: 2},
+          {cssClasses: 'ansi32', firstPos: 0, lastPos: 1},
+          {cssClasses: 'ansi31', firstPos: 1, lastPos: 2},
         ],
       ],
-      2: ["..",
+      2: [
+        '..',
         [
-          {cssClasses: "ansi32", firstPos: 0, lastPos: 1},
-          {cssClasses: "ansi32", firstPos: 1, lastPos: 2},
+          {cssClasses: 'ansi32', firstPos: 0, lastPos: 1},
+          {cssClasses: 'ansi32', firstPos: 1, lastPos: 2},
         ],
       ],
     });
   });
 
   it('mergeNotManyEscapes', () => {
-    const text = "o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-      "o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n";
+    const text =
+      'o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+      'o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n';
     const chunk1 = parseLogChunk(20, text, 's');
     const chunk2 = parseLogChunk(23, text, 's');
     const mergedChunk = mergeChunks(chunk1, chunk2);
     expect(mergedChunk).toEqual({
       firstLine: 20,
       lastLine: 26,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n" +
-        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      text:
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n' +
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n',
       textLineBounds: [0, 56, 77, 99, 155, 176, 198],
       linesWithEscapes: [0, 1, 2, 3, 4, 5],
-      lineTypes: "oohooh",
+      lineTypes: 'oohooh',
       textNoEscapes: null,
       textNoEscapesLineBounds: null,
     });
-  })
+  });
 
   it('mergeManyEscapesFirst', () => {
-    const text = "o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-      "o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n";
+    const text =
+      'o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+      'o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n';
     const chunk1 = parseLogChunk(20, text, 's', true);
     const chunk2 = parseLogChunk(23, text, 's');
     const mergedChunk = mergeChunks(chunk1, chunk2);
     expect(mergedChunk).toEqual({
       firstLine: 20,
       lastLine: 26,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n" +
-        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      text:
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n' +
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n',
       textLineBounds: [0, 56, 77, 99, 155, 176, 198],
       linesWithEscapes: null,
-      lineTypes: "oohooh",
-      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n" +
-        "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n",
+      lineTypes: 'oohooh',
+      textNoEscapes:
+        'DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n' +
+        'DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n',
       textNoEscapesLineBounds: [0, 46, 49, 52, 98, 101],
     });
-  })
+  });
 
   it('mergeManyEscapesSecond', () => {
-    const text = "o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-      "o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n";
+    const text =
+      'o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+      'o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n';
     const chunk1 = parseLogChunk(20, text, 's');
     const chunk2 = parseLogChunk(23, text, 's', true);
     const mergedChunk = mergeChunks(chunk1, chunk2);
     expect(mergedChunk).toEqual({
       firstLine: 20,
       lastLine: 26,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n" +
-        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      text:
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n' +
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n',
       textLineBounds: [0, 56, 77, 99, 155, 176, 198],
       linesWithEscapes: null,
-      lineTypes: "oohooh",
-      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n" +
-        "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n",
+      lineTypes: 'oohooh',
+      textNoEscapes:
+        'DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n' +
+        'DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n',
       textNoEscapesLineBounds: [0, 46, 49, 52, 98, 101],
     });
-  })
+  });
 
   it('mergeManyEscapesBoth', () => {
-    const text = "o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-      "o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n";
+    const text =
+      'o\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+      'o\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\nh\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n';
     const chunk1 = parseLogChunk(20, text, 's', true);
     const chunk2 = parseLogChunk(23, text, 's', true);
     const mergedChunk = mergeChunks(chunk1, chunk2);
     expect(mergedChunk).toEqual({
       firstLine: 20,
       lastLine: 26,
-      text: "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n" +
-        "\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n" +
-        "\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n",
+      text:
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n' +
+        '\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.\n' +
+        '\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\n\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m\n',
       textLineBounds: [0, 56, 77, 99, 155, 176, 198],
       linesWithEscapes: null,
-      lineTypes: "oohooh",
-      textNoEscapes: "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n" +
-        "DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n",
+      lineTypes: 'oohooh',
+      textNoEscapes:
+        'DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n' +
+        'DEBUG [plugin]: Loading plugin karma-jasmine.\n.F\n..\n',
       textNoEscapesLineBounds: [0, 46, 49, 52, 98, 101],
     });
-  })
+  });
 });

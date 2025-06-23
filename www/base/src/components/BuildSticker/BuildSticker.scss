@@ -1,4 +1,4 @@
-@import "buildbot-ui/colors.scss";
+@import 'buildbot-ui/colors.scss';
 
 .bb-buildsticker {
   width: 100%;
@@ -11,7 +11,8 @@
     margin-left: 0;
     margin-right: 0;
 
-    > .bb-badge-status, > .bb-buildsticker-time {
+    > .bb-badge-status,
+    > .bb-buildsticker-time {
       float: right;
     }
   }

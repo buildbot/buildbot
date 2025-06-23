@@ -15,8 +15,8 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
-import {repositionPositionedArray} from "./Array";
+import {describe, expect, it} from 'vitest';
+import {repositionPositionedArray} from './Array';
 
 describe('Array', () => {
   describe('repositionPositionedArray', () => {

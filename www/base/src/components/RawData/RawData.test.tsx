@@ -15,18 +15,18 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
+import {describe, expect, it} from 'vitest';
 import {render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {MemoryRouter} from "react-router-dom";
+import {MemoryRouter} from 'react-router-dom';
 import {RawData} from './RawData';
-import {observable} from "mobx";
+import {observable} from 'mobx';
 
 function assertRenderSnapshot(data: {[key: string]: any}) {
   const component = render(
     <MemoryRouter>
-      <RawData data={data}/>
-    </MemoryRouter>
+      <RawData data={data} />
+    </MemoryRouter>,
   );
   expect(component.asFragment()).toMatchSnapshot();
 }
@@ -34,37 +34,37 @@ function assertRenderSnapshot(data: {[key: string]: any}) {
 async function assertRenderSnapshotExpanded(data: {[key: string]: any}) {
   const component = render(
     <MemoryRouter>
-      <RawData data={data}/>
-    </MemoryRouter>
+      <RawData data={data} />
+    </MemoryRouter>,
   );
-  const elements = component.container.querySelectorAll("svg")
+  const elements = component.container.querySelectorAll('svg');
   expect(elements.length).toBe(1);
   await userEvent.click(elements[0]);
   expect(component.asFragment()).toMatchSnapshot();
 }
 
-describe('RawData component', function() {
+describe('RawData component', function () {
   it('simple object', () => {
     const obj = {
-      str: "string",
+      str: 'string',
       int: 123,
       float: 123.4,
       boolean: true,
-      array: [321, "string", true],
+      array: [321, 'string', true],
       null: null,
       undefined: undefined,
-    }
+    };
 
     assertRenderSnapshot(obj);
   });
 
   it('observable object', () => {
     const obj = observable({
-      str: "string",
+      str: 'string',
       int: 123,
       float: 123.4,
       boolean: true,
-      array: observable([321, "string", true]),
+      array: observable([321, 'string', true]),
       null: null,
       undefined: undefined,
     });
@@ -75,7 +75,7 @@ describe('RawData component', function() {
   it('object with array of objects', () => {
     const obj = {
       array: [
-        {str: "string"},
+        {str: 'string'},
         {int: 123},
         {float: 123.4},
         {boolean: true},
@@ -90,7 +90,7 @@ describe('RawData component', function() {
   it('object with array of objects expanded', async () => {
     const obj = {
       array: [
-        {str: "string"},
+        {str: 'string'},
         {int: 123},
         {float: 123.4},
         {boolean: true},
@@ -105,7 +105,7 @@ describe('RawData component', function() {
   it('observable object with array of objects', () => {
     const obj = observable({
       array: [
-        observable({str: "string"}),
+        observable({str: 'string'}),
         observable({int: 123}),
         observable({float: 123.4}),
         observable({boolean: true}),

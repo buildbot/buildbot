@@ -5,24 +5,19 @@
   Copyright Buildbot Team Members
 */
 
-import {BaseClass} from "./classes/BaseClass";
-import {
-  action,
-  autorun,
-  IObservableArray,
-  makeObservable,
-  observable,
-  ObservableMap
-} from "mobx";
-import {DataCollection, IDataCollection} from "./DataCollection";
-import {IReactionDisposer} from "mobx";
-import {IDataAccessor} from "./DataAccessor";
+import {BaseClass} from './classes/BaseClass';
+import {action, autorun, IObservableArray, makeObservable, observable, ObservableMap} from 'mobx';
+import {DataCollection, IDataCollection} from './DataCollection';
+import {IReactionDisposer} from 'mobx';
+import {IDataAccessor} from './DataAccessor';
 
 /* This class wraps multiple DataCollections of the same thing.
  */
-export class BasicDataMultiCollection<ParentDataType extends BaseClass,
-  Collection extends IDataCollection> implements IDataCollection {
-
+export class BasicDataMultiCollection<
+  ParentDataType extends BaseClass,
+  Collection extends IDataCollection,
+> implements IDataCollection
+{
   accessor: IDataAccessor;
   parentArray: IObservableArray<ParentDataType> | null;
   parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null;
@@ -33,11 +28,13 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
   callback: (parent: ParentDataType) => Collection;
   private disposer: IReactionDisposer;
 
-  constructor(accessor: IDataAccessor,
-              parentArray: IObservableArray<ParentDataType> | null,
-              parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
-              parentFilteredIds: IObservableArray<string> | null,
-              callback: (parent: ParentDataType) => Collection) {
+  constructor(
+    accessor: IDataAccessor,
+    parentArray: IObservableArray<ParentDataType> | null,
+    parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null,
+    parentFilteredIds: IObservableArray<string> | null,
+    callback: (parent: ParentDataType) => Collection,
+  ) {
     makeObservable(this);
 
     this.accessor = accessor;
@@ -49,7 +46,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
     if (parentArray !== null) {
       this.disposer = autorun(() => {
         const newParentIds = new Set<string>();
-        for (let parent of this.parentArray!) {
+        for (const parent of this.parentArray!) {
           if (this.parentFilteredIds !== null && this.parentFilteredIds.indexOf(parent.id) < 0) {
             continue;
           }
@@ -60,7 +57,7 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
           }
         }
 
-        for (let key of this.byParentId.keys()) {
+        for (const key of this.byParentId.keys()) {
           if (!newParentIds.has(key)) {
             this.removeByParentId(key);
           }
@@ -81,14 +78,14 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
             }
           }
         }
-        for (let key of this.byParentId.keys()) {
+        for (const key of this.byParentId.keys()) {
           if (!newParentIds.has(key)) {
             this.removeByParentId(key);
           }
         }
       });
     } else {
-      throw Error("Either parentArray or parentArrayMap must not be null");
+      throw Error('Either parentArray or parentArrayMap must not be null');
     }
   }
 
@@ -111,11 +108,13 @@ export class BasicDataMultiCollection<ParentDataType extends BaseClass,
     return Promise.resolve();
   }
 
-  initial(data: any[]) {}
+  initial(_data: any[]) {}
 
-  close() : Promise<void> {
+  close() {
     this.disposer();
-    return Promise.all([...this.byParentId.values()].map((collection => collection.close()))).then();
+    for (const collection of this.byParentId.values()) {
+      collection.close();
+    }
   }
 
   @action addByParentId(id: string, collection: Collection) {

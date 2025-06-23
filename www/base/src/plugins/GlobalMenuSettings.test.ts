@@ -15,219 +15,222 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
+import {describe, expect, it} from 'vitest';
 import {
   getBestMatchingSettingsGroupRoute,
   GlobalMenuSettings,
-  ResolvedGroupSettings
-} from "./GlobalMenuSettings";
+  ResolvedGroupSettings,
+} from './GlobalMenuSettings';
 
 describe('GlobalMenuSettings', () => {
-  it("group sorting", () => {
+  it('group sorting', () => {
     const settings = new GlobalMenuSettings();
     settings.addGroup({
       name: '0',
       parentName: null,
       caption: 'c0',
       route: '/0',
-      order: null
+      order: null,
     });
     settings.addGroup({
       name: '1',
       parentName: null,
       caption: 'c1',
       route: '/1',
-      order: 10
+      order: 10,
     });
     settings.addGroup({
       name: '2',
       parentName: null,
       caption: 'c2',
       route: '/2',
-      order: 9
+      order: 9,
     });
     settings.addGroup({
       name: '3',
       parentName: null,
       caption: 'c3',
       route: '/3',
-      order: 11
+      order: 11,
     });
     settings.addGroup({
       name: '4',
       parentName: null,
       caption: 'c4',
       route: '/c4',
-      order: 10
+      order: 10,
     });
 
     expect(settings.groups).toEqual([
       {
-        "caption": "c2",
-        "icon": undefined,
-        "name": "2",
-        "order": 9,
-        "route": "/2",
-        "subGroups": []
+        caption: 'c2',
+        icon: undefined,
+        name: '2',
+        order: 9,
+        route: '/2',
+        subGroups: [],
       },
       {
-        "caption": "c1",
-        "icon": undefined,
-        "name": "1",
-        "order": 10,
-        "route": "/1",
-        "subGroups": []
+        caption: 'c1',
+        icon: undefined,
+        name: '1',
+        order: 10,
+        route: '/1',
+        subGroups: [],
       },
       {
-        "caption": "c4",
-        "icon": undefined,
-        "name": "4",
-        "order": 10,
-        "route": "/c4",
-        "subGroups": []
+        caption: 'c4',
+        icon: undefined,
+        name: '4',
+        order: 10,
+        route: '/c4',
+        subGroups: [],
       },
       {
-        "caption": "c3",
-        "icon": undefined,
-        "name": "3",
-        "order": 11,
-        "route": "/3",
-        "subGroups": []
+        caption: 'c3',
+        icon: undefined,
+        name: '3',
+        order: 11,
+        route: '/3',
+        subGroups: [],
       },
       {
-        "caption": "c0",
-        "icon": undefined,
-        "name": "0",
-        "order": 99,
-        "route": "/0",
-        "subGroups": []
-      }
+        caption: 'c0',
+        icon: undefined,
+        name: '0',
+        order: 99,
+        route: '/0',
+        subGroups: [],
+      },
     ]);
   });
 
-  it("group child sorting", () => {
+  it('group child sorting', () => {
     const settings = new GlobalMenuSettings();
     settings.addGroup({
       name: '1',
       parentName: null,
       caption: 'c1',
       route: '/1',
-      order: 10
+      order: 10,
     });
     settings.addGroup({
       name: '1.1',
       parentName: '1',
       caption: 'c1.1',
       route: '/1.1',
-      order: 5
+      order: 5,
     });
     settings.addGroup({
       name: '1.1.1',
       parentName: '1.1',
       caption: 'c1.1.1',
       route: '/1.1.1',
-      order: null
+      order: null,
     });
     settings.addGroup({
       name: '1.1.2',
       parentName: '1.1',
       caption: 'c1.1.2',
       route: '/1.1.2',
-      order: 10
+      order: 10,
     });
     settings.addGroup({
       name: '1.1.3',
       parentName: '1.1',
       caption: 'c1.1.3',
       route: '/1.1.3',
-      order: 9
+      order: 9,
     });
     settings.addGroup({
       name: '1.1.4',
       parentName: '1.1',
       caption: 'c1.1.4',
       route: '/1.1.4',
-      order: 11
+      order: 11,
     });
     settings.addGroup({
       name: '1.1.5',
       parentName: '1.1',
       caption: 'c1.1.5',
       route: '/1.1.5',
-      order: 10
+      order: 10,
     });
 
     expect(settings.groups).toEqual([
       {
-        "caption": "c1",
-        "icon": undefined,
-        "name": "1",
-        "order": 10,
-        "route": "/1",
-        "subGroups": [
+        caption: 'c1',
+        icon: undefined,
+        name: '1',
+        order: 10,
+        route: '/1',
+        subGroups: [
           {
-            "caption": "c1.1",
-            "icon": undefined,
-            "name": "1.1",
-            "order": 5,
-            "route": "/1.1",
-            "subGroups": [
+            caption: 'c1.1',
+            icon: undefined,
+            name: '1.1',
+            order: 5,
+            route: '/1.1',
+            subGroups: [
               {
-                "caption": "c1.1.3",
-                "icon": undefined,
-                "name": "1.1.3",
-                "order": 9,
-                "route": "/1.1.3",
-                "subGroups": []
+                caption: 'c1.1.3',
+                icon: undefined,
+                name: '1.1.3',
+                order: 9,
+                route: '/1.1.3',
+                subGroups: [],
               },
               {
-                "caption": "c1.1.2",
-                "icon": undefined,
-                "name": "1.1.2",
-                "order": 10,
-                "route": "/1.1.2",
-                "subGroups": []
+                caption: 'c1.1.2',
+                icon: undefined,
+                name: '1.1.2',
+                order: 10,
+                route: '/1.1.2',
+                subGroups: [],
               },
               {
-                "caption": "c1.1.5",
-                "icon": undefined,
-                "name": "1.1.5",
-                "order": 10,
-                "route": "/1.1.5",
-                "subGroups": []
+                caption: 'c1.1.5',
+                icon: undefined,
+                name: '1.1.5',
+                order: 10,
+                route: '/1.1.5',
+                subGroups: [],
               },
               {
-                "caption": "c1.1.4",
-                "icon": undefined,
-                "name": "1.1.4",
-                "order": 11,
-                "route": "/1.1.4",
-                "subGroups": []
+                caption: 'c1.1.4',
+                icon: undefined,
+                name: '1.1.4',
+                order: 11,
+                route: '/1.1.4',
+                subGroups: [],
               },
               {
-                "caption": "c1.1.1",
-                "icon": undefined,
-                "name": "1.1.1",
-                "order": 99,
-                "route": "/1.1.1",
-                "subGroups": []
-              }
-            ]
-          }
-        ]
-      }]);
+                caption: 'c1.1.1',
+                icon: undefined,
+                name: '1.1.1',
+                order: 99,
+                route: '/1.1.1',
+                subGroups: [],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
   });
 
   describe('getBestMatchingSettingsGroupRoute', () => {
-    const buildGroup = (route: string|null,
-                        subGroups: ResolvedGroupSettings[]) : ResolvedGroupSettings => {
+    const buildGroup = (
+      route: string | null,
+      subGroups: ResolvedGroupSettings[],
+    ): ResolvedGroupSettings => {
       return {
         name: '',
         caption: '',
         route: route,
         order: 0,
-        subGroups: subGroups
-      }
+        subGroups: subGroups,
+      };
     };
 
     it('no groups', () => {
@@ -235,34 +238,40 @@ describe('GlobalMenuSettings', () => {
     });
 
     it('not matching groups', () => {
-      expect(getBestMatchingSettingsGroupRoute('/path', [
-        buildGroup('/', []),
-        buildGroup('/pa', []),
-        buildGroup('/path2', []),
-      ])).toBeNull();
+      expect(
+        getBestMatchingSettingsGroupRoute('/path', [
+          buildGroup('/', []),
+          buildGroup('/pa', []),
+          buildGroup('/path2', []),
+        ]),
+      ).toBeNull();
     });
 
     it('matching group', () => {
-      expect(getBestMatchingSettingsGroupRoute('/path/path2/path3', [
-        buildGroup('/path', []),
-        buildGroup('/path/path2', []),
-        buildGroup('/path/path2/path3', []),
-      ])).toEqual('/path/path2/path3');
+      expect(
+        getBestMatchingSettingsGroupRoute('/path/path2/path3', [
+          buildGroup('/path', []),
+          buildGroup('/path/path2', []),
+          buildGroup('/path/path2/path3', []),
+        ]),
+      ).toEqual('/path/path2/path3');
 
-      expect(getBestMatchingSettingsGroupRoute('/path/path2/path3', [
-        buildGroup('/path/path2/path3', []),
-        buildGroup('/path/path2', []),
-        buildGroup('/path', []),
-      ])).toEqual('/path/path2/path3');
+      expect(
+        getBestMatchingSettingsGroupRoute('/path/path2/path3', [
+          buildGroup('/path/path2/path3', []),
+          buildGroup('/path/path2', []),
+          buildGroup('/path', []),
+        ]),
+      ).toEqual('/path/path2/path3');
     });
 
     it('matching sub group', () => {
-      expect(getBestMatchingSettingsGroupRoute('/path/path2/path3', [
-        buildGroup('/path', []),
-        buildGroup('/path/path2', [
-          buildGroup('/path/path2/path3', []),
+      expect(
+        getBestMatchingSettingsGroupRoute('/path/path2/path3', [
+          buildGroup('/path', []),
+          buildGroup('/path/path2', [buildGroup('/path/path2/path3', [])]),
         ]),
-      ])).toEqual('/path/path2/path3');
+      ).toEqual('/path/path2/path3');
     });
   });
 });

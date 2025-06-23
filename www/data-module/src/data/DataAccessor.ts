@@ -5,21 +5,24 @@
   Copyright Buildbot Team Members
 */
 
-import {DataCollection, IDataCollection} from "./DataCollection";
-import {DataClient} from "./DataClient";
-import {IDataDescriptor} from "./classes/DataDescriptor";
-import {ControlParams, Query, RequestQuery} from "./DataQuery";
-import {BaseClass} from "./classes/BaseClass";
-import {DataPropertiesCollection} from "./DataPropertiesCollection";
-import {CancellablePromise} from "../util/CancellablePromise";
+import {DataCollection, IDataCollection} from './DataCollection';
+import {DataClient} from './DataClient';
+import {IDataDescriptor} from './classes/DataDescriptor';
+import {ControlParams, Query, RequestQuery} from './DataQuery';
+import {BaseClass} from './classes/BaseClass';
+import {DataPropertiesCollection} from './DataPropertiesCollection';
+import {CancellablePromise} from '../util/CancellablePromise';
 
 export interface IDataAccessor {
   registerCollection(c: IDataCollection): void;
   unregisterCollection(c: IDataCollection): void;
   isOpen(): boolean;
   close(): void;
-  get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
-                                  descriptor: IDataDescriptor<DataType>): DataCollection<DataType>;
+  get<DataType extends BaseClass>(
+    endpoint: string,
+    query: RequestQuery,
+    descriptor: IDataDescriptor<DataType>,
+  ): DataCollection<DataType>;
   getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection;
 
   getRaw(endpoint: string, query: Query): CancellablePromise<any>;
@@ -46,7 +49,9 @@ export class BaseDataAccessor implements IDataAccessor {
     }
   }
 
-  isOpen() { return this._isOpen; }
+  isOpen() {
+    return this._isOpen;
+  }
 
   close() {
     this._isOpen = false;
@@ -57,17 +62,20 @@ export class BaseDataAccessor implements IDataAccessor {
     }
   }
 
-  get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
-                                  descriptor: IDataDescriptor<DataType>): DataCollection<DataType> {
+  get<DataType extends BaseClass>(
+    endpoint: string,
+    query: RequestQuery,
+    descriptor: IDataDescriptor<DataType>,
+  ): DataCollection<DataType> {
     if (query.id !== undefined) {
-      endpoint += "/" + query.id;
+      endpoint += '/' + query.id;
     }
     return this.client.get(endpoint, this, descriptor, query.query ?? {}, query.subscribe ?? true);
   }
 
   getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection {
     if (query.id !== undefined) {
-      endpoint += "/" + query.id;
+      endpoint += '/' + query.id;
     }
     return this.client.getProperties(endpoint, this, query.query ?? {}, query.subscribe ?? true);
   }
@@ -82,26 +90,31 @@ export class BaseDataAccessor implements IDataAccessor {
 }
 
 export class EmptyDataAccessor implements IDataAccessor {
-  registerCollection(c: IDataCollection) {}
-  unregisterCollection(c: IDataCollection) {}
+  registerCollection(_: IDataCollection) {}
+  unregisterCollection(_: IDataCollection) {}
 
-  isOpen() { return false; }
+  isOpen() {
+    return false;
+  }
   close() {}
 
-  get<DataType extends BaseClass>(endpoint: string, query: RequestQuery,
-                                  descriptor: IDataDescriptor<DataType>): DataCollection<DataType> {
-    throw Error("Not implemented");
+  get<DataType extends BaseClass>(
+    _endpoint: string,
+    _query: RequestQuery,
+    _descriptor: IDataDescriptor<DataType>,
+  ): DataCollection<DataType> {
+    throw Error('Not implemented');
   }
 
-  getProperties(endpoint: string, query: RequestQuery): DataPropertiesCollection {
-    throw Error("Not implemented");
+  getProperties(_endpoint: string, _query: RequestQuery): DataPropertiesCollection {
+    throw Error('Not implemented');
   }
 
-  getRaw(endpoint: string, query: Query): CancellablePromise<any> {
-    throw Error("Not implemented");
+  getRaw(_endpoint: string, _query: Query): CancellablePromise<any> {
+    throw Error('Not implemented');
   }
 
-  control(endpoint: string, method: string, params: ControlParams): Promise<any> {
-    throw Error("Not implemented");
+  control(_endpoint: string, _method: string, _params: ControlParams): Promise<any> {
+    throw Error('Not implemented');
   }
 }

@@ -15,10 +15,10 @@
   Copyright Buildbot Team Members
 */
 
-import axios from "axios";
-import {useContext, useEffect} from "react";
-import {intToColor, SUCCESS, UNKNOWN} from "buildbot-data-js";
-import {ConfigContext} from "../contexts/Config";
+import axios from 'axios';
+import {useContext, useEffect} from 'react';
+import {intToColor, SUCCESS, UNKNOWN} from 'buildbot-data-js';
+import {ConfigContext} from '../contexts/Config';
 
 function setFavIconUrl(url: string) {
   const iconElement = document.getElementById('bbicon');
@@ -28,7 +28,7 @@ function setFavIconUrl(url: string) {
 }
 
 function setFavIconUrlOriginal(buildbotUrl: string) {
-  setFavIconUrl(buildbotUrl + "/icon.png");
+  setFavIconUrl(buildbotUrl + '/icon.png');
 }
 
 async function setFavIcon(buildbotUrl: string, result: number) {
@@ -37,7 +37,7 @@ async function setFavIcon(buildbotUrl: string, result: number) {
     return;
   }
 
-  const response = await axios.get(buildbotUrl + "/icon.svg");
+  const response = await axios.get(buildbotUrl + '/icon.svg');
   const iconSvg = response.data;
 
   const canvas = document.createElement('canvas');
@@ -54,7 +54,7 @@ async function setFavIcon(buildbotUrl: string, result: number) {
   const url = URL.createObjectURL(svg);
 
   const img = new Image();
-  img.onload = function() {
+  img.onload = function () {
     ctx?.drawImage(img, 0, 0);
     setFavIconUrl(canvas.toDataURL());
     URL.revokeObjectURL(url);
@@ -69,13 +69,13 @@ export function useFavIcon(result: number) {
   const url = config.isProxy ? '' : config.buildbotURL;
 
   useEffect(() => {
-    setFavIcon(url, result);
-  }, [result]);
+    setFavIcon(url, result).catch((error) => console.error('Error setting favicon:', error));
+  }, [url, result]);
 
   // We only want to clear the favicon once, thus the useEffect hook is split into two parts, one
   // for updates, one for eventual cleanup when navigating out of view.
   useEffect(() => {
     return () => setFavIconUrlOriginal(url);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 }

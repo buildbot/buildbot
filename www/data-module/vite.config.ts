@@ -1,8 +1,8 @@
-import {resolve} from "path";
-import {defineConfig} from "vite";
+import {resolve} from 'path';
+import {defineConfig} from 'vite';
 import checker from 'vite-plugin-checker';
-import react from "@vitejs/plugin-react";
-import dts from 'vite-plugin-dts'
+import react from '@vitejs/plugin-react';
+import dts from 'vite-plugin-dts';
 
 const outDir = 'dist';
 
@@ -11,9 +11,9 @@ export default defineConfig({
     react({
       babel: {
         parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties']
-        }
-      }
+          plugins: ['decorators-legacy', 'classProperties'],
+        },
+      },
     }),
     dts(),
     checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
@@ -21,18 +21,18 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/main.ts'),
-      formats: ["es"],
-      name: "buildbot-data-js",
-      fileName: "buildbot-data-js",
+      formats: ['es'],
+      name: 'buildbot-data-js',
+      fileName: 'buildbot-data-js',
     },
     rollupOptions: {
       external: ['axios', 'mobx', 'react', 'moment'],
       output: {
         globals: {
-          axios: "axios",
-          mobx: "mobx",
-          react: "React",
-          moment: "moment",
+          axios: 'axios',
+          mobx: 'mobx',
+          react: 'React',
+          moment: 'moment',
         },
       },
     },
@@ -42,8 +42,8 @@ export default defineConfig({
     minify: false,
   },
   test: {
-    environment: "jsdom",
+    environment: 'jsdom',
     // required to fake nextTick: https://vitest.dev/guide/migration.html#timer-mocks-3925
-    pool: "threads"
+    pool: 'threads',
   },
 });

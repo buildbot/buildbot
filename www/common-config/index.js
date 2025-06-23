@@ -6,7 +6,7 @@ import importPlugin from 'eslint-plugin-import';
 import jsxAlly from 'eslint-plugin-jsx-a11y'
 import tseslint from 'typescript-eslint'
 
-export default tseslint.config(
+export const buildbotEslintConfig = tseslint.config(
   { ignores: ['dist'] },
   {
     extends: [
@@ -33,20 +33,27 @@ export default tseslint.config(
       'no-var': 'warn',
 
       '@typescript-eslint/ban-ts-comment': 'warn',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-for-in-array': 'warn',
       '@typescript-eslint/no-misused-promises': 'warn',
       '@typescript-eslint/no-redundant-type-constituents': 'warn',
       '@typescript-eslint/no-this-alias': 'warn',
       '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-call': 'warn',
-      '@typescript-eslint/no-unsafe-function-type': 'warn',
-      '@typescript-eslint/no-unsafe-member-access': 'warn',
-      '@typescript-eslint/no-unsafe-return': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        "warn",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_"
+        }
+      ],
       '@typescript-eslint/no-wrapper-object-types': 'warn',
       '@typescript-eslint/restrict-template-expressions': 'warn',
       '@typescript-eslint/triple-slash-reference': 'warn',
@@ -60,3 +67,13 @@ export default tseslint.config(
     },
   },
 )
+
+export const buildbotPrettierConfig = {
+  tabWidth: 2,
+  printWidth: 100,
+  singleQuote: true,
+  trailingComma: 'all',
+  bracketSpacing: false,
+  bracketSameLine: false,
+  arrowParens: 'always',
+}

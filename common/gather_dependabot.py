@@ -3,6 +3,7 @@
 # this script takes all the PR created by dependabot and gather them into one
 
 import os
+import subprocess
 
 import requests
 import yaml
@@ -13,8 +14,8 @@ def main():
         conf = yaml.safe_load(f)
         token = conf['github.com'][0]['oauth_token']
 
-    os.system("git fetch https://github.com/buildbot/buildbot master")
-    os.system("git checkout FETCH_HEAD -B gather_dependabot")
+    subprocess.check_call(["git", "fetch", "https://github.com/buildbot/buildbot", "master"])
+    subprocess.check_call(["git", "checkout", "FETCH_HEAD", "-B", "gather_dependabot"])
     s = requests.Session()
     s.headers.update({'Authorization': 'token ' + token})
     r = s.get("https://api.github.com/repos/buildbot/buildbot/pulls")
@@ -22,14 +23,20 @@ def main():
     prs = r.json()
 
     pr_text = "This PR collects dependabot PRs:\n\n"
-    for pr in prs:
-        if 'dependabot' in pr['user']['login']:
-            print(pr['number'], pr['title'])
-            pr_text += f"#{pr['number']}: {pr['title']}\n"
-            os.system(
-                f"git fetch https://github.com/buildbot/buildbot refs/pull/{pr['number']}/head"
-            )
-            os.system("git cherry-pick FETCH_HEAD")
+    try:
+        for pr in prs:
+            if 'dependabot' in pr['user']['login']:
+                print(pr['number'], pr['title'])
+                subprocess.check_call([
+                    "git",
+                    "fetch",
+                    "https://github.com/buildbot/buildbot",
+                    f"refs/pull/{pr['number']}/head",
+                ])
+                subprocess.check_call(["git", "cherry-pick", "FETCH_HEAD"])
+                pr_text += f"#{pr['number']}: {pr['title']}\n"
+    except Exception as e:
+        print('GOT ERROR', e)
 
     print("===========")
     print(pr_text)

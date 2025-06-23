@@ -5,7 +5,7 @@
   Copyright Buildbot Team Members
 */
 
-import {IDataAccessor} from "../DataAccessor";
+import {IDataAccessor} from '../DataAccessor';
 
 export interface IAnyDataDescriptor {
   restArrayField: string;

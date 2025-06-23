@@ -12,7 +12,6 @@ export class Stream<T> {
   listeners: StreamListener<T>[] = [];
 
   subscribe(listener: StreamListener<T>) {
-
     this.listeners.push(listener);
 
     // unsubscribe
@@ -23,7 +22,7 @@ export class Stream<T> {
   }
 
   push(data: T) {
-    for (let listener of this.listeners) {
+    for (const listener of this.listeners) {
       listener(data);
     }
   }

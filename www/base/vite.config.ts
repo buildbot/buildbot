@@ -1,11 +1,11 @@
-import {defineConfig, PluginOption, ViteDevServer} from "vite";
-import react from "@vitejs/plugin-react";
+import {defineConfig, PluginOption, ViteDevServer} from 'vite';
+import react from '@vitejs/plugin-react';
 import {nodePolyfills} from 'vite-plugin-node-polyfills';
 import {viteStaticCopy} from 'vite-plugin-static-copy';
 import checker from 'vite-plugin-checker';
 import path from 'path';
 import fs from 'fs';
-import { visualizer } from "rollup-plugin-visualizer";
+import {visualizer} from 'rollup-plugin-visualizer';
 
 const proxy = new URL('https://buildbot.buildbot.net');
 
@@ -16,12 +16,12 @@ const outDir = 'buildbot_www/static';
 
 const buildPluginsPathsMap = () => {
   const root = path.resolve(__dirname, '..');
-  const aliases: {[src: string]: [string, string]} = {}
+  const aliases: {[src: string]: [string, string]} = {};
 
   const addPlugin = (pluginName: string, pluginOutputRoot: string) => {
     const knownPaths = [
       ['scripts.js', 'text/javascript'],
-      ['styles.css', 'text/css']
+      ['styles.css', 'text/css'],
     ];
 
     for (const [filename, mimeType] of knownPaths) {
@@ -30,15 +30,15 @@ const buildPluginsPathsMap = () => {
         aliases[`/plugins/${pluginName}/${filename}`] = [pluginOutputFile, mimeType];
       }
     }
-  }
+  };
 
-  addPlugin('grid_view', path.join(root, `grid_view/buildbot_grid_view/static/`))
-  addPlugin('console_view', path.join(root, `console_view/buildbot_console_view/static/`))
-  addPlugin('waterfall_view', path.join(root, `waterfall_view/buildbot_waterfall_view/static/`))
-  addPlugin('wsgi_dashboards', path.join(root, `wsgi_dashboards/buildbot_wsgi_dashboards/static/`))
+  addPlugin('grid_view', path.join(root, `grid_view/buildbot_grid_view/static/`));
+  addPlugin('console_view', path.join(root, `console_view/buildbot_console_view/static/`));
+  addPlugin('waterfall_view', path.join(root, `waterfall_view/buildbot_waterfall_view/static/`));
+  addPlugin('wsgi_dashboards', path.join(root, `wsgi_dashboards/buildbot_wsgi_dashboards/static/`));
 
   return aliases;
-}
+};
 
 function serveBuildbotPlugins(): PluginOption {
   return {
@@ -48,7 +48,7 @@ function serveBuildbotPlugins(): PluginOption {
 
       return () => {
         server.middlewares.use(async (req, res, next) => {
-          if (req.originalUrl !== undefined && (req.originalUrl in pathMap)) {
+          if (req.originalUrl !== undefined && req.originalUrl in pathMap) {
             const [filePath, mimeType] = pathMap[req.originalUrl];
             res.setHeader('Content-Type', mimeType);
             res.writeHead(200);
@@ -69,19 +69,21 @@ export default defineConfig({
     react({
       babel: {
         parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties']
-        }
-      }
+          plugins: ['decorators-legacy', 'classProperties'],
+        },
+      },
     }),
     viteStaticCopy({
       targets: [
-        { src: './node_modules/outdated-browser-rework/dist/outdated-browser-rework.min.js',
+        {
+          src: './node_modules/outdated-browser-rework/dist/outdated-browser-rework.min.js',
           dest: '',
-          rename: 'browser-warning.js'
+          rename: 'browser-warning.js',
         },
-        { src: './node_modules/outdated-browser-rework/dist/style.css',
+        {
+          src: './node_modules/outdated-browser-rework/dist/style.css',
           dest: '',
-          rename: 'browser-warning.css'
+          rename: 'browser-warning.css',
         },
       ],
     }),
@@ -89,7 +91,7 @@ export default defineConfig({
     serveBuildbotPlugins(),
     nodePolyfills({
       include: ['util'],
-      globals: { process: true },
+      globals: {process: true},
     }),
     visualizer(),
   ],
@@ -102,10 +104,10 @@ export default defineConfig({
     emptyOutDir: true,
   },
   test: {
-    environment: "jsdom",
+    environment: 'jsdom',
     // required to fake nextTick: https://vitest.dev/guide/migration.html#timer-mocks-3925
-    pool: "threads",
-    setupFiles: './vitest.setup.tsx'
+    pool: 'threads',
+    setupFiles: './vitest.setup.tsx',
   },
   server: {
     proxy: {
@@ -114,8 +116,8 @@ export default defineConfig({
       '/api/v2': {
         target: proxyTargetHttp,
         headers: {
-          'Host': proxy.host,
-          'Origin': proxyTargetHttp,
+          Host: proxy.host,
+          Origin: proxyTargetHttp,
         },
         // note that changeOrigin does not work for POST requests
       },
@@ -125,8 +127,8 @@ export default defineConfig({
         ws: true,
         secure: false, // the proxy attempts to verify certificate using localhost hostname
         headers: {
-          'Host': proxy.host,
-          'Origin': proxyTargetHttp,
+          Host: proxy.host,
+          Origin: proxyTargetHttp,
         },
       },
       '/avatar': proxyTargetHttp,
@@ -136,15 +138,7 @@ export default defineConfig({
     },
   },
   resolve: {
-    dedupe: [
-      'axios',
-      'mobx',
-      'mobx-react',
-      'moment',
-      'react',
-      'react-dom',
-      'react-router-dom'
-    ],
-    mainFields: ['browser', 'module', 'main']
+    dedupe: ['axios', 'mobx', 'mobx-react', 'moment', 'react', 'react-dom', 'react-router-dom'],
+    mainFields: ['browser', 'module', 'main'],
   },
 });

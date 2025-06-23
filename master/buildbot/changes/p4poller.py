@@ -315,18 +315,19 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         else:
             args.extend(['-m', '1', f'{self.p4base}...'])
 
-        result = yield self._get_process_output(args)
+        gpo_result: bytes = yield self._get_process_output(args)
+
         # decode the result from its designated encoding
         try:
-            result = bytes2unicode(result, self.encoding)
+            result = bytes2unicode(gpo_result, self.encoding)
         except UnicodeError as ex:
             self._logger.warn(
                 "{ex}: cannot fully decode {result!r} in {encoding}",
                 ex=ex,
-                result=result,
+                result=gpo_result,
                 encoding=self.encoding,
             )
-            result = bytes2unicode(result, encoding=self.encoding, errors="replace")
+            result = bytes2unicode(gpo_result, encoding=self.encoding, errors="replace")
 
         last_change = self.last_change
         changelists: list[int] = []
@@ -358,15 +359,15 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
                 if self.p4passwd:
                     args.extend(['-P', self.p4passwd])
             args.extend(['describe', '-s', str(num)])
-            result = yield self._get_process_output(args)
+            gpo_result = yield self._get_process_output(args)
 
             # decode the result from its designated encoding
             try:
-                result = bytes2unicode(result, self.encoding)
+                result = bytes2unicode(gpo_result, self.encoding)
             except UnicodeError as ex:
                 self._logger.error(
                     "Couldn't decode changelist description in object: {result}. ex: {ex}",
-                    result=result,
+                    result=gpo_result,
                     ex=ex,
                 )
                 raise

@@ -5,23 +5,23 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
 
 export class CodebaseCommit extends BaseClass {
   @observable commitid!: number;
   @observable codebaseid!: number;
   @observable author!: string;
-  @observable committer!: string|null;
+  @observable committer!: string | null;
   @observable comments!: string;
   @observable when_timestamp!: number;
   @observable revision!: string;
-  @observable parent_commitid!: number|null;
+  @observable parent_commitid!: number | null;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "commits", String(object.commitid));
+    super(accessor, 'commits', String(object.commitid));
     this.update(object);
     makeObservable(this);
   }
@@ -52,8 +52,8 @@ export class CodebaseCommit extends BaseClass {
 }
 
 export class CodebaseCommitDescriptor implements IDataDescriptor<CodebaseCommit> {
-  restArrayField = "commits";
-  fieldId: string = "commitid";
+  restArrayField = 'commits';
+  fieldId: string = 'commitid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new CodebaseCommit(accessor, object);

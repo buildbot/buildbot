@@ -15,27 +15,29 @@
   Copyright Buildbot Team Members
 */
 
-import {ForceSchedulerFieldChoiceString} from "buildbot-data-js";
-import {ForceBuildModalFieldsState} from "../ForceBuildModalFieldsState";
-import {FaRegQuestionCircle} from "react-icons/fa";
-import {observer} from "mobx-react";
-import {FieldBase} from "./FieldBase";
-import {Form} from "react-bootstrap";
-import {Tooltip} from 'react-tooltip'
-import Select, { ActionMeta, PropsValue, SingleValue, MultiValue } from 'react-select';
+import {ForceSchedulerFieldChoiceString} from 'buildbot-data-js';
+import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
+import {FaRegQuestionCircle} from 'react-icons/fa';
+import {observer} from 'mobx-react';
+import {FieldBase} from './FieldBase';
+import {Form} from 'react-bootstrap';
+import {Tooltip} from 'react-tooltip';
+import Select, {ActionMeta, PropsValue, SingleValue, MultiValue} from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
 type FieldChoiceStringProps = {
   field: ForceSchedulerFieldChoiceString;
   fieldsState: ForceBuildModalFieldsState;
-}
+};
 
 interface SelectOption {
-  readonly value: string,
-  readonly label: string,
+  readonly value: string;
+  readonly label: string;
 }
 
-const ValueToSelectOption = (value: string): SelectOption => { return {value: value, label: value} };
+const ValueToSelectOption = (value: string): SelectOption => {
+  return {value: value, label: value};
+};
 
 export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStringProps) => {
   const state = fieldsState.fields.get(field.fullName)!;
@@ -43,16 +45,12 @@ export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStri
     fieldsState.setValue(field.fullName, state.value ? [state.value] : []);
   }
 
-  const onChange = (
-    newValue: PropsValue<SelectOption>,
-    _actionMeta: ActionMeta<SelectOption>
-  ) => {
+  const onChange = (newValue: PropsValue<SelectOption>, _actionMeta: ActionMeta<SelectOption>) => {
     fieldsState.setValue(
       field.fullName,
-      (
-        field.multiple  ? (newValue as MultiValue<SelectOption>).map(e => e.value)
-                        : (newValue as SingleValue<SelectOption>)?.value ?? null
-      )
+      field.multiple
+        ? (newValue as MultiValue<SelectOption>).map((e) => e.value)
+        : ((newValue as SingleValue<SelectOption>)?.value ?? null),
     );
   };
   let options = field.choices.map(ValueToSelectOption);
@@ -62,27 +60,30 @@ export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStri
 
   const props = {
     isMulti: field.multiple,
-    defaultValue: field.multiple ? (state.value as string[]).map(ValueToSelectOption) : ValueToSelectOption(state.value as string),
+    defaultValue: field.multiple
+      ? (state.value as string[]).map(ValueToSelectOption)
+      : ValueToSelectOption(state.value as string),
     onChange,
     options,
   };
 
   return (
     <FieldBase field={field} fieldsState={fieldsState}>
-      <Form.Label className="col-sm-10">{field.label}
+      <Form.Label className="col-sm-10">
+        {field.label}
         {field.tooltip && (
           <span data-tooltip-id="my-tooltip" data-tooltip-html={field.tooltip}>
-            <FaRegQuestionCircle className="tooltip-icon"/>
+            <FaRegQuestionCircle className="tooltip-icon" />
           </span>
         )}
-        <Tooltip id="my-tooltip" clickable/>
+        <Tooltip id="my-tooltip" clickable />
       </Form.Label>
       <div className="col-sm-10" data-bb-test-id={`force-field-${field.fullName}`}>
-        {
-          field.strict ?
-          <Select<SelectOption, boolean> {...props} /> :
+        {field.strict ? (
+          <Select<SelectOption, boolean> {...props} />
+        ) : (
           <CreatableSelect<SelectOption, boolean> {...props} />
-        }
+        )}
       </div>
     </FieldBase>
   );

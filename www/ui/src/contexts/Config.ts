@@ -15,30 +15,30 @@
   Copyright Buildbot Team Members
 */
 
-import {createContext} from "react";
+import {createContext} from 'react';
 
 export type AuthConfig = {
   name: string;
   oauth2: boolean;
   fa_icon: string;
   autologin: boolean;
-}
+};
 
 export type AvatarConfig = {
   name: string;
-}
+};
 
 export type UserConfig = {
   anonymous: boolean;
   username?: string;
   email?: string;
   full_name?: string;
-}
+};
 
 export type ProjectWidgetsConfig = {
   project_name?: string;
   widgets: string[];
-}
+};
 
 export type Config = {
   title: string;
@@ -56,6 +56,6 @@ export type Config = {
   port: string;
   // Added by the frontend itself if it's running via a proxy.
   isProxy?: boolean;
-}
+};
 
 export const ConfigContext = createContext<Config>(undefined as any);

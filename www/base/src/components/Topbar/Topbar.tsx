@@ -15,41 +15,45 @@
   Copyright Buildbot Team Members
 */
 
-import './Topbar.scss'
-import {Link} from "react-router-dom";
-import {computed} from "mobx";
-import {observer} from "mobx-react";
-import {Nav, Navbar} from "react-bootstrap";
-import {TopbarStore} from "buildbot-ui";
+import './Topbar.scss';
+import {Link} from 'react-router-dom';
+import {computed} from 'mobx';
+import {observer} from 'mobx-react';
+import {Nav, Navbar} from 'react-bootstrap';
+import {TopbarStore} from 'buildbot-ui';
 
 type TopbarProps = {
-  store: TopbarStore,
-  appTitle: string,
-  children: JSX.Element | JSX.Element[]
-}
+  store: TopbarStore;
+  appTitle: string;
+  children: JSX.Element | JSX.Element[];
+};
 
 export const Topbar = observer(({store, appTitle, children}: TopbarProps) => {
-  const elements = computed(() => store.items.map((item, index) => {
-    if (item.route === null) {
+  const elements = computed(() =>
+    store.items.map((item, index) => {
+      if (item.route === null) {
+        return (
+          <li className="nav-item" key={index}>
+            <span>{item.caption}</span>
+          </li>
+        );
+      }
       return (
-        <li className="nav-item" key={index}><span>{item.caption}</span></li>
+        <li className="nav-item" key={index}>
+          <Link className="nav-link" to={item.route}>
+            {item.caption}
+          </Link>
+        </li>
       );
-    }
-    return (
-      <li className="nav-item" key={index}>
-        <Link className="nav-link" to={item.route}>{item.caption}</Link>
-      </li>
-    );
-  })).get();
+    }),
+  ).get();
 
   return (
     <Navbar bg="light" expand="lg">
       <Navbar.Brand>{appTitle}</Navbar.Brand>
       <Navbar.Toggle aria-controls="bb-topbar-navbar-nav" />
       <Navbar.Collapse id="bb-topbar-navbar-nav">
-        <Nav className="mr-auto bb-topbar-navbar-elements">
-          {elements}
-        </Nav>
+        <Nav className="mr-auto bb-topbar-navbar-elements">{elements}</Nav>
         {children}
       </Navbar.Collapse>
     </Navbar>

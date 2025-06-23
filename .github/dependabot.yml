@@ -2,14 +2,31 @@ version: 2
 updates:
   - package-ecosystem: "pip"
     directory: "/"
+    commit-message:
+      prefix: "requirements: "
+    open-pull-requests-limit: 15
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
 
   - package-ecosystem: "npm"
     directories:
-      - "e2e/"
       - "www/**"
+    commit-message:
+      prefix: "www: "
+    # more PRs won't help due to merge conflicts in lock file
+    open-pull-requests-limit: 3
+    schedule:
+      interval: "cron"
+      cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
+
+  - package-ecosystem: "npm"
+    directories:
+      - "e2e/**"
+    commit-message:
+      prefix: "e2e: "
+    # more PRs won't help due to merge conflicts in lock file
+    open-pull-requests-limit: 3
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
@@ -17,12 +34,17 @@ updates:
   - package-ecosystem: "docker"
     directories:
       - "**/*"
+    commit-message:
+      prefix: "docker: "
+    open-pull-requests-limit: 15
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    commit-message:
+      prefix: "github: "
     schedule:
       interval: "cron"
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month

@@ -16,8 +16,8 @@
 */
 
 import './BuildSummaryTooltip.scss';
-import {useContext} from "react";
-import {observer} from "mobx-react";
+import {useContext} from 'react';
+import {observer} from 'mobx-react';
 import {
   Builder,
   Build,
@@ -26,20 +26,20 @@ import {
   useDataAccessor,
   useDataApiQuery,
   results2class,
-  results2text
-} from "buildbot-data-js";
-import {ConfigContext} from "../../contexts/Config";
-import {buildDurationFormatWithLocks, stepDurationFormatWithLocks} from "../../util/DataUtils";
-import {useCurrentTime} from "../../util/Moment";
-import {analyzeStepUrls, useStepUrlAnalyzer} from "../../util/StepUrls";
-import {BadgeRound} from "../BadgeRound/BadgeRound";
-import {BadgeStatus} from "../BadgeStatus/BadgeStatus";
+  results2text,
+} from 'buildbot-data-js';
+import {ConfigContext} from '../../contexts/Config';
+import {buildDurationFormatWithLocks, stepDurationFormatWithLocks} from '../../util/DataUtils';
+import {useCurrentTime} from '../../util/Moment';
+import {analyzeStepUrls, useStepUrlAnalyzer} from '../../util/StepUrls';
+import {BadgeRound} from '../BadgeRound/BadgeRound';
+import {BadgeStatus} from '../BadgeStatus/BadgeStatus';
 import Card from 'react-bootstrap/Card';
-import React from "react";
+import React from 'react';
 
 const isStepDisplayed = (step: Step) => {
   return !step.hidden;
-}
+};
 
 const limitStringLength = (s: string, limit: number) => {
   let res = s.slice(0, limit);
@@ -47,11 +47,11 @@ const limitStringLength = (s: string, limit: number) => {
     res += ' ...';
   }
   return res;
-}
+};
 
 type BuildSummaryTooltipProps = {
   build: Build;
-}
+};
 
 export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) => {
   const accessor = useDataAccessor([build.id]);
@@ -59,14 +59,16 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
 
   const propertiesQuery = useDataApiQuery(() => build.getProperties());
   const stepsQuery = useDataApiQuery(() => build.getSteps());
-  const builderQuery = useDataApiQuery(() => Builder.getAll(accessor, {id: build.builderid.toString()}));
+  const builderQuery = useDataApiQuery(() =>
+    Builder.getAll(accessor, {id: build.builderid.toString()}),
+  );
 
   const builder = builderQuery.getNthOrNull(0);
   const stepsToDisplay = stepsQuery.array.filter(isStepDisplayed);
 
-  const buildResultClass = build !== null ? " " + results2class(build, null) : "";
+  const buildResultClass = build !== null ? ' ' + results2class(build, null) : '';
 
-  const reason = getPropertyValueOrDefault(propertiesQuery.properties, "reason", null);
+  const reason = getPropertyValueOrDefault(propertiesQuery.properties, 'reason', null) as string;
 
   const baseUrls = config.buildbotURLs || [config.buildbotURL];
   const stepUrlAnalyzer = useStepUrlAnalyzer(baseUrls);
@@ -76,34 +78,33 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
   const headerElements: JSX.Element[] = [];
 
   if (build !== null) {
-    headerElements.push((
+    headerElements.push(
       <div key="build" className="flex-row">
         <div className="flex-grow-1">
           <span>{builder !== null ? limitStringLength(builder.name, 80) : ''}</span>
           <BadgeRound className={buildResultClass}>{build.number.toString()}</BadgeRound>
-          { reason !== null
-            ? <span>&nbsp; | {reason}</span>
-            : <></>
-          }
+          {reason !== null ? <span>&nbsp; | {reason}</span> : <></>}
         </div>
-      </div>
-    ));
+      </div>,
+    );
 
-    headerElements.push((
+    headerElements.push(
       <div key="result" className="flex-row">
         <div className="flex-grow-1">
-          { buildDurationFormatWithLocks(build, now) }
+          {buildDurationFormatWithLocks(build, now)}
           &nbsp;
-          { limitStringLength(build.state_string, 80) }
+          {limitStringLength(build.state_string, 80)}
           &nbsp;
           <BadgeStatus className={buildResultClass}>{results2text(build)}</BadgeStatus>
         </div>
-      </div>
-    ));
+      </div>,
+    );
   } else {
-    headerElements.push((
-      <div key="build" className="flex-row">loading build details...</div>
-    ));
+    headerElements.push(
+      <div key="build" className="flex-row">
+        loading build details...
+      </div>,
+    );
   }
 
   const stepElements = stepsToDisplay.map((step, index) => {
@@ -115,9 +116,9 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
               <span className="bb-buildsummary-tooltip-collapsed-entries">⋮</span>
             </div>
           </li>
-        )
+        );
       } else {
-        return <React.Fragment key={index}/>;
+        return <React.Fragment key={index} />;
       }
     }
 
@@ -125,7 +126,7 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
     if (step.started_at !== null) {
       stepInfoWhenStarted = (
         <span className="bb-buildsummary-tooltip-step-time">
-            { stepDurationFormatWithLocks(step, now) }
+          {stepDurationFormatWithLocks(step, now)}
           &nbsp;
           {limitStringLength(step.state_string, 40)}
         </span>
@@ -148,25 +149,26 @@ export const BuildSummaryTooltip = observer(({build}: BuildSummaryTooltipProps) 
       <li key={index} className="list-group-item">
         <div className="clearfix">
           <span className="bb-buildsummary-tooltip-step-badge">
-            <BadgeRound className={results2class(step, 'pulse')}>{step.number.toString()}</BadgeRound>
+            <BadgeRound className={results2class(step, 'pulse')}>
+              {step.number.toString()}
+            </BadgeRound>
             &nbsp;
           </span>
-          <span className="bb-buildsummary-tooltip-step-name">{limitStringLength(step.name, 40)}
+          <span className="bb-buildsummary-tooltip-step-name">
+            {limitStringLength(step.name, 40)}
             {stepBuildInfoElement}
           </span>
           <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
           {stepInfoWhenStarted}
         </div>
       </li>
-    )
+    );
   });
 
   return (
-    <Card style={{marginBottom: "0px"}} className={buildResultClass}>
+    <Card style={{marginBottom: '0px'}} className={buildResultClass}>
       <Card.Header>{headerElements}</Card.Header>
-      <ul className="list-group">
-        {stepElements}
-      </ul>
+      <ul className="list-group">{stepElements}</ul>
     </Card>
   );
 });

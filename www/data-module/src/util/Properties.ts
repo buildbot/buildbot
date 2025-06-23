@@ -5,7 +5,7 @@
   Copyright Buildbot Team Members
 */
 
-import {emailInString} from "../data/DataUtils";
+import {emailInString} from '../data/DataUtils';
 
 export function getPropertyValueArrayOrEmpty(props: {[key: string]: any}, key: string) {
   if (!(key in props)) {
@@ -43,7 +43,7 @@ export function parseChangeAuthorNameAndEmail(author: string): [string, string |
     if (author.split(' ').length > 1) {
       name = author.replace(new RegExp(`\\s<${email}>`), '');
     } else {
-      name = email.split("@")[0];
+      name = email.split('@')[0];
     }
     return [name, email];
   }

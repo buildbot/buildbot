@@ -37,35 +37,47 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. */
 
 // Finds the first element that is greater or equal to the given value.
-export function binarySearchGreaterEqual<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
-                                               lo?: number, hi?: number) {
-  let l = (lo === undefined) ? 0 : lo | 0;
-  let h = (hi === undefined) ? a.length - 1 : hi | 0;
+export function binarySearchGreaterEqual<T, U>(
+  a: ArrayLike<T>,
+  y: U,
+  c?: (a: T, y: U) => number,
+  lo?: number,
+  hi?: number,
+) {
+  let l = lo === undefined ? 0 : lo | 0;
+  let h = hi === undefined ? a.length - 1 : hi | 0;
 
   var i = h + 1;
   while (l <= h) {
-    var m = (l + h) >>> 1, x = a[m];
-    var p = (c !== undefined) ? c(x, y) : ((x as unknown as number) - (y as unknown as number));
+    var m = (l + h) >>> 1,
+      x = a[m];
+    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
     if (p >= 0) {
       i = m;
-      h = m - 1
+      h = m - 1;
     } else {
-      l = m + 1
+      l = m + 1;
     }
   }
   return i;
-};
+}
 
 // Finds the first element that is greater than the given value.
-export function binarySearchGreater<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
-                                          lo?: number, hi?: number) {
-  let l = (lo === undefined) ? 0 : lo | 0;
-  let h = (hi === undefined) ? a.length - 1 : hi | 0;
+export function binarySearchGreater<T, U>(
+  a: ArrayLike<T>,
+  y: U,
+  c?: (a: T, y: U) => number,
+  lo?: number,
+  hi?: number,
+) {
+  let l = lo === undefined ? 0 : lo | 0;
+  let h = hi === undefined ? a.length - 1 : hi | 0;
 
   var i = h + 1;
   while (l <= h) {
-    var m = (l + h) >>> 1, x = a[m];
-    var p = (c !== undefined) ? c(x, y) : ((x as unknown as number) - (y as unknown as number));
+    var m = (l + h) >>> 1,
+      x = a[m];
+    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
     if (p > 0) {
       i = m;
       h = m - 1;
@@ -74,18 +86,24 @@ export function binarySearchGreater<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U
     }
   }
   return i;
-};
+}
 
 // Finds the first element that is less than the given value.
-export function binarySearchLess<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
-                                       lo?: number, hi?: number) {
-  let l = (lo === undefined) ? 0 : lo | 0;
-  let h = (hi === undefined) ? a.length - 1 : hi | 0;
+export function binarySearchLess<T, U>(
+  a: ArrayLike<T>,
+  y: U,
+  c?: (a: T, y: U) => number,
+  lo?: number,
+  hi?: number,
+) {
+  let l = lo === undefined ? 0 : lo | 0;
+  let h = hi === undefined ? a.length - 1 : hi | 0;
 
   var i = l - 1;
   while (l <= h) {
-    var m = (l + h) >>> 1, x = a[m];
-    var p = (c !== undefined) ? c(x, y) : ((x as unknown as number) - (y as unknown as number));
+    var m = (l + h) >>> 1,
+      x = a[m];
+    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
     if (p < 0) {
       i = m;
       l = m + 1;
@@ -94,18 +112,24 @@ export function binarySearchLess<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) =
     }
   }
   return i;
-};
+}
 
 // Finds the first element that is less or equal to the given value.
-export function binarySearchLessEqual<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
-                                            lo?: number, hi?: number) {
-  let l = (lo === undefined) ? 0 : lo | 0;
-  let h = (hi === undefined) ? a.length - 1 : hi | 0;
+export function binarySearchLessEqual<T, U>(
+  a: ArrayLike<T>,
+  y: U,
+  c?: (a: T, y: U) => number,
+  lo?: number,
+  hi?: number,
+) {
+  let l = lo === undefined ? 0 : lo | 0;
+  let h = hi === undefined ? a.length - 1 : hi | 0;
 
   var i = l - 1;
   while (l <= h) {
-    var m = (l + h) >>> 1, x = a[m];
-    var p = (c !== undefined) ? c(x, y) : ((x as unknown as number) - (y as unknown as number));
+    var m = (l + h) >>> 1,
+      x = a[m];
+    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
     if (p <= 0) {
       i = m;
       l = m + 1;
@@ -117,15 +141,23 @@ export function binarySearchLessEqual<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y:
 }
 
 // Finds the element that is equal to the given value or -1 if no such element exists.
-export function binarySearchEqual<T, U>(a: ArrayLike<T>, y: U, c?: (a: T, y: U) => number,
-                                        lo?: number, hi?: number) {
-  let l = (lo === undefined) ? 0 : lo | 0;
-  let h = (hi === undefined) ? a.length - 1 : hi | 0;
+export function binarySearchEqual<T, U>(
+  a: ArrayLike<T>,
+  y: U,
+  c?: (a: T, y: U) => number,
+  lo?: number,
+  hi?: number,
+) {
+  let l = lo === undefined ? 0 : lo | 0;
+  let h = hi === undefined ? a.length - 1 : hi | 0;
 
   while (l <= h) {
-    var m = (l + h) >>> 1, x = a[m];
-    var p = (c !== undefined) ? c(x, y) : ((x as unknown as number) - (y as unknown as number));
-    if (p === 0) { return m }
+    var m = (l + h) >>> 1,
+      x = a[m];
+    var p = c !== undefined ? c(x, y) : (x as unknown as number) - (y as unknown as number);
+    if (p === 0) {
+      return m;
+    }
     if (p <= 0) {
       l = m + 1;
     } else {

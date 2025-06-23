@@ -41,15 +41,19 @@
   SOFTWARE.
 */
 
-import {beforeEach, describe, expect, it, vi, Mock, MockInstance} from "vitest";
+import {beforeEach, describe, expect, it, vi, Mock, MockInstance} from 'vitest';
 import React, {createRef, memo} from 'react';
 import {createRoot} from 'react-dom/client';
-import renderer from "react-test-renderer";
+import renderer from 'react-test-renderer';
 import {Simulate} from 'react-dom/test-utils';
 import {FixedSizeList, FixedSizeListProps} from './FixedSizeList';
 import * as domHelpers from './domHelpers';
 
-const simulateScroll = (instance: FixedSizeList<any>, scrollOffset: number, direction = 'vertical') => {
+const simulateScroll = (
+  instance: FixedSizeList<any>,
+  scrollOffset: number,
+  direction = 'vertical',
+) => {
   if (direction === 'horizontal') {
     instance._outerRef!.scrollLeft = scrollOffset;
   } else {
@@ -61,17 +65,12 @@ const simulateScroll = (instance: FixedSizeList<any>, scrollOffset: number, dire
 const findScrollContainer = (rendered: any) => rendered.root.children[0].children[0];
 
 async function waitForAnimationFrame() {
-  const p = new Promise<void>((resolve, reject) => {
+  const p = new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => {
       resolve();
     });
   });
   await p;
-}
-
-async function sleepMs(ms: number) {
-  var promise = new Promise((r) => setTimeout(r, ms));
-  await promise;
 }
 
 async function renderWithReactDom(children: React.ReactNode) {
@@ -83,7 +82,6 @@ async function renderWithReactDom(children: React.ReactNode) {
   await waitForAnimationFrame();
 }
 
-
 describe('FixedSizeList', () => {
   let itemRenderer: Mock;
   let getScrollbarSize: MockInstance;
@@ -94,7 +92,7 @@ describe('FixedSizeList', () => {
   let mockedScrollWidth = Number.MAX_SAFE_INTEGER;
 
   beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['nextTick'] });
+    vi.useFakeTimers({toFake: ['nextTick']});
 
     mockedScrollHeight = Number.MAX_SAFE_INTEGER;
     mockedScrollWidth = Number.MAX_SAFE_INTEGER;
@@ -105,13 +103,13 @@ describe('FixedSizeList', () => {
     Object.defineProperties(HTMLDivElement.prototype, {
       clientWidth: {
         configurable: true,
-        get: function() {
+        get: function () {
           return parseInt(this.style.width, 10) || 0;
         },
       },
       clientHeight: {
         configurable: true,
-        get: function() {
+        get: function () {
           return parseInt(this.style.height, 10) || 0;
         },
       },
@@ -126,17 +124,16 @@ describe('FixedSizeList', () => {
     });
 
     // Mock the DOM helper util for testing purposes.
-    getScrollbarSize = vi.spyOn(domHelpers, "getScrollbarSize");
+    getScrollbarSize = vi.spyOn(domHelpers, 'getScrollbarSize');
     getScrollbarSize.mockImplementation(() => 0);
 
     onItemsRendered = vi.fn();
 
-
-    itemRenderer = vi.fn(({ style, ...rest }) => (
+    itemRenderer = vi.fn(({style, ...rest}) => (
       <div style={style}>{JSON.stringify(rest, null, 2)}</div>
     ));
 
-    // @ts-ignore
+    // @ts-expect-error: This is a test case where we expect a type error
     defaultProps = {
       children: memo((props) => itemRenderer(props)),
       height: 100,
@@ -160,8 +157,7 @@ describe('FixedSizeList', () => {
   });
 
   describe('scrollbar handling', () => {
-    it('should set width to "100%" for vertical lists to avoid unnecessary horizontal scrollbar',
-        async () => {
+    it('should set width to "100%" for vertical lists to avoid unnecessary horizontal scrollbar', async () => {
       const innerRef = createRef<HTMLDivElement>();
       await renderWithReactDom(<FixedSizeList {...defaultProps} innerRef={innerRef} />);
 
@@ -174,7 +170,7 @@ describe('FixedSizeList', () => {
   describe('style caching', () => {
     it('should cache styles while scrolling to avoid breaking pure sCU for items', () => {
       const ref = createRef<FixedSizeList<any>>();
-      renderer.create(<FixedSizeList {...defaultProps} ref={ref}/>);
+      renderer.create(<FixedSizeList {...defaultProps} ref={ref} />);
       // Scroll a few times.
       // Each time, make sure to render item 3.
       ref.current!.scrollToItem(1, 'start');
@@ -182,9 +178,7 @@ describe('FixedSizeList', () => {
       ref.current!.scrollToItem(3, 'start');
       // Find all of the times item 3 was rendered.
       // If we are caching props correctly, it should only be once.
-      expect(
-        itemRenderer.mock.calls.filter(([params]) => params.index === 3)
-      ).toHaveLength(1);
+      expect(itemRenderer.mock.calls.filter(([params]) => params.index === 3)).toHaveLength(1);
     });
   });
 
@@ -195,9 +189,7 @@ describe('FixedSizeList', () => {
   });
 
   it('changing itemSize updates the rendered items and busts the style cache', () => {
-    const rendered = renderer.create(
-      <FixedSizeList {...defaultProps} />
-    );
+    const rendered = renderer.create(<FixedSizeList {...defaultProps} />);
     const oldStyle = itemRenderer.mock.calls[0][0].style;
     itemRenderer.mockClear();
     rendered.update(<FixedSizeList {...defaultProps} itemSize={50} />);
@@ -213,26 +205,22 @@ describe('FixedSizeList', () => {
 
   it('should disable pointer events while scrolling', () => {
     const ref = createRef<FixedSizeList<any>>();
-    const rendered = renderer.create(
-      <FixedSizeList {...defaultProps} ref={ref}/>
-    );
+    const rendered = renderer.create(<FixedSizeList {...defaultProps} ref={ref} />);
     const scrollContainer = findScrollContainer(rendered);
     expect(scrollContainer.props.style.pointerEvents).toBe(undefined);
-    ref.current!.setState({ isScrolling: true });
+    ref.current!.setState({isScrolling: true});
     expect(scrollContainer.props.style.pointerEvents).toBe('none');
   });
 
   describe('style overrides', () => {
     it('should support className prop', () => {
-      const rendered = renderer.create(
-        <FixedSizeList {...defaultProps} className="custom" />
-      );
+      const rendered = renderer.create(<FixedSizeList {...defaultProps} className="custom" />);
       expect((rendered.toJSON() as any).props.className).toBe('custom');
     });
 
     it('should support style prop', () => {
       const rendered = renderer.create(
-        <FixedSizeList {...defaultProps} style={{ backgroundColor: 'red' }} />
+        <FixedSizeList {...defaultProps} style={{backgroundColor: 'red'}} />,
       );
       expect((rendered.toJSON() as any).props.style.backgroundColor).toBe('red');
     });
@@ -270,11 +258,7 @@ describe('FixedSizeList', () => {
   describe('overscanCount', () => {
     it('should require a minimum of 1 overscan to support tabbing', () => {
       renderer.create(
-        <FixedSizeList
-          {...defaultProps}
-          initialScrollOffset={50}
-          overscanCount={0}
-        />
+        <FixedSizeList {...defaultProps} initialScrollOffset={50} overscanCount={0} />,
       );
       expect(onItemsRendered.mock.calls).toMatchSnapshot();
     });
@@ -282,12 +266,7 @@ describe('FixedSizeList', () => {
     it('should overscan in the direction being scrolled', async () => {
       const ref = createRef<FixedSizeList<any>>();
       await renderWithReactDom(
-        <FixedSizeList
-          {...defaultProps}
-          initialScrollOffset={50}
-          overscanCount={2}
-          ref={ref}
-        />
+        <FixedSizeList {...defaultProps} initialScrollOffset={50} overscanCount={2} ref={ref} />,
       );
 
       // Simulate scrolling (rather than using scrollTo) to test isScrolling state.
@@ -307,11 +286,7 @@ describe('FixedSizeList', () => {
 
     it('should accommodate a custom overscan', () => {
       renderer.create(
-        <FixedSizeList
-          {...defaultProps}
-          initialScrollOffset={100}
-          overscanCount={3}
-        />
+        <FixedSizeList {...defaultProps} initialScrollOffset={100} overscanCount={3} />,
       );
       expect(onItemsRendered.mock.calls).toMatchSnapshot();
     });
@@ -322,13 +297,7 @@ describe('FixedSizeList', () => {
     });
 
     it('should not scan past the end of the list', () => {
-      renderer.create(
-        <FixedSizeList
-          {...defaultProps}
-          itemCount={10}
-          initialScrollOffset={150}
-        />
-      );
+      renderer.create(<FixedSizeList {...defaultProps} itemCount={10} initialScrollOffset={150} />);
       expect(onItemsRendered.mock.calls).toMatchSnapshot();
     });
   });
@@ -364,7 +333,7 @@ describe('FixedSizeList', () => {
     it('should not re-render children unnecessarily if isScrolling param is not used', async () => {
       // Use ReactDOM renderer so the container ref and "onScroll" work correctly.
       const ref = createRef<FixedSizeList<any>>();
-      await renderWithReactDom(<FixedSizeList {...defaultProps} overscanCount={1} ref={ref}/>);
+      await renderWithReactDom(<FixedSizeList {...defaultProps} overscanCount={1} ref={ref} />);
 
       simulateScroll(ref.current!, 100);
       itemRenderer.mockClear();
@@ -377,7 +346,7 @@ describe('FixedSizeList', () => {
     it('should not report isScrolling', async () => {
       // Use ReactDOM renderer so the container ref and "onScroll" work correctly.
       const ref = createRef<FixedSizeList<any>>();
-      await renderWithReactDom(<FixedSizeList {...defaultProps} useIsScrolling ref={ref}/>);
+      await renderWithReactDom(<FixedSizeList {...defaultProps} useIsScrolling ref={ref} />);
 
       itemRenderer.mockClear();
 
@@ -390,7 +359,7 @@ describe('FixedSizeList', () => {
     it('should ignore values less than zero', async () => {
       const onScroll = vi.fn();
       const ref = createRef<FixedSizeList<any>>();
-      await renderWithReactDom(<FixedSizeList {...defaultProps} onScroll={onScroll} ref={ref}/>);
+      await renderWithReactDom(<FixedSizeList {...defaultProps} onScroll={onScroll} ref={ref} />);
 
       ref.current!.scrollTo(100);
       await waitForAnimationFrame();
@@ -409,7 +378,7 @@ describe('FixedSizeList', () => {
       const onScroll = vi.fn();
       const ref = createRef<FixedSizeList<any>>();
       renderer.create(
-        <FixedSizeList {...defaultProps} itemCount={3} onScroll={onScroll} ref={ref}/>
+        <FixedSizeList {...defaultProps} itemCount={3} onScroll={onScroll} ref={ref} />,
       );
       expect(onItemsRendered).toMatchSnapshot();
       onItemsRendered.mockClear();
@@ -419,7 +388,7 @@ describe('FixedSizeList', () => {
 
     it('should scroll to the correct item for align = "auto"', () => {
       const ref = createRef<FixedSizeList<any>>();
-      renderer.create(<FixedSizeList {...defaultProps} ref={ref}/>);
+      renderer.create(<FixedSizeList {...defaultProps} ref={ref} />);
       // Scroll down enough to show item 10 at the bottom.
       ref.current!.scrollToItem(10, 'auto');
       // No need to scroll again; item 9 is already visible.
@@ -435,7 +404,7 @@ describe('FixedSizeList', () => {
       renderer.create(
         // Create list where items don't fit exactly into container.
         // The container has space for 3 1/3 items.
-        <FixedSizeList {...defaultProps} itemSize={30} ref={ref}/>
+        <FixedSizeList {...defaultProps} itemSize={30} ref={ref} />,
       );
       // Scroll down enough to show item 10 at the bottom.
       // Should show 4 items: 3 full and one partial at the beginning
@@ -465,7 +434,7 @@ describe('FixedSizeList', () => {
       const ref = createRef<FixedSizeList<any>>();
       renderer.create(
         // Create list with only two items, one of which will be shown as a partial.
-        <FixedSizeList {...defaultProps} itemSize={60} itemCount={2} ref={ref}/>
+        <FixedSizeList {...defaultProps} itemSize={60} itemCount={2} ref={ref} />,
       );
       // Show the second item fully. The first item should be a partial.
       ref.current!.scrollToItem(1, 'auto');
@@ -478,7 +447,7 @@ describe('FixedSizeList', () => {
 
     it('should scroll to the correct item for align = "start"', () => {
       const ref = createRef<FixedSizeList<any>>();
-      renderer.create(<FixedSizeList {...defaultProps} ref={ref}/>);
+      renderer.create(<FixedSizeList {...defaultProps} ref={ref} />);
 
       // Scroll down enough to show item 10 at the top.
       ref.current!.scrollToItem(10, 'start');
@@ -494,9 +463,7 @@ describe('FixedSizeList', () => {
 
     it('should scroll to the correct item for align = "end"', () => {
       const ref = createRef<FixedSizeList<any>>();
-      renderer.create(
-        <FixedSizeList {...defaultProps} ref={ref}/>
-      );
+      renderer.create(<FixedSizeList {...defaultProps} ref={ref} />);
       // Scroll down enough to show item 10 at the bottom.
       ref.current!.scrollToItem(10, 'end');
       // Scroll back up so that item 9 is at the bottom.
@@ -511,7 +478,7 @@ describe('FixedSizeList', () => {
 
     it('should scroll to the correct item for align = "center"', () => {
       const ref = createRef<FixedSizeList<any>>();
-      renderer.create(<FixedSizeList {...defaultProps} ref={ref}/>);
+      renderer.create(<FixedSizeList {...defaultProps} ref={ref} />);
 
       // Scroll down enough to show item 10 in the middle.
       ref.current!.scrollToItem(10, 'center');
@@ -531,7 +498,7 @@ describe('FixedSizeList', () => {
 
     it('should scroll to the correct item for align = "smart"', () => {
       const ref = createRef<FixedSizeList<any>>();
-      renderer.create(<FixedSizeList {...defaultProps} ref={ref}/>);
+      renderer.create(<FixedSizeList {...defaultProps} ref={ref} />);
       // Scroll down enough to show item 10 in the middle.
       ref.current!.scrollToItem(10, 'smart');
       // Scrolldn't scroll at all because it's close enough.
@@ -559,18 +526,20 @@ describe('FixedSizeList', () => {
     it('should not report isScrolling', async () => {
       // Use ReactDOM renderer so the container ref and "onScroll" work correctly.
       const ref = createRef<FixedSizeList<any>>();
-      await renderWithReactDom(<FixedSizeList {...defaultProps} useIsScrolling ref={ref}/>);
+      await renderWithReactDom(<FixedSizeList {...defaultProps} useIsScrolling ref={ref} />);
 
       itemRenderer.mockClear();
       ref.current!.scrollToItem(15);
       await waitForAnimationFrame();
 
-      expect(itemRenderer.mock.calls[itemRenderer.mock.calls.length - 1][0].isScrolling).toBe(false);
+      expect(itemRenderer.mock.calls[itemRenderer.mock.calls.length - 1][0].isScrolling).toBe(
+        false,
+      );
     });
 
     it('should ignore indexes less than zero', async () => {
       const ref = createRef<FixedSizeList<any>>();
-      await renderWithReactDom(<FixedSizeList {...defaultProps} ref={ref}/>);
+      await renderWithReactDom(<FixedSizeList {...defaultProps} ref={ref} />);
 
       ref.current!.scrollToItem(20);
       await waitForAnimationFrame();
@@ -584,7 +553,7 @@ describe('FixedSizeList', () => {
 
     it('should ignore indexes greater than itemCount', async () => {
       const ref = createRef<FixedSizeList<any>>();
-      await renderWithReactDom(<FixedSizeList {...defaultProps} ref={ref}/>);
+      await renderWithReactDom(<FixedSizeList {...defaultProps} ref={ref} />);
 
       onItemsRendered.mockClear();
       ref.current!.scrollToItem(defaultProps.itemCount * 2);
@@ -621,16 +590,14 @@ describe('FixedSizeList', () => {
   describe('onScroll', () => {
     it('should call onScroll after mount', () => {
       const onScroll = vi.fn();
-      renderer.create(
-        <FixedSizeList {...defaultProps} onScroll={onScroll} />
-      );
+      renderer.create(<FixedSizeList {...defaultProps} onScroll={onScroll} />);
       expect(onScroll.mock.calls).toMatchSnapshot();
     });
 
     it('should call onScroll when scroll position changes', () => {
       const onScroll = vi.fn();
       const ref = createRef<FixedSizeList<any>>();
-      renderer.create(<FixedSizeList {...defaultProps} onScroll={onScroll} ref={ref}/>);
+      renderer.create(<FixedSizeList {...defaultProps} onScroll={onScroll} ref={ref} />);
 
       ref.current!.scrollTo(100);
       ref.current!.scrollTo(0);
@@ -642,7 +609,7 @@ describe('FixedSizeList', () => {
       // Use ReactDOM renderer so the container ref and "onScroll" event work correctly.
       const ref = createRef<FixedSizeList<any>>();
 
-      await renderWithReactDom(<FixedSizeList {...defaultProps} onScroll={onScroll} ref={ref}/>);
+      await renderWithReactDom(<FixedSizeList {...defaultProps} onScroll={onScroll} ref={ref} />);
 
       onScroll.mockClear();
       ref.current!.scrollTo(100);
@@ -661,7 +628,7 @@ describe('FixedSizeList', () => {
       // Use ReactDOM renderer so the container ref works correctly.
       const ref = createRef<FixedSizeList<any>>();
       await renderWithReactDom(
-        <FixedSizeList {...defaultProps} initialScrollOffset={20} ref={ref}/>
+        <FixedSizeList {...defaultProps} initialScrollOffset={20} ref={ref} />,
       );
 
       // Scroll 2 items fwd, but thanks to the initialScrollOffset, we should
@@ -696,10 +663,8 @@ describe('FixedSizeList', () => {
 
   describe('itemKey', () => {
     it('should be used', () => {
-      const itemKey = vi.fn(index => index);
-      renderer.create(
-        <FixedSizeList {...defaultProps} itemCount={3} itemKey={itemKey} />
-      );
+      const itemKey = vi.fn((index) => index);
+      renderer.create(<FixedSizeList {...defaultProps} itemCount={3} itemKey={itemKey} />);
       expect(itemKey).toHaveBeenCalledTimes(3);
       expect(itemKey.mock.calls[0][0]).toBe(0);
       expect(itemKey.mock.calls[1][0]).toBe(1);
@@ -708,17 +673,17 @@ describe('FixedSizeList', () => {
 
     it('should allow items to be moved within the collection without causing caching problems', () => {
       const keyMap = ['0', '1', '2'];
-      const keyMapItemRenderer = vi.fn(({ index, style }) => (
+      const keyMapItemRenderer = vi.fn(({index, style}) => (
         <div style={style}>{keyMap[index]}</div>
       ));
 
       const ref = createRef<FixedSizeList<any>>();
 
-      const itemKey = vi.fn(index => keyMap[index]);
+      const itemKey = vi.fn((index) => keyMap[index]);
       renderer.create(
         <FixedSizeList {...defaultProps} itemCount={3} itemKey={itemKey} ref={ref}>
           {memo((props) => keyMapItemRenderer(props))}
-        </FixedSizeList>
+        </FixedSizeList>,
       );
       expect(itemKey).toHaveBeenCalledTimes(3);
       itemKey.mockClear();
@@ -745,19 +710,14 @@ describe('FixedSizeList', () => {
     });
 
     it('should receive a data value if itemData is provided', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const itemKey = vi.fn((index, data) => index);
       const itemData = {};
-      renderer.create(
-        <FixedSizeList
-          {...defaultProps}
-          itemData={itemData}
-          itemKey={itemKey}
-        />
-      );
+      renderer.create(<FixedSizeList {...defaultProps} itemData={itemData} itemKey={itemKey} />);
       expect(itemKey).toHaveBeenCalled();
-      expect(
-        itemKey.mock.calls.filter((value: [any, any]) => value[1] === itemData)
-      ).toHaveLength(itemKey.mock.calls.length);
+      expect(itemKey.mock.calls.filter((value: [any, any]) => value[1] === itemData)).toHaveLength(
+        itemKey.mock.calls.length,
+      );
     });
   });
 
@@ -766,11 +726,7 @@ describe('FixedSizeList', () => {
       const innerRef = vi.fn();
       const outerRef = vi.fn();
       await renderWithReactDom(
-        <FixedSizeList
-          {...defaultProps}
-          innerRef={innerRef}
-          outerRef={outerRef}
-        />
+        <FixedSizeList {...defaultProps} innerRef={innerRef} outerRef={outerRef} />,
       );
       expect(innerRef).toHaveBeenCalled();
       expect(innerRef.mock.calls[0][0]).toBeInstanceOf(HTMLDivElement);
@@ -783,11 +739,7 @@ describe('FixedSizeList', () => {
       const outerRef = createRef<HTMLDivElement>();
 
       await renderWithReactDom(
-        <FixedSizeList
-          {...defaultProps}
-          innerRef={innerRef}
-          outerRef={outerRef}
-        />,
+        <FixedSizeList {...defaultProps} innerRef={innerRef} outerRef={outerRef} />,
       );
       expect(innerRef.current).toBeInstanceOf(HTMLDivElement);
       expect(outerRef.current).toBeInstanceOf(HTMLDivElement);
@@ -797,14 +749,14 @@ describe('FixedSizeList', () => {
   describe('custom element types', () => {
     it('should use a custom innerElementType if specified', () => {
       const rendered = renderer.create(
-        <FixedSizeList {...defaultProps} innerElementType="section" />
+        <FixedSizeList {...defaultProps} innerElementType="section" />,
       );
       expect(rendered.root.findByType('section')).toBeDefined();
     });
 
     it('should use a custom outerElementType if specified', () => {
       const rendered = renderer.create(
-        <FixedSizeList {...defaultProps} outerElementType="section" />
+        <FixedSizeList {...defaultProps} outerElementType="section" />,
       );
       expect(rendered.root.findByType('section')).toBeDefined();
     });
@@ -833,9 +785,9 @@ describe('FixedSizeList', () => {
       const itemData = {};
       renderer.create(<FixedSizeList {...defaultProps} itemData={itemData} />);
       expect(itemRenderer).toHaveBeenCalled();
-      expect(
-        itemRenderer.mock.calls.filter(([params]) => params.data === itemData)
-      ).toHaveLength(itemRenderer.mock.calls.length);
+      expect(itemRenderer.mock.calls.filter(([params]) => params.data === itemData)).toHaveLength(
+        itemRenderer.mock.calls.length,
+      );
     });
 
     it('should re-render items if itemData changes', () => {
@@ -853,9 +805,7 @@ describe('FixedSizeList', () => {
       rendered.update(<FixedSizeList {...defaultProps} itemData={newItemData} />);
       expect(itemRenderer).toHaveBeenCalled();
       expect(
-        itemRenderer.mock.calls.filter(
-          ([params]) => params.data === newItemData
-        )
+        itemRenderer.mock.calls.filter(([params]) => params.data === newItemData),
       ).toHaveLength(itemRenderer.mock.calls.length);
     });
   });

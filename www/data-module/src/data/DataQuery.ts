@@ -30,33 +30,39 @@ const parseFilter = (fieldAndOperator: string, value: any): ValueFilter | null =
 
   const [field, operator] = Array.from(fieldAndOperator.split('__'));
   switch (operator) {
-    case 'ne': return (v: any) => v[field] !== value;
-    case 'lt': return (v: any) => v[field] < value;
-    case 'le': return (v: any) => v[field] <= value;
-    case 'gt': return (v: any) => v[field] > value;
-    case 'ge': return (v: any) => v[field] >= value;
-    default: return (v: any) => {
-      if (v[field] === value) {
-        return true;
-      }
-      if (Array.isArray(v[field]) && Array.from(v[field]).includes(value)) {
-        return true;
-      }
-      if (Array.isArray(value) && value.length === 0) {
-        return true;
-      }
-      if (Array.isArray(value) && Array.from(value).includes(v[field])) {
-        return true;
-      }
-      return false;
-    }
+    case 'ne':
+      return (v: any) => v[field] !== value;
+    case 'lt':
+      return (v: any) => v[field] < value;
+    case 'le':
+      return (v: any) => v[field] <= value;
+    case 'gt':
+      return (v: any) => v[field] > value;
+    case 'ge':
+      return (v: any) => v[field] >= value;
+    default:
+      return (v: any) => {
+        if (v[field] === value) {
+          return true;
+        }
+        if (Array.isArray(v[field]) && Array.from(v[field]).includes(value)) {
+          return true;
+        }
+        if (Array.isArray(value) && value.length === 0) {
+          return true;
+        }
+        if (Array.isArray(value) && Array.from(value).includes(v[field])) {
+          return true;
+        }
+        return false;
+      };
   }
-}
+};
 
 export class DataQuery {
   query: Query;
   filters: ValueFilter[] = [];
-  order: any | null = null;
+  order: string | null = null;
   limit: number | null = null;
 
   constructor(query: Query | null) {
@@ -64,7 +70,7 @@ export class DataQuery {
       query = {};
     }
     this.query = query;
-    for (let fieldAndOperator in query) {
+    for (const fieldAndOperator in query) {
       const filter = parseFilter(fieldAndOperator, query[fieldAndOperator]);
       if (filter !== null) {
         this.filters.push(filter);
@@ -129,14 +135,18 @@ export class DataQuery {
       array.sort(compare(order));
     } else if (Array.isArray(order)) {
       array.sort((a: any, b: any) => {
-        for (let o of Array.from(order)) {
-          const f = compare(o)(a, b);
-          if (f) { return f; }
+        for (const o of Array.from(order)) {
+          if (typeof o === 'string') {
+            const f = compare(o)(a, b);
+            if (f) {
+              return f;
+            }
+          }
         }
         return 0;
       });
     } else {
-      throw Error(`Unsupported order parameter for query {order}`)
+      throw Error(`Unsupported order parameter for query {order}`);
     }
   }
 

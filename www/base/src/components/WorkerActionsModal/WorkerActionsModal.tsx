@@ -15,15 +15,21 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {Worker} from "buildbot-data-js";
-import {MultipleWorkersActionsModal} from "../MultipleWorkersActionsModal/MultipleWorkersActionsModal";
+import {observer} from 'mobx-react';
+import {Worker} from 'buildbot-data-js';
+import {MultipleWorkersActionsModal} from '../MultipleWorkersActionsModal/MultipleWorkersActionsModal';
 
 type WorkerActionsModalProps = {
   worker: Worker;
   onClose: () => void;
-}
+};
 
 export const WorkerActionsModal = observer(({worker, onClose}: WorkerActionsModalProps) => {
-  return <MultipleWorkersActionsModal workers={[worker]} preselectedWorkers={[worker]} onClose={onClose}/>
+  return (
+    <MultipleWorkersActionsModal
+      workers={[worker]}
+      preselectedWorkers={[worker]}
+      onClose={onClose}
+    />
+  );
 });

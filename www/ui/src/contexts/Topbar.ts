@@ -15,7 +15,7 @@
   Copyright Buildbot Team Members
 */
 
-import {createContext} from "react";
-import {TopbarStore} from "../stores/TopbarStore";
+import {createContext} from 'react';
+import {TopbarStore} from '../stores/TopbarStore';
 
 export const TopbarContext = createContext<TopbarStore>(undefined as any);

@@ -5,19 +5,19 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {Sourcestamp} from "./Sourcestamp";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
-import {Build, buildDescriptor} from "./Build";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {Sourcestamp} from './Sourcestamp';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
+import {Build, buildDescriptor} from './Build';
 
 export class Change extends BaseClass {
   @observable changeid!: number;
   @observable author!: string;
-  @observable branch!: string|null;
-  @observable category!: string|null;
+  @observable branch!: string | null;
+  @observable category!: string | null;
   @observable codebase!: string;
   @observable comments!: string;
   @observable files!: string[];
@@ -25,13 +25,13 @@ export class Change extends BaseClass {
   @observable project!: string;
   @observable properties!: {[key: string]: any}; // for subscription to properties use getProperties
   @observable repository!: string;
-  @observable revision!: string|null;
-  @observable revlink!: string|null;
+  @observable revision!: string | null;
+  @observable revlink!: string | null;
   @observable sourcestamp!: Sourcestamp;
   @observable when_timestamp!: number;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "changes", String(object.changeid));
+    super(accessor, 'changes', String(object.changeid));
     this.update(object);
     makeObservable(this);
   }
@@ -75,21 +75,21 @@ export class Change extends BaseClass {
   }
 
   getBuilds(query: RequestQuery = {}) {
-    return this.get<Build>("builds", query, buildDescriptor);
+    return this.get<Build>('builds', query, buildDescriptor);
   }
 
   getProperties(query: RequestQuery = {}) {
-    return this.getPropertiesImpl("properties", query);
+    return this.getPropertiesImpl('properties', query);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get<Change>("changes", query, changeDescriptor);
+    return accessor.get<Change>('changes', query, changeDescriptor);
   }
 }
 
 export class ChangeDescriptor implements IDataDescriptor<Change> {
-  restArrayField = "changes";
-  fieldId: string = "changeid";
+  restArrayField = 'changes';
+  fieldId: string = 'changeid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Change(accessor, object);

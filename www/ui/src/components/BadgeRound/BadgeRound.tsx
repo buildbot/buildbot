@@ -21,10 +21,12 @@ type BadgeRoundProps = {
   className: string;
   children?: JSX.Element | JSX.Element[] | string;
   title?: string;
-}
+};
 
 export const BadgeRound = ({className, children, title, ...props}: BadgeRoundProps) => {
   return (
-    <span {...props} title={title} className={"bb-badge-round " + className}>{children}</span>
+    <span {...props} title={title} className={'bb-badge-round ' + className}>
+      {children}
+    </span>
   );
-}
+};

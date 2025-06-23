@@ -16,16 +16,16 @@
 */
 
 import './LoadingIndicator.scss';
-import {FaCircleNotch} from "react-icons/fa";
+import {FaCircleNotch} from 'react-icons/fa';
 
 export const LoadingIndicator = () => {
   // FIXME: implement spinning
   return (
     <div className="bb-load-indicator">
       <div data-bb-test-id="loading" className="spinner">
-        <FaCircleNotch className="fa-spin"/>
+        <FaCircleNotch className="fa-spin" />
         <p>loading</p>
       </div>
     </div>
-  )
-}
+  );
+};

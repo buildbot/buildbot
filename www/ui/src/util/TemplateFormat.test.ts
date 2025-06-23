@@ -15,8 +15,8 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
-import {fillTemplate, parseTemplate} from "./TemplateFormat";
+import {describe, expect, it} from 'vitest';
+import {fillTemplate, parseTemplate} from './TemplateFormat';
 
 describe('TemplateFormat', () => {
   describe('parseTemplate', () => {
@@ -24,7 +24,7 @@ describe('TemplateFormat', () => {
       expect(parseTemplate('')).toEqual({
         template: '',
         replacements: new Set<string>(),
-        errors: []
+        errors: [],
       });
     });
 
@@ -32,7 +32,7 @@ describe('TemplateFormat', () => {
       expect(parseTemplate('no replacements')).toEqual({
         template: 'no replacements',
         replacements: new Set<string>(),
-        errors: []
+        errors: [],
       });
     });
 
@@ -40,17 +40,17 @@ describe('TemplateFormat', () => {
       expect(parseTemplate('%(replacement)')).toEqual({
         template: '%(replacement)',
         replacements: new Set(['replacement']),
-        errors: []
+        errors: [],
       });
       expect(parseTemplate('abc%(replacement)')).toEqual({
         template: 'abc%(replacement)',
         replacements: new Set(['replacement']),
-        errors: []
+        errors: [],
       });
       expect(parseTemplate('%(replacement)abc')).toEqual({
         template: '%(replacement)abc',
         replacements: new Set(['replacement']),
-        errors: []
+        errors: [],
       });
     });
 
@@ -58,7 +58,7 @@ describe('TemplateFormat', () => {
       expect(parseTemplate('%()')).toEqual({
         template: '%()',
         replacements: new Set(),
-        errors: ['Empty replacement at position 0']
+        errors: ['Empty replacement at position 0'],
       });
     });
 
@@ -66,22 +66,22 @@ describe('TemplateFormat', () => {
       expect(parseTemplate('%(r1)%(r2)')).toEqual({
         template: '%(r1)%(r2)',
         replacements: new Set(['r1', 'r2']),
-        errors: []
+        errors: [],
       });
       expect(parseTemplate('%(r1)a%(r2)')).toEqual({
         template: '%(r1)a%(r2)',
         replacements: new Set(['r1', 'r2']),
-        errors: []
+        errors: [],
       });
       expect(parseTemplate('a%(r1)%(r2)')).toEqual({
         template: 'a%(r1)%(r2)',
         replacements: new Set(['r1', 'r2']),
-        errors: []
+        errors: [],
       });
       expect(parseTemplate('%(r1)%(r2)a')).toEqual({
         template: '%(r1)%(r2)a',
         replacements: new Set(['r1', 'r2']),
-        errors: []
+        errors: [],
       });
     });
   });
@@ -93,45 +93,66 @@ describe('TemplateFormat', () => {
 
     it('no replacements', () => {
       expect(fillTemplate('no replacements', new Map<string, string>())).toEqual('no replacements');
-      expect(fillTemplate('no replacements', new Map<string, string>([['no', 'with']])))
-        .toEqual('no replacements');
+      expect(fillTemplate('no replacements', new Map<string, string>([['no', 'with']]))).toEqual(
+        'no replacements',
+      );
     });
 
     it('single replacement', () => {
-      expect(fillTemplate('%(repl)', new Map<string, string>([['repl', 'value']])))
-        .toEqual('value');
-      expect(fillTemplate('%(repl)', new Map<string, string>()))
-        .toEqual('');
-      expect(fillTemplate('abc%(repl)', new Map<string, string>([['repl', 'value']])))
-        .toEqual('abcvalue');
-      expect(fillTemplate('abc%(repl)', new Map<string, string>()))
-        .toEqual('abc');
-      expect(fillTemplate('%(repl)abc', new Map<string, string>([['repl', 'value']])))
-        .toEqual('valueabc');
-      expect(fillTemplate('%(repl)abc', new Map<string, string>()))
-        .toEqual('abc');
+      expect(fillTemplate('%(repl)', new Map<string, string>([['repl', 'value']]))).toEqual(
+        'value',
+      );
+      expect(fillTemplate('%(repl)', new Map<string, string>())).toEqual('');
+      expect(fillTemplate('abc%(repl)', new Map<string, string>([['repl', 'value']]))).toEqual(
+        'abcvalue',
+      );
+      expect(fillTemplate('abc%(repl)', new Map<string, string>())).toEqual('abc');
+      expect(fillTemplate('%(repl)abc', new Map<string, string>([['repl', 'value']]))).toEqual(
+        'valueabc',
+      );
+      expect(fillTemplate('%(repl)abc', new Map<string, string>())).toEqual('abc');
     });
 
     it('two replacements', () => {
-      expect(fillTemplate(
-        '%(r1)%(r2)',
-        new Map<string, string>([['r1', 'value1'], ['r2', 'value2']])
-      )).toEqual('value1value2');
+      expect(
+        fillTemplate(
+          '%(r1)%(r2)',
+          new Map<string, string>([
+            ['r1', 'value1'],
+            ['r2', 'value2'],
+          ]),
+        ),
+      ).toEqual('value1value2');
 
-      expect(fillTemplate(
-        '%(r1)a%(r2)',
-        new Map<string, string>([['r1', 'value1'], ['r2', 'value2']])
-      )).toEqual('value1avalue2');
+      expect(
+        fillTemplate(
+          '%(r1)a%(r2)',
+          new Map<string, string>([
+            ['r1', 'value1'],
+            ['r2', 'value2'],
+          ]),
+        ),
+      ).toEqual('value1avalue2');
 
-      expect(fillTemplate(
-        'a%(r1)%(r2)',
-        new Map<string, string>([['r1', 'value1'], ['r2', 'value2']])
-      )).toEqual('avalue1value2');
+      expect(
+        fillTemplate(
+          'a%(r1)%(r2)',
+          new Map<string, string>([
+            ['r1', 'value1'],
+            ['r2', 'value2'],
+          ]),
+        ),
+      ).toEqual('avalue1value2');
 
-      expect(fillTemplate(
-        '%(r1)%(r2)a',
-        new Map<string, string>([['r1', 'value1'], ['r2', 'value2']])
-      )).toEqual('value1value2a');
+      expect(
+        fillTemplate(
+          '%(r1)%(r2)a',
+          new Map<string, string>([
+            ['r1', 'value1'],
+            ['r2', 'value2'],
+          ]),
+        ),
+      ).toEqual('value1value2a');
     });
   });
 });

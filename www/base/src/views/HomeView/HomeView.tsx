@@ -16,23 +16,16 @@
 */
 
 import './HomeView.scss';
-import {observer} from "mobx-react";
-import {FaHome} from "react-icons/fa";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
-import {
-  Build,
-  Builder,
-  DataCollection,
-  useDataAccessor,
-  useDataApiQuery
-} from "buildbot-data-js";
-import {useContext} from "react";
-import {Config, ConfigContext, LoadingIndicator} from "buildbot-ui";
-import {BuildSticker} from "../../components/BuildSticker/BuildSticker";
-import {Link} from "react-router-dom";
-import {Card} from "react-bootstrap";
-import {TableHeading} from "../../components/TableHeading/TableHeading";
-
+import {observer} from 'mobx-react';
+import {FaHome} from 'react-icons/fa';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
+import {Build, Builder, DataCollection, useDataAccessor, useDataApiQuery} from 'buildbot-data-js';
+import {useContext} from 'react';
+import {Config, ConfigContext, LoadingIndicator} from 'buildbot-ui';
+import {BuildSticker} from '../../components/BuildSticker/BuildSticker';
+import {Link} from 'react-router-dom';
+import {Card} from 'react-bootstrap';
+import {TableHeading} from '../../components/TableHeading/TableHeading';
 
 function maybeShowUrlWarning(location: Location, config: Config) {
   const colonAndPort = location.port === '' ? '' : `:${location.port}`;
@@ -43,23 +36,24 @@ function maybeShowUrlWarning(location: Location, config: Config) {
 
   return (
     <div className="alert alert-danger">
-      Warning:
-      c['buildbotURL'] is misconfigured to
+      Warning: c['buildbotURL'] is misconfigured to
       <pre>{config.buildbotURL}</pre>Should be:
       <pre>{urlWithNoFragment}</pre>
     </div>
   );
 }
 
-type BuildsById = {[id: string]: Build}
+type BuildsById = {[id: string]: Build};
 type BuilderBuilds = {
   builder: Builder;
   builds: BuildsById;
-}
+};
 type BuildsByBuilder = {[id: string]: BuilderBuilds};
 
-function computeBuildsByBuilder(builders: DataCollection<Builder>,
-                                recentBuilds: DataCollection<Build>) {
+function computeBuildsByBuilder(
+  builders: DataCollection<Builder>,
+  recentBuilds: DataCollection<Build>,
+) {
   const buildsByBuilder: BuildsByBuilder = {};
   for (const build of recentBuilds.array) {
     const builderid = build.builderid.toString();
@@ -68,7 +62,7 @@ function computeBuildsByBuilder(builders: DataCollection<Builder>,
       if (!(builderid in buildsByBuilder)) {
         buildsByBuilder[builderid] = {
           builder: builder,
-          builds: {}
+          builds: {},
         };
       }
 
@@ -82,14 +76,17 @@ export const HomeView = observer(() => {
   const config = useContext(ConfigContext);
   const accessor = useDataAccessor([]);
 
-  const buildsRunning = useDataApiQuery(
-    () => Build.getAll(accessor, {query: {order: '-started_at', complete: false}}));
+  const buildsRunning = useDataApiQuery(() =>
+    Build.getAll(accessor, {query: {order: '-started_at', complete: false}}),
+  );
 
-  const maxRecentBuilds = buildbotGetSettings().getIntegerSetting("Home.max_recent_builds");
+  const maxRecentBuilds = buildbotGetSettings().getIntegerSetting('Home.max_recent_builds');
 
-  const recentBuilds = useDataApiQuery(
-    () => Build.getAll(accessor, {query: {order: '-buildid', complete: true,
-        limit: maxRecentBuilds}}));
+  const recentBuilds = useDataApiQuery(() =>
+    Build.getAll(accessor, {
+      query: {order: '-buildid', complete: true, limit: maxRecentBuilds},
+    }),
+  );
 
   const builders = useDataApiQuery(() => Builder.getAll(accessor));
 
@@ -102,92 +99,94 @@ export const HomeView = observer(() => {
         <Card bg="light">
           <Card.Body>
             <h2>Welcome to buildbot</h2>
-              <TableHeading>
-                {
-                  !buildsRunning.resolved
-                  ? <LoadingIndicator/>
-                  : <>
-                      {buildsRunning.array.length} build{buildsRunning.array.length === 1 ? ' ' : 's '}
-                      running currently
-                    </>
-                }
-              </TableHeading>
+            <TableHeading>
+              {!buildsRunning.resolved ? (
+                <LoadingIndicator />
+              ) : (
+                <>
+                  {buildsRunning.array.length} build
+                  {buildsRunning.array.length === 1 ? ' ' : 's '}
+                  running currently
+                </>
+              )}
+            </TableHeading>
             <ul>
-              {
-                buildsRunning.array
-                  .filter(build => build.complete === false &&
-                    builders.byId.has(build.builderid.toString()))
-                  .map(build => {
-                    return (
-                      <li key={`${build.builderid}-${build.id}`} className="unstyled">
-                        <BuildSticker build={build}
-                                      builder={builders.byId.get(build.builderid.toString())!}/>
-                      </li>
-                    )
-                  })
-              }
+              {buildsRunning.array
+                .filter(
+                  (build) =>
+                    build.complete === false && builders.byId.has(build.builderid.toString()),
+                )
+                .map((build) => {
+                  return (
+                    <li key={`${build.builderid}-${build.id}`} className="unstyled">
+                      <BuildSticker
+                        build={build}
+                        builder={builders.byId.get(build.builderid.toString())!}
+                      />
+                    </li>
+                  );
+                })}
             </ul>
             <TableHeading>{recentBuilds.array.length} recent builds</TableHeading>
             <div className="row">
-              {
-                Object.values(buildsByBuilder)
-                  .sort((a, b) => a.builder.name.localeCompare(b.builder.name))
-                  .map(b => {
-                    return (
-                      <div key={b.builder.builderid} className="col-md-4">
-                        <Card className="bb-home-builder-card">
-                          <Card.Header>
-                            <Link to={`builders/${b.builder.builderid}`}>{b.builder.name}</Link>
-                          </Card.Header>
-                          <Card.Body>
-                            {
-                              Object.values(b.builds)
-                                .sort((a, b) => b.number - a.number)
-                                .map(build => {
-                                  return (
-                                    <span key={build.id}>
-                                      <BuildSticker build={build} builder={b.builder}/>
-                                    </span>
-                                  );
-                                })
-                              }
-                          </Card.Body>
-                        </Card>
-                      </div>
-                    )
-                  })
-              }
+              {Object.values(buildsByBuilder)
+                .sort((a, b) => a.builder.name.localeCompare(b.builder.name))
+                .map((b) => {
+                  return (
+                    <div key={b.builder.builderid} className="col-md-4">
+                      <Card className="bb-home-builder-card">
+                        <Card.Header>
+                          <Link to={`builders/${b.builder.builderid}`}>{b.builder.name}</Link>
+                        </Card.Header>
+                        <Card.Body>
+                          {Object.values(b.builds)
+                            .sort((a, b) => b.number - a.number)
+                            .map((build) => {
+                              return (
+                                <span key={build.id}>
+                                  <BuildSticker build={build} builder={b.builder} />
+                                </span>
+                              );
+                            })}
+                        </Card.Body>
+                      </Card>
+                    </div>
+                  );
+                })}
             </div>
           </Card.Body>
         </Card>
       </div>
     </div>
-  )
+  );
 });
 
 buildbotSetupPlugin((reg) => {
   reg.registerMenuGroup({
     name: 'home',
     caption: 'Home',
-    icon: <FaHome/>,
+    icon: <FaHome />,
     order: 1,
     route: '/',
     parentName: null,
   });
 
   reg.registerRoute({
-    route: "/",
-    group: "home",
-    element: () => <HomeView/>,
+    route: '/',
+    group: 'home',
+    element: () => <HomeView />,
   });
 
   reg.registerSettingGroup({
     name: 'Home',
     caption: 'Home page related settings',
-    items: [{
-      type: 'integer',
-      name: 'max_recent_builds',
-      caption: 'Max recent builds',
-      defaultValue: 20
-    }]});
+    items: [
+      {
+        type: 'integer',
+        name: 'max_recent_builds',
+        caption: 'Max recent builds',
+        defaultValue: 20,
+      },
+    ],
+  });
 });

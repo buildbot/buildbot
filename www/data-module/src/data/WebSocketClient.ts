@@ -5,7 +5,7 @@
   Copyright Buildbot Team Members
 */
 
-import {Stream} from "../util/Stream";
+import {Stream} from '../util/Stream';
 
 export type PromiseData<T> = {
   promise: Promise<T> | null;
@@ -30,9 +30,9 @@ export class WebSocketClient {
     this.socket.onmessage = this.onMessage;
   }
 
-  onOpen = (ev: Event) => {
+  onOpen = (_ev: Event) => {
     this.flush();
-  }
+  };
 
   onMessage = (ev: MessageEvent) => {
     const data = JSON.parse(ev.data);
@@ -52,7 +52,7 @@ export class WebSocketClient {
       // status update message
       setTimeout(() => this.eventStream.push(data), 0);
     }
-  }
+  };
 
   /* sends data via the websocket message.
      Returns a promise, which will be resolved once a response message with the same id has been
@@ -105,8 +105,8 @@ export class WebSocketClient {
     subscribersForPath.push(subscriber);
     if (subscribersForPath.length === 1) {
       return this.send({
-        cmd: "startConsuming",
-        path: eventPath
+        cmd: 'startConsuming',
+        path: eventPath,
       });
     }
     return Promise.resolve();
@@ -119,8 +119,8 @@ export class WebSocketClient {
       subscribersForPath.splice(pos, 1);
       if (subscribersForPath.length === 0) {
         return this.send({
-          cmd: "stopConsuming",
-          path: eventPath
+          cmd: 'stopConsuming',
+          path: eventPath,
         });
       }
     }

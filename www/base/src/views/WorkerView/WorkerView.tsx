@@ -15,9 +15,9 @@
   Copyright Buildbot Team Members
 */
 
-import {useState} from "react";
-import {observer} from "mobx-react";
-import {Tab, Table, Tabs} from "react-bootstrap";
+import {useState} from 'react';
+import {observer} from 'mobx-react';
+import {Tab, Table, Tabs} from 'react-bootstrap';
 import {
   Build,
   Builder,
@@ -25,52 +25,67 @@ import {
   Worker,
   useDataAccessor,
   useDataApiQuery,
-  useDataApiDynamicQuery
-} from "buildbot-data-js";
-import {Link, useParams} from "react-router-dom";
-import {buildbotSetupPlugin} from "buildbot-plugin-support";
-import {getBuildLinkDisplayProperties, TopbarAction, useLoadMoreItemsState, useTopbarActions} from "buildbot-ui";
-import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
-import {BuildsTable} from "../../components/BuildsTable/BuildsTable";
-import {WorkerActionsModal} from "../../components/WorkerActionsModal/WorkerActionsModal";
-import {LoadingSpan} from "../../components/LoadingSpan/LoadingSpan";
+  useDataApiDynamicQuery,
+} from 'buildbot-data-js';
+import {Link, useParams} from 'react-router-dom';
+import {buildbotSetupPlugin} from 'buildbot-plugin-support';
+import {
+  getBuildLinkDisplayProperties,
+  TopbarAction,
+  useLoadMoreItemsState,
+  useTopbarActions,
+} from 'buildbot-ui';
+import {WorkersTable} from '../../components/WorkersTable/WorkersTable';
+import {BuildsTable} from '../../components/BuildsTable/BuildsTable';
+import {WorkerActionsModal} from '../../components/WorkerActionsModal/WorkerActionsModal';
+import {LoadingSpan} from '../../components/LoadingSpan/LoadingSpan';
 
 export const WorkerView = observer(() => {
-  const workerid = Number.parseInt(useParams<"workerid">().workerid ?? "");
+  const workerid = Number.parseInt(useParams<'workerid'>().workerid ?? '');
   const accessor = useDataAccessor([workerid]);
 
   const initialBuildsFetchLimit = 100;
-  const [buildsFetchLimit, onLoadMoreBuilds] =
-      useLoadMoreItemsState(initialBuildsFetchLimit, initialBuildsFetchLimit);
+  const [buildsFetchLimit, onLoadMoreBuilds] = useLoadMoreItemsState(
+    initialBuildsFetchLimit,
+    initialBuildsFetchLimit,
+  );
 
   const workersQuery = useDataApiQuery(() => Worker.getAll(accessor, {id: workerid.toString()}));
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));
   const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
   const buildsQuery = useDataApiDynamicQuery([buildsFetchLimit], () =>
-    Build.getAll(accessor, {query: {
-        property: ["owners", "workername", "branch", "revision", ...getBuildLinkDisplayProperties()],
+    Build.getAll(accessor, {
+      query: {
+        property: [
+          'owners',
+          'workername',
+          'branch',
+          'revision',
+          ...getBuildLinkDisplayProperties(),
+        ],
         workerid__eq: workerid,
         limit: buildsFetchLimit,
-        order: "-buildid",
-      }
-    }));
-  const workersBuildersQuery = useDataApiQuery(
-    () => workersQuery.getRelated(w => w.getBuilders({query: {order: 'name'}}))
+        order: '-buildid',
+      },
+    }),
+  );
+  const workersBuildersQuery = useDataApiQuery(() =>
+    workersQuery.getRelated((w) => w.getBuilders({query: {order: 'name'}})),
   );
 
-  const [workerForActions, setWorkerForActions] = useState<null|Worker>(null);
+  const [workerForActions, setWorkerForActions] = useState<null | Worker>(null);
 
-  const worker = workersQuery.isResolved() && workersQuery.array.length >= 1 ? workersQuery.array[0] : null;
+  const worker =
+    workersQuery.isResolved() && workersQuery.array.length >= 1 ? workersQuery.array[0] : null;
   const topBarActions: TopbarAction[] = [];
   if (worker !== null) {
-    topBarActions.push(
-      {
-        caption: "Actions...",
-        variant: "primary",
-        action: () => {
-          setWorkerForActions(worker);
-        },
-      });
+    topBarActions.push({
+      caption: 'Actions...',
+      variant: 'primary',
+      action: () => {
+        setWorkerForActions(worker);
+      },
+    });
   }
   useTopbarActions(topBarActions);
 
@@ -82,13 +97,13 @@ export const WorkerView = observer(() => {
     return (
       <Table hover striped size="sm">
         <tbody>
-        {
-          builders.map(builder => (
+          {builders.map((builder) => (
             <tr key={builder.name}>
-              <td><Link to={`/builders/${builder.builderid}`}>{builder.name}</Link></td>
+              <td>
+                <Link to={`/builders/${builder.builderid}`}>{builder.name}</Link>
+              </td>
             </tr>
-          ))
-        }
+          ))}
         </tbody>
       </Table>
     );
@@ -96,24 +111,29 @@ export const WorkerView = observer(() => {
 
   return (
     <div className="container">
-      <WorkersTable workers={workersQuery.array} buildersQuery={buildersQuery}
-                    mastersQuery={mastersQuery}
-                    buildsForWorker={null}
-                    onWorkerIconClick={(worker) => setWorkerForActions(worker)}/>
-      { workerForActions !== null
-        ? <WorkerActionsModal worker={workerForActions}
-                              onClose={() => setWorkerForActions(null)}/>
-        : <></>
-      }
+      <WorkersTable
+        workers={workersQuery.array}
+        buildersQuery={buildersQuery}
+        mastersQuery={mastersQuery}
+        buildsForWorker={null}
+        onWorkerIconClick={(worker) => setWorkerForActions(worker)}
+      />
+      {workerForActions !== null ? (
+        <WorkerActionsModal worker={workerForActions} onClose={() => setWorkerForActions(null)} />
+      ) : (
+        <></>
+      )}
       <Tabs defaultActiveKey={1}>
         <Tab eventKey={1} title="Builds">
           <BuildsTable
-            builds={buildsQuery} builders={buildersQuery} fetchLimit={buildsFetchLimit}
+            builds={buildsQuery}
+            builders={buildersQuery}
+            fetchLimit={buildsFetchLimit}
             onLoadMore={onLoadMoreBuilds}
           />
         </Tab>
         <Tab eventKey={2} title="Builders">
-          { renderWorkerBuilders() }
+          {renderWorkerBuilders()}
         </Tab>
       </Tabs>
     </div>
@@ -122,8 +142,8 @@ export const WorkerView = observer(() => {
 
 buildbotSetupPlugin((reg) => {
   reg.registerRoute({
-    route: "workers/:workerid",
-    group: "workers",
-    element: () => <WorkerView/>,
+    route: 'workers/:workerid',
+    group: 'workers',
+    element: () => <WorkerView />,
   });
 });

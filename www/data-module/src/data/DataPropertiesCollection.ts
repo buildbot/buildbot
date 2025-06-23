@@ -5,12 +5,12 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {DataQuery, Query} from "./DataQuery";
-import {IDataAccessor} from "./DataAccessor";
-import {WebSocketClient} from "./WebSocketClient";
-import {endpointPath, socketPath, socketPathRE} from "./DataUtils";
-import {IDataCollection} from "./DataCollection";
+import {action, makeObservable, observable} from 'mobx';
+import {DataQuery, Query} from './DataQuery';
+import {IDataAccessor} from './DataAccessor';
+import {WebSocketClient} from './WebSocketClient';
+import {endpointPath, socketPath, socketPathRE} from './DataUtils';
+import {IDataCollection} from './DataCollection';
 
 export class DataPropertiesCollection implements IDataCollection {
   restPath!: string;
@@ -65,8 +65,7 @@ export class DataPropertiesCollection implements IDataCollection {
     return this.webSocketClient.subscribe(this.socketPath, this);
   }
 
-  open(restPath: string, query: Query, accessor: IDataAccessor,
-       webSocketClient: WebSocketClient) {
+  open(restPath: string, query: Query, accessor: IDataAccessor, webSocketClient: WebSocketClient) {
     this.restPath = restPath;
     this.query = query;
     this.accessor = accessor;
@@ -85,9 +84,10 @@ export class DataPropertiesCollection implements IDataCollection {
     if (this.isOpen) {
       this.isOpen = false;
       this.accessor.unregisterCollection(this);
-      return this.webSocketClient.unsubscribe(this.socketPath, this);
+      this.webSocketClient
+        .unsubscribe(this.socketPath, this)
+        .catch((error) => console.error('Unsubscription error:', error));
     }
-    return Promise.resolve();
   }
 
   @action initial(data: any[]) {

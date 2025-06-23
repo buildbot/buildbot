@@ -5,40 +5,40 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
 
 // This class is effectively same as Sourcestamp except that it is returned as part of a Buildset
 // and not as a separate entity identified by id, like in the rest of the API.
 export type BuildsetSourcestamps = {
   ssid: number;
-  branch: string|null;
+  branch: string | null;
   codebase: string;
   created_at: number;
-  patch: string|null;
+  patch: string | null;
   project: string;
   repository: string;
-  revision: string|null;
-}
+  revision: string | null;
+};
 
 export class Buildset extends BaseClass {
   @observable bsid!: number;
   @observable complete!: boolean;
-  @observable complete_at!: number|null;
-  @observable external_idstring!: string|null;
-  @observable parent_buildid!: number|null;
-  @observable parent_relationship!: string|null;
+  @observable complete_at!: number | null;
+  @observable external_idstring!: string | null;
+  @observable parent_buildid!: number | null;
+  @observable parent_relationship!: string | null;
   @observable reason!: string;
-  @observable rebuilt_buildid!: number|null;
-  @observable results!: number|null;
+  @observable rebuilt_buildid!: number | null;
+  @observable results!: number | null;
   @observable sourcestamps!: BuildsetSourcestamps[];
-  @observable submitted_at!: number|null;
+  @observable submitted_at!: number | null;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "buildsets", String(object.bsid));
+    super(accessor, 'buildsets', String(object.bsid));
     this.update(object);
     makeObservable(this);
   }
@@ -74,17 +74,17 @@ export class Buildset extends BaseClass {
   }
 
   getProperties(query: RequestQuery = {}) {
-    return this.getPropertiesImpl("properties", query);
+    return this.getPropertiesImpl('properties', query);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get<Buildset>("buildsets", query, buildsetDescriptor);
+    return accessor.get<Buildset>('buildsets', query, buildsetDescriptor);
   }
 }
 
 export class BuildsetDescriptor implements IDataDescriptor<Buildset> {
-  restArrayField = "buildsets";
-  fieldId: string = "bsid";
+  restArrayField = 'buildsets';
+  fieldId: string = 'bsid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Buildset(accessor, object);

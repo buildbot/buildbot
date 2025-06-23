@@ -16,40 +16,40 @@
 */
 
 import './SettingsView.scss';
-import {observer} from "mobx-react";
-import {Card} from "react-bootstrap";
-import {FaSlidersH} from "react-icons/fa";
-import {buildbotSetupPlugin, SettingValue} from "buildbot-plugin-support";
+import {observer} from 'mobx-react';
+import {Card} from 'react-bootstrap';
+import {FaSlidersH} from 'react-icons/fa';
+import {buildbotSetupPlugin, SettingValue} from 'buildbot-plugin-support';
 import {
   GlobalSettings,
   globalSettings,
   SettingGroup,
-  SettingItem
-} from "../../plugins/GlobalSettings";
-import {FieldBoolean} from "./Fields/FieldBoolean";
-import {FieldChoiceCombo} from "./Fields/FieldChoiceCombo";
-import {FieldFloat} from "./Fields/FieldFloat";
-import {FieldInteger} from "./Fields/FieldInteger";
-import {FieldString} from "./Fields/FieldString";
+  SettingItem,
+} from '../../plugins/GlobalSettings';
+import {FieldBoolean} from './Fields/FieldBoolean';
+import {FieldChoiceCombo} from './Fields/FieldChoiceCombo';
+import {FieldFloat} from './Fields/FieldFloat';
+import {FieldInteger} from './Fields/FieldInteger';
+import {FieldString} from './Fields/FieldString';
 
 const computeMasterCfgSnippet = (settings: GlobalSettings) => {
   let code = "c['www']['ui_default_config'] = { \n";
   for (let groupName in settings.groups) {
     const group = settings.groups[groupName];
     for (let item of Object.values(group.items)) {
-      if ((item.value !== item.defaultValue) && (item.value !== null)) {
+      if (item.value !== item.defaultValue && item.value !== null) {
         let value = JSON.stringify(item.value);
-        if (value === "true") {
-          value = "True";
+        if (value === 'true') {
+          value = 'True';
         }
-        if (value === "false") {
-          value = "False";
+        if (value === 'false') {
+          value = 'False';
         }
         code += `    '${groupName}.${item.name}': ${value},\n`;
       }
     }
   }
-  code += "}\n";
+  code += '}\n';
   return code;
 };
 
@@ -64,23 +64,23 @@ export const SettingsView = observer(() => {
     };
 
     if (item.type === 'boolean') {
-      return <FieldBoolean item={item} setSetting={setSetting}/>;
+      return <FieldBoolean item={item} setSetting={setSetting} />;
     }
 
     if (item.type === 'integer') {
-      return <FieldInteger item={item} setSetting={setSetting}/>
+      return <FieldInteger item={item} setSetting={setSetting} />;
     }
 
     if (item.type === 'float') {
-      return <FieldFloat item={item} setSetting={setSetting}/>
+      return <FieldFloat item={item} setSetting={setSetting} />;
     }
 
     if (item.type === 'string') {
-      return <FieldString item={item} setSetting={setSetting}/>;
+      return <FieldString item={item} setSetting={setSetting} />;
     }
 
     if (item.type === 'choice_combo') {
-      return <FieldChoiceCombo item={item} setSetting={setSetting}/>;
+      return <FieldChoiceCombo item={item} setSetting={setSetting} />;
     }
 
     return (
@@ -94,27 +94,24 @@ export const SettingsView = observer(() => {
     return (
       <Card key={group.name}>
         <Card.Header>
-          <Card.Title>{group.caption ?? "(null - please report a bug)"}</Card.Title>
+          <Card.Title>{group.caption ?? '(null - please report a bug)'}</Card.Title>
         </Card.Header>
         <Card.Body>
-          <form data-bb-test-id={`settings-group-${group.name}`}
-                name={group.name}>
-            {Object.values(group.items).map(item => (
+          <form data-bb-test-id={`settings-group-${group.name}`} name={group.name}>
+            {Object.values(group.items).map((item) => (
               <div key={item.name}>
-                <div className="col-md-12">
-                  {renderGroupItem(group.name, item)}
-                </div>
+                <div className="col-md-12">{renderGroupItem(group.name, item)}</div>
               </div>
             ))}
           </form>
         </Card.Body>
       </Card>
     );
-  }
+  };
 
   return (
     <div className="bb-settings-view container">
-      {Object.values(globalSettings.groups).map(group => renderGroup(group))}
+      {Object.values(globalSettings.groups).map((group) => renderGroup(group))}
       <Card>
         <Card.Header>
           <Card.Title>Override defaults for all users</Card.Title>
@@ -132,15 +129,15 @@ buildbotSetupPlugin((reg) => {
   reg.registerMenuGroup({
     name: 'settings',
     caption: 'Settings',
-    icon: <FaSlidersH/>,
+    icon: <FaSlidersH />,
     order: 99,
     route: '/settings',
     parentName: null,
   });
 
   reg.registerRoute({
-    route: "/settings",
+    route: '/settings',
     group: null,
-    element: () => <SettingsView/>,
+    element: () => <SettingsView />,
   });
 });

@@ -15,9 +15,9 @@
   Copyright Buildbot Team Members
 */
 
-import * as d3 from "d3";
-import {Build, Builder, Step, results2class} from "buildbot-data-js";
-import {BuildGroup, WaterfallYScale} from "./Utils";
+import * as d3 from 'd3';
+import {Build, Builder, Step, results2class} from 'buildbot-data-js';
+import {BuildGroup, WaterfallYScale} from './Utils';
 
 export type MarginSettings = {
   top: number;
@@ -45,13 +45,11 @@ function link(formatter: (b: any) => string) {
       return;
     }
     const p = d3.select(el.parentElement);
-    const a = p.append('a')
-      .attr('xlink:href', formatter(d));
+    const a = p.append('a').attr('xlink:href', formatter(d));
     a.node()?.appendChild(el);
   }
   return linkImpl;
 }
-
 
 export class Visualizer {
   minColumnWidth: number;
@@ -68,9 +66,9 @@ export class Visualizer {
   containerHeight!: number;
   contentHeight!: number;
 
-  setHoveredBuildId: (buildid: number|null) => void;
-  hoveredBuild: Build|null = null;
-  hoveredBuildTooltip: d3.Selection<SVGGElement, unknown, null, unknown>|null = null;
+  setHoveredBuildId: (buildid: number | null) => void;
+  hoveredBuild: Build | null = null;
+  hoveredBuildTooltip: d3.Selection<SVGGElement, unknown, null, unknown> | null = null;
   hoveredBuildTooltipOnRight: boolean = false;
   extraTicks: number[] = [];
 
@@ -90,9 +88,12 @@ export class Visualizer {
   buildGroups: BuildGroup[] = [];
   builderToBuilds: Map<number, Build[]> = new Map<number, Build[]>();
 
-  constructor(setHoveredBuildId: (buildid: number|null) => void,
-              minColumnWidth: number, showBuildNumberBackground: boolean,
-              layoutSettings: LayoutSettings) {
+  constructor(
+    setHoveredBuildId: (buildid: number | null) => void,
+    minColumnWidth: number,
+    showBuildNumberBackground: boolean,
+    layoutSettings: LayoutSettings,
+  ) {
     this.setHoveredBuildId = setHoveredBuildId;
     this.minColumnWidth = minColumnWidth;
     this.showBuildNumberBackground = showBuildNumberBackground;
@@ -104,23 +105,37 @@ export class Visualizer {
     }
   }
 
-  onViewConfigMaybeUpdate(rootEl: HTMLDivElement|null, headerEl: HTMLDivElement|null,
-                          headerContentEl: HTMLDivElement|null, contentEl: HTMLDivElement|null,
-                          innerContentEl: HTMLDivElement|null, svgContainerEl: HTMLDivElement|null,
-                          windowWidth: number, scalingFactor: number) {
-    if (rootEl === null || headerEl === null || headerContentEl === null || contentEl === null ||
-      innerContentEl === null || svgContainerEl === null) {
+  onViewConfigMaybeUpdate(
+    rootEl: HTMLDivElement | null,
+    headerEl: HTMLDivElement | null,
+    headerContentEl: HTMLDivElement | null,
+    contentEl: HTMLDivElement | null,
+    innerContentEl: HTMLDivElement | null,
+    svgContainerEl: HTMLDivElement | null,
+    windowWidth: number,
+    scalingFactor: number,
+  ) {
+    if (
+      rootEl === null ||
+      headerEl === null ||
+      headerContentEl === null ||
+      contentEl === null ||
+      innerContentEl === null ||
+      svgContainerEl === null
+    ) {
       return;
     }
 
-    if (this.rootEl === rootEl &&
+    if (
+      this.rootEl === rootEl &&
       this.headerEl === headerEl &&
       this.headerContentEl === headerContentEl &&
       this.contentEl === contentEl &&
       this.innerContentEl === innerContentEl &&
       this.svgContainerEl === svgContainerEl &&
       this.windowWidth === windowWidth &&
-      this.scalingFactor === scalingFactor) {
+      this.scalingFactor === scalingFactor
+    ) {
       return;
     }
     this.hasViewConfig = true;
@@ -183,23 +198,24 @@ export class Visualizer {
     this.container.selectAll('*').remove();
     this.header.selectAll('*').remove();
 
-
-    this.chart = this.container.append('svg')
+    this.chart = this.container
+      .append('svg')
       .append('g')
       .attr('transform', `translate(${ls.margin.left}, ${ls.margin.top})`)
       .attr('class', 'chart');
 
     const height = this.getHeaderHeight();
-    this.waterfall.select(".header").style("height", height);
+    this.waterfall.select('.header').style('height', height);
 
-    this.headerSvg = this.header.append('svg')
+    this.headerSvg = this.header
+      .append('svg')
       .append('g')
       .attr('transform', `translate(${ls.margin.left}, ${height})`)
       .attr('class', 'header');
   }
 
   setContentWidth() {
-    const totalMargins = this.layoutSettings.margin.right + this.layoutSettings.margin.left
+    const totalMargins = this.layoutSettings.margin.right + this.layoutSettings.margin.left;
 
     const availableWidth = this.rootEl.offsetWidth - totalMargins;
     const minRequiredWidth = this.builders.length * this.minColumnWidth;
@@ -219,7 +235,7 @@ export class Visualizer {
 
     let h = -ls.gap;
     for (const group of this.buildGroups) {
-      h += ((group.maxTime - group.minTime) + ls.gap);
+      h += group.maxTime - group.minTime + ls.gap;
     }
 
     const totalMargins = ls.margin.top + ls.margin.bottom;
@@ -230,24 +246,26 @@ export class Visualizer {
     this.container.style('height', `${this.containerHeight}px`);
 
     const headerHeight = this.getHeaderHeight();
-    this.waterfall.select("div.header").style("height", headerHeight + "px");
+    this.waterfall.select('div.header').style('height', headerHeight + 'px');
     this.headerSvg.attr('transform', `translate(${ls.margin.left}, ${headerHeight})`);
   }
 
   getScaleX() {
-    return d3.scaleBand()
-      .domain(this.builders.map(builder => builder.builderid.toString()))
+    return d3
+      .scaleBand()
+      .domain(this.builders.map((builder) => builder.builderid.toString()))
       .rangeRound([0, this.contentWidth])
       .padding(0.05);
   }
 
   getBuilderNameTickFormat() {
-    return d3.scaleOrdinal<string>()
-      .domain(this.builders.map(builder => builder.builderid.toString()))
-      .range(this.builders.map(builder => builder.name));
+    return d3
+      .scaleOrdinal<string>()
+      .domain(this.builders.map((builder) => builder.builderid.toString()))
+      .range(this.builders.map((builder) => builder.name));
   }
 
-// Returns y scale
+  // Returns y scale
   getScaleY() {
     return new WaterfallYScale(this.buildGroups, this.layoutSettings.gap, this.contentHeight);
   }
@@ -278,34 +296,34 @@ export class Visualizer {
     this.headerSvg.select('.axis.x').remove();
 
     // Select axis
-    const axis = this.headerSvg.append('g')
-      .attr('class', 'axis x');
+    const axis = this.headerSvg.append('g').attr('class', 'axis x');
 
     // Remove previous elements
     axis.selectAll('*').remove();
 
     // Top axis shows builder names
-    const xAxis = d3.axisTop(x)
-      .tickFormat(this.getBuilderNameTickFormat());
+    const xAxis = d3.axisTop(x).tickFormat(this.getBuilderNameTickFormat());
 
     const xAxisSelect = axis.call(xAxis);
 
     // Rotate text
-    xAxisSelect.selectAll('text')
+    xAxisSelect
+      .selectAll('text')
       .style('text-anchor', 'start')
       .attr('transform', 'translate(0, -16) rotate(-25)')
       .attr('dy', '0.75em')
-      .each(link(builderid => `#/builders/${builderid}`));
+      .each(link((builderid) => `#/builders/${builderid}`));
 
     // Rotate tick lines
-    xAxisSelect.selectAll('line')
+    xAxisSelect
+      .selectAll('line')
       .data(this.builders)
       .attr('transform', 'rotate(90)')
       .attr('x1', 0)
       .attr('x2', 0)
       .attr('y1', x.bandwidth() / 2)
       .attr('y2', -x.bandwidth() / 2)
-      .attr('class', b => this.getClassForBuilderResults(b))
+      .attr('class', (b) => this.getClassForBuilderResults(b))
       .classed('stroke', true);
   }
 
@@ -316,11 +334,11 @@ export class Visualizer {
     // Remove old axis
     this.chart.select('.axis.y').remove();
 
-    const axis = this.chart.append('g')
-      .attr('class', 'axis y');
+    const axis = this.chart.append('g').attr('class', 'axis y');
 
     // White background
-    axis.append('rect')
+    axis
+      .append('rect')
       .attr('x', -this.layoutSettings.margin.left)
       .attr('y', -this.layoutSettings.margin.top)
       .attr('width', this.layoutSettings.margin.left)
@@ -342,9 +360,7 @@ export class Visualizer {
       return format(date);
     };
 
-    const yAxis = d3.axisLeft<number>(i)
-      .tickValues(ticks)
-      .tickFormat(tickFormat);
+    const yAxis = d3.axisLeft<number>(i).tickValues(ticks).tickFormat(tickFormat);
 
     const yAxisSelect = axis.call(yAxis);
 
@@ -362,20 +378,22 @@ export class Visualizer {
           text.attr('x', x).attr('dy', i * 10);
         }
       }
-    };
+    }
     yAxisSelect.selectAll('text').each(lineBreak);
 
-    const dasharray = (tick: any) => this.extraTicks.includes(tick) ? '2, 5' : '2, 1';
+    const dasharray = (tick: any) => (this.extraTicks.includes(tick) ? '2, 5' : '2, 1');
 
-    yAxisSelect.selectAll('.tick')
+    yAxisSelect
+      .selectAll('.tick')
       .append('line')
       .attr('x2', this.contentWidth)
       .attr('stroke-dasharray', dasharray);
 
     // Stay on left on horizontal scrolling
     axis.attr('transform', `translate(${this.rootEl.scrollLeft}, 0)`);
-    this.waterfall.on('scroll',
-      () => { yAxisSelect.attr('transform', `translate(${this.rootEl.scrollLeft}, 0)`); });
+    this.waterfall.on('scroll', () => {
+      yAxisSelect.attr('transform', `translate(${this.rootEl.scrollLeft}, 0)`);
+    });
   }
 
   getPoinstForTooltip(height: number, tooltipOnRight: boolean) {
@@ -391,13 +409,15 @@ export class Visualizer {
       return;
     }
 
-    const height = (steps.length * 15) + 7;
-    this.hoveredBuildTooltip.transition().duration(100)
-      .attr('transform', `translate(${this.hoveredBuildTooltipOnRight ? 5 : -175}, ${- height / 2})`)
+    const height = steps.length * 15 + 7;
+    this.hoveredBuildTooltip
+      .transition()
+      .duration(100)
+      .attr('transform', `translate(${this.hoveredBuildTooltipOnRight ? 5 : -175}, ${-height / 2})`)
       .select('polygon')
       .attr('points', this.getPoinstForTooltip(height, this.hoveredBuildTooltipOnRight));
 
-    const duration = function(step: Step) {
+    const duration = function (step: Step) {
       const d = ((step.complete_at ?? 0) - (step.started_at ?? 0)) * 1000;
       if (d > 0) {
         return `(${d / 1000}s)`;
@@ -406,17 +426,20 @@ export class Visualizer {
       }
     };
 
-    this.hoveredBuildTooltip.selectAll('.buildstep')
+    this.hoveredBuildTooltip
+      .selectAll('.buildstep')
       .data(steps)
-      .enter().append('g')
+      .enter()
+      .append('g')
       .attr('class', 'buildstep')
       // Add text
       .append('text')
       .attr('y', (step, i) => 15 * (i + 1))
       .attr('x', this.hoveredBuildTooltipOnRight ? 30 : 10)
-      .attr('class', b => results2class(b, null))
+      .attr('class', (b) => results2class(b, null))
       .classed('fill', true)
-      .transition().delay(100)
+      .transition()
+      .delay(100)
       // Text format
       .text((step, i) => `${i + 1}. ${step.name} ${duration(step)}`);
   }
@@ -434,22 +457,24 @@ export class Visualizer {
     // Move build and builder to front
     const p = d3.select(node.parentElement);
     node.parentElement.appendChild(node);
-    p.each(function(this: Element) { return this.parentElement?.appendChild(this); });
+    p.each(function (this: Element) {
+      return this.parentElement?.appendChild(this);
+    });
 
     // Show tooltip on the left or on the right
-    const tooltipOnRight = build.builderid < (this.builders.length / 2);
+    const tooltipOnRight = build.builderid < this.builders.length / 2;
 
     // Create tooltip
     let height = 40;
-    const tooltip = e.append('g')
+    const tooltip = e
+      .append('g')
       .attr('class', 'svg-tooltip')
       .attr('transform', `translate(${pointer[0]}, ${pointer[1]})`)
       .append('g')
       .attr('class', 'tooltip-content')
-      .attr('transform', `translate(${tooltipOnRight ? 5 : -175}, ${- height / 2})`);
+      .attr('transform', `translate(${tooltipOnRight ? 5 : -175}, ${-height / 2})`);
 
-    tooltip.append('polygon')
-      .attr('points', this.getPoinstForTooltip(height, tooltipOnRight));
+    tooltip.append('polygon').attr('points', this.getPoinstForTooltip(height, tooltipOnRight));
 
     this.hoveredBuild = build;
     this.hoveredBuildTooltip = tooltip;
@@ -462,8 +487,7 @@ export class Visualizer {
 
     // Move the tooltip to the mouse position
     const pointer = d3.pointer(event, node);
-    e.select('.svg-tooltip')
-      .attr('transform', `translate(${pointer[0]}, ${pointer[1]})`);
+    e.select('.svg-tooltip').attr('transform', `translate(${pointer[0]}, ${pointer[1]})`);
   }
 
   mouseOut(node: d3.ContainerElement) {
@@ -486,8 +510,10 @@ export class Visualizer {
     this.chart.selectAll('.builder').remove();
 
     // Create builder columns
-    const builderEls = this.chart.selectAll('.builder')
-      .data(this.builders).enter()
+    const builderEls = this.chart
+      .selectAll('.builder')
+      .data(this.builders)
+      .enter()
       .append('g')
       .attr('class', 'builder')
       .attr('transform', (builder: Builder) => `translate(${x(builder.builderid.toString())}, 0)`);
@@ -496,23 +522,27 @@ export class Visualizer {
     const data = (builder: Builder) => this.builderToBuilds.get(builder.builderid) ?? [];
     const key = (build: Build) => build.buildid.toString();
 
-    const builds = builderEls.selectAll<d3.BaseType, Build>('.build')
-      .data(data, key).enter()
+    const builds = builderEls
+      .selectAll<d3.BaseType, Build>('.build')
+      .data(data, key)
+      .enter()
       .append('g')
       .attr('class', 'build')
       .attr('transform', (build: Build) => `translate(0, ${y.getCoord(build.complete_at ?? 0)})`);
 
     // Draw rectangle for each build
     const height = (build: Build) => {
-      return Math.max(10,
-        Math.abs((y.getCoord(build.started_at) ?? 0) -
-          (y.getCoord(build.complete_at ?? 0) ?? 0)));
-    }
+      return Math.max(
+        10,
+        Math.abs((y.getCoord(build.started_at) ?? 0) - (y.getCoord(build.complete_at ?? 0) ?? 0)),
+      );
+    };
 
-    const buildlink = link(b => `#/builders/${b.builderid}/builds/${b.number}`);
+    const buildlink = link((b) => `#/builders/${b.builderid}/builds/${b.number}`);
 
-    builds.append('rect')
-      .attr('class', b => results2class(b, null))
+    builds
+      .append('rect')
+      .attr('class', (b) => results2class(b, null))
       .attr('width', x.bandwidth())
       .attr('height', height)
       .classed('fill', true)
@@ -520,7 +550,8 @@ export class Visualizer {
 
     // Optional: grey rectangle below buildids
     if (this.showBuildNumberBackground) {
-      builds.append('rect')
+      builds
+        .append('rect')
         .attr('y', -15)
         .attr('width', x.bandwidth())
         .attr('height', 15)
@@ -528,22 +559,26 @@ export class Visualizer {
     }
 
     // Draw text over builds
-    builds.append('text')
+    builds
+      .append('text')
       .attr('class', 'id')
       .attr('x', x.bandwidth() / 2)
       .attr('y', -3)
-      .text(build => build.number)
+      .text((build) => build.number)
       .each(buildlink);
 
     const self = this;
 
     // Add event listeners
     builds
-      .on('mouseover', function(this: d3.ContainerElement, event: any, build: Build) {
+      .on('mouseover', function (this: d3.ContainerElement, event: any, build: Build) {
         self.mouseOver(this, build, event);
       })
-      .on('mousemove', function(this: d3.ContainerElement, event: any) { self.mouseMove(this, event); })
-      .on('mouseout', function(this: d3.ContainerElement) { self.mouseOut(this); })
+      .on('mousemove', function (this: d3.ContainerElement, event: any) {
+        self.mouseMove(this, event);
+      })
+      .on('mouseout', function (this: d3.ContainerElement) {
+        self.mouseOut(this);
+      });
   }
-
 }

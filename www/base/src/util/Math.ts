@@ -17,7 +17,7 @@
 
 export const digitCount = (n: number) => {
   return Math.floor(Math.log10(n) + 1);
-}
+};
 
 export function alignFloor(n: number, align: number) {
   return Math.floor(n / align) * align;
@@ -31,27 +31,37 @@ export function clamp(n: number, min: number, max: number) {
   return Math.min(Math.max(n, min), max);
 }
 
-export function expandRange(start: number, end: number, limitStart: number, limitEnd: number,
-                            expand: number): [number, number] {
+export function expandRange(
+  start: number,
+  end: number,
+  limitStart: number,
+  limitEnd: number,
+  expand: number,
+): [number, number] {
   start -= expand;
   end += expand;
-  return [
-    (start < limitStart) ? limitStart : start,
-    (end > limitEnd) ? limitEnd : end
-  ];
+  return [start < limitStart ? limitStart : start, end > limitEnd ? limitEnd : end];
 }
 
 export function areRangesOverlapping(startA: number, endA: number, startB: number, endB: number) {
-  return (endA > startB && endB > startA);
+  return endA > startB && endB > startA;
 }
 
-export function isRangeWithinAnother(startIn: number, endIn: number,
-                                     startOut: number, endOut: number) {
+export function isRangeWithinAnother(
+  startIn: number,
+  endIn: number,
+  startOut: number,
+  endOut: number,
+) {
   return startOut <= startIn && endOut >= endIn;
 }
 
-export function limitRangeToSize(start: number, end: number, maxSize: number,
-                                 preferredCenter: number): [number, number] {
+export function limitRangeToSize(
+  start: number,
+  end: number,
+  maxSize: number,
+  preferredCenter: number,
+): [number, number] {
   if (end - start <= maxSize) {
     return [start, end];
   }

@@ -5,8 +5,8 @@
   Copyright Buildbot Team Members
 */
 
-import {beforeEach, describe, expect, it} from "vitest";
-import {DataQuery, Query} from "./DataQuery";
+import {beforeEach, describe, expect, it} from 'vitest';
+import {DataQuery, Query} from './DataQuery';
 
 class WrappedDataQuery {
   filter(array: any[], query: Query) {
@@ -32,36 +32,38 @@ class WrappedDataQuery {
 
 describe('dataquery service', () => {
   let testArray: any[] = [];
-  let wrappedDataQuery = new WrappedDataQuery();
+  const wrappedDataQuery = new WrappedDataQuery();
 
   beforeEach(() => {
-    testArray = [{
+    testArray = [
+      {
         builderid: 1,
         buildid: 3,
         buildrequestid: 1,
         complete: false,
         complete_at: null,
-        started_at: 1417802797
-      }, {
+        started_at: 1417802797,
+      },
+      {
         builderid: 2,
         buildid: 1,
         buildrequestid: 1,
         complete: true,
         complete_at: 1417803429,
-        started_at: 1417803026
-      }, {
+        started_at: 1417803026,
+      },
+      {
         builderid: 1,
         buildid: 2,
         buildrequestid: 1,
         complete: true,
         complete_at: 1417803038,
-        started_at: 1417803025
-      }
+        started_at: 1417803025,
+      },
     ];
   });
 
   describe('filter(array, filters)', () => {
-
     it('should filter the array (one filter)', () => {
       const result = wrappedDataQuery.filter(testArray, {complete: false});
       expect(result.length).toBe(1);
@@ -76,50 +78,50 @@ describe('dataquery service', () => {
     });
 
     it('should filter the array (eq - equal)', () => {
-      const result = wrappedDataQuery.filter(testArray, {'complete__eq': true});
+      const result = wrappedDataQuery.filter(testArray, {complete__eq: true});
       expect(result.length).toBe(2);
       expect(result).toContain(testArray[1]);
       expect(result).toContain(testArray[2]);
     });
 
     it('should filter the array (two eq)', () => {
-      const result = wrappedDataQuery.filter(testArray, {'buildid__eq': [1, 2]});
+      const result = wrappedDataQuery.filter(testArray, {buildid__eq: [1, 2]});
       expect(result.length).toBe(2);
       expect(result).toContain(testArray[1]);
       expect(result).toContain(testArray[2]);
     });
 
     it('should treat empty eq criteria as no restriction', () => {
-      const result = wrappedDataQuery.filter(testArray, {'buildid__eq': []});
+      const result = wrappedDataQuery.filter(testArray, {buildid__eq: []});
       expect(result.length).toBe(3);
     });
 
     it('should filter the array (ne - not equal)', () => {
-      const result = wrappedDataQuery.filter(testArray, {'complete__ne': true});
+      const result = wrappedDataQuery.filter(testArray, {complete__ne: true});
       expect(result.length).toBe(1);
       expect(result).toContain(testArray[0]);
     });
 
     it('should filter the array (lt - less than)', () => {
-      const result = wrappedDataQuery.filter(testArray, {'buildid__lt': 3});
+      const result = wrappedDataQuery.filter(testArray, {buildid__lt: 3});
       expect(result.length).toBe(2);
       expect(result).toContain(testArray[1]);
       expect(result).toContain(testArray[2]);
     });
 
     it('should filter the array (le - less than or equal to)', () => {
-      const result = wrappedDataQuery.filter(testArray, {'buildid__le': 3});
+      const result = wrappedDataQuery.filter(testArray, {buildid__le: 3});
       expect(result.length).toBe(3);
     });
 
     it('should filter the array (gt - greater than)', () => {
-      const result = wrappedDataQuery.filter(testArray, {'started_at__gt': 1417803025});
+      const result = wrappedDataQuery.filter(testArray, {started_at__gt: 1417803025});
       expect(result.length).toBe(1);
       expect(result).toContain(testArray[1]);
     });
 
     it('should filter the array (ge - greater than or equal to)', () => {
-      const result = wrappedDataQuery.filter(testArray, {'started_at__ge': 1417803025});
+      const result = wrappedDataQuery.filter(testArray, {started_at__ge: 1417803025});
       expect(result.length).toBe(2);
       expect(result).toContain(testArray[1]);
       expect(result).toContain(testArray[2]);
@@ -146,7 +148,6 @@ describe('dataquery service', () => {
   });
 
   describe('sort(array, order)', () => {
-
     it('should sort the array (one parameter)', () => {
       const result = wrappedDataQuery.sort(testArray, 'buildid');
       expect(result[0]).toEqual(testArray[1]);
@@ -169,13 +170,13 @@ describe('dataquery service', () => {
     });
 
     it('exception if wrong order', () => {
-      expect(() => wrappedDataQuery.sort(testArray, {test: 2}))
-        .toThrowError(/.*Unsupported order parameter.*/);
+      expect(() => wrappedDataQuery.sort(testArray, {test: 2})).toThrowError(
+        /.*Unsupported order parameter.*/,
+      );
     });
   });
 
   describe('limit(array, limit)', () => {
-
     it('should slice the array', () => {
       const result = wrappedDataQuery.limit(testArray, 1);
       expect(result.length).toBe(1);

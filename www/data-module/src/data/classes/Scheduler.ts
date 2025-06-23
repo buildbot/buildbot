@@ -5,18 +5,18 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
 
 export type SchedulerMaster = {
   masterid: number;
   active: boolean;
-  last_active: number|null;
+  last_active: number | null;
   name: string;
-}
+};
 
 export class Scheduler extends BaseClass {
   @observable schedulerid!: number;
@@ -25,7 +25,7 @@ export class Scheduler extends BaseClass {
   @observable enabled!: boolean;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "schedulers", String(object.schedulerid));
+    super(accessor, 'schedulers', String(object.schedulerid));
     this.update(object);
     makeObservable(this);
   }
@@ -47,13 +47,13 @@ export class Scheduler extends BaseClass {
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get<Scheduler>("schedulers", query, schedulerDescriptor);
+    return accessor.get<Scheduler>('schedulers', query, schedulerDescriptor);
   }
 }
 
 export class SchedulerDescriptor implements IDataDescriptor<Scheduler> {
-  restArrayField = "schedulers";
-  fieldId: string = "schedulerid";
+  restArrayField = 'schedulers';
+  fieldId: string = 'schedulerid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Scheduler(accessor, object);

@@ -16,27 +16,25 @@
 */
 
 import './BuildSticker.scss';
-import {observer} from "mobx-react";
-import {Link} from "react-router-dom";
-import { Card } from 'react-bootstrap';
-import {Build, Builder, results2class, results2text} from "buildbot-data-js";
-import {BadgeStatus, durationFormat, useCurrentTime} from "buildbot-ui";
+import {observer} from 'mobx-react';
+import {Link} from 'react-router-dom';
+import {Card} from 'react-bootstrap';
+import {Build, Builder, results2class, results2text} from 'buildbot-data-js';
+import {BadgeStatus, durationFormat, useCurrentTime} from 'buildbot-ui';
 
 type BuildStickerProps = {
   build: Build;
   builder: Builder;
-}
+};
 
 export const BuildSticker = observer(({build, builder}: BuildStickerProps) => {
   const now = useCurrentTime();
 
   return (
-    <Card className={"bb-buildsticker " + results2class(build, null)}>
+    <Card className={'bb-buildsticker ' + results2class(build, null)}>
       <Card.Body>
         <div className="bb-buildsticker-left">
-          <BadgeStatus className={results2class(build, null)}>
-            {results2text(build)}
-          </BadgeStatus>
+          <BadgeStatus className={results2class(build, null)}>{results2text(build)}</BadgeStatus>
           <Link to={`builders/${builder.builderid}/builds/${build.number}`}>
             {builder.name}/{build.number}
           </Link>

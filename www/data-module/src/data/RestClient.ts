@@ -6,7 +6,7 @@
 */
 
 import axios, {AxiosRequestConfig, ParamsSerializerOptions} from 'axios';
-import {CancellablePromise} from "../util/CancellablePromise";
+import {CancellablePromise} from '../util/CancellablePromise';
 
 // Axios 1.0.0 will provide an easier way to disable emission of braces, for now we use a modified
 // version of Axios internal serializer as of 0.27.2. The following three functions are:
@@ -34,7 +34,7 @@ const axiosEncode = (val: any) => {
     .replace(/%20/g, '+')
     .replace(/%5B/gi, '[')
     .replace(/%5D/gi, ']');
-}
+};
 
 const axiosForEach = (obj: any, fn: (obj: any, key: any) => void) => {
   // Don't bother if no value provided
@@ -64,10 +64,13 @@ const axiosForEach = (obj: any, fn: (obj: any, key: any) => void) => {
       fn(obj[key], key);
     }
   }
-}
+};
 
-const axiosParamsSerializerWithoutBraces = (params: Record<string, any>, options?: ParamsSerializerOptions) => {
-  let parts: string[] = [];
+const axiosParamsSerializerWithoutBraces = (
+  params: Record<string, any>,
+  _options?: ParamsSerializerOptions,
+) => {
+  const parts: string[] = [];
 
   axiosForEach(params, (val, key) => {
     if (val === null || typeof val === 'undefined') {
@@ -87,15 +90,15 @@ const axiosParamsSerializerWithoutBraces = (params: Record<string, any>, options
   });
 
   return parts.join('&');
-}
+};
 
 export class RestClient {
   rootUrl: string;
 
   constructor(rootUrl: string) {
     this.rootUrl = rootUrl;
-    if (!this.rootUrl.endsWith("/")) {
-      this.rootUrl += "/";
+    if (!this.rootUrl.endsWith('/')) {
+      this.rootUrl += '/';
     }
   }
 
@@ -107,11 +110,13 @@ export class RestClient {
       });
       config.signal = controller.signal;
       const request = axios.request(config);
-      request.then(response => {
-        resolve(response.data);
-      }).catch(reason => {
-        reject(reason);
-      })
+      request
+        .then((response) => {
+          resolve(response.data);
+        })
+        .catch((reason) => {
+          reject(reason);
+        });
     });
   }
 
@@ -130,7 +135,7 @@ export class RestClient {
   del(url: string) {
     return this.buildCancellablePromise({
       method: 'delete',
-      url: this.rootUrl + url
+      url: this.rootUrl + url,
     });
   }
 
@@ -157,7 +162,7 @@ export function getBaseUrl(location: Location, route?: string) {
   const defaultport = location.protocol === 'https:' ? '443' : '80';
   const path = location.pathname;
   const port = location.port === defaultport ? '' : `:${location.port}`;
-  return `${protocol}//${hostname}${port}${path}${route ?? ""}`;
+  return `${protocol}//${hostname}${port}${path}${route ?? ''}`;
 }
 
 export function getRestUrl(location: Location) {

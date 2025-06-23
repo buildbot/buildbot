@@ -1,4 +1,3 @@
-
 $navbar-height: 52px;
 $main-color: #3498db;
 
@@ -78,7 +77,8 @@ $main-color: #3498db;
               .build {
                 cursor: pointer;
 
-                rect, polygon {
+                rect,
+                polygon {
                   stroke: $main-color;
                   stroke-width: 1px;
                 }
@@ -133,63 +133,63 @@ $main-color: #3498db;
 
   .fill {
     &.results_SUCCESS {
-      fill: #88DD33;
+      fill: #88dd33;
     }
     &.results_WARNINGS {
-      fill: #FFAA33;
+      fill: #ffaa33;
     }
     &.results_FAILURE {
-      fill: #EE8888;
+      fill: #ee8888;
     }
     &.results_SKIPPED {
-      fill: #AADDEE;
+      fill: #aaddee;
     }
     &.results_EXCEPTION {
-      fill: #CC66CC;
+      fill: #cc66cc;
     }
     &.results_RETRY {
-      fill: #EECCCC;
+      fill: #eecccc;
     }
     // ?
     &.results_CANCELLED {
-      fill: #EECCCC;
+      fill: #eecccc;
     }
     &.results_PENDING {
-      fill: #E7D100;
+      fill: #e7d100;
     }
     &.results_UNKNOWN {
-      fill: #EEEEEE;
+      fill: #eeeeee;
     }
   }
 
   .stroke {
     &.results_SUCCESS {
-      stroke: #88DD33;
+      stroke: #88dd33;
     }
     &.results_WARNINGS {
-      stroke: #FFAA33;
+      stroke: #ffaa33;
     }
     &.results_FAILURE {
-      stroke: #EE8888;
+      stroke: #ee8888;
     }
     &.results_SKIPPED {
-      stroke: #AADDEE;
+      stroke: #aaddee;
     }
     &.results_EXCEPTION {
-      stroke: #CC66CC;
+      stroke: #cc66cc;
     }
     &.results_RETRY {
-      stroke: #EECCCC;
+      stroke: #eecccc;
     }
     // ?
     &.results_CANCELLED {
-      stroke: #EECCCC;
+      stroke: #eecccc;
     }
     &.results_PENDING {
-      stroke: #E7D100;
+      stroke: #e7d100;
     }
     &.results_UNKNOWN {
-      stroke: #EEEEEE;
+      stroke: #eeeeee;
     }
   }
 }

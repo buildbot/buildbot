@@ -16,14 +16,14 @@
 */
 
 import './LogDownloadButtons.scss';
-import {useContext} from "react";
-import {Button, ButtonGroup} from "react-bootstrap";
-import {FaDownload} from "react-icons/fa";
-import {DataClientContext, Log} from "buildbot-data-js";
+import {useContext} from 'react';
+import {Button, ButtonGroup} from 'react-bootstrap';
+import {FaDownload} from 'react-icons/fa';
+import {DataClientContext, Log} from 'buildbot-data-js';
 
 export type LogDownloadButtonsProps = {
   log: Log;
-}
+};
 
 export const LogDownloadButtons = ({log}: LogDownloadButtonsProps) => {
   const dataClient = useContext(DataClientContext);
@@ -31,15 +31,22 @@ export const LogDownloadButtons = ({log}: LogDownloadButtonsProps) => {
 
   return (
     <ButtonGroup>
-      <Button href={new URL(`logs/${log.id}/raw`, apiRootUrl).toString()} variant="default" title="download log"
-        className="bb-log-download-button btn-sm">
-        <FaDownload/>
+      <Button
+        href={new URL(`logs/${log.id}/raw`, apiRootUrl).toString()}
+        variant="default"
+        title="download log"
+        className="bb-log-download-button btn-sm"
+      >
+        <FaDownload />
       </Button>
-      <Button href={new URL(`logs/${log.id}/raw_inline`, apiRootUrl).toString()} variant="default"
-              title="show log"
-              className="bb-log-download-button btn-sm">
+      <Button
+        href={new URL(`logs/${log.id}/raw_inline`, apiRootUrl).toString()}
+        variant="default"
+        title="show log"
+        className="bb-log-download-button btn-sm"
+      >
         Raw
       </Button>
     </ButtonGroup>
   );
-}
+};

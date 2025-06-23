@@ -18,16 +18,16 @@
 export type ParsedTemplate = {
   template: string;
   replacements: Set<string>;
-  errors: string[]
-}
+  errors: string[];
+};
 
-export function parseTemplate(template: string) : ParsedTemplate {
+export function parseTemplate(template: string): ParsedTemplate {
   const replacements = new Set<string>();
   const errors: string[] = [];
 
-  let i = template.indexOf("%(");
+  let i = template.indexOf('%(');
   while (i >= 0) {
-    let iend = template.indexOf(")", i + 2);
+    const iend = template.indexOf(')', i + 2);
     if (iend < 0) {
       errors.push(`Unclosed replacement field at position ${i}`);
       break;
@@ -37,18 +37,18 @@ export function parseTemplate(template: string) : ParsedTemplate {
       break;
     }
     replacements.add(template.substring(i + 2, iend));
-    i = template.indexOf("%(", iend + 1);
+    i = template.indexOf('%(', iend + 1);
   }
   return {
     template: template,
     replacements: replacements,
-    errors: errors
-  }
+    errors: errors,
+  };
 }
 
 export function fillTemplate(template: string, replacements: Map<string, string>) {
   let result = '';
-  let i = template.indexOf("%(");
+  let i = template.indexOf('%(');
   if (i >= 0) {
     result += template.substring(0, i);
   } else {
@@ -56,7 +56,7 @@ export function fillTemplate(template: string, replacements: Map<string, string>
   }
 
   while (i >= 0) {
-    let iend = template.indexOf(")", i + 2);
+    const iend = template.indexOf(')', i + 2);
     if (iend < 0) {
       return result;
     }
@@ -65,7 +65,7 @@ export function fillTemplate(template: string, replacements: Map<string, string>
     }
     const key = template.substring(i + 2, iend);
     result += replacements.get(key) ?? '';
-    i = template.indexOf("%(", iend + 1);
+    i = template.indexOf('%(', iend + 1);
     if (i >= 0) {
       result += template.substring(iend + 1, i);
     } else {

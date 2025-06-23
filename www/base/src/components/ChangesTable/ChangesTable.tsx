@@ -16,16 +16,16 @@
 */
 
 import './ChangesTable.scss';
-import {action, makeObservable, observable} from "mobx";
-import {FaMinus, FaPlus} from "react-icons/fa";
-import {Link} from "react-router-dom";
-import {Change, DataCollection} from "buildbot-data-js";
-import {ChangeDetails} from "buildbot-ui";
-import {observer, useLocalObservable} from "mobx-react";
-import {resizeArray} from "../../util/Array";
-import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
-import {Button} from "react-bootstrap";
-import {LoadMoreListItem} from "../LoadMoreListItem/LoadMoreListItem";
+import {action, makeObservable, observable} from 'mobx';
+import {FaMinus, FaPlus} from 'react-icons/fa';
+import {Link} from 'react-router-dom';
+import {Change, DataCollection} from 'buildbot-data-js';
+import {ChangeDetails} from 'buildbot-ui';
+import {observer, useLocalObservable} from 'mobx-react';
+import {resizeArray} from '../../util/Array';
+import {LoadingSpan} from '../LoadingSpan/LoadingSpan';
+import {Button} from 'react-bootstrap';
+import {LoadMoreListItem} from '../LoadMoreListItem/LoadMoreListItem';
 
 class ChangesTableState {
   showDetails = observable.array<boolean>();
@@ -50,8 +50,8 @@ class ChangesTableState {
 type ChangesTableProps = {
   changes: DataCollection<Change>;
   fetchLimit: number;
-  onLoadMore: (() => void)|null;
-}
+  onLoadMore: (() => void) | null;
+};
 
 export const ChangesTable = observer(({changes, fetchLimit, onLoadMore}: ChangesTableProps) => {
   const tableState = useLocalObservable(() => new ChangesTableState());
@@ -61,8 +61,12 @@ export const ChangesTable = observer(({changes, fetchLimit, onLoadMore}: Changes
     return (
       <li key={change.id} className="list-group-item">
         <Link to={`/changes/${change.id}`}>See builds</Link>
-        <ChangeDetails change={change} compact={false} showDetails={tableState.showDetails[index]}
-                       setShowDetails={(show) => tableState.setShowDetailsSingle(index, show)}/>
+        <ChangeDetails
+          change={change}
+          compact={false}
+          showDetails={tableState.showDetails[index]}
+          setShowDetails={(show) => tableState.setShowDetailsSingle(index, show)}
+        />
       </li>
     );
   });
@@ -71,14 +75,14 @@ export const ChangesTable = observer(({changes, fetchLimit, onLoadMore}: Changes
     if (changes.isResolved()) {
       return <>{changes.array.length} changes</>;
     }
-    return <LoadingSpan/>
-  }
+    return <LoadingSpan />;
+  };
 
   const maybeRenderLoadMore = () => {
     if (!changes.isResolved() || onLoadMore === null || changes.array.length < fetchLimit) {
       return <></>;
     }
-    return <LoadMoreListItem onLoadMore={onLoadMore}/>;
+    return <LoadMoreListItem onLoadMore={onLoadMore} />;
   };
 
   return (
@@ -90,13 +94,19 @@ export const ChangesTable = observer(({changes, fetchLimit, onLoadMore}: Changes
           </div>
           <div className="navbar-form navbar-right">
             <div className="form-group">
-              <div onClick={() => tableState.setShowDetailsAll(false)} title="Collapse all"
-                   className="btn btn-default">
-                <FaMinus/>
+              <div
+                onClick={() => tableState.setShowDetailsAll(false)}
+                title="Collapse all"
+                className="btn btn-default"
+              >
+                <FaMinus />
               </div>
-              <div onClick={() => tableState.setShowDetailsAll(true)} title="Expand all"
-                   className="btn btn-default">
-                <FaPlus/>
+              <div
+                onClick={() => tableState.setShowDetailsAll(true)}
+                title="Expand all"
+                className="btn btn-default"
+              >
+                <FaPlus />
               </div>
             </div>
           </div>

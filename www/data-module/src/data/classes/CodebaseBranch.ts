@@ -5,10 +5,10 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
 
 export class CodebaseBranch extends BaseClass {
   @observable branchid!: number;
@@ -18,7 +18,7 @@ export class CodebaseBranch extends BaseClass {
   @observable last_timestamp!: number;
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "branches", String(object.branchid));
+    super(accessor, 'branches', String(object.branchid));
     this.update(object);
     makeObservable(this);
   }
@@ -40,12 +40,11 @@ export class CodebaseBranch extends BaseClass {
       last_timestamp: this.last_timestamp,
     };
   }
-
 }
 
 export class CodebaseBranchDescriptor implements IDataDescriptor<CodebaseBranch> {
-  restArrayField = "branches";
-  fieldId: string = "branchid";
+  restArrayField = 'branches';
+  fieldId: string = 'branchid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new CodebaseBranch(accessor, object);

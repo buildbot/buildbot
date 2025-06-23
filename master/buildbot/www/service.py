@@ -243,7 +243,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     else:
                         # older twisted's just have the port sitting there
                         # as an instance attribute
-                        self._getPort = lambda: self.port_service._port  # type: ignore[union-attr]
+                        self._getPort = lambda: self.port_service._port
 
                 yield self.port_service.setServiceParent(self)
 
@@ -358,7 +358,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         assert self.site is not None
 
-        self.site.sessionFactory = None  # type: ignore[assignment]
+        # mypy is confused by issuing warning on the next line
+        self.site.sessionFactory = None  # type: ignore[assignment,unused-ignore]
 
         # Make sure site.master is set. It is required for poller change_hook
         self.site.master = self.master

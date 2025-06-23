@@ -15,9 +15,9 @@
   Copyright Buildbot Team Members
 */
 
-import {useContext, useEffect} from "react";
-import {TopbarContext} from "../contexts/Topbar";
-import {TopbarAction, TopbarItem} from "../stores/TopbarStore";
+import {useContext, useEffect} from 'react';
+import {TopbarContext} from '../contexts/Topbar';
+import {TopbarAction, TopbarItem} from '../stores/TopbarStore';
 
 export function useTopbarItems(items: TopbarItem[]) {
   const store = useContext(TopbarContext);
@@ -30,7 +30,7 @@ export function useTopbarItems(items: TopbarItem[]) {
   // for updates, one for eventual cleanup when navigating out of view.
   useEffect(() => {
     return () => store.setItems([]);
-  }, [store])
+  }, [store]);
 }
 
 export function useTopbarActions(actions: TopbarAction[]) {
@@ -44,5 +44,5 @@ export function useTopbarActions(actions: TopbarAction[]) {
   // for updates, one for eventual cleanup when navigating out of view.
   useEffect(() => {
     return () => store.setActions([]);
-  }, [store])
+  }, [store]);
 }

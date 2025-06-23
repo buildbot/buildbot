@@ -15,64 +15,81 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {Card} from "react-bootstrap";
+import {observer} from 'mobx-react';
+import {Card} from 'react-bootstrap';
 import {
   Project,
   useDataAccessor,
   useDataApiQuery,
-  useDataApiSingleElementQuery, Buildrequest, useDataApiDynamicQuery,
-} from "buildbot-data-js";
-import {buildbotGetSettings} from "buildbot-plugin-support";
-import {useLoadMoreItemsState} from "../../../../ui";
-import {LoadingSpan} from "../LoadingSpan/LoadingSpan";
-import {PendingBuildRequestsTable} from "../PendingBuildRequestsTable/PendingBuildRequestsTable";
+  useDataApiSingleElementQuery,
+  Buildrequest,
+  useDataApiDynamicQuery,
+} from 'buildbot-data-js';
+import {buildbotGetSettings} from 'buildbot-plugin-support';
+import {useLoadMoreItemsState} from '../../../../ui';
+import {LoadingSpan} from '../LoadingSpan/LoadingSpan';
+import {PendingBuildRequestsTable} from '../PendingBuildRequestsTable/PendingBuildRequestsTable';
 
 export type ProjectPendingBuildRequestsWidgetProps = {
   projectid: number;
-}
+};
 
-export const ProjectPendingBuildRequestsWidget = observer(({projectid}: ProjectPendingBuildRequestsWidgetProps) => {
-  const accessor = useDataAccessor([]);
+export const ProjectPendingBuildRequestsWidget = observer(
+  ({projectid}: ProjectPendingBuildRequestsWidgetProps) => {
+    const accessor = useDataAccessor([]);
 
-  const projectQuery = useDataApiQuery(() => Project.getAll(accessor, {query: {
-      projectid: projectid
-    }}));
-  const project = projectQuery.getNthOrNull(0);
-  const builders = useDataApiSingleElementQuery(project, [], p => p.getBuilders());
-  const builderIds = builders.array.map(builder => builder.builderid);
-
-  const initialRequestsFetchLimit = buildbotGetSettings().getIntegerSetting("BuildRequests.buildrequestFetchLimit");
-  const [requestsFetchLimit, onLoadMoreRequests] =
-    useLoadMoreItemsState(initialRequestsFetchLimit, initialRequestsFetchLimit);
-  const buildRequestsQuery = useDataApiDynamicQuery(builderIds,
-    () => Buildrequest.getAll(accessor, {query: {
-        limit: requestsFetchLimit,
-        order: ['-priority', '-submitted_at'],
-        claimed: false,
-        builderid__eq: builderIds,
-      }}));
-
-  const renderContent = () => {
-    if (!buildRequestsQuery.resolved) {
-      return <LoadingSpan/>
-    }
-    if (buildRequestsQuery.array.length === 0) {
-      return <span>None</span>
-    }
-    return (
-      <PendingBuildRequestsTable buildRequestsQuery={buildRequestsQuery}
-                                 fetchLimit={requestsFetchLimit}
-                                 onLoadMore={onLoadMoreRequests}/>
+    const projectQuery = useDataApiQuery(() =>
+      Project.getAll(accessor, {
+        query: {
+          projectid: projectid,
+        },
+      }),
     );
-  }
+    const project = projectQuery.getNthOrNull(0);
+    const builders = useDataApiSingleElementQuery(project, [], (p) => p.getBuilders());
+    const builderIds = builders.array.map((builder) => builder.builderid);
 
-  return (
-    <Card>
-      <Card.Body>
-        <h5>Pending Build Requests</h5>
-        {renderContent()}
-      </Card.Body>
-    </Card>
-  );
-});
+    const initialRequestsFetchLimit = buildbotGetSettings().getIntegerSetting(
+      'BuildRequests.buildrequestFetchLimit',
+    );
+    const [requestsFetchLimit, onLoadMoreRequests] = useLoadMoreItemsState(
+      initialRequestsFetchLimit,
+      initialRequestsFetchLimit,
+    );
+    const buildRequestsQuery = useDataApiDynamicQuery(builderIds, () =>
+      Buildrequest.getAll(accessor, {
+        query: {
+          limit: requestsFetchLimit,
+          order: ['-priority', '-submitted_at'],
+          claimed: false,
+          builderid__eq: builderIds,
+        },
+      }),
+    );
+
+    const renderContent = () => {
+      if (!buildRequestsQuery.resolved) {
+        return <LoadingSpan />;
+      }
+      if (buildRequestsQuery.array.length === 0) {
+        return <span>None</span>;
+      }
+      return (
+        <PendingBuildRequestsTable
+          buildRequestsQuery={buildRequestsQuery}
+          fetchLimit={requestsFetchLimit}
+          onLoadMore={onLoadMoreRequests}
+        />
+      );
+    };
+
+    return (
+      <Card>
+        <Card.Body>
+          <h5>Pending Build Requests</h5>
+          {renderContent()}
+        </Card.Body>
+      </Card>
+    );
+  },
+);

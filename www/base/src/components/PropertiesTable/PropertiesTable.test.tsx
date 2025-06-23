@@ -15,30 +15,30 @@
   Copyright Buildbot Team Members
 */
 
-import {describe, expect, it} from "vitest";
+import {describe, expect, it} from 'vitest';
 import {render} from '@testing-library/react';
-import {MemoryRouter} from "react-router-dom";
+import {MemoryRouter} from 'react-router-dom';
 import {PropertiesTable} from './PropertiesTable';
 
 function assertRenderSnapshot(properties: Map<string, any>) {
   const component = render(
     <MemoryRouter>
-      <PropertiesTable properties={properties}/>
-    </MemoryRouter>
+      <PropertiesTable properties={properties} />
+    </MemoryRouter>,
   );
   expect(component.asFragment()).toMatchSnapshot();
 }
 
-describe('PropertiesTable component', function() {
+describe('PropertiesTable component', function () {
   it('rendering', () => {
     const obj = {
-      str: ["string", "string source"],
-      int: [123, "int source"],
-      float: [123.4, "float source"],
-      boolean: [true, "boolean source"],
-      array: [[321, "astr", false], "array source"],
-      object: [{s: "str", i: 789, b: false}, "object source"],
-    }
+      str: ['string', 'string source'],
+      int: [123, 'int source'],
+      float: [123.4, 'float source'],
+      boolean: [true, 'boolean source'],
+      array: [[321, 'astr', false], 'array source'],
+      object: [{s: 'str', i: 789, b: false}, 'object source'],
+    };
 
     assertRenderSnapshot(new Map(Object.entries(obj)));
   });

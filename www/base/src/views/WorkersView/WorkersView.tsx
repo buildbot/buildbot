@@ -15,9 +15,9 @@
   Copyright Buildbot Team Members
 */
 
-import {observer} from "mobx-react";
-import {useState} from "react";
-import {buildbotGetSettings, buildbotSetupPlugin} from "buildbot-plugin-support";
+import {observer} from 'mobx-react';
+import {useState} from 'react';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
 import {
   Build,
   Builder,
@@ -26,33 +26,32 @@ import {
   Worker,
   useDataAccessor,
   useDataApiDynamicQuery,
-  useDataApiQuery
-} from "buildbot-data-js";
-import {WorkerActionsModal} from "../../components/WorkerActionsModal/WorkerActionsModal";
-import {MultipleWorkersActionsModal} from "../../components/MultipleWorkersActionsModal/MultipleWorkersActionsModal";
-import {WorkersTable} from "../../components/WorkersTable/WorkersTable";
-import {
-  getBuildLinkDisplayProperties,
-  useTopbarActions,
-} from "buildbot-ui";
-import {makePagination} from "../../util/Pagination";
-import {Form} from "react-bootstrap";
+  useDataApiQuery,
+} from 'buildbot-data-js';
+import {WorkerActionsModal} from '../../components/WorkerActionsModal/WorkerActionsModal';
+import {MultipleWorkersActionsModal} from '../../components/MultipleWorkersActionsModal/MultipleWorkersActionsModal';
+import {WorkersTable} from '../../components/WorkersTable/WorkersTable';
+import {getBuildLinkDisplayProperties, useTopbarActions} from 'buildbot-ui';
+import {makePagination} from '../../util/Pagination';
+import {Form} from 'react-bootstrap';
 
 const isWorkerFiltered = (worker: Worker, showOldWorkers: boolean, workerNameFilter: string) => {
   if (!showOldWorkers && worker.configured_on.length === 0) {
     return false;
   }
-  if (workerNameFilter !== "" && worker.name.indexOf(workerNameFilter) < 0) {
+  if (workerNameFilter !== '' && worker.name.indexOf(workerNameFilter) < 0) {
     return false;
   }
   return true;
-}
+};
 
 // Returns an object mapping worker name to its known builds. The returned object has an entry
 // for each worker in workersQuery.
-const getBuildsForWorkerMap = (workersQuery: DataCollection<Worker>,
-                               buildsQuery: DataCollection<Build>,
-                               maxBuilds: number) => {
+const getBuildsForWorkerMap = (
+  workersQuery: DataCollection<Worker>,
+  buildsQuery: DataCollection<Build>,
+  maxBuilds: number,
+) => {
   const idMap = new Map<number, Build[]>();
   for (const worker of workersQuery.array) {
     idMap.set(worker.workerid, []);
@@ -70,41 +69,44 @@ const getBuildsForWorkerMap = (workersQuery: DataCollection<Worker>,
     buildsArray.push(build);
   }
 
-  const map : {[workername: string]: Build[]} = {};
+  const map: {[workername: string]: Build[]} = {};
   for (const worker of workersQuery.array) {
     map[worker.name] = idMap.get(worker.workerid) ?? [];
   }
 
   return map;
-}
+};
 
 export const WorkersView = observer(() => {
   const accessor = useDataAccessor([]);
 
   const settings = buildbotGetSettings();
-  const showOldWorkers = settings.getBooleanSetting("Workers.show_old_workers");
+  const showOldWorkers = settings.getBooleanSetting('Workers.show_old_workers');
 
-  const [workerForActions, setWorkerForActions] = useState<null|Worker>(null);
+  const [workerForActions, setWorkerForActions] = useState<null | Worker>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [workerNameFilter, setWorkerNameFilter] = useState("");
+  const [workerNameFilter, setWorkerNameFilter] = useState('');
   const [showWorkersActions, setShowWorkersActions] = useState<boolean>(false);
 
   const workersQuery = useDataApiQuery(() => Worker.getAll(accessor, {query: {order: 'name'}}));
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));
   const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
 
-  const filteredWorkers = workersQuery.array.filter(worker => {
-    return isWorkerFiltered(worker, showOldWorkers, workerNameFilter);
-  }).sort((a, b) => a.name.localeCompare(b.name))
+  const filteredWorkers = workersQuery.array
+    .filter((worker) => {
+      return isWorkerFiltered(worker, showOldWorkers, workerNameFilter);
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
     .sort((a, b) => b.connected_to.length - a.connected_to.length);
 
   const [paginatedWorkers, paginationElement] = makePagination(
-    currentPage, setCurrentPage,
-    settings.getIntegerSetting("Workers.page_size"),
-    filteredWorkers
+    currentPage,
+    setCurrentPage,
+    settings.getIntegerSetting('Workers.page_size'),
+    filteredWorkers,
   );
 
-  const paginatedWorkerIds = paginatedWorkers.map(w => w.workerid).sort();
+  const paginatedWorkerIds = paginatedWorkers.map((w) => w.workerid).sort();
   const buildsQuery = useDataApiDynamicQuery(paginatedWorkerIds, () => {
     // wait for workersQuery to be resolved to avoid querying without
     // workerid filter
@@ -113,19 +115,20 @@ export const WorkersView = observer(() => {
       col.resolved = true;
       return col;
     }
-    return Build.getAll(accessor, {query: {
-      property: ["owners", "workername", "branch", ...getBuildLinkDisplayProperties()],
-      limit: settings.getIntegerSetting("Workers.buildFetchLimit"),
-      order: '-buildid',
-      workerid: paginatedWorkerIds,
-    }});
+    return Build.getAll(accessor, {
+      query: {
+        property: ['owners', 'workername', 'branch', ...getBuildLinkDisplayProperties()],
+        limit: settings.getIntegerSetting('Workers.buildFetchLimit'),
+        order: '-buildid',
+        workerid: paginatedWorkerIds,
+      },
+    });
   });
-
 
   useTopbarActions([
     {
-      caption: "Actions...",
-      variant: "primary",
+      caption: 'Actions...',
+      variant: 'primary',
       action: () => {
         setShowWorkersActions(true);
       },
@@ -134,28 +137,35 @@ export const WorkersView = observer(() => {
 
   return (
     <div className="container">
-      <form role="search" style={{width: "200px"}}>
+      <form role="search" style={{width: '200px'}}>
         <Form.Control
-          type="text" value={workerNameFilter}
-          onChange={e => setWorkerNameFilter(e.target.value)}
-          placeholder="Search for workers" />
+          type="text"
+          value={workerNameFilter}
+          onChange={(e) => setWorkerNameFilter(e.target.value)}
+          placeholder="Search for workers"
+        />
       </form>
-      <WorkersTable workers={paginatedWorkers} buildersQuery={buildersQuery}
-                    mastersQuery={mastersQuery}
-                    buildsForWorker={getBuildsForWorkerMap(workersQuery, buildsQuery, 7)}
-                    onWorkerIconClick={(worker) => setWorkerForActions(worker)}/>
-      { workerForActions !== null
-        ? <WorkerActionsModal worker={workerForActions}
-                              onClose={() => setWorkerForActions(null)}/>
-        : <></>
-      }
-      { showWorkersActions
-        ? <MultipleWorkersActionsModal
-            workers={workersQuery.array}
-            preselectedWorkers={paginatedWorkers}
-            onClose={() => setShowWorkersActions(false)}/>
-        : <></>
-      }
+      <WorkersTable
+        workers={paginatedWorkers}
+        buildersQuery={buildersQuery}
+        mastersQuery={mastersQuery}
+        buildsForWorker={getBuildsForWorkerMap(workersQuery, buildsQuery, 7)}
+        onWorkerIconClick={(worker) => setWorkerForActions(worker)}
+      />
+      {workerForActions !== null ? (
+        <WorkerActionsModal worker={workerForActions} onClose={() => setWorkerForActions(null)} />
+      ) : (
+        <></>
+      )}
+      {showWorkersActions ? (
+        <MultipleWorkersActionsModal
+          workers={workersQuery.array}
+          preselectedWorkers={paginatedWorkers}
+          onClose={() => setShowWorkersActions(false)}
+        />
+      ) : (
+        <></>
+      )}
       {paginationElement}
     </div>
   );
@@ -171,29 +181,33 @@ buildbotSetupPlugin((reg) => {
   });
 
   reg.registerRoute({
-    route: "workers",
-    group: "workers",
-    element: () => <WorkersView/>,
+    route: 'workers',
+    group: 'workers',
+    element: () => <WorkersView />,
   });
 
   reg.registerSettingGroup({
     name: 'Workers',
     caption: 'Workers page related settings',
-    items: [{
-      type: 'boolean',
-      name: 'show_old_workers',
-      caption: 'Show old workers',
-      defaultValue: false
-    }, {
-      type: 'integer',
-      name: 'page_size',
-      caption: 'Number of workers to show per page',
-      defaultValue: 100
-    }, {
-      type: 'integer',
-      name: 'buildFetchLimit',
-      caption: 'Maximum number of builds to fetch',
-      defaultValue: 50
-    }]
+    items: [
+      {
+        type: 'boolean',
+        name: 'show_old_workers',
+        caption: 'Show old workers',
+        defaultValue: false,
+      },
+      {
+        type: 'integer',
+        name: 'page_size',
+        caption: 'Number of workers to show per page',
+        defaultValue: 100,
+      },
+      {
+        type: 'integer',
+        name: 'buildFetchLimit',
+        caption: 'Maximum number of builds to fetch',
+        defaultValue: 50,
+      },
+    ],
   });
 });

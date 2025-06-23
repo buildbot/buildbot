@@ -4,6 +4,12 @@ on:
     branches:
     - master
     - release
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow on'
+        required: true
+        default: 'master'
 
 permissions:
   contents: read
@@ -68,7 +74,7 @@ jobs:
         env:
           MARIADB_USER: buildbot
           MARIADB_PASSWORD: buildbot
-          MARIADB_DATABASE: bbtest     
+          MARIADB_DATABASE: bbtest
           MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 1
           MYSQL_USER: buildbot
           MYSQL_PASSWORD: buildbot
@@ -80,10 +86,21 @@ jobs:
         ports:
           - '3306:3306'
           - '5432:5432'
-        options: --health-cmd "${{ matrix.check }}" --health-interval 10s --health-timeout 5s --health-retries 10
+        options: >
+          --health-cmd "${{ matrix.check }}" --health-interval 10s --health-timeout 5s --health-retries 10
+          --mount type=tmpfs,destination=/var/lib/mysql,tmpfs-size=512M
+          --mount type=tmpfs,destination=/var/lib/postgres,tmpfs-size=512M
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout specific branch
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        if: ${{ github.event_name != 'workflow_dispatch' }}
 
       - run: sudo apt-get install aspell aspell-en iamerican ispell
 

@@ -5,35 +5,35 @@
   Copyright Buildbot Team Members
 */
 
-import {action, makeObservable, observable} from "mobx";
-import {BaseClass} from "./BaseClass";
-import {IDataDescriptor} from "./DataDescriptor";
-import {IDataAccessor} from "../DataAccessor";
-import {RequestQuery} from "../DataQuery";
-import {Log, logDescriptor} from "./Log";
-import {TestResultSet, testResultSetDescriptor} from "./TestResultSet";
+import {action, makeObservable, observable} from 'mobx';
+import {BaseClass} from './BaseClass';
+import {IDataDescriptor} from './DataDescriptor';
+import {IDataAccessor} from '../DataAccessor';
+import {RequestQuery} from '../DataQuery';
+import {Log, logDescriptor} from './Log';
+import {TestResultSet, testResultSetDescriptor} from './TestResultSet';
 
 export type StepUrl = {
   name: string;
   url: string;
-}
+};
 
 export class Step extends BaseClass {
   @observable stepid!: number;
   @observable buildid!: number;
   @observable complete!: boolean;
-  @observable complete_at!: number|null;
+  @observable complete_at!: number | null;
   @observable hidden!: boolean;
-  @observable locks_acquired_at!: number|null;
+  @observable locks_acquired_at!: number | null;
   @observable name!: string;
   @observable number!: number;
   @observable results!: number;
-  @observable started_at!: number|null;
+  @observable started_at!: number | null;
   @observable state_string!: string;
   @observable urls!: StepUrl[];
 
   constructor(accessor: IDataAccessor, object: any) {
-    super(accessor, "steps", String(object.stepid));
+    super(accessor, 'steps', String(object.stepid));
     this.update(object);
     makeObservable(this);
   }
@@ -71,21 +71,21 @@ export class Step extends BaseClass {
   }
 
   getLogs(query: RequestQuery = {}) {
-    return this.get<Log>("logs", query, logDescriptor);
+    return this.get<Log>('logs', query, logDescriptor);
   }
 
   getTestResultSets(query: RequestQuery = {}) {
-    return this.get<TestResultSet>("test_result_sets", query, testResultSetDescriptor);
+    return this.get<TestResultSet>('test_result_sets', query, testResultSetDescriptor);
   }
 
   static getAll(accessor: IDataAccessor, query: RequestQuery = {}) {
-    return accessor.get<Step>("steps", query, stepDescriptor);
+    return accessor.get<Step>('steps', query, stepDescriptor);
   }
 }
 
 export class StepDescriptor implements IDataDescriptor<Step> {
-  restArrayField = "steps";
-  fieldId: string = "stepid";
+  restArrayField = 'steps';
+  fieldId: string = 'stepid';
 
   parse(accessor: IDataAccessor, object: any) {
     return new Step(accessor, object);
