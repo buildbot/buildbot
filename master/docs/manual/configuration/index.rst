@@ -27,7 +27,7 @@ The next section, :doc:`../customization/index`, describes this approach, with f
     interlocks
     report_generators/index
     reporters/index
-    www
+    www/index
     wwwhooks
     services/index
     dbconfig
