@@ -132,62 +132,6 @@ class TestEC2LatentWorker(unittest.TestCase):
             fake_describe_spot_instance_requests,
         )
 
-    def get_image(self):
-        if self.image is not None:
-            return self.image
-        images = self._get_all_images()
-
-        images_options_sorted = self._sort_images_options(images)
-
-        candidate_images = [f'{candidate[-1].id} ({candidate[-1].image_location})' for candidate in images_options_sorted]
-        log.msg(f"sorted images (last is chosen): {', '.join(candidate_images)}")
-        if not images_options_sorted:
-            raise ValueError('no available images match constraints')
-        return images_options_sorted[-1][-1]
-
-    def _get_all_images(self):
-        images = self.ec2.images.all()
-        if self.valid_ami_owners:
-            images = images.filter(Owners=self.valid_ami_owners)
-        return [img for img in images if img.state == 'available']
-
-    def _extract_sort(self, level, match):
-        # Gather sorting information
-        alpha_sort = int_sort = None
-        if level < 2:
-            try:
-                alpha_sort = match.group(1)
-            except IndexError:
-                return None, None, 2
-            else:
-                if level == 0:
-                    try:
-                        int_sort = int(alpha_sort)
-                    except ValueError:
-                        return None, None, 1
-        return alpha_sort, int_sort, level
-
-    def _sort_images_options(self, images):
-        if self.valid_ami_location_regex:
-            level = 0
-            options = []
-            get_match = self.valid_ami_location_regex.match
-            for image in images:
-                # Image must match regex
-                match = get_match(image.image_location)
-                if not match:
-                    continue
-
-                alpha_sort, int_sort, level = self._extract_sort(level, match)
-
-                options.append([int_sort, alpha_sort, image.image_location, image.id, image])
-            if level:
-                log.msg(f'sorting images at level {level}')
-                options = [candidate[level:] for candidate in options]
-        else:
-            options = [(image.image_location, image.id, image) for image in images]
-        return options.sort()
-    
     @mock_aws
     def test_constructor_minimal(self):
         _, r = self.botoSetup('latent_buildbot_slave')
@@ -659,7 +603,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             security_name='latent_buildbot_worker',
             ami=image.id,
         )
-        worker.valid_ami_owners="1234",
+        worker.valid_ami_owners = ("1234",)
 
         mocked_image_collection = MagicMock()
         mocked_image_collection.filter.return_value = [mocked_image]

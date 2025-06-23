@@ -303,7 +303,10 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         images_options_sorted = self._sort_images_options(images)
 
-        candidate_images = [f'{candidate[-1].id} ({candidate[-1].image_location})' for candidate in images_options_sorted]
+        candidate_images = [
+            f'{candidate[-1].id} ({candidate[-1].image_location})'
+            for candidate in images_options_sorted
+        ]
         log.msg(f"sorted images (last is chosen): {', '.join(candidate_images)}")
         if not images_options_sorted:
             raise ValueError('no available images match constraints')
