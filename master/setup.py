@@ -554,7 +554,7 @@ setup_args = {
                     ('buildbot.www.ldapuserinfo', ['LdapUserInfo']),
                     (
                         'buildbot.www.oauth2',
-                        ['GoogleAuth', 'GitHubAuth', 'GitLabAuth', 'BitbucketAuth'],
+                        ['GoogleAuth', 'GitHubAuth', 'GitLabAuth', 'BitbucketAuth', 'KeyCloakAuth'],
                     ),
                     ('buildbot.db.dbconfig', ['DbConfig']),
                     ('buildbot.www.authz', ['Authz', 'fnmatchStrMatcher', 'reStrMatcher']),

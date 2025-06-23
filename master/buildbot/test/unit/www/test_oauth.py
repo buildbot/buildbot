@@ -15,13 +15,17 @@
 
 import json
 import os
+import warnings
 import webbrowser
 from unittest import mock
 
 import twisted
+import urllib3
 from twisted.internet import defer
 from twisted.internet import reactor
-from twisted.internet import threads
+from twisted.internet.threads import (
+    deferToThread as twistedDeferToThread,
+)  # import like this to avoid patching in other tests
 from twisted.python import failure
 from twisted.trial import unittest
 from twisted.web.resource import Resource
@@ -34,7 +38,6 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.site import SiteWithClose
-from buildbot.util import bytes2unicode
 
 try:
     import requests
@@ -595,6 +598,73 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
 
+class TestKeyCloakAuth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
+    def setUp(self):
+        self.setup_test_reactor()
+        if requests is None:
+            raise unittest.SkipTest("Need to install requests to test oauth2")
+
+        self.patch(requests, 'request', mock.Mock(spec=requests.request))
+        self.patch(requests, 'post', mock.Mock(spec=requests.post))
+        self.patch(requests, 'get', mock.Mock(spec=requests.get))
+
+    @defer.inlineCallbacks
+    def setup_keycloak_auth(self):
+        auth = oauth2.KeyCloakAuth("instance_uri", "realm", "client_id", "client_secret")
+        master = yield self.make_master(url='http://localhost:5000/', auth=auth)
+        auth.reconfigAuth(master, master.config)
+        return auth
+
+    @defer.inlineCallbacks
+    def test_get_key_cloak_verify_code(self):
+        auth = yield self.setup_keycloak_auth()
+
+        res = yield auth.getLoginURL('http://redir')
+        exp = (
+            "instance_uri/realms/realm/protocol/openid-connect/auth?client_id=client_id&"
+            "redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fauth%2Flogin&response_type=code&"
+            "scope=openid&"
+            "state=redirect%3Dhttp%253A%252F%252Fredir"
+        )
+        self.assertEqual(res, exp)
+        res = yield auth.getLoginURL(None)
+        exp = (
+            "instance_uri/realms/realm/protocol/openid-connect/auth?client_id=client_id&"
+            "redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fauth%2Flogin&response_type=code&"
+            "scope=openid"
+        )
+        self.assertEqual(res, exp)
+
+    @defer.inlineCallbacks
+    def test_key_cloak_verify_code(self):
+        auth = yield self.setup_keycloak_auth()
+
+        requests.get.side_effect = []
+        requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
+        auth.get = mock.Mock(
+            side_effect=[
+                {
+                    "name": 'foo bar',
+                    "preferred_username": 'bar',
+                    "email": 'bar@foo',
+                    "picture": 'http://pic',
+                    "groups": ['group1', 'group2'],
+                }
+            ]
+        )
+        res = yield auth.verifyCode("code!")
+        self.assertEqual(
+            {
+                'avatar_url': 'http://pic',
+                'email': 'bar@foo',
+                'full_name': 'foo bar',
+                'username': 'bar',
+                'groups': ["group1", "group2"],
+            },
+            res,
+        )
+
+
 # unit tests are not very useful to write new oauth support
 # so following is an e2e test, which opens a browser, and do the oauth
 # negotiation. The browser window close in the end of the test
@@ -615,11 +685,19 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
 #     "CLIENTID": "XX",
 #     "CLIENTSECRET": "XX"
 #  }
+#  "KeyCloakAuth": {
+#     "INSTANCEURI": "XX",
+#     "REALM": "XX",
+#     "CLIENTID": "XX",
+#     "CLIENTSECRET": "XX"
+#  }
 #  }
 
 
 class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     authClass = "GitHubAuth"
+    timeout = 60
+    ssl_verify = True
 
     def _instantiateAuth(self, cls, config):
         return cls(config["CLIENTID"], config["CLIENTSECRET"])
@@ -638,7 +716,9 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
         with open(os.environ['OAUTHCONF'], encoding='utf-8') as f:
             jsonData = f.read()
-        config = json.loads(jsonData)[self.authClass]
+        config = json.loads(jsonData).get(self.authClass, None)
+        if config is None:
+            raise unittest.SkipTest(f"{self.authClass} is not in OAUTHCONF file")
         from buildbot.www import oauth2
 
         self.auth = self._instantiateAuth(getattr(oauth2, self.authClass), config)
@@ -671,7 +751,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
                 reactor.callLater(0, d.callback, info)
                 return (
                     b"<html><script>setTimeout(close,1000)</script><body>WORKED: "
-                    + info
+                    + str(info).encode('utf-8')
                     + b"</body></html>"
                 )
 
@@ -679,6 +759,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             def makeSession(self):
                 uid = self._mkuid()
                 session = self.sessions[uid] = self.sessionFactory(self, uid)
+                session.updateSession = mock.Mock()
                 return session
 
         root = Resource()
@@ -690,12 +771,15 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         listener = reactor.listenTCP(5000, site)
 
         def thd():
-            res = requests.get('http://localhost:5000/auth/login', timeout=30)
-            content = bytes2unicode(res.content)
-            webbrowser.open(content)
+            self.assertTrue(
+                webbrowser.open('http://localhost:5000/auth/login'), "Could not open web browser"
+            )
 
-        threads.deferToThread(thd)
-        res = yield d
+        with warnings.catch_warnings():
+            if not self.ssl_verify:
+                warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
+            twistedDeferToThread(thd)
+            res = yield d
         yield listener.stopListening()
         yield site.stopFactory()
         yield site.close_connections()
@@ -714,3 +798,17 @@ class OAuth2AuthGitLabE2E(OAuth2AuthGitHubE2E):
 
     def _instantiateAuth(self, cls, config):
         return cls(config["INSTANCEURI"], config["CLIENTID"], config["CLIENTSECRET"])
+
+
+class OAuth2AuthKeyCloakE2E(OAuth2AuthGitHubE2E):
+    authClass = "KeyCloakAuth"
+    ssl_verify = False
+
+    def _instantiateAuth(self, cls, config):
+        return cls(
+            config["INSTANCEURI"],
+            config["REALM"],
+            config["CLIENTID"],
+            config["CLIENTSECRET"],
+            ssl_verify=False,  # self-hosted instance uses self-signed certificate
+        )

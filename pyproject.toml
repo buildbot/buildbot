@@ -138,6 +138,7 @@ plugins = "mypy_zope:plugin"
       "treq.*",
       "xerox.*",
       "ruamel.*",
+      "urllib3.*",
     ]
     ignore_missing_imports = true
 
