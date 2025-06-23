@@ -97,12 +97,14 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         self._validate_and_process_ami_filters(ami, valid_ami_owners, valid_ami_location_regex)
         self._build_placement(region, placement)
-        id, secret = self._setup_aws_id(identifier, secret_identifier, aws_id_file_path)
+        identifier, secret_identifier = self._setup_aws_id(
+            identifier, secret_identifier, aws_id_file_path
+        )
         self._setup_ec2_connection(
             session,
             region,
-            id,
-            secret,
+            identifier,
+            secret_identifier,
         )
 
         self.keypair_name = keypair_name
@@ -159,31 +161,34 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.tags = tags
 
     def _validate_and_process_ami_filters(self, ami, valid_ami_owners, valid_ami_location_regex):
-        if not (
-            (ami is not None)
-            ^ (valid_ami_owners is not None or valid_ami_location_regex is not None)
-        ):
+        def _validate_owners(owners):
+            if owners is None:
+                return None
+            if isinstance(owners, int):
+                return [str(owners)]
+            for element in owners:
+                if not isinstance(element, int):
+                    raise ValueError('valid_ami_owners should be int or iterable of ints', element)
+            return [str(o) for o in owners]
+
+        def _compile_regex(regex):
+            if regex is None:
+                return None
+            if not isinstance(regex, str):
+                raise ValueError('valid_ami_location_regex should be a string')
+            return re.compile(regex)
+
+        only_ami = ami is not None
+        only_filters = valid_ami_owners is not None or valid_ami_location_regex is not None
+        if only_ami == only_filters:
             raise ValueError(
                 'You must provide either a specific ami, or one or both of '
                 'valid_ami_location_regex and valid_ami_owners'
             )
+
         self.ami = ami
-        if valid_ami_owners is not None:
-            if isinstance(valid_ami_owners, int):
-                valid_ami_owners = (valid_ami_owners,)
-            else:
-                for element in valid_ami_owners:
-                    if not isinstance(element, int):
-                        raise ValueError(
-                            'valid_ami_owners should be int or iterable of ints', element
-                        )
-        if valid_ami_location_regex is not None:
-            if not isinstance(valid_ami_location_regex, str):
-                raise ValueError('valid_ami_location_regex should be a string')
-            # pre-compile the regex
-            valid_ami_location_regex = re.compile(valid_ami_location_regex)
-        self.valid_ami_owners = [str(o) for o in valid_ami_owners] if valid_ami_owners else None
-        self.valid_ami_location_regex = valid_ami_location_regex
+        self.valid_ami_owners = _validate_owners(valid_ami_owners)
+        self.valid_ami_location_regex = _compile_regex(valid_ami_location_regex)
 
     def _build_placement(self, region, placement):
         self.placement = f"{region}{placement}" if region and placement else None
