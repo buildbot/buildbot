@@ -221,10 +221,12 @@ class TestEC2LatentWorker(unittest.TestCase):
                 instance_type='m5.large',
                 ami='ami-123456',
                 keypair_name='keypair',
-                security_name='security-group'
+                security_name='security-group',
             )
 
-        self.assertEqual(error.exception.args[0][0], "The python module 'boto3' is needed to use EC2LatentWorker")
+        self.assertEqual(
+            error.exception.args[0][0], "The python module 'boto3' is needed to use EC2LatentWorker"
+        )
 
     @mock_aws
     def test_constructor_fail_requirements_no_keypair(self):
@@ -394,8 +396,10 @@ class TestEC2LatentWorker(unittest.TestCase):
         class FakeLog:
             def __init__(self):
                 self.calls = []
+
             def msg(self, *args, **kwargs):
                 self.calls.append((args, kwargs))
+
             def assert_any_call(self, msg):
                 for args, _ in self.calls:
                     if msg in args:
@@ -444,7 +448,6 @@ class TestEC2LatentWorker(unittest.TestCase):
             'Please doublecheck before reporting a problem.\n'
         )
 
-
     def test_constructor_elastic_ip_not_found(self):
         class FakeMetaClient:
             def describe_addresses(self, *a, **k):
@@ -452,7 +455,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         class FakeMeta:
             client = FakeMetaClient()
-        
+
         class FakeKeyPair:
             def load(self):
                 pass
@@ -464,17 +467,21 @@ class TestEC2LatentWorker(unittest.TestCase):
                 self.get_available_regions = lambda *a, **k: ['us-east-1']
                 self.region_name = 'us-east-1'
                 self.meta = FakeMeta()
+
             def KeyPair(self, *a, **k):
                 return FakeKeyPair()
+
             def describe_security_groups(self, *a, **k):
                 # Retorne uma resposta fake adequada para o teste
                 return {'SecurityGroups': []}
+
             def Image(self, ami):
                 class FakeImage:
                     def __init__(self, ami):
                         self.id = ami
                         self.owner_id = "123456789012"
                         self.image_location = "amazon/fake"
+
                 return FakeImage(ami)
 
         fake_boto3 = type("FakeBoto3", (), {"Session": lambda *a, **k: FakeSession()})()
