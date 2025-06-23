@@ -15,9 +15,12 @@
 # Portions Copyright 2014 Longaccess private company
 
 import os
+from unittest.mock import MagicMock
+from unittest.mock import mock_open
+from unittest.mock import patch
 
 from twisted.trial import unittest
-from unittest.mock import patch, mock_open, MagicMock
+
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
