@@ -21,32 +21,50 @@ from twisted.logger import Logger
 from buildbot import config
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
+from buildbot.reporters.generators.buildrequest import BuildRequestGenerator
+from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import httpclientservice
 
 log = Logger()
 
 
 class ZulipStatusPush(ReporterBase):
-    name: str | None = "ZulipStatusPush"  # type: ignore[assignment]
+    # name: str | None = "ZulipStatusPush"  # type: ignore[assignment]
 
-    def checkConfig(self, endpoint, token, stream=None, debug=None, verify=None):
+    def checkConfig(self, endpoint, token, stream=None, debug=None, verify=None, generators=None):
         if not isinstance(endpoint, str):
             config.error("Endpoint must be a string")
         if not isinstance(token, str):
             config.error("Token must be a string")
+        if generators is None:
+            generators = self._create_default_generators()
 
-        super().checkConfig(generators=[BuildStartEndStatusGenerator()])
+        super().checkConfig(generators=generators)
 
     @defer.inlineCallbacks
-    def reconfigService(self, endpoint, token, stream=None, debug=None, verify=None):
+    def reconfigService(self, endpoint, token, stream=None, debug=None, verify=None, generators=None):
         self.debug = debug
         self.verify = verify
-        yield super().reconfigService(generators=[BuildStartEndStatusGenerator()])
+        if generators is None:
+            generators = self._create_default_generators()
+        yield super().reconfigService(generators=generators)
         self._http = yield httpclientservice.HTTPSession(
             self.master.httpservice, endpoint, debug=self.debug, verify=self.verify
         )
         self.token = token
         self.stream = stream
+
+    def _create_default_generators(self):
+        start_formatter = MessageFormatterRenderable('Build started.')
+        end_formatter = MessageFormatterRenderable('Build done.')
+        pending_formatter = MessageFormatterRenderable('Build pending.')
+
+        return [
+            BuildRequestGenerator(formatter=pending_formatter),
+            BuildStartEndStatusGenerator(
+                start_formatter=start_formatter, end_formatter=end_formatter
+            ),
+        ]
 
     @defer.inlineCallbacks
     def sendMessage(self, reports):
@@ -76,3 +94,4 @@ class ZulipStatusPush(ReporterBase):
                 code=response.code,
                 content=content,
             )
+
