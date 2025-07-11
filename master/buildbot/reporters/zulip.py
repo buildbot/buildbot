@@ -42,7 +42,9 @@ class ZulipStatusPush(ReporterBase):
         super().checkConfig(generators=generators)
 
     @defer.inlineCallbacks
-    def reconfigService(self, endpoint, token, stream=None, debug=None, verify=None, generators=None):
+    def reconfigService(
+        self, endpoint, token, stream=None, debug=None, verify=None, generators=None
+    ):
         self.debug = debug
         self.verify = verify
         if generators is None:
@@ -94,4 +96,3 @@ class ZulipStatusPush(ReporterBase):
                 code=response.code,
                 content=content,
             )
-
