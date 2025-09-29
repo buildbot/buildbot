@@ -22,9 +22,7 @@ import {HomePage} from './pages/home';
 
 test.describe('home page', function() {
   test('should go to the home page and check if panel with builder name exists', async ({page}) => {
-    const builderName = {
-      0 : "runtests"
-    };
+    const builderName = "runtests"
     await BuilderPage.goto(page, "runtests");
     const buildnumber = await BuilderPage.getLastFinishedBuildNumber(page);
     await BuilderPage.gotoForce(page, "runtests", "force");
@@ -32,7 +30,12 @@ test.describe('home page', function() {
     await BuilderPage.goto(page, "runtests");
     await BuilderPage.waitBuildFinished(page, buildnumber + 1);
     await HomePage.goto(page);
-    const card0 = HomePage.getBuilderCard(page).first().locator(".card-header");
-    expect(await card0.textContent()).toContain(builderName[0]);
+    const header = HomePage
+      .getBuilderCard(page)
+      .locator('.card-header')
+      .filter({ hasText: builderName })
+      .first();
+
+    await expect(header).toBeVisible();
   });
 });
