@@ -69,7 +69,7 @@ six==1.17.0
 SQLAlchemy==2.0.41
 treq==25.5.0
 Twisted==25.5.0
-txaio==23.1.1
+txaio==25.9.2
 txrequests==0.9.6
 typing_extensions==4.14.0
 unidiff==0.7.5
