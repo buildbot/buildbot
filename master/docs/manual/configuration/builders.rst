@@ -209,6 +209,9 @@ Sourcestamps are compatible if all of the below conditions are met:
 * Neither source stamp has a patch (e.g., from a try scheduler)
 * Either both source stamps are associated with changes, or neither is associated with changes but they have matching revisions.
 
+Note that on asymmetric multimaster configurations the value of ``collapseRequests`` for the builder will be the one defined on the master that runs the collapse function (typically the one that runs the Web UI).
+If the builder is not defined on that master then the globally defined ``collapseRequests`` value will be used instead.
+
 .. index:: Builds; priority
 
 .. _Prioritizing-Builds:
