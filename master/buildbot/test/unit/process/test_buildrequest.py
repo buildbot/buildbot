@@ -24,7 +24,6 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process import buildrequest
-from buildbot.process.builder import Builder
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -32,6 +31,7 @@ from buildbot.test.reactor import TestReactorMixin
 if TYPE_CHECKING:
     from buildbot.data.buildrequests import BuildRequestData
     from buildbot.master import BuildMaster
+    from buildbot.process.builder import Builder
     from buildbot.test.fakedb.row import Row
     from buildbot.util.twisted import InlineCallbacksType
 
@@ -60,7 +60,8 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         bldr.master = self.master
         self.master.botmaster.builders[name] = bldr
         self.builders[name] = bldr
-        bldr.getCollapseRequestsFn = lambda: False
+        bldr.config = mock.Mock()
+        bldr.config.collapseRequests = False
 
         return bldr
 
@@ -82,7 +83,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
             # pylint: disable=unreachable
             return True
 
-        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
+        self.bldr.config.collapseRequests = collapseRequests_fn
         rows = [
             fakedb.Builder(id=77, name='A'),
             fakedb.SourceStamp(id=234, revision='r234', repository='repo', codebase='A'),
@@ -128,7 +129,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
             # Fail all collapse attempts
             return False
 
-        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
+        self.bldr.config.collapseRequests = collapseRequests_fn
         yield self.master.db.insert_test_data(self.BASE_ROWS)
         yield self.do_request_collapse([21], [])
 
@@ -143,7 +144,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
             # collapse all attempts
             return True
 
-        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
+        self.bldr.config.collapseRequests = collapseRequests_fn
         yield self.master.db.insert_test_data(self.BASE_ROWS)
         yield self.do_request_collapse([21], [19, 20])
 
@@ -158,9 +159,33 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
             # collapse all attempts
             return True
 
-        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
+        self.bldr.config.collapseRequests = collapseRequests_fn
         yield self.master.db.insert_test_data(self.BASE_ROWS)
         yield self.do_request_collapse([21, 21], [19, 20])
+
+    @defer.inlineCallbacks
+    def test_collapseRequests_builder_missing_uses_master_callable(
+        self,
+    ) -> InlineCallbacksType[None]:
+        collapse_calls = []
+
+        def collapseRequests_fn(
+            master: BuildMaster,
+            builder: Builder,
+            brdict1: BuildRequestData,
+            brdict2: BuildRequestData,
+        ) -> bool:
+            collapse_calls.append(builder)
+            return True
+
+        self.master.config.collapseRequests = collapseRequests_fn
+        del self.master.botmaster.builders['A']
+
+        yield self.master.db.insert_test_data(self.BASE_ROWS)
+        yield self.do_request_collapse([21], [19, 20])
+
+        self.assertTrue(collapse_calls)
+        self.assertTrue(all(bldr is None for bldr in collapse_calls))
 
     # As documented:
     # Sourcestamps are compatible if all of the below conditions are met:
@@ -237,7 +262,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         rows += self.makeBuildRequestRows(21, 121, None, 223)
         rows += self.makeBuildRequestRows(19, 119, None, 223)
         rows += self.makeBuildRequestRows(20, 120, None, 223)
-        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        self.bldr.config.collapseRequests = (
+            buildrequest.BuildRequestCollapser._defaultCollapseRequestFn
+        )
         yield self.master.db.insert_test_data(rows)
         yield self.do_request_collapse([22], [])
         yield self.do_request_collapse([21], [19, 20])
@@ -254,11 +281,23 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         rows += self.makeBuildRequestRows(21, 121, None, 222)
         rows += self.makeBuildRequestRows(19, 119, None, 222)
         rows += self.makeBuildRequestRows(20, 120, None, 222)
-        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        self.bldr.config.collapseRequests = (
+            buildrequest.BuildRequestCollapser._defaultCollapseRequestFn
+        )
         yield self.master.db.insert_test_data(rows)
         yield self.do_request_collapse([19], [])
         yield self.do_request_collapse([20], [19])
         yield self.do_request_collapse([21], [20])
+
+    @defer.inlineCallbacks
+    def test_collapseRequests_builder_missing_uses_default(
+        self,
+    ) -> InlineCallbacksType[None]:
+        self.master.config.collapseRequests = None
+        del self.master.botmaster.builders['A']
+
+        yield self.master.db.insert_test_data(self.BASE_ROWS)
+        yield self.do_request_collapse([21], [19, 20])
 
     @defer.inlineCallbacks
     def test_collapseRequests_collapse_default_does_not_collapse_concurrent_claims(
@@ -285,10 +324,12 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
             if not claimed:
                 yield self.master.data.updates.claimBuildRequests([20])
                 claimed.append(20)
-            res = yield Builder._defaultCollapseRequestFn(master, builder, brdict1, brdict2)
+            res = yield buildrequest.BuildRequestCollapser._defaultCollapseRequestFn(
+                master, builder, brdict1, brdict2
+            )
             return res
 
-        self.bldr.getCollapseRequestsFn = lambda: collapse_fn
+        self.bldr.config.collapseRequests = collapse_fn
 
         yield self.master.db.insert_test_data(rows)
         yield self.do_request_collapse([21], [19])
@@ -319,7 +360,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         )
         rows += self.makeBuildRequestRows(16, 116, None, 222)
 
-        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        self.bldr.config.collapseRequests = (
+            buildrequest.BuildRequestCollapser._defaultCollapseRequestFn
+        )
 
         yield self.master.db.insert_test_data(rows)
         # only the same property coming from a scheduler is matched
@@ -342,7 +385,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         rows += self.makeBuildRequestRows(21, 121, None, 223)
         rows += self.makeBuildRequestRows(19, 119, None, 223)
         rows += self.makeBuildRequestRows(20, 120, None, 224)
-        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        self.bldr.config.collapseRequests = (
+            buildrequest.BuildRequestCollapser._defaultCollapseRequestFn
+        )
 
         yield self.master.db.insert_test_data(rows)
         yield self.do_request_collapse([22], [])
@@ -363,7 +408,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         rows += self.makeBuildRequestRows(21, 121, None, 223)
         rows += self.makeBuildRequestRows(19, 119, None, 223)
         rows += self.makeBuildRequestRows(20, 120, None, 224)
-        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        self.bldr.config.collapseRequests = (
+            buildrequest.BuildRequestCollapser._defaultCollapseRequestFn
+        )
 
         yield self.master.db.insert_test_data(rows)
         yield self.do_request_collapse([22], [])
@@ -384,7 +431,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         rows += self.makeBuildRequestRows(21, 121, None, 223)
         rows += self.makeBuildRequestRows(19, 119, None, 223)
         rows += self.makeBuildRequestRows(20, 120, None, 224)
-        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        self.bldr.config.collapseRequests = (
+            buildrequest.BuildRequestCollapser._defaultCollapseRequestFn
+        )
 
         yield self.master.db.insert_test_data(rows)
         yield self.do_request_collapse([22], [])
@@ -412,7 +461,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         rows += self.makeBuildRequestRows(21, 121, None, 223)
         rows += self.makeBuildRequestRows(19, 119, None, 224)
         rows += self.makeBuildRequestRows(20, 120, None, 223)
-        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        self.bldr.config.collapseRequests = (
+            buildrequest.BuildRequestCollapser._defaultCollapseRequestFn
+        )
         yield self.master.db.insert_test_data(rows)
         yield self.do_request_collapse([22], [])
         yield self.do_request_collapse([21], [20])
@@ -430,7 +481,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         rows += self.makeBuildRequestRows(21, 121, 123, 223)
         rows += self.makeBuildRequestRows(19, 119, None, 223)
         rows += self.makeBuildRequestRows(20, 120, 124, 223)
-        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        self.bldr.config.collapseRequests = (
+            buildrequest.BuildRequestCollapser._defaultCollapseRequestFn
+        )
         yield self.master.db.insert_test_data(rows)
         yield self.do_request_collapse([22], [])
         yield self.do_request_collapse([21], [19, 20])
@@ -451,7 +504,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         rows += self.makeBuildRequestRows(21, 121, None, 223)
         rows += self.makeBuildRequestRows(19, 119, None, 224)
         rows += self.makeBuildRequestRows(20, 120, None, 223)
-        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        self.bldr.config.collapseRequests = (
+            buildrequest.BuildRequestCollapser._defaultCollapseRequestFn
+        )
         yield self.master.db.insert_test_data(rows)
         yield self.do_request_collapse([22], [])
         yield self.do_request_collapse([21], [20])
