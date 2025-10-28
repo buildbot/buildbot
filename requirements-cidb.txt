@@ -1,6 +1,6 @@
 psycopg2-binary==2.9.10
 mysqlclient==2.2.7
-pg8000==1.31.2
+pg8000==1.31.5
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
