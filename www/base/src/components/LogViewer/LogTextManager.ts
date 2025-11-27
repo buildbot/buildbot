@@ -375,17 +375,9 @@ export class LogTextManager {
     } else {
       this.chunks[mergeIndex] = mergeChunks(this.chunks[mergeIndex], chunk);
     }
-    if (this.chunkToCssClasses[mergeIndex] !== null) {
-      // There was a need for CSS class information, and it wasn't cleared yet. This means that
-      // this information is useful and shouldn't be dropped yet. Additionally, the CSS class
-      // information for the prepended/appended chunk is likely to be needed. Thus, it doesn't
-      // hurt to compute CSS class information for whole chunk.
-      const chunkCssClasses = parseCssClassesForChunk(chunk, chunk.firstLine, chunk.lastLine);
-      this.chunkToCssClasses[mergeIndex] = {
-        ...chunkCssClasses,
-        ...this.chunkToCssClasses[mergeIndex],
-      };
-    }
+    //After #8267 the cache is relative; keys should not be combined without reindexing
+    //Invalidate the cache to force a lazy rebuild on next render
+    this.chunkToCssClasses[mergeIndex] = null;
     this.maybeMergeChunkSearchResults(mergeIndex, prepend);
     return true;
   }
