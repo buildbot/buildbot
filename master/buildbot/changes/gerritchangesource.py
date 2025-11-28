@@ -1017,7 +1017,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             on_lines_received_cb=self._lines_received,
         )
         yield self._connector.setup()
-        self._poller = util.poll.Poller(self._connector.do_poll, self, self.master.reactor)
+        self._poller = util.poll.Poller(type(self._connector).do_poll, self._connector, self.master.reactor)
 
     def getFiles(self, change: str, patchset: str) -> defer.Deferred:
         return self._connector.get_files(change, patchset)
