@@ -1081,7 +1081,7 @@ class TestGerritEventLogPoller(
     def test_name(self):
         yield self.newChangeSource()
         self.assertEqual('GerritEventLogPoller:gerrit', self.changesource.name)
-        
+
     @defer.inlineCallbacks
     def test_poller_uses_correct_signature(self):
         yield self.master.db.insert_test_data([
