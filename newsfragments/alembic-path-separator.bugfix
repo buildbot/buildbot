@@ -1,0 +1,1 @@
+Fix deprecation warning from alembic >= 1.16.0.
