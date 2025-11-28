@@ -1,0 +1,1 @@
+Fixes TypeError that occurs in _run method of Poller after reconfigService method of GerritEventLogPoller creates an instance of Poller (:issue:`8711`)
