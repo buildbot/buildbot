@@ -1081,6 +1081,33 @@ class TestGerritEventLogPoller(
     def test_name(self):
         yield self.newChangeSource()
         self.assertEqual('GerritEventLogPoller:gerrit', self.changesource.name)
+        
+    @defer.inlineCallbacks
+    def test_poller_uses_correct_signature(self):
+        yield self.master.db.insert_test_data([
+            fakedb.Object(
+                id=self.OBJECTID,
+                name='GerritEventLogPoller:gerrit',
+                class_name='GerritEventLogPoller',
+            )
+        ])
+        yield self.newChangeSource()
+
+        self._http.expect(
+            method='get',
+            params={'t1': '1969-12-02 00:00:00'},
+            ep='/plugins/events-log/events/',
+            content=b"",
+        )
+
+        yield self.startChangeSource()
+
+        d = self.changesource._poller()
+        self.reactor.advance(0)
+        yield d
+
+        d = self.changesource.disownServiceParent()
+        yield d
 
     @defer.inlineCallbacks
     def test_lineReceived_patchset_created(self):
