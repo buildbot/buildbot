@@ -15,6 +15,9 @@
 # Portions Copyright 2014 Longaccess private company
 
 import os
+from unittest.mock import MagicMock
+from unittest.mock import mock_open
+from unittest.mock import patch
 
 from twisted.trial import unittest
 
@@ -100,14 +103,19 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         self.patch(bs.ec2.meta.client, "describe_spot_price_history", fake_describe_price)
 
-    def _patch_moto_describe_spot_instance_requests(self, c, r, bs):
+    def _patch_moto_describe_spot_instance_requests(self, c, r, bs, target_status='fulfilled'):
         this_call = [0]
-
         orig_describe_instance = bs.ec2.meta.client.describe_spot_instance_requests
 
         def fake_describe_spot_instance_requests(*args, **kwargs):
             curr_call = this_call[0]
             this_call[0] += 1
+
+            if target_status != 'fullfilled':
+                response = orig_describe_instance(*args, **kwargs)
+                response['SpotInstanceRequests'][0]['Status']['Code'] = target_status
+                return response
+
             if curr_call == 0:
                 raise ClientError(
                     {'Error': {'Code': 'InvalidSpotInstanceRequestID.NotFound'}},
@@ -117,12 +125,10 @@ class TestEC2LatentWorker(unittest.TestCase):
                 return orig_describe_instance(*args, **kwargs)
 
             response = orig_describe_instance(*args, **kwargs)
-
+            response['SpotInstanceRequests'][0]['Status']['Code'] = target_status
             instances = r.instances.filter(
                 Filters=[{'Name': 'instance-state-name', 'Values': ['running']}]
             )
-
-            response['SpotInstanceRequests'][0]['Status']['Code'] = 'fulfilled'
             response['SpotInstanceRequests'][0]['InstanceId'] = next(iter(instances)).id
             return response
 
@@ -206,6 +212,297 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             create_worker()
+
+    @mock_aws
+    def test_constructor_no_boto3(self):
+        self.patch(ec2, "boto3", None)
+
+        with self.assertRaises(ec2.config.ConfigErrors) as error:
+            ec2.EC2LatentWorker(
+                name='bot1',
+                password='secret',
+                instance_type='m5.large',
+                ami='ami-123456',
+                keypair_name='keypair',
+                security_name='security-group',
+            )
+
+        self.assertEqual(
+            error.exception.args[0][0], "The python module 'boto3' is needed to use EC2LatentWorker"
+        )
+
+    @mock_aws
+    def test_constructor_fail_requirements_no_keypair(self):
+        amis = list(boto3.resource('ec2').images.all())
+        with self.assertRaises(ec2.config.ConfigErrors):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                security_name='security_name',
+                ami=amis[0].id,
+                keypair_name=None,
+            )
+
+    @mock_aws
+    def test_constructor_fail_requirements_no_security(self):
+        amis = list(boto3.resource('ec2').images.all())
+        with self.assertRaises(ec2.config.ConfigErrors):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name=None,
+                subnet_id=None,
+                ami=amis[0].id,
+            )
+
+    @mock_aws
+    def test_constructor_fail_requirements_spot_instance(self):
+        amis = list(boto3.resource('ec2').images.all())
+        with self.assertRaises(ValueError):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name='security_name',
+                ami=amis[0].id,
+                spot_instance=True,
+                price_multiplier=None,
+                max_spot_price=None,
+            )
+
+    @mock_aws
+    def test_constructor_valid_ami_owners_one_account(self):
+        _, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
+        ami_owner = int(amis[0].owner_id)
+        bs = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="keypair_name",
+            security_name='security_name',
+            valid_ami_owners=ami_owner,
+        )
+        self.assertEqual(bs.valid_ami_owners, [str(ami_owner)])
+
+    @mock_aws
+    def test_constructor_ami_params_invalid(self):
+        with self.assertRaises(ValueError):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name='security_name',
+                ami=None,
+                valid_ami_owners=None,
+                valid_ami_location_regex=None,
+            )
+
+    @mock_aws
+    def test_constructor_ami_invalid_owner_type(self):
+        with self.assertRaises(ValueError):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name='security_name',
+                ami=None,
+                valid_ami_owners=['not-an-int'],
+                valid_ami_location_regex='amazon/.*',
+            )
+
+    @mock_aws
+    def test_constructor_ami_invalid_location_type(self):
+        invalid_regex = 468
+        with self.assertRaises(ValueError):
+            ec2.EC2LatentWorker(
+                'bot1',
+                'sekrit',
+                'm1.large',
+                keypair_name='keypair_name',
+                security_name='security_name',
+                ami=None,
+                valid_ami_owners=[123],
+                valid_ami_location_regex=invalid_regex,
+            )
+
+    @mock_aws
+    def test_constructor_setup_ec2_invalid_region(self):
+        region = 'invalid-region'
+
+        with self.assertRaises(ValueError) as error:
+            ec2.EC2LatentWorker(
+                name="bot1",
+                password="sekrit",
+                instance_type="m1.large",
+                keypair_name="keypair_name",
+                security_name="security_name",
+                ami='ami-123456',
+                region=region,
+                identifier="id",
+                secret_identifier="secret",
+            )
+
+        self.assertEqual(error.exception.args[0], f'The specified region does not exist: {region}')
+
+    @mock_aws
+    def test_constructor_setup_ec2_default_region(self):
+        _ = ec2.EC2LatentWorker(
+            name="bot1",
+            password="sekrit",
+            instance_type="m1.large",
+            keypair_name="keypair_name",
+            security_name="security_name",
+            ami="ami-123",
+            identifier="id",
+            secret_identifier="secret",
+            region=None,
+        )
+
+        self.assertEqual(_.session.region_name, 'us-east-1')
+
+    @patch("buildbot.worker.ec2.log")
+    @patch("builtins.open", new_callable=mock_open, read_data="id\nsecret\n")
+    @patch("os.path.exists", return_value=True)
+    @patch.dict("os.environ", {"HOME": "/tmp"})
+    @patch("buildbot.worker.ec2.boto3")
+    def test_constructor_reads_aws_id_file(self, mock_boto3, mock_exists, mock_open_file, mock_log):
+        mock_session = mock_boto3.Session.return_value
+        mock_session.resource.return_value = mock_session
+        mock_session.client.return_value = mock_session
+        mock_session.get_available_regions.return_value = ['us-east-1']
+        mock_session.region_name = 'us-east-1'
+
+        _ = ec2.EC2LatentWorker(
+            name="bot1",
+            password="sekrit",
+            instance_type="m1.large",
+            keypair_name="keypair_name",
+            security_name="security_name",
+            ami="ami-123",
+            identifier=None,
+            secret_identifier=None,
+            aws_id_file_path=None,
+        )
+
+        mock_log.msg.assert_any_call('WARNING: EC2LatentWorker is using deprecated aws_id file')
+
+    def test_constructor_keypair_authfailure(self):
+        class FakeLog:
+            def __init__(self):
+                self.calls = []
+
+            def msg(self, *args, **kwargs):
+                self.calls.append((args, kwargs))
+
+            def assert_any_call(self, msg):
+                for args, _ in self.calls:
+                    if msg in args:
+                        return
+                raise AssertionError(f"msg '{msg}' not found in calls: {self.calls}")
+
+        class FakeKeyPair:
+            def __init__(self, client_error):
+                self.load = lambda: (_ for _ in ()).throw(client_error)
+
+        class FakeSession:
+            def __init__(self, client_error):
+                self.resource = lambda *a, **k: self
+                self.client = lambda *a, **k: self
+                self.get_available_regions = lambda *a, **k: ['us-east-1']
+                self.region_name = 'us-east-1'
+                self.KeyPair = lambda *a, **k: FakeKeyPair(client_error)
+
+        error_response = {"Error": {"Code": "AuthFailure", "Message": "AuthFailure"}}
+        client_error = ClientError(error_response, "load")
+
+        fake_log = FakeLog()
+        self.patch(ec2, "log", fake_log)
+        fake_boto3 = type("FakeBoto3", (), {"Session": lambda *a, **k: FakeSession(client_error)})()
+        self.patch(ec2, "boto3", fake_boto3)
+
+        with self.assertRaises(ClientError):
+            ec2.EC2LatentWorker(
+                name="bot1",
+                password="sekrit",
+                instance_type="m1.large",
+                keypair_name="keypair_name",
+                security_name="security_name",
+                ami="ami-123",
+                identifier="id",
+                secret_identifier="secret",
+                region="us-east-1",
+            )
+
+        fake_log.assert_any_call(
+            'POSSIBLE CAUSES OF ERROR:\n'
+            '  Did you supply your AWS credentials?\n'
+            '  Did you sign up for EC2?\n'
+            '  Did you put a credit card number in your AWS '
+            'account?\n'
+            'Please doublecheck before reporting a problem.\n'
+        )
+
+    def test_constructor_elastic_ip_not_found(self):
+        class FakeMetaClient:
+            def describe_addresses(self, *a, **k):
+                return {'Addresses': []}
+
+        class FakeMeta:
+            client = FakeMetaClient()
+
+        class FakeKeyPair:
+            def load(self):
+                pass
+
+        class FakeSession:
+            def __init__(self):
+                self.resource = lambda *a, **k: self
+                self.client = lambda *a, **k: self
+                self.get_available_regions = lambda *a, **k: ['us-east-1']
+                self.region_name = 'us-east-1'
+                self.meta = FakeMeta()
+
+            def KeyPair(self, *a, **k):
+                return FakeKeyPair()
+
+            def describe_security_groups(self, *a, **k):
+                # Retorne uma resposta fake adequada para o teste
+                return {'SecurityGroups': []}
+
+            def Image(self, ami):
+                class FakeImage:
+                    def __init__(self, ami):
+                        self.id = ami
+                        self.owner_id = "123456789012"
+                        self.image_location = "amazon/fake"
+
+                return FakeImage(ami)
+
+        fake_boto3 = type("FakeBoto3", (), {"Session": lambda *a, **k: FakeSession()})()
+        self.patch(ec2, "boto3", fake_boto3)
+
+        with self.assertRaisesRegex(ValueError, "Could not find EIP for IP: 1.2.3.4"):
+            ec2.EC2LatentWorker(
+                name="bot1",
+                password="sekrit",
+                instance_type="m1.large",
+                keypair_name="keypair_name",
+                security_name="security_name",
+                ami="ami-123",
+                identifier="id",
+                secret_identifier="secret",
+                region="us-east-1",
+                elastic_ip="1.2.3.4",
+            )
 
     @mock_aws
     def test_start_vpc_instance(self):
@@ -484,6 +781,90 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertIsNone(instances[0].tags)
 
     @mock_aws
+    def test_start_spot_instance_price_too_low(self):
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
+        bs = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name='keypair_name',
+            security_name='security_name',
+            ami=amis[0].id,
+            spot_instance=True,
+            max_spot_price=0.5,
+            price_multiplier=None,  # Skipping _bid_price_from_spot_price_history
+        )
+        bs._poll_resolution = 0
+
+        self._patch_moto_describe_spot_instance_requests(c, r, bs, target_status='price-too-low')
+        self.patch(bs, "_cancel_spot_request", lambda x: None)
+
+        with self.assertRaises(ec2.LatentWorkerFailedToSubstantiate) as exc:
+            bs._request_spot_instance()
+
+        self.assertEqual(exc.exception.args[1], 'price-too-low')
+
+    @mock_aws
+    def test_start_spot_instance_generic_error(self):
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
+        bs = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name='keypair_name',
+            security_name='security_name',
+            ami=amis[0].id,
+            spot_instance=True,
+            max_spot_price=0.5,
+            price_multiplier=None,  # Skipping _bid_price_from_spot_price_history
+        )
+        bs._poll_resolution = 0
+
+        self._patch_moto_describe_spot_instance_requests(c, r, bs, target_status='generic-error')
+        self.patch(bs, "_cancel_spot_request", lambda x: None)
+
+        with self.assertRaises(ec2.LatentWorkerFailedToSubstantiate) as exc:
+            bs._request_spot_instance()
+
+        self.assertEqual(exc.exception.args[1], 'generic-error')
+
+    @mock_aws
+    def test_start_spot_instance_timeout(self):
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
+        bs = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name='keypair_name',
+            security_name='security_name',
+            ami=amis[0].id,
+            spot_instance=True,
+            max_spot_price=0.5,
+            price_multiplier=None,  # Skipping _bid_price_from_spot_price_history
+        )
+        bs._poll_resolution = 1
+        bs._max_runtime = 2
+
+        self._patch_moto_describe_spot_instance_requests(
+            c, r, bs, target_status='pending-fulfillment'
+        )
+        self.patch(bs, "_cancel_spot_request", lambda x: None)
+
+        with self.assertRaises(ec2.LatentWorkerFailedToSubstantiate) as exc:
+            bs._request_spot_instance()
+
+        self.assertEqual(exc.exception.args[1], 'timeout-waiting-for-fulfillment')
+
+    @mock_aws
     def test_get_image_ami(self):
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
@@ -582,8 +963,139 @@ class TestEC2LatentWorker(unittest.TestCase):
         with self.assertRaises(ValueError):
             create_worker()
 
+    @mock_aws
+    def test_get_all_images_with_valid_ami_owners(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
 
-class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
+        image = next(iter(r.images.all()))
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.owner_id = "1234"
+        mocked_image.state = 'available'
+        mocked_image.id = image.id
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami=image.id,
+        )
+        worker.valid_ami_owners = ("1234",)
+
+        mocked_image_collection = MagicMock()
+        mocked_image_collection.filter.return_value = [mocked_image]
+
+        ec2_mock = MagicMock()
+        ec2_mock.images.all.return_value = mocked_image_collection
+        worker.ec2 = ec2_mock
+
+        result = worker._get_all_images()
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].id, image.id)
+
+    @mock_aws
+    def test_get_all_images_with_invalid_ami_owners(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = next(iter(r.images.all()))
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.owner_id = "5678"
+        mocked_image.state = 'available'
+        mocked_image.id = image.id
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami=image.id,
+        )
+        worker.valid_ami_owners = ["1234"]
+
+        mocked_image_collection = MagicMock()
+        mocked_image_collection.filter.return_value = []
+
+        ec2_mock = MagicMock()
+        ec2_mock.images.all.return_value = mocked_image_collection
+        worker.ec2 = ec2_mock
+
+        result = worker._get_all_images()
+
+        self.assertEqual(result, [])
+
+    @mock_aws
+    def test_sort_images_options_with_valid_regex(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = next(iter(r.images.all()))
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.image_location = "amazon/foo"
+        mocked_image.id = "ami-123"
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami="ami-123",
+        )
+
+        match_mock = MagicMock()
+        match_mock.group.return_value = "123"
+
+        regex_mock = MagicMock()
+        regex_mock.match.return_value = match_mock
+
+        worker.valid_ami_location_regex = regex_mock
+
+        result = worker._sort_images_options([mocked_image])
+
+        regex_mock.match.assert_called_with("amazon/foo")
+
+        self.assertEqual(result[0][1], "123")
+
+    @mock_aws
+    def test_sort_images_options_without_regex(self):
+        _, r = self.botoSetup('latent_buildbot_worker')
+
+        image = next(iter(r.images.all()))
+
+        mocked_image = MagicMock(wraps=image)
+        mocked_image.image_location = "amazon/foo"
+        mocked_image.id = "ami-123"
+
+        worker = ec2.EC2LatentWorker(
+            'bot1',
+            'sekrit',
+            'm1.large',
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name="latent_buildbot_worker",
+            security_name='latent_buildbot_worker',
+            ami="ami-123",
+        )
+
+        worker.valid_ami_location_regex = None
+
+        sorted_images = worker._sort_images_options([mocked_image])
+
+        self.assertEqual(sorted_images[0][1], "ami-123")
+
+
+class TestEC2LatentWorkerDefaultKeypairSecurityGroup(unittest.TestCase):
     ec2_connection = None
 
     def setUp(self):
