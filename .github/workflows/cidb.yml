@@ -94,12 +94,12 @@ jobs:
     steps:
       - name: Checkout specific branch
         if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.branch }}
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         if: ${{ github.event_name != 'workflow_dispatch' }}
 
       - run: sudo apt-get install aspell aspell-en iamerican ispell
