@@ -1386,6 +1386,58 @@ It adds the following arguments:
     The number of columns to use for a `vertical` layout. If omitted, it is set to 1 unless there
     are more than 3 visible child fields in which case it is set to 2.
 
+
+Now to use the values of the ``NestedParameter`` fields in your build steps, it can be complicated.
+If you get the property directly, you will get a dictionary with all the fields inside.
+You can access the full dictionary with the ``getProperty`` step function.
+If you do an ``Interpolate``, you will get the dictionary as a string.
+
+If you want to use the individual nested fields as properties, you can make a workaround by using
+a :ref:`Renderer` to set new properties in a flattened way.
+First you need to make a function to get the renderer:
+
+.. code-block:: python
+
+   def create_nested_property_renderer(property_name: str, *args: str) -> Callable:
+       if not args:
+           raise ValueError('At least one argument is required to create a nested property renderer.')
+   
+       @util.renderer
+       def render_nested_property(props: IProperties) -> Any:
+           value = props.getProperty(property_name)
+           whoami = property_name
+           for arg in args:
+               whoami += f'[{arg}]'
+               if not isinstance(value, dict):
+                   raise TypeError(f'{whoami} not a dict: {value}')
+   
+               value = value[arg]
+   
+           return value
+   
+       return render_nested_property
+
+Then you can use this function to set new properties in your build steps
+(do it early so that you can access them later).
+
+For instance if you have a ``NestedParameter`` called ``options`` with fields ``pull`` and
+``force``,
+``pull`` being also a ``NestedParameter``, with field ``url``, you can do:
+
+.. code-block:: python
+
+   factory.addStep(
+       steps.SetProperty(
+           property='options_pull_url',
+           value=step_helper.create_nested_property_renderer('options', 'pull', 'url'),
+           hideStepIf=True,
+       )
+   )
+
+This way you can use these new properties in ``Interpolate`` or access them directly with
+``getProperty``.
+
+
 FixedParameter
 ##############
 
