@@ -81,7 +81,7 @@ which is a :py:class:`DataConnector` instance.
     should always be a tuple. Integer arguments can be presented as either integers or strings that
     can be parsed by ``int``; all other arguments must be strings.
 
-    .. py:method:: get(path, filters=None, fields=None, order=None, limit=None, offset=None)
+    .. py:method:: get(path, filters=None, fields=None, order=None, limit=None, offset=None, properties=None)
 
         :param tuple path: A tuple of path elements representing the API path to fetch.
             Numbers can be passed as strings or integers
@@ -90,6 +90,7 @@ which is a :py:class:`DataConnector` instance.
         :param order: result spec order
         :param limit: result spec limit
         :param offset: result spec offset
+        :param properties: create result spec Property list from list of strings
         :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
         :returns: a resource or list via Deferred, or None
 
@@ -97,7 +98,7 @@ which is a :py:class:`DataConnector` instance.
         Depending on the path, it will return a single resource or a list of resources.
         If a single resource is not specified, it returns ``None``.
 
-        The ``filters``, ``fields``, ``order``, ``limit``, and ``offset`` are passed to the
+        The ``filters``, ``fields``, ``order``, ``limit``, ``offset``, and ``properties`` are passed to the
         :py:class:`~buildbot.data.resultspec.ResultSpec`, which will then be forwarded to the
         endpoint.
 
@@ -120,7 +121,10 @@ which is a :py:class:`DataConnector` instance.
                 ],
                 fields=["buildrequestid", "buildsetid"],
                 order=("-buildrequestid",),
-                limit=2
+                limit=2,
+                properties=[
+                    "reason",
+                ]
             )
 
     .. py:method:: getEndpoint(path)
