@@ -11,6 +11,8 @@ And especially: https://docs.buildbot.net/latest/developer/pull-request.html
 
 # Contributor Checklist:
 
+> remove items that are not applicable
+
 * [ ] I have updated the unit tests
 * [ ] I have created a file in the `newsfragments` directory (and read the `README.txt` in that directory)
 * [ ] I have updated the appropriate documentation
