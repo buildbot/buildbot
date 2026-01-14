@@ -6,8 +6,7 @@ Please have a look at our developer documentation before submitting your Pull Re
 
 https://docs.buildbot.net/latest/developer/quickstart.html
 
-And especially:
-https://docs.buildbot.net/latest/developer/pull-request.html
+And especially: https://docs.buildbot.net/latest/developer/pull-request.html
 
 
 # Contributor Checklist:
