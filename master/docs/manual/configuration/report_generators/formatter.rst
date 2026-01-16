@@ -11,12 +11,13 @@ It formats a message using the Jinja2_ templating language and picks the templat
 
 The constructor of the class takes the following arguments:
 
-``template_type``
+``template_type`` (default: ``plain``)
     This indicates the type of the generated template.
-    Use either 'plain' (the default) or 'html'.
+    Use either ``plain`` or ``html``.
 
 ``template``
-    If set, specifies the template used to generate the message body. If not set, a default template will be used.
+    If set, specifies the template used to generate the message body.
+    If not set, a default template will be used.
     The default template is selected according to ``template_type`` so it may make sense to specify appropriate ``template_type`` even if the default template is used.
 
 ``subject``
@@ -31,28 +32,26 @@ The constructor of the class takes the following arguments:
     Alternatively, you can subclass MessageFormatter and override the :py:meth:`buildAdditionalContext` in order to grab more context from the data API.
 
     .. py:method:: buildAdditionalContext(master, ctx)
-        :noindex:
+       :noindex:
 
-        :param master: the master object
-        :param ctx: the context dictionary to enhance
-        :returns: optionally deferred
+       :param master: the master object
+       :param ctx: the context dictionary to enhance
+       :returns: optionally deferred
 
-        default implementation will add ``self.ctx`` into the current template context
+       default implementation will add ``self.ctx`` into the current template context
 
 ``want_properties``
     This parameter (defaults to True) will extend the content of the given ``build`` object with the Properties from the build.
 
-``want_steps``
-    This parameter (defaults to False) will extend the content of the given ``build`` object with information about the steps of the build.
     Use it only when necessary as this increases the overhead in terms of CPU and memory on the master.
 
-``want_logs``
-    This parameter (defaults to False) will extend the content of the steps of the given ``build`` object with the log metadata of each steps from the build.
-    This implies ``wantSteps`` to be `True`.
+``want_logs`` (default: ``False``)
+    This parameter will extend the content of the steps of the given ``build`` object with the log metadata of each steps from the build.
+    This implies ``wantSteps`` to be ``True``.
     Use it only when mandatory, as this greatly increases the overhead in terms of CPU and memory on the master.
 
-``want_logs_content``
-    This parameter (defaults to ``False``) controls whether to include log content together with log metadata as controlled by ``want_logs``.
+``want_logs_content`` (default: ``False``)
+    This parameter controls whether to include log content together with log metadata as controlled by ``want_logs``.
 
     ``False`` disables log content inclusion.
     ``True`` enables log content inclusion for all logs.
@@ -65,8 +64,8 @@ The constructor of the class takes the following arguments:
 
     Enabling `want_logs_content` dumps the *full* content of logs and may consume lots of memory and CPU depending on the log size.
 
-``extra_info_cb``
-    This parameter (defaults to ``None``) can be used to customize extra information that is passed to reporters.
+``extra_info_cb`` (default: ``None``)
+    This parameter can be used to customize extra information that is passed to reporters.
     If set, this argument must be a function that returns a dictionary of dictionaries either directly or via a ``Deferred``.
     The interpretation of the return value depends on the exact reporter being used.
 
