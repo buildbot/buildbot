@@ -51,7 +51,7 @@ msgpack==1.1.1
 mypy-extensions==1.1.0
 packaging==25.0
 parameterized==0.9.0
-pyasn1==0.6.1
+pyasn1==0.6.2
 pyasn1-modules==0.4.2
 pycparser==2.22
 PyJWT==2.10.1
