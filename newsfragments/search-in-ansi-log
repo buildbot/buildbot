@@ -1,0 +1,1 @@
+Fix a UI crash occurring when using the search inside long log with ANSI escape code (:bug:`8678`)
