@@ -112,6 +112,8 @@ class MailNotifier(ReporterBase):
         smtpPort=25,
         dumpMailsToLog=False,
         generators=None,
+        attach_logs=True,  # Add attach_logs option
+        attach_patches=True  # Add attach_patches option
     ):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot send mail")
@@ -142,6 +144,9 @@ class MailNotifier(ReporterBase):
         if useSmtps:
             ssl.ensureHasSSL(self.__class__.__name__)
 
+        self.attach_logs = attach_logs
+        self.attach_patches = attach_patches
+
     @defer.inlineCallbacks
     def reconfigService(
         self,
@@ -158,6 +163,8 @@ class MailNotifier(ReporterBase):
         smtpPort=25,
         dumpMailsToLog=False,
         generators=None,
+        attach_logs=True,  # Add attach_logs option
+        attach_patches=True  # Add attach_patches option
     ):
         if generators is None:
             generators = self._create_default_generators()
@@ -181,6 +188,8 @@ class MailNotifier(ReporterBase):
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
         self.dumpMailsToLog = dumpMailsToLog
+        self.attach_logs = attach_logs
+        self.attach_patches = attach_patches
 
     def _create_default_generators(self):
         return [
@@ -225,11 +234,11 @@ class MailNotifier(ReporterBase):
         m['From'] = self.fromaddr
         # m['To'] is added later
 
-        if patches:
+        if patches and self.attach_patches:
             for i, patch in enumerate(patches):
                 a = self.patch_to_attachment(patch, i)
                 m.attach(a)
-        if logs:
+        if logs and self.attach_logs:
             for log in logs:
                 # Use distinct filenames for the e-mail summary
                 name = f"{log['stepname']}.{log['name']}"
