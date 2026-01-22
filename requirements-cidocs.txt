@@ -12,7 +12,7 @@ sphinxcontrib-serializinghtml==2.0.0
 sphinxcontrib-spelling==8.0.0; python_version == "3.9"
 sphinxcontrib-spelling==8.0.1; python_version >= "3.10"
 sphinxcontrib-websupport==2.0.0
-Pygments==2.19.1
+Pygments==2.19.2
 towncrier==24.8.0
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
