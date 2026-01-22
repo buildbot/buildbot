@@ -4,7 +4,7 @@
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
 buildbot-www==4.3.0
 
-Markdown==3.8
+Markdown==3.10.1
 coverage==7.9.1
 docker==7.1.0
 hvac==2.3.0
