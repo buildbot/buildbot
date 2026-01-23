@@ -23,6 +23,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.config.master import MasterConfig
 from buildbot.process import builder
+from buildbot.process import buildrequest
 from buildbot.process import factory
 from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
@@ -204,9 +205,10 @@ class TestBuilder(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
         self.master.config.collapseRequests = global_param
 
-        fn = self.bldr.getCollapseRequestsFn()
+        br_collapser = buildrequest.BuildRequestCollapser(self.master, [])
+        fn = br_collapser.getCollapseRequestsFn(self.bldr)
 
-        if fn == builder.Builder._defaultCollapseRequestFn:
+        if fn == buildrequest.BuildRequestCollapser._defaultCollapseRequestFn:
             fn = "default"
         elif fn is cble:
             fn = 'callable'

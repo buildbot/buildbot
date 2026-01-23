@@ -26,7 +26,7 @@ from twisted.python.versions import Version
 
 from buildbot.data import resultspec
 from buildbot.db.buildsets import BsProps
-from buildbot.process import properties
+from buildbot.process import properties, buildrequest
 from buildbot.process.results import SKIPPED
 
 if TYPE_CHECKING:
@@ -89,10 +89,8 @@ class BuildRequestCollapser:
             assert bldrdict is not None
             # Get the builder object
             bldr = self.master.botmaster.builders.get(bldrdict['name'])
-            if not bldr:
-                continue
             # Get the Collapse BuildRequest function (from the configuration)
-            collapseRequestsFn = bldr.getCollapseRequestsFn()
+            collapseRequestsFn = self.getCollapseRequestsFn(bldr)
             unclaim_brs: list[BuildRequestData] = yield self._getUnclaimedBrs(builderid)
 
             # short circuit if there is no merging to do
@@ -115,6 +113,42 @@ class BuildRequestCollapser:
                 collapsed_brids.append(brid)
 
         return collapsed_brids
+
+
+    def getCollapseRequestsFn(
+        self,
+        builder: Builder,
+    ) -> CollapseRequestFn | None:
+        """Helper function to determine which collapseRequests function to use
+        from L{_collapseRequests}, or None for no merging"""
+        # first, seek through builder, global, and the default
+        collapseRequests_fn: CollapseRequestFn | bool | None = None
+        # The builder object may not exist on some asymmetric multi-master configurations
+        if builder is not None:
+            assert builder.config is not None
+            collapseRequests_fn = builder.config.collapseRequests
+        if collapseRequests_fn is None:
+            assert self.master is not None
+            collapseRequests_fn = self.master.config.collapseRequests
+        if collapseRequests_fn is None:
+            collapseRequests_fn = True
+
+        # then translate False and True properly
+        if collapseRequests_fn is False:
+            return None
+        elif collapseRequests_fn is True:
+            return self._defaultCollapseRequestFn
+
+        return collapseRequests_fn
+
+    @staticmethod
+    def _defaultCollapseRequestFn(
+        master: BuildMaster,
+        builder: Builder,
+        brdict1: BuildRequestData,
+        brdict2: BuildRequestData,
+    ) -> defer.Deferred[bool]:
+        return buildrequest.BuildRequest.canBeCollapsed(master, brdict1, brdict2)
 
 
 class TempSourceStamp:
