@@ -22,54 +22,56 @@ matrix:
   fast_finish: true
   include:
     # ruff, docs first as they're more likely to find issues
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=ruff
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=docs
-    - env: PYTHON=3.9 TESTS=mypy
-    - env: PYTHON=3.9 TESTS=prettier
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=ruff
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=docs
+    - env: PYTHON=3.10 TESTS=mypy
+    - env: PYTHON=3.10 TESTS=prettier
 
     # add js tests in separate job. Start it early because it is quite long
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=1G
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=1G
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_whl NUM_CPU=2 MEMORY_SIZE=2G
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_tgz NUM_CPU=2 MEMORY_SIZE=2G
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=1G
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=js_unit NUM_CPU=2 MEMORY_SIZE=1G
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_whl NUM_CPU=2 MEMORY_SIZE=2G
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_tgz NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.12 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_whl NUM_CPU=2 MEMORY_SIZE=2G
     - env: PYTHON=3.12 TWISTED=latest SQLALCHEMY=latest TESTS=e2e_react_tgz NUM_CPU=2 MEMORY_SIZE=2G
 
     # include "ci" string into the name of the status that is eventually submitted to Github, so
     # that the codecov.io service would wait until this build is finished before creating report.
-    - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=24.7.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=1.4.52 NUM_CPU=2 TESTS=trial
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
+    - env: PYTHON=3.10 TREQ=22.2.0 TWISTED=24.7.0 SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=1.4.52 NUM_CPU=2 TESTS=trial
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=ci/coverage
     - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.11 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.12 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
     - env: PYTHON=3.13 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=trial
 
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=dev_virtualenv
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest NUM_CPU=2 TESTS=dev_virtualenv
 
     # Worker-master interoperability tests
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.9
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.10
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.9
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.8
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.7
 
     # Worker tests on older python and twisted package combinations.
     - env: PYTHON=3.7 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
     - env: PYTHON=3.8 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
     - env: PYTHON=3.9 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
+    - env: PYTHON=3.10 TREQ=22.2.0 TWISTED=21.2.0 SQLALCHEMY=latest TESTS=trial_worker
 
     # Configuration when SQLite database is persistent between running tests
     # (by default in other tests in-memory SQLite database is used which is
     # recreated for each test).
     # Helps to detect issues with incorrect database setup/cleanup in tests.
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////scratch/test_db{TEST_ID}.sqlite
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////scratch/test_db{TEST_ID}.sqlite
     # Configuration that runs tests with real MySQL database
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID}
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID}?storage_engine=InnoDB
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID}
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest{TEST_ID}?storage_engine=InnoDB
 
     # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
     # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest{TEST_ID}
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL='postgresql+pg8000:///bbtest{TEST_ID}?user=buildbot&password=x'
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest{TEST_ID}
+    - env: PYTHON=3.10 TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL='postgresql+pg8000:///bbtest{TEST_ID}?user=buildbot&password=x'
 
 # Dependencies installation commands
 install:
