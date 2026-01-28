@@ -35,6 +35,8 @@ class FakeEventDetails:
 
 
 class ComparableSubscribeOptions(SubscribeOptions):
+    __hash__ = None
+
     def __eq__(self, other):
         if not isinstance(other, SubscribeOptions):
             return False

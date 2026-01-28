@@ -131,6 +131,8 @@ class FieldBase:
     def __repr__(self):
         return f"resultspec.{self.__class__.__name__}('{self.field}','{self.op}',{self.values})"
 
+    __hash__ = None
+
     def __eq__(self, b):
         for i in self.__slots__:
             if getattr(self, i) != getattr(b, i):
@@ -164,6 +166,8 @@ class NoneComparator:
 
     def __init__(self, value):
         self.value = value
+
+    __hash__ = None
 
     def __lt__(self, other):
         if self.value is None and other.value is None:
@@ -201,6 +205,8 @@ class ReverseComparator:
     def __init__(self, value):
         self.value = value
 
+    __hash__ = None
+
     def __lt__(self, other):
         return other.value < self.value
 
@@ -234,6 +240,8 @@ class ResultSpec:
             f"'properties': {self.properties}, 'order': {self.order}, 'limit': {self.limit}, "
             f"'offset': {self.offset}" + "})"
         )
+
+    __hash__ = None
 
     def __eq__(self, b):
         for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:

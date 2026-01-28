@@ -177,6 +177,8 @@ class BuildDictLookAlike:
         self.keys.sort()
         self.assertions = assertions
 
+    __hash__ = None
+
     def __eq__(self, b):
         if sorted(b.keys()) != self.keys:
             raise AssertionError(
