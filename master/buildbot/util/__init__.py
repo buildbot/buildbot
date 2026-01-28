@@ -543,9 +543,9 @@ def dictionary_merge(a, b):
     """
     for key, value in b.items():
         if key in a and isinstance(a[key], dict) and isinstance(value, dict):
-            dictionary_merge(a[key], b[key])
+            dictionary_merge(a[key], value)
             continue
-        a[key] = b[key]
+        a[key] = value
     return a
 
 
