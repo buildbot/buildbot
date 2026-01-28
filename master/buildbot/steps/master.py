@@ -122,7 +122,7 @@ class MasterShellCommand(BuildStep):
                         raise RuntimeError(
                             f"'env' values must be strings or lists; key '{key}' is incorrect"
                         )
-                    newenv[key] = p.sub(subst, env[key])
+                    newenv[key] = p.sub(subst, v)
 
             # RunProcess will take environment values from os.environ in cases of env not having
             # the keys that are in os.environ. Prevent this by putting None into those keys.
