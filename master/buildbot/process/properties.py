@@ -270,6 +270,8 @@ class RenderableOperatorsMixin:
     Properties and Interpolate instances can be manipulated with standard operators.
     """
 
+    __hash__ = None
+
     def __eq__(self, other):
         return _OperatorRenderer(self, other, "==", lambda v1, v2: v1 == v2)
 

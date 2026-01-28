@@ -161,6 +161,8 @@ class Change:
             self.codebase,
         )
 
+    __hash__ = None
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Change):
             raise NotImplementedError

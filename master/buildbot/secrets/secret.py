@@ -51,5 +51,7 @@ class SecretDetails:
     def __str__(self):
         return f'{self._source} {self._key}: {self.value!r}'
 
+    __hash__ = None
+
     def __eq__(self, other):
         return self._source == other._source and self.key == other.key and self.value == other.value

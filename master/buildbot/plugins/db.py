@@ -73,6 +73,8 @@ class _PluginEntry:
             self._info = find_distribution_info(self._entry.name, self._group)
         return self._info
 
+    __hash__ = None
+
     def __eq__(self, other):
         return self.info == other.info
 
