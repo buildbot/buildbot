@@ -76,7 +76,8 @@ class _PluginEntry:
     def __eq__(self, other):
         return self.info == other.info
 
-    __hash__ = None  # type: ignore[assignment]
+    def __hash__(self) -> int:
+        return hash(self.info)
 
     def __ne__(self, other):
         return not self.__eq__(other)

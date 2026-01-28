@@ -137,7 +137,8 @@ class FieldBase:
                 return False
         return True
 
-    __hash__ = None  # type: ignore[assignment]
+    def __hash__(self) -> int:
+        return hash(tuple(getattr(self, s) for s in self.__slots__))
 
     def __ne__(self, b):
         return not self == b
@@ -179,7 +180,8 @@ class NoneComparator:
     def __eq__(self, other):
         return self.value == other.value
 
-    __hash__ = None  # type: ignore[assignment]
+    def __hash__(self) -> int:
+        return hash(self.value)
 
     def __ne__(self, other):
         return self.value != other.value
@@ -211,7 +213,8 @@ class ReverseComparator:
     def __eq__(self, other):
         return other.value == self.value
 
-    __hash__ = None  # type: ignore[assignment]
+    def __hash__(self) -> int:
+        return hash(self.value)
 
     def __ne__(self, other):
         return other.value != self.value
@@ -247,7 +250,15 @@ class ResultSpec:
                 return False
         return True
 
-    __hash__ = None  # type: ignore[assignment]
+    def __hash__(self) -> int:
+        return hash((
+            self.filters,
+            self.fields,
+            self.properties,
+            self.order,
+            self.limit,
+            self.offset,
+        ))
 
     def __ne__(self, b):
         return not self == b
