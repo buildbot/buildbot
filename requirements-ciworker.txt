@@ -6,7 +6,7 @@ Automat==22.10.0;  python_version < "3.8"  # pyup: ignore
 Automat==24.8.1;  python_version >= "3.8" and python_version < "3.9"
 Automat==25.4.16;  python_version >= "3.9"
 cffi==1.15.1;  python_version < "3.8"  # pyup: ignore
-cffi==1.17.1;  python_version >= "3.8"
+cffi==2.0.0;  python_version >= "3.8"
 constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
 cryptography==45.0.4
