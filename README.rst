@@ -12,6 +12,8 @@ lothar . com>`_, and currently maintained by `the Botherders
 
 Visit us on http://buildbot.net !
 
+You can also find us on Discord at https://discord.gg/AMXBDUBTZV
+
 |travis-badge|_ |codecov-badge|_ |readthedocs-badge|_
 
 Buildbot consists of several components:
