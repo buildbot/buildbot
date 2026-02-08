@@ -1876,14 +1876,6 @@ browserslist@^4.12.0, browserslist@^4.18.1, browserslist@^4.24.0, browserslist@^
     node-releases "^2.0.19"
     update-browserslist-db "^1.1.3"
 
-"buffer-polyfill@npm:buffer@^6.0.3":
-  version "6.0.3"
-  resolved "https://registry.yarnpkg.com/buffer/-/buffer-6.0.3.tgz#2ace578459cc8fbe2a70aaa8f52ee63b6a74c6c6"
-  integrity sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==
-  dependencies:
-    base64-js "^1.3.1"
-    ieee754 "^1.2.1"
-
 buffer-xor@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/buffer-xor/-/buffer-xor-1.0.3.tgz#26e61ed1422fb70dd42e6e36729ed51d855fe8d9"
@@ -6516,15 +6508,13 @@ vite-plugin-checker@^0.9.0:
     tinyglobby "^0.2.13"
     vscode-uri "^3.1.0"
 
-vite-plugin-node-polyfills@~0.17.0:
-  version "0.17.0"
-  resolved "https://registry.yarnpkg.com/vite-plugin-node-polyfills/-/vite-plugin-node-polyfills-0.17.0.tgz#1044a4955174ddaeedbc3679b179e1efac9da006"
-  integrity sha512-iPmPn7376e5u6QvoTSJa16hf5Q0DFwHFXJk2uYpsNlmI3JdPms7hWyh55o+OysJ5jo9J5XPhLC9sMOYifwFd1w==
+vite-plugin-node-polyfills@~0.24.0:
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/vite-plugin-node-polyfills/-/vite-plugin-node-polyfills-0.24.0.tgz#4a2e984bba134017fc88cace0149cf8afdb50b54"
+  integrity sha512-GA9QKLH+vIM8NPaGA+o2t8PDfFUl32J8rUp1zQfMKVJQiNkOX4unE51tR6ppl6iKw5yOrDAdSH7r/UIFLCVhLw==
   dependencies:
     "@rollup/plugin-inject" "^5.0.5"
-    buffer-polyfill "npm:buffer@^6.0.3"
     node-stdlib-browser "^1.2.0"
-    process "^0.11.10"
 
 vite-plugin-static-copy@~1.0.5:
   version "1.0.6"
