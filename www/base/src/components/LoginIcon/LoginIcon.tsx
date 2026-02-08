@@ -26,6 +26,10 @@ import {
   FaMicrosoft,
 } from 'react-icons/fa';
 
+import {
+  SiGitea
+} from 'react-icons/si';
+
 export type LoginIconProps = {
   iconName: string;
 };
@@ -46,6 +50,8 @@ export const LoginIcon = ({iconName}: LoginIconProps) => {
       return <FaLinkedin />;
     case 'fa-microsoft':
       return <FaMicrosoft />;
+    case 'si-gitea':
+      return <SiGitea />;
     case '':
       return <></>;
     default:
