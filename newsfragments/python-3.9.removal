@@ -1,0 +1,2 @@
+Buildbot Master now requires Python 3.10 or newer.
+Python 3.9 is no longer supported.
