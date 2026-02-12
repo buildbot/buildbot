@@ -5,7 +5,7 @@
 
 # Provides a base Debian image with latest buildbot worker installed
 
-ARG DEBIAN_VERSION="bookworm"
+ARG DEBIAN_VERSION="trixie"
 
 FROM docker.io/library/debian:${DEBIAN_VERSION}
 LABEL org.opencontainers.image.authors="Buildbot maintainers"

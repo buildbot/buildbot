@@ -1,0 +1,1 @@
+Buildbot Master Docker image now uses Debian 13 Trixie as base image.
