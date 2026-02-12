@@ -14,7 +14,7 @@
 # which get installed in the final image.
 # This allows us to avoid installing build tools like gcc in the final image.
 
-ARG DEBIAN_VERSION="bookworm"
+ARG DEBIAN_VERSION="trixie"
 
 FROM docker.io/library/debian:${DEBIAN_VERSION} AS buildbot-build
 LABEL org.opencontainers.image.authors="Buildbot maintainers"
@@ -34,7 +34,7 @@ RUN \
     gpg --no-default-keyring --keyring "$KEYRING" --list-keys && \
     chmod a+r /usr/share/keyrings/nodesource.gpg && \
     VERSION=node_18.x && \
-    DISTRO=bookworm && \
+    DISTRO=trixie && \
     echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
     echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
     cat /etc/apt/sources.list.d/nodesource.list
