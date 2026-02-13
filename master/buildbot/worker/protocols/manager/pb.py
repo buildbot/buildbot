@@ -35,6 +35,7 @@ from buildbot.worker.protocols.manager.base import BaseManager
 
 if TYPE_CHECKING:
     from twisted.cred.credentials import IUsernamePassword
+    from twisted.internet.protocol import ServerFactory
 
     from buildbot.util.twisted import InlineCallbacksType
 
@@ -44,12 +45,15 @@ class Dispatcher(BaseDispatcher):
     credentialInterfaces = [credentials.IUsernamePassword, credentials.IUsernameHashedPassword]
 
     def __init__(self, config_port: str | int) -> None:
-        super().__init__(config_port=config_port)
         # there's lots of stuff to set up for a PB connection!
         self.portal = portal.Portal(self)
         self.portal.registerChecker(self)
-        self.serverFactory = pb.PBServerFactory(self.portal)
-        self.serverFactory.unsafeTracebacks = True
+        super().__init__(config_port=config_port)
+
+    def _create_server_factory(self, config_port: str | int) -> ServerFactory:
+        serverFactory = pb.PBServerFactory(self.portal)
+        serverFactory.unsafeTracebacks = True
+        return serverFactory
 
     # IRealm
 
