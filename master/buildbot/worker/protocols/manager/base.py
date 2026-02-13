@@ -25,10 +25,10 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import service
+from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from twisted.internet.defer import Deferred
-    from twisted.internet.interfaces import IListeningPort
     from twisted.internet.protocol import ServerFactory
 
     from buildbot.util.twisted import InlineCallbacksType
@@ -114,44 +114,48 @@ class Registration:
         OS.
         """
         disp = self.manager.dispatchers[self.portstr]
-        assert disp.port is not None
-        return disp.port.getHost().port
+        assert disp.bound_port is not None
+        return disp.bound_port
 
 
-class BaseDispatcher(service.AsyncService):
+class BaseDispatcher(service.AsyncMultiService):
     debug = False
 
-    serverFactory: ServerFactory
-
     def __init__(self, config_port: str | int) -> None:
+        super().__init__()
+        self.serverFactory = self._create_server_factory(config_port)
+        self.bound_port: int | None = None
+
         # do some basic normalization of portstrs
         if isinstance(config_port, int) or ':' not in config_port:
             config_port = f"tcp:{config_port}"
 
         self.portstr = config_port
         self.users: dict[str, tuple[str, Callable[[object, str], Deferred[Connection]]]] = {}
-        self.port: IListeningPort | None = None
+
+        self._service = strports.service(
+            self.portstr,
+            self.serverFactory,
+        )
+        self._service.setServiceParent(self)
+
+    def _create_server_factory(self, config_port: str | int) -> ServerFactory:
+        raise NotImplementedError
+
+    @async_to_deferred
+    async def startService(self) -> None:
+        await super().startService()
+        if self._service._waitingForPort is not None:
+            port = await self._service._waitingForPort
+            self.bound_port = port.getHost().port
+
+    @async_to_deferred
+    async def stopService(self) -> None:
+        self.bound_port = None
+        await super().stopService()
 
     def __repr__(self) -> str:
         return f'<base.BaseDispatcher for {", ".join(list(self.users))} on {self.portstr}>'
-
-    def start_listening_port(self) -> IListeningPort:
-        return strports.listen(self.portstr, self.serverFactory)
-
-    def startService(self) -> None:
-        assert not self.port
-        self.port = self.start_listening_port()
-
-        return super().startService()
-
-    @defer.inlineCallbacks
-    def stopService(self) -> InlineCallbacksType[None]:
-        # stop listening on the port when shut down
-        assert self.port
-        port = self.port
-        self.port = None
-        yield port.stopListening()
-        yield super().stopService()
 
     def register(
         self,
