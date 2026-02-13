@@ -288,3 +288,19 @@ class TestBaseManager(unittest.TestCase):
 
         yield self.manager.stopService()
         self.assert_start_stop_listening_counts(disp, 1, 1)
+
+    @defer.inlineCallbacks
+    def test_haproxy_port(self) -> InlineCallbacksType[None]:
+        yield self.manager.startService()
+        pf1 = mock.Mock()
+        reg = yield self.manager.register('haproxy:tcp:9001', 'user1', 'pass1', pf1)
+
+        disp = self.manager.dispatchers['haproxy:tcp:9001']
+
+        reg.unregister()
+        self.assert_equal_registration(self.manager.dispatchers, {})
+        self.assertEqual(reg.username, None)
+        self.assertEqual(len(self.manager.services), 0)
+
+        yield self.manager.stopService()
+        self.assert_start_stop_listening_counts(disp, 1, 1)
