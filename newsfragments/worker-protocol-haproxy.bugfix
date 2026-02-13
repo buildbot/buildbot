@@ -1,0 +1,1 @@
+Fix issue when using the `haproxy:` prefix in the master's worker protocol configuration (PB or MsgPack).
