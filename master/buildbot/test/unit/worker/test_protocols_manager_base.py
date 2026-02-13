@@ -20,9 +20,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import cast
 from unittest import mock
 
 from twisted.internet import defer
+from twisted.internet.protocol import ServerFactory
 from twisted.trial import unittest
 from typing_extensions import Self
 
@@ -30,8 +32,6 @@ from buildbot.worker.protocols.manager.base import BaseDispatcher
 from buildbot.worker.protocols.manager.base import BaseManager
 
 if TYPE_CHECKING:
-    from unittest.mock import Mock
-
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -46,20 +46,36 @@ class FakeMaster:
         return self
 
 
+class _TestServerFactory(ServerFactory):
+    pass
+
+
 class TestDispatcher(BaseDispatcher):
     def __init__(self, config_port: str | int) -> None:
+        # if this is running on BaseDispatcher.__init__,
+        # _service will be started when added as a child service
+        # which will start listening on the port
+        assert not self.running
         super().__init__(config_port=config_port)
-        self.start_listening_count = 0
-        self.stop_listening_count = 0
 
-    def start_listening_port(self) -> Mock:
-        def stopListening() -> None:
-            self.stop_listening_count += 1
+        self._service.privilegedStartService = mock.Mock()  # type: ignore[method-assign]
+        self._service.startService = mock.Mock()  # type: ignore[method-assign]
+        self._service.stopService = mock.Mock()  # type: ignore[method-assign]
 
-        self.start_listening_count += 1
-        port = mock.Mock()
-        port.stopListening = stopListening
-        return port
+    def _create_server_factory(self, config_port: str | int) -> ServerFactory:
+        return _TestServerFactory()
+
+    @property
+    def privileged_start_listening_count(self) -> int:
+        return cast(mock.Mock, self._service.privilegedStartService).call_count
+
+    @property
+    def start_listening_count(self) -> int:
+        return cast(mock.Mock, self._service.startService).call_count
+
+    @property
+    def stop_listening_count(self) -> int:
+        return cast(mock.Mock, self._service.stopService).call_count
 
 
 class TestManagerClass(BaseManager):
