@@ -1,0 +1,1 @@
+An alert now appears at the top of the web UI when the WebSocket disconnects, indicating that live updates have stopped.
