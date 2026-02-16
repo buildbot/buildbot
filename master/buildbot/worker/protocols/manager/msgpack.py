@@ -82,6 +82,23 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self._deferwaiter = deferwaiter.DeferWaiter()
 
         self._logger = Logger()
+        self._update_logger_ns()
+
+    def _update_logger_ns(self, peer: str | None = None) -> None:
+        namespace = self.__class__.__name__
+        parts: list[str] = []
+        if self.connection is not None:
+            parts.append(self.connection.get_peer())
+        elif peer is not None:
+            parts.append(peer)
+
+        if self.worker_name:
+            parts.append(self.worker_name)
+
+        if parts:
+            namespace += '<' + ','.join(parts) + '>'
+
+        self._logger.namespace = namespace
 
     def get_dispatcher(self) -> Dispatcher:
         # This is an instance of class msgpack.Dispatcher set in Dispatcher.__init__().
@@ -120,6 +137,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             if self.worker_name in dispatcher.users:
                 _, afactory = dispatcher.users[self.worker_name]
                 self.connection = yield afactory(self, self.worker_name)
+                self._update_logger_ns()
                 yield cast(Connection, self.connection).attached(self)
             else:
                 self.sendClose()
@@ -400,6 +418,8 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         if not authentication:
             raise ConnectionDeny(401, "Unauthorized")
 
+        self._update_logger_ns(peer=request.peer)
+
     def onClose(self, wasClean: bool, code: int | None, reason: str) -> None:
         if self.debug:
             self._logger.info(f"WebSocket connection closed: {reason}")
@@ -410,6 +430,9 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
         if self.connection is not None:
             self.connection.detached(self)
+            self.connection = None
+        self.worker_name = None
+        self._update_logger_ns()
 
 
 class Dispatcher(BaseDispatcher):

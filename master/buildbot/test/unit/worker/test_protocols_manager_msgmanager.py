@@ -126,14 +126,16 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def connect_authenticated_worker(self) -> InlineCallbacksType[None]:
         # worker has to be authenticated before opening the connection
-        pfactory = mock.Mock()
-        pfactory.connection = mock.Mock()
+        connection = mock.Mock()
+        connection.get_peer = mock.Mock(return_value="mock-conn-peer")
+        pfactory = mock.Mock(return_value=connection)
+        pfactory.connection = connection
 
         self.setup_mock_users({'name': ('pass', pfactory)})
 
         request = mock.Mock()
         request.headers = {"authorization": 'Basic bmFtZTpwYXNz'}
-        request.peer = ''
+        request.peer = 'mock-request-peer'
 
         yield self.protocol.onConnect(request)
         yield self.protocol.onOpen()
@@ -626,6 +628,8 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         # Worker disconnected, master will never get the response message.
         # Stop waiting and raise Exception
+        connection = self.protocol.connection
+
         self.protocol.onClose(True, None, 'worker is gone')
         self.assertEqual(d1.called, True)
         with self.assertRaises(ConnectioLostError):
@@ -635,8 +639,8 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         with self.assertRaises(ConnectioLostError):
             yield d2
 
-        assert self.protocol.connection is not None
-        assert isinstance(self.protocol.connection.detached, mock.Mock)
-        self.protocol.connection.detached.assert_called()
+        assert connection is not None
+        assert isinstance(connection.detached, mock.Mock)
+        connection.detached.assert_called()
         # contents of dict_def are deleted to stop waiting for the responses of all commands
         self.assertEqual(len(self.protocol.seq_num_to_waiters_map), 0)
