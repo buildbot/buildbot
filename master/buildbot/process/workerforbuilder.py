@@ -19,7 +19,7 @@ import enum
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
-from twisted.python import log
+from twisted.logger import Logger
 
 if TYPE_CHECKING:
     from buildbot.process.builder import Builder
@@ -44,6 +44,8 @@ class AbstractWorkerForBuilder:
         self.builder = builder
         self.builder_name = builder.name
         self.locks = None
+
+        self._logger = Logger()
 
     def __repr__(self):
         r = ["<", self.__class__.__name__]
@@ -98,7 +100,7 @@ class AbstractWorkerForBuilder:
             self.worker.addWorkerForBuilder(self)
         else:
             assert self.worker == worker
-        log.msg(f"Worker {worker.workername} attached to {self.builder_name}")
+        self._logger.info(f"Worker {worker.workername} attached to {self.builder_name}")
 
         yield self.worker.conn.remotePrint(message="attached")
 
@@ -133,7 +135,7 @@ class AbstractWorkerForBuilder:
             d.callback(res)
 
     def detached(self):
-        log.msg(f"Worker {self.worker.workername} detached from {self.builder_name}")
+        self._logger.info(f"Worker {self.worker.workername} detached from {self.builder_name}")
         if self.worker:
             self.worker.removeWorkerForBuilder(self)
         self.worker = None
@@ -153,7 +155,8 @@ class Ping:
             # clearly the ping must fail
             return defer.fail(PingException("Worker not connected?"))
         self.running = True
-        log.msg("sending ping")
+        self._logger = Logger()
+        self._logger.info("sending ping")
         self.d = defer.Deferred()
         # TODO: add a distinct 'ping' command on the worker.. using 'print'
         # for this purpose is kind of silly.
@@ -163,11 +166,11 @@ class Ping:
         return self.d
 
     def _pong(self, res):
-        log.msg("ping finished: success")
+        self._logger.info("ping finished: success")
         self.d.callback(True)
 
     def _ping_failed(self, res, conn):
-        log.msg("ping finished: failure")
+        self._logger.info("ping finished: failure")
         # the worker has some sort of internal error, disconnect them. If we
         # don't, we'll requeue a build and ping them again right away,
         # creating a nasty loop.
@@ -202,7 +205,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         self.worker: AbstractLatentWorker | None = worker
         self.state = States.AVAILABLE
         self.worker.addWorkerForBuilder(self)
-        log.msg(f"Latent worker {worker.workername} attached to {self.builder_name}")
+        self._logger.info(f"Latent worker {worker.workername} attached to {self.builder_name}")
 
     def substantiate_if_needed(self, build):
         self.state = States.DETACHED
