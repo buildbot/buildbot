@@ -46,6 +46,19 @@ class AbstractWorkerForBuilder:
         self.locks = None
 
         self._logger = Logger()
+        self._update_logger_ns()
+
+    def _update_logger_ns(self) -> None:
+        parts: list[str] = []
+        if self.worker is not None:
+            if self.worker.conn is not None:
+                parts.append(self.worker.conn.get_peer())
+            if self.worker.workername:
+                parts.append(self.worker.workername)
+
+        if self.builder.name:
+            parts.append(self.builder.name)
+        self._logger.namespace = f"WorkerForBuilder<{','.join(parts)}>"
 
     def __repr__(self):
         r = ["<", self.__class__.__name__]
@@ -100,6 +113,7 @@ class AbstractWorkerForBuilder:
             self.worker.addWorkerForBuilder(self)
         else:
             assert self.worker == worker
+        self._update_logger_ns()
         self._logger.info(f"Worker {worker.workername} attached to {self.builder_name}")
 
         yield self.worker.conn.remotePrint(message="attached")
@@ -140,6 +154,7 @@ class AbstractWorkerForBuilder:
             self.worker.removeWorkerForBuilder(self)
         self.worker = None
         self.remoteCommands = None
+        self._update_logger_ns()
 
 
 class PingException(Exception):
@@ -155,7 +170,7 @@ class Ping:
             # clearly the ping must fail
             return defer.fail(PingException("Worker not connected?"))
         self.running = True
-        self._logger = Logger()
+        self._logger = Logger(f"Ping<{conn.get_peer()}>")
         self._logger.info("sending ping")
         self.d = defer.Deferred()
         # TODO: add a distinct 'ping' command on the worker.. using 'print'
