@@ -134,7 +134,7 @@ export class GlobalSettings implements ISettings {
     localStorage.setItem('settings', JSON.stringify(storedGroups));
   }
 
-  private getSettingItem(selector: string) {
+  private getSettingItem(selector: string): SettingItem | null {
     const groupAndSetting = this.getGroupBySelector(selector);
     if (groupAndSetting === null) {
       return null;
@@ -143,7 +143,7 @@ export class GlobalSettings implements ISettings {
     if (!(settingName in group.items)) {
       console.error(`bad setting name ${selector}: setting does not exist`);
     }
-    return group.items[settingName];
+    return group.items[settingName] ?? null;
   }
 
   getSetting(selector: string) {
