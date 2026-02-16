@@ -24,6 +24,7 @@ import msgpack
 from autobahn.websocket.types import ConnectionDeny
 from parameterized import parameterized
 from twisted.internet import defer
+from twisted.logger import capturedLogs
 from twisted.trial import unittest
 
 from buildbot.worker.protocols.base import FileReaderImpl
@@ -163,9 +164,16 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('update_upload_directory_write_seq_number', {'op': 'update_upload_directory_write'}),
     ])
     def test_msg_missing_arg(self, name: str, msg: dict[str, Any]) -> None:
-        with mock.patch('twisted.python.log.msg') as mock_log:
+        with capturedLogs() as captured:
             self.protocol.onMessage(msgpack.packb(msg), True)
-            mock_log.assert_any_call(f'Invalid message from worker: {msg}')
+
+        self.assertEqual(len(captured), 2)
+        self.assertEqual(captured[0]["log_format"], "WORKER -> MASTER message: {msg!r}")
+        self.assertEqual(captured[0]["msg"], msg)
+
+        # for some reason, this happens in tests
+        self.assertEqual(captured[1]["log_format"], f'Invalid message from worker: {msg}')
+        self.assertTrue(str(captured[1]["log_legacy"]).startswith("Unable to format event "))
 
         # if msg does not have 'sep_number' or 'op', response sendMessage should not be called
         self.protocol.sendMessage.assert_not_called()

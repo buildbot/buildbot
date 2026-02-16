@@ -25,7 +25,7 @@ from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
 from autobahn.websocket.types import ConnectionDeny
 from twisted.internet import defer
-from twisted.python import log
+from twisted.logger import Logger
 
 from buildbot.util import deferwaiter
 from buildbot.util.twisted import async_to_deferred
@@ -81,6 +81,8 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.worker_name: str | None = None
         self._deferwaiter = deferwaiter.DeferWaiter()
 
+        self._logger = Logger()
+
     def get_dispatcher(self) -> Dispatcher:
         # This is an instance of class msgpack.Dispatcher set in Dispatcher.__init__().
         # self.factory is set on the protocol instance when creating it in Twisted internals
@@ -89,7 +91,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     @defer.inlineCallbacks
     def onOpen(self) -> InlineCallbacksType[None]:
         if self.debug:
-            log.msg("WebSocket connection open.")
+            self._logger.info("WebSocket connection open.")
         self.seq_number = 0
         self.command_id_to_command_map: dict[str, RemoteCommandImpl] = {}
         self.command_id_to_reader_map: dict[str, FileReaderImpl] = {}
@@ -98,11 +100,11 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
     def maybe_log_worker_to_master_msg(self, message: dict[str, Any]) -> None:
         if self.debug:
-            log.msg("WORKER -> MASTER message: ", message)
+            self._logger.info("WORKER -> MASTER message: {msg!r}", msg=message)
 
     def maybe_log_master_to_worker_msg(self, message: dict[str, Any]) -> None:
         if self.debug:
-            log.msg("MASTER -> WORKER message: ", message)
+            self._logger.info("MASTER -> WORKER message: {msg!r}", msg=message)
 
     def contains_msg_key(self, msg: dict[str, Any], keys: tuple[str, ...]) -> None:
         for k in keys:
@@ -122,7 +124,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             else:
                 self.sendClose()
         except Exception as e:
-            log.msg(f"Connection opening failed: {e}")
+            self._logger.info(f"Connection opening failed: {e}")
             self.sendClose()
         finally:
             dispatcher.master.release_lock()
@@ -302,14 +304,14 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     def onMessage(self, payload: bytes, isBinary: bool) -> None:
         if not isBinary:
             name = self.worker_name if self.worker_name is not None else '<???>'
-            log.msg(f'Message type from worker {name} unsupported')
+            self._logger.info(f'Message type from worker {name} unsupported')
             return
 
         msg = msgpack.unpackb(payload, raw=False)
         self.maybe_log_worker_to_master_msg(msg)
 
         if 'seq_number' not in msg or 'op' not in msg:
-            log.msg(f'Invalid message from worker: {msg}')
+            self._logger.info(f'Invalid message from worker: {msg}')
             return
 
         if msg['op'] != "response" and self.connection is None:
@@ -366,7 +368,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     @defer.inlineCallbacks
     def onConnect(self, request: ConnectionRequest) -> InlineCallbacksType[None]:
         if self.debug:
-            log.msg(f"Client connecting: {request.peer}")
+            self._logger.info(f"Client connecting: {request.peer}")
 
         value = request.headers.get('authorization')
         if value is None:
@@ -400,7 +402,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
     def onClose(self, wasClean: bool, code: int | None, reason: str) -> None:
         if self.debug:
-            log.msg(f"WebSocket connection closed: {reason}")
+            self._logger.info(f"WebSocket connection closed: {reason}")
         # stop waiting for the responses of all commands
         for d in self.seq_num_to_waiters_map.values():
             d.errback(ConnectioLostError("Connection lost"))
