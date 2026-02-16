@@ -262,7 +262,12 @@ class RunProcessPP(protocol.ProcessProtocol):
         if self.debug:
             self.command.log_msg("RunProcessPP.errReceived")
         decodedData = self.stderrDecode.decode(data)
-        self.command.addStderr(decodedData)
+        if self.command.mergeStreams:
+            # When merging streams, route stderr data through stdout
+            # to maintain a single combined output stream.
+            self.command.addStdout(decodedData)
+        else:
+            self.command.addStderr(decodedData)
 
     def processEnded(self, status_object: Failure) -> None:
         if self.debug:
@@ -329,6 +334,7 @@ class RunProcess:
         logEnviron: bool = True,
         logfiles: dict[str, Any] | None = None,
         usePTY: bool = False,
+        mergeStreams: bool = False,
         useProcGroup: bool = True,
     ) -> None:
         """
@@ -416,6 +422,11 @@ class RunProcess:
             False,
         ), f"Unexpected usePTY argument value: {usePTY!r}. Expected boolean."
         self.usePTY = usePTY
+
+        # mergeStreams redirects stderr into stdout at the file descriptor level,
+        # so both streams arrive via outReceived(). This maintains chronological
+        # ordering without requiring PTY or shell redirection.
+        self.mergeStreams = mergeStreams
 
         # usePTY=True is a convenience for cleaning up all children and
         # grandchildren of a hung command. Fall back to usePTY=False on systems
@@ -575,6 +586,11 @@ class RunProcess:
         msg = f" using PTY: {bool(self.usePTY)}"
         self.log_msg(" " + msg)
         self.send_update([('header', msg + "\n")])
+
+        if self.mergeStreams:
+            msg = " merging stdout and stderr"
+            self.log_msg(" " + msg)
+            self.send_update([('header', msg + "\n")])
 
         # put data into stdin and close it, if necessary.  This will be
         # buffered until connectionMade is called

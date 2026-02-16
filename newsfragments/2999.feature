@@ -1,0 +1,1 @@
+Added ``merge_streams`` option to `ShellCommand` and other shell-based build steps. When set to ``True``, stderr is redirected into stdout at the file descriptor level, preserving chronological ordering of output without requiring PTY or shell-level redirection (:issue:`2999`).

@@ -141,6 +141,7 @@ class FakeRunProcess:
             "logEnviron": True,
             "logfiles": {},
             "usePTY": False,
+            "mergeStreams": False,
         }
 
         if not self._expectations:

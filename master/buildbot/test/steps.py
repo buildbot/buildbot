@@ -291,6 +291,7 @@ class ExpectShell(Expect):
         sigterm_time=None,
         logfiles=None,
         use_pty=False,
+        merge_streams=False,
         log_environ=True,
         interrupt_signal='KILL',
     ):
@@ -310,6 +311,7 @@ class ExpectShell(Expect):
             'max_lines': max_lines,
             'logfiles': logfiles,
             'usePTY': use_pty,
+            'merge_streams': merge_streams,
             'logEnviron': log_environ,
         }
 
