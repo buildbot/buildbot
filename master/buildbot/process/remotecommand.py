@@ -110,6 +110,16 @@ class RemoteCommand(base.RemoteCommandImpl):
         ] = defaultdict(LineBoundaryFinder)
 
         self._logger = Logger()
+        self._update_logger_ns()
+
+    def _update_logger_ns(self) -> None:
+        parts: list[str] = []
+        if self.conn is not None:
+            parts.append(self.conn.get_peer())
+        if self.worker is not None and self.worker.workername:
+            parts.append(self.worker.workername)
+        parts.append(str(id(self)))
+        self._logger.namespace = f"RemoteCommand<{','.join(parts)}>"
 
     def __repr__(self) -> str:
         return f"<RemoteCommand '{self.remote_command}' at {id(self)}>"
@@ -135,6 +145,8 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.step = step
         self.conn = conn
         self.builder_name = builder_name
+
+        self._update_logger_ns()
 
         # This probably could be solved in a cleaner way.
         self._is_conn_test_fake = hasattr(self.conn, 'is_fake_test_connection')
@@ -237,6 +249,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             # return the final results when the connection is disconnected.
             self._logger.info("RemoteCommand.interrupt: lost worker")
             self.conn = None
+            self._update_logger_ns()
             self._finished(why)
             return
         if not self.active or self.interrupted:
