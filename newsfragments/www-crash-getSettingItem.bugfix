@@ -1,0 +1,1 @@
+Fixed a WebUI crash when loading an unknown settings :issue:`8369`
