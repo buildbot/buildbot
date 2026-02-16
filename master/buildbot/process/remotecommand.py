@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.python import log
+from twisted.logger import Logger
 from twisted.python.failure import Failure
 from twisted.spread import pb
 
@@ -109,6 +109,8 @@ class RemoteCommand(base.RemoteCommandImpl):
             LineBoundaryFinder,
         ] = defaultdict(LineBoundaryFinder)
 
+        self._logger = Logger()
+
     def __repr__(self) -> str:
         return f"<RemoteCommand '{self.remote_command}' at {id(self)}>"
 
@@ -139,7 +141,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
         self.commandID = RemoteCommand.generate_new_command_id()
 
-        log.msg(f"{self}: RemoteCommand.run [{self.commandID}]")
+        self._logger.info(f"{self}: RemoteCommand.run [{self.commandID}]")
         self.deferred = defer.Deferred()
 
         d = defer.maybeDeferred(self._start)
@@ -228,20 +230,20 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @async_to_deferred
     async def interrupt(self, why) -> None:
-        log.msg("RemoteCommand.interrupt", self, why)
+        self._logger.info(f"RemoteCommand.interrupt {self}, {why}")
 
         if self.conn and isinstance(why, Failure) and why.check(error.ConnectionLost):
             # Note that we may be in the process of interruption and waiting for the worker to
             # return the final results when the connection is disconnected.
-            log.msg("RemoteCommand.interrupt: lost worker")
+            self._logger.info("RemoteCommand.interrupt: lost worker")
             self.conn = None
             self._finished(why)
             return
         if not self.active or self.interrupted:
-            log.msg(" but this RemoteCommand is already inactive")
+            self._logger.info(" but this RemoteCommand is already inactive")
             return
         if not self.conn:
-            log.msg(" but our .conn went away")
+            self._logger.info(" but our .conn went away")
             return
 
         self.interrupted = True
@@ -254,7 +256,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             await self.conn.remoteInterruptCommand(self.builder_name, self.commandID, str(why))
             # the worker may not have remote_interruptCommand
         except Exception as e:
-            log.msg("RemoteCommand.interrupt failed", self, e)
+            self._logger.info(f"RemoteCommand.interrupt failed {self} {e}")
 
     def remote_update_msgpack(self, updates: list[tuple[str, Any]]) -> defer.Deferred[None]:
         assert self.worker is not None
@@ -402,7 +404,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         if logname in self.logs:
             await self.logs[logname].add_stdout_lines(data)
         else:
-            log.msg(f"{self}.addToLog: no such log {logname}")
+            self._logger.info(f"{self}.addToLog: no such log {logname}")
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     @async_to_deferred
@@ -413,7 +415,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             return self.step.build.properties.cleanupTextFromSecrets(data)
 
         if self.debug:
-            log.msg(f"Update[{key}]: {value}")
+            self._logger.info(f"Update[{key}]: {value}")
         if key == "stdout":
             await self.add_stdout_lines(cleanup(value), is_flushed)
         if key == "stderr":
@@ -425,7 +427,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             await self.addToLog(logname, cleanup(data))
         if key == "rc":
             rc = self.rc = value
-            log.msg(f"{self} rc={rc}")
+            self._logger.info(f"{self} rc={rc}")
             await self.add_header_lines(f"program finished with exit code {rc}\n")
         if key == "elapsed":
             self._remoteElapsed = value
@@ -460,7 +462,7 @@ class RemoteCommand(base.RemoteCommandImpl):
                     if maybeFailure:
                         await loog.addHeader(f"\nremoteFailed: {maybeFailure}")
                     else:
-                        log.msg(f"closing log {loog}")
+                        self._logger.info(f"closing log {loog}")
                     await loog.finish()
 
         if maybeFailure:
@@ -581,7 +583,7 @@ class RemoteShellCommand(RemoteCommand):
             if self.step.workerVersionIsOlderThan("shell", "2.16"):
                 self.args.pop('sigtermTime', None)
         what = f"command '{self.fake_command}' in dir '{self.args['workdir']}'"
-        log.msg(what)
+        self._logger.info(what)
         return super()._start()
 
     def __repr__(self):
