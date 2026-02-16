@@ -43,7 +43,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
 
     @defer.inlineCallbacks
     def onJoin(self, details):
-        self._logger.info("Wamp connection succeed!")
+        self._logger.info("Wamp connection succeed (authid={authid})!", authid=self.authid)
         for handler in [self, *self.services]:
             yield self.register(handler)
             yield self.subscribe(handler)
