@@ -979,7 +979,7 @@ class ShellMixin:
     want_stdout = True
     want_stderr = True
     usePTY: bool | None = None
-    merge_streams = False
+    merge_streams: bool = False
     logfiles: dict[str, str] = {}
     lazylogfiles: bool = False
     timeout = 1200

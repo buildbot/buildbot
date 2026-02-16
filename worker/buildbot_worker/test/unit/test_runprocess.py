@@ -247,6 +247,26 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
+    def testMergeStreamsHeader(self) -> InlineCallbacksType[None]:
+        """When mergeStreams=True, a header message should be emitted"""
+        s = runprocess.RunProcess(
+            0,
+            stderrCommand("hello"),
+            self.basedir,
+            'utf-8',
+            self.send_update,
+            mergeStreams=True,
+        )
+
+        yield s.start()
+
+        headers = [data for tag, data in self.updates if tag == 'header']
+        self.assertTrue(
+            any('merging stdout and stderr' in h for h in headers),
+            f"Expected 'merging stdout and stderr' header, got headers: {headers}",
+        )
+
+    @defer.inlineCallbacks
     def test_incrementalDecoder(self) -> InlineCallbacksType[None]:
         s = runprocess.RunProcess(
             0, stderrCommand("hello"), self.basedir, 'utf-8', self.send_update, sendStderr=True
