@@ -19,6 +19,7 @@ from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import Service
 from autobahn.wamp.exception import TransportLost
 from twisted.internet import defer
+from twisted.logger import Logger
 from twisted.python import log
 
 from buildbot.util import bytes2unicode
@@ -38,9 +39,11 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         self.leaving = False
         self.setServiceParent(config.extra['parent'])
 
+        self._logger = Logger("WampAppSessionMasterService")
+
     @defer.inlineCallbacks
     def onJoin(self, details):
-        log.msg("Wamp connection succeed!")
+        self._logger.info("Wamp connection succeed (authid={authid})!", authid=self.authid)
         for handler in [self, *self.services]:
             yield self.register(handler)
             yield self.subscribe(handler)
@@ -59,13 +62,13 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         # This is quite complicated, and I believe much better handled in autobahn
         # It is possible that such failure is practically non-existent
         # so for now, we just crash the master
-        log.msg("Guru meditation! We have been disconnected from wamp server")
-        log.msg("We don't know how to recover this without restarting the whole system")
-        log.msg(str(details))
+        self._logger.info("Guru meditation! We have been disconnected from wamp server")
+        self._logger.info("We don't know how to recover this without restarting the whole system")
+        self._logger.info(str(details))
         yield self.master.stopService()
 
     def onUserError(self, e, msg):
-        log.err(e, msg)
+        self._logger.failure(msg, e)
 
 
 def make(config):
