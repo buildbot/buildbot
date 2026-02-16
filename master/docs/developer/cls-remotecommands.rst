@@ -188,7 +188,7 @@ RemoteCommand
 
         Add data to a logfile other than ``stdio``.
 
-.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, max_lines=None, sigtermTime=None, logfiles={}, usePTY=None, logEnviron=True, collectStdio=False, collectStderr=False, interruptSignal=None, initialStdin=None, decodeRC=None, stdioLogName='stdio')
+.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, max_lines=None, sigtermTime=None, logfiles={}, usePTY=None, merge_streams=False, logEnviron=True, collectStdio=False, collectStderr=False, interruptSignal=None, initialStdin=None, decodeRC=None, stdioLogName='stdio')
 
     :param workdir: directory in which the command should be executed, relative to the builder's basedir
     :param command: shell command to run
@@ -204,6 +204,9 @@ RemoteCommand
     :param env: A dictionary of environment variables to augment or replace the existing environment on the worker
     :param logfiles: Additional logfiles to request from the worker
     :param usePTY: True to use a PTY, false to not use a PTY; the default value is False
+    :param merge_streams: If True, stderr output is merged into the stdout stream at the application
+                          level, providing a single combined output. Setting both ``merge_streams`` and
+                          ``usePTY`` is redundant since a PTY already merges the streams
     :param logEnviron: If false, do not log the environment on the worker
     :param collectStdout: If True, collect the command's stdout
     :param collectStderr: If True, collect the command's stderr

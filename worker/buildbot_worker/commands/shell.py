@@ -47,6 +47,7 @@ class WorkerShellCommand(base.Command):
             initialStdin=args.get('initial_stdin'),
             logfiles=args.get('logfiles', {}),
             usePTY=args.get('usePTY', False),
+            mergeStreams=args.get('merge_streams', False),
             logEnviron=args.get('logEnviron', True),
         )
         if args.get('interruptSignal'):

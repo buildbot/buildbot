@@ -102,6 +102,14 @@ The :bb:step:`ShellCommand` arguments are:
     Like ``want_stdout`` but for :file:`stderr`.
     Note that commands that run through a PTY do not have separate :file:`stdout`/:file:`stderr` streams, and both are merged into :file:`stdout`.
 
+``merge_streams``
+    If ``True``, stderr output is merged into the stdout stream at the application level (defaults to ``False``).
+    This provides a single combined output stream without requiring a PTY or shell-level ``2>&1`` redirection.
+
+    Note that stdout and stderr are still received through separate file descriptors, so strict chronological ordering between them is not guaranteed.
+    When ``merge_streams`` is enabled, ``collectStderr`` will still accumulate stderr data, but the data will also appear in the stdout log.
+    Setting both ``merge_streams`` and ``usePTY`` is redundant, since a PTY already merges the streams.
+
 ``usePTY``
     If ``True``, this command will be run in a ``pty`` (defaults to ``False``).
     This option is not available on Windows.

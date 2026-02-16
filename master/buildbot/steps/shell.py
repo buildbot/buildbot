@@ -172,6 +172,7 @@ class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
                 "logfiles",
                 "lazylogfiles",
                 "usePTY",
+                "merge_streams",
                 "logEnviron",
                 "collectStdout",
                 "collectStderr",
