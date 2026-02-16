@@ -266,6 +266,10 @@ class RunProcessPP(protocol.ProcessProtocol):
             # When merging streams, route stderr data through stdout
             # so both appear as 'stdout' updates in the build log.
             self.command.addStdout(decodedData)
+            # Still accumulate in self.stderr if keepStderr is set,
+            # so that collectStderr continues to work.
+            if self.command.keepStderr:
+                self.command.stderr += decodedData
         else:
             self.command.addStderr(decodedData)
 

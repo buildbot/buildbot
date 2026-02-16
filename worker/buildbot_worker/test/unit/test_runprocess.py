@@ -267,6 +267,32 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
+    def testMergeStreamsKeepStderr(self) -> InlineCallbacksType[None]:
+        """When mergeStreams=True and keepStderr=True, stderr data should still
+        be accumulated in self.stderr even though it is sent as stdout."""
+        s = runprocess.RunProcess(
+            0,
+            stderrCommand("hello"),
+            self.basedir,
+            'utf-8',
+            self.send_update,
+            mergeStreams=True,
+            keepStderr=True,
+        )
+
+        yield s.start()
+
+        # stderr data should be accumulated via keepStderr
+        self.assertIn('hello', s.stderr)
+        # but it should also appear as stdout updates (merged)
+        self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
+        # and no stderr updates should be sent
+        self.assertFalse(
+            any(tag == 'stderr' for tag, _ in self.updates),
+            f"Expected no stderr updates when mergeStreams=True, got: {self.show()}",
+        )
+
+    @defer.inlineCallbacks
     def test_incrementalDecoder(self) -> InlineCallbacksType[None]:
         s = runprocess.RunProcess(
             0, stderrCommand("hello"), self.basedir, 'utf-8', self.send_update, sendStderr=True
