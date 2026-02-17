@@ -65,11 +65,15 @@ export const PendingBuildRequestsTable = observer(
       return buildRequestsQuery.array.map((buildRequest) => {
         const builder = buildersQuery.getNthOfParentOrNull(buildRequest.id, 0);
 
-        const props = buildRequest.properties ?? {};
-        const ownerText =
-          (props as any)?.owner?.[0] ??
-          (props as any)?.owners?.[0]?.[0] ??
-          '(none)';
+        const props = (buildRequest.properties ?? {}) as Record<string, any>;
+
+        const owner =
+          Array.isArray(props.owner) ? props.owner[0] : undefined;
+
+        const owners0 =
+          Array.isArray(props.owners) && Array.isArray(props.owners[0]) ? props.owners[0][0] : undefined;
+
+        const ownerText = owner ?? owners0 ?? '(none)';
 
         const propertiesElements = Object.entries(props).map(([name, valueSource]) => {
           const value = Array.isArray(valueSource) ? valueSource[0] : valueSource;
