@@ -63,6 +63,7 @@ export const ProjectPendingBuildRequestsWidget = observer(
           order: ['-priority', '-submitted_at'],
           claimed: false,
           builderid__eq: builderIds,
+          property: ['owner', 'owners'],
         },
       }),
     );

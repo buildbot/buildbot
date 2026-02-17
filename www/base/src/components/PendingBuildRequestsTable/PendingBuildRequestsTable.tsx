@@ -43,9 +43,6 @@ export const PendingBuildRequestsTable = observer(
     const now = useCurrentTime();
     const accessor = useDataAccessor([]);
 
-    const propertiesQuery = useDataApiQuery(() =>
-      buildRequestsQuery.getRelatedProperties((br) => br.getProperties()),
-    );
     const buildersQuery = useDataApiQuery(() =>
       buildRequestsQuery.getRelated((br) =>
         Builder.getAll(accessor, {id: br.builderid.toString()}),
@@ -68,17 +65,20 @@ export const PendingBuildRequestsTable = observer(
     const renderBuildRequests = () => {
       return buildRequestsQuery.array.map((buildRequest) => {
         const builder = buildersQuery.getNthOfParentOrNull(buildRequest.id, 0);
-        const properties = propertiesQuery.getParentCollectionOrEmpty(buildRequest.id);
 
-        const propertiesElements = Array.from(properties.properties.entries()).map(
-          ([name, valueSource]) => {
-            return (
-              <li key={name}>
-                {name} = {JSON.stringify(valueSource[0])}
-              </li>
-            );
-          },
-        );
+        const props = buildRequest.properties ?? {};
+        const ownerText =
+          getPropertyValueOrDefault(props, 'owner', null) ??
+          getPropertyValueOrDefault(props, 'owners', null)?.[0] ??
+          '(none)';
+
+        const propertiesElements = Object.entries(props).map(([name, valueSource]) => {
+          return (
+            <li key={name}>
+              {name} = {JSON.stringify(Array.isArray(valueSource) ? valueSource[0] : valueSource)}
+            </li>
+          );
+        });
 
         return (
           <tr
@@ -109,7 +109,7 @@ export const PendingBuildRequestsTable = observer(
               </span>
             </td>
             <td>
-              <span>{getPropertyValueOrDefault(buildRequest.properties, 'owner', '(none)')}</span>
+              <span>{ownerText}</span>
             </td>
             <td>
               <ul>{propertiesElements}</ul>
