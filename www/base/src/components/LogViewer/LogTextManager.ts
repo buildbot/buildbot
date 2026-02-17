@@ -433,7 +433,7 @@ export class LogTextManager {
     const lineIndexInChunk = index - chunk.firstLine;
     const lineType = chunk.lineTypes[lineIndexInChunk];
     const lineStartInChunk = chunk.textLineBounds[lineIndexInChunk];
-    const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1] - 1; // exclude trailing newline
+    const lineEndInChunk = chunk.textLineBounds[lineIndexInChunk + 1];
     const lineCssClassesWithText = this.getCssClassesForChunk(chunkIndex)[lineIndexInChunk];
     const lineContent = escapeClassesToHtml(
       chunk.text,
