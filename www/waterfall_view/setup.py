@@ -39,5 +39,5 @@ setup_www_plugin(
         [buildbot.www]
         waterfall_view = buildbot_waterfall_view:ep
     """,
-    classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
+    license='GPL-2.0-or-later',
 )

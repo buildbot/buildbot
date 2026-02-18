@@ -26,5 +26,5 @@ setup_www_plugin(
         [buildbot.www]
         nestedexample = buildbot_nestedexample:ep
     """,
-    classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
+    license='GPL-2.0-or-later',
 )
