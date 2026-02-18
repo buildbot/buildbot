@@ -624,11 +624,14 @@ class TestTelegramService(TestReactorMixin, unittest.TestCase):
         self.assertNotIn(-12345678, bot.channels)
 
         if platform.python_implementation() != 'PyPy':
-            self.assertEqual(sys.getrefcount(u), 2)  # local, sys
+            py_ver_str = platform.python_version_tuple()[:2]
+            py_ver = (int(py_ver_str[0]), int(py_ver_str[1]))
+            ref_counts = (2, 3, 2) if py_ver <= (3, 13) else (1, 2, 1)
+            self.assertEqual(sys.getrefcount(u), ref_counts[0])  # local, sys
             c = u.channel
-            self.assertEqual(sys.getrefcount(c), 3)  # local, contact, sys
+            self.assertEqual(sys.getrefcount(c), ref_counts[1])  # local, contact, sys
             del u
-            self.assertEqual(sys.getrefcount(c), 2)  # local, sys
+            self.assertEqual(sys.getrefcount(c), ref_counts[2])  # local, sys
 
     @defer.inlineCallbacks
     def test_getContact_valid(self):
