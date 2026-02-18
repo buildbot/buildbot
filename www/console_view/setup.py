@@ -45,5 +45,5 @@ setup_www_plugin(
         [buildbot.www]
         console_view = buildbot_console_view:ep
     """,
-    classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
+    license='GPL-2.0-or-later',
 )
