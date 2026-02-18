@@ -118,3 +118,12 @@ warnings.filterwarnings(
     r".* is deprecated\. Please use .* instead\.",
     category=DeprecationWarning,
 )
+
+# Twisted <= 25.5.0
+# builtins.DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+
+warnings.filterwarnings(
+    "ignore",
+    r"'asyncio\.iscoroutinefunction'\ is\ deprecated\ and\ slated\ for\ removal\ in\ Python\ 3\.16;\ use\ inspect\.iscoroutinefunction\(\)\ instead",
+    category=DeprecationWarning,
+)
