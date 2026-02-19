@@ -21,6 +21,7 @@ VENV_NAME := .venv$(VENV_PY_VERSION)
 PIP ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/pip
 VENV_PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
 YARN := $(shell which yarnpkg || which yarn)
+MYPY := mypy --sqlite-cache
 
 check_for_yarn:
 	@if [ "$(YARN)" = "" ]; then echo "yarnpkg or yarn is not installed" ; exit 1; fi
@@ -112,11 +113,16 @@ prettier: check_for_yarn
 ruff:
 	ruff format .
 
-mypy:
-	mypy --platform linux --config-file ./pyproject.toml master/buildbot
-	mypy --platform win32 --config-file ./pyproject.toml master/buildbot
-	mypy --platform linux --config-file ./worker/.mypy.ini worker/buildbot_worker
-	mypy --platform win32 --config-file ./worker/.mypy.ini worker/buildbot_worker
+mypy-master-linux:
+	$(MYPY) --cache-dir ".mypy_cache/master/linux" --platform linux --config-file ./pyproject.toml master/buildbot
+mypy-master-win32:
+	$(MYPY) --cache-dir ".mypy_cache/master/win32" --platform win32 --config-file ./pyproject.toml master/buildbot
+mypy-worker-linux:
+	$(MYPY) --cache-dir ".mypy_cache/worker/linux" --platform linux --config-file ./worker/.mypy.ini worker/buildbot_worker
+mypy-worker-win32:
+	$(MYPY) --cache-dir ".mypy_cache/worker/win32" --platform win32 --config-file ./worker/.mypy.ini worker/buildbot_worker
+
+mypy: mypy-master-linux mypy-master-win32 mypy-worker-linux mypy-worker-win32
 
 docker: docker-buildbot-worker docker-buildbot-master
 	echo done
