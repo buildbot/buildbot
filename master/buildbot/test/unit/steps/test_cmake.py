@@ -31,12 +31,12 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_test_reactor()
         yield self.setup_test_build_step()
 
-    def expect_and_run_command(self, *params):
+    async def expect_and_run_command(self, *params) -> None:
         command = [CMake.DEFAULT_CMAKE, *list(params)]
 
         self.expect_commands(ExpectShell(command=command, workdir='wkdir').exit(0))
         self.expect_outcome(result=SUCCESS)
-        return self.run_step()
+        await self.run_step()
 
     def test_definitions_type(self):
         with self.assertRaises(ConfigErrors):
@@ -71,10 +71,10 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_definitions(self):
+    async def test_definitions(self):
         definition = {'a': 'b'}
         self.setup_step(CMake(definitions=definition))
-        self.expect_and_run_command('-Da=b')
+        await self.expect_and_run_command('-Da=b')
 
     def test_environment(self):
         command = [CMake.DEFAULT_CMAKE]
@@ -84,61 +84,61 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_definitions_interpolation(self):
+    async def test_definitions_interpolation(self):
         definitions = {'a': Property('b')}
 
         self.setup_step(CMake(definitions=definitions))
         self.build.setProperty('b', 'real_b', source='test')
-        self.expect_and_run_command('-Da=real_b')
+        await self.expect_and_run_command('-Da=real_b')
 
-    def test_definitions_renderable(self):
+    async def test_definitions_renderable(self):
         definitions = Property('b')
         self.setup_step(CMake(definitions=definitions))
         self.build.setProperty('b', {'a': 'real_b'}, source='test')
-        self.expect_and_run_command('-Da=real_b')
+        await self.expect_and_run_command('-Da=real_b')
 
-    def test_generator(self):
+    async def test_generator(self):
         generator = 'Ninja'
 
         self.setup_step(CMake(generator=generator))
-        self.expect_and_run_command('-G', generator)
+        await self.expect_and_run_command('-G', generator)
 
-    def test_generator_interpolation(self):
+    async def test_generator_interpolation(self):
         value = 'Our_GENERATOR'
 
         self.setup_step(CMake(generator=Property('GENERATOR')))
         self.build.setProperty('GENERATOR', value, source='test')
 
-        self.expect_and_run_command('-G', value)
+        await self.expect_and_run_command('-G', value)
 
-    def test_options(self):
+    async def test_options(self):
         options = ('A', 'B')
 
         self.setup_step(CMake(options=options))
-        self.expect_and_run_command(*options)
+        await self.expect_and_run_command(*options)
 
-    def test_options_interpolation(self):
+    async def test_options_interpolation(self):
         prop = 'option'
         value = 'value'
 
         self.setup_step(CMake(options=(Property(prop),)))
         self.build.setProperty(prop, value, source='test')
-        self.expect_and_run_command(value)
+        await self.expect_and_run_command(value)
 
-    def test_path(self):
+    async def test_path(self):
         path = 'some/path'
 
         self.setup_step(CMake(path=path))
-        self.expect_and_run_command(path)
+        await self.expect_and_run_command(path)
 
-    def test_path_interpolation(self):
+    async def test_path_interpolation(self):
         prop = 'path'
         value = 'some/path'
 
         self.setup_step(CMake(path=Property(prop)))
         self.build.setProperty(prop, value, source='test')
-        self.expect_and_run_command(value)
+        await self.expect_and_run_command(value)
 
-    def test_options_path(self):
+    async def test_options_path(self):
         self.setup_step(CMake(path='some/path', options=('A', 'B')))
-        self.expect_and_run_command('A', 'B', 'some/path')
+        await self.expect_and_run_command('A', 'B', 'some/path')
