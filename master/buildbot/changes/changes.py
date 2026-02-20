@@ -166,6 +166,9 @@ class Change:
             raise NotImplementedError
         return self.number == other.number
 
+    def __hash__(self) -> int:
+        return hash(self.number)
+
     def __ne__(self, other: object) -> bool:
         if not isinstance(other, Change):
             raise NotImplementedError
