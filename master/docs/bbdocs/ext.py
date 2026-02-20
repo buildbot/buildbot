@@ -411,12 +411,12 @@ class BBDomain(Domain):
                     # for some reason we end up with multiple references to the same things in
                     # multiple domains. If both instances point to the same location, ignore it,
                     # otherwise issue a warning.
-                    if other_data[target_name] == self_data[target_name]:
+                    if target_data == self_data[target_name]:
                         continue
 
                     self_path = f'{self.env.doc2path(self_data[target_name][0])}#{self_data[target_name][1]}'
 
-                    other_path = f'{self.env.doc2path(other_data[target_name][0])}#{other_data[target_name][1]}'
+                    other_path = f'{self.env.doc2path(target_data[0])}#{target_data[1]}'
 
                     logger.warning(
                         f'Duplicate index {typ} reference {target_name} in {self_path}, other instance in {other_path}'

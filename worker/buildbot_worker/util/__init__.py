@@ -87,6 +87,9 @@ class Obfuscated(Generic[StrOrBytesType]):
             and other.fake == self.fake
         )
 
+    def __hash__(self) -> int:
+        return hash((self.real, self.fake))
+
     @overload
     @staticmethod
     def to_text(s: bytes) -> bytes: ...
