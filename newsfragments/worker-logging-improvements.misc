@@ -1,0 +1,1 @@
+Logs entries in ``twisted.log`` related to a Worker interaction are enriched with the worker name and IP

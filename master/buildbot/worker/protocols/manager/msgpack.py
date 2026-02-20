@@ -25,9 +25,10 @@ from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
 from autobahn.websocket.types import ConnectionDeny
 from twisted.internet import defer
-from twisted.python import log
+from twisted.logger import Logger
 
 from buildbot.util import deferwaiter
+from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.protocols.manager.base import BaseDispatcher
 from buildbot.worker.protocols.manager.base import BaseManager
 from buildbot.worker.protocols.msgpack import Connection
@@ -35,7 +36,7 @@ from buildbot.worker.protocols.msgpack import Connection
 if TYPE_CHECKING:
     from autobahn.websocket.types import ConnectionRequest
     from twisted.internet.defer import Deferred
-    from twisted.internet.interfaces import IListeningPort
+    from twisted.internet.protocol import ServerFactory
 
     from buildbot.util.twisted import InlineCallbacksType
     from buildbot.worker.protocols.base import FileReaderImpl
@@ -80,6 +81,25 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.worker_name: str | None = None
         self._deferwaiter = deferwaiter.DeferWaiter()
 
+        self._logger = Logger()
+        self._update_logger_ns()
+
+    def _update_logger_ns(self, peer: str | None = None) -> None:
+        namespace = self.__class__.__name__
+        parts: list[str] = []
+        if self.connection is not None:
+            parts.append(self.connection.get_peer())
+        elif peer is not None:
+            parts.append(peer)
+
+        if self.worker_name:
+            parts.append(self.worker_name)
+
+        if parts:
+            namespace += '<' + ','.join(parts) + '>'
+
+        self._logger.namespace = namespace
+
     def get_dispatcher(self) -> Dispatcher:
         # This is an instance of class msgpack.Dispatcher set in Dispatcher.__init__().
         # self.factory is set on the protocol instance when creating it in Twisted internals
@@ -88,7 +108,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     @defer.inlineCallbacks
     def onOpen(self) -> InlineCallbacksType[None]:
         if self.debug:
-            log.msg("WebSocket connection open.")
+            self._logger.info("WebSocket connection open.")
         self.seq_number = 0
         self.command_id_to_command_map: dict[str, RemoteCommandImpl] = {}
         self.command_id_to_reader_map: dict[str, FileReaderImpl] = {}
@@ -97,11 +117,11 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
     def maybe_log_worker_to_master_msg(self, message: dict[str, Any]) -> None:
         if self.debug:
-            log.msg("WORKER -> MASTER message: ", message)
+            self._logger.info("WORKER -> MASTER message: {msg!r}", msg=message)
 
     def maybe_log_master_to_worker_msg(self, message: dict[str, Any]) -> None:
         if self.debug:
-            log.msg("MASTER -> WORKER message: ", message)
+            self._logger.info("MASTER -> WORKER message: {msg!r}", msg=message)
 
     def contains_msg_key(self, msg: dict[str, Any], keys: tuple[str, ...]) -> None:
         for k in keys:
@@ -117,11 +137,12 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             if self.worker_name in dispatcher.users:
                 _, afactory = dispatcher.users[self.worker_name]
                 self.connection = yield afactory(self, self.worker_name)
+                self._update_logger_ns()
                 yield cast(Connection, self.connection).attached(self)
             else:
                 self.sendClose()
         except Exception as e:
-            log.msg(f"Connection opening failed: {e}")
+            self._logger.info(f"Connection opening failed: {e}")
             self.sendClose()
         finally:
             dispatcher.master.release_lock()
@@ -301,14 +322,14 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     def onMessage(self, payload: bytes, isBinary: bool) -> None:
         if not isBinary:
             name = self.worker_name if self.worker_name is not None else '<???>'
-            log.msg(f'Message type from worker {name} unsupported')
+            self._logger.info(f'Message type from worker {name} unsupported')
             return
 
         msg = msgpack.unpackb(payload, raw=False)
         self.maybe_log_worker_to_master_msg(msg)
 
         if 'seq_number' not in msg or 'op' not in msg:
-            log.msg(f'Invalid message from worker: {msg}')
+            self._logger.info(f'Invalid message from worker: {msg}')
             return
 
         if msg['op'] != "response" and self.connection is None:
@@ -365,7 +386,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     @defer.inlineCallbacks
     def onConnect(self, request: ConnectionRequest) -> InlineCallbacksType[None]:
         if self.debug:
-            log.msg(f"Client connecting: {request.peer}")
+            self._logger.info(f"Client connecting: {request.peer}")
 
         value = request.headers.get('authorization')
         if value is None:
@@ -397,9 +418,11 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         if not authentication:
             raise ConnectionDeny(401, "Unauthorized")
 
+        self._update_logger_ns(peer=request.peer)
+
     def onClose(self, wasClean: bool, code: int | None, reason: str) -> None:
         if self.debug:
-            log.msg(f"WebSocket connection closed: {reason}")
+            self._logger.info(f"WebSocket connection closed: {reason}")
         # stop waiting for the responses of all commands
         for d in self.seq_num_to_waiters_map.values():
             d.errback(ConnectioLostError("Connection lost"))
@@ -407,13 +430,15 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
         if self.connection is not None:
             self.connection.detached(self)
+            self.connection = None
+        self.worker_name = None
+        self._update_logger_ns()
 
 
 class Dispatcher(BaseDispatcher):
     DUMMY_PORT = 1
 
-    def __init__(self, config_port: str | int) -> None:
-        super().__init__(config_port=config_port)
+    def _create_server_factory(self, config_port: str | int) -> ServerFactory:
         try:
             port = int(config_port)
         except ValueError as e:
@@ -427,19 +452,22 @@ class Dispatcher(BaseDispatcher):
         if self._zero_port:
             port = self.DUMMY_PORT
 
-        self.serverFactory = WebSocketServerFactory(f"ws://0.0.0.0:{port}")
-        self.serverFactory.buildbot_dispatcher = self  # type: ignore[attr-defined]
-        self.serverFactory.protocol = BuildbotWebSocketServerProtocol
+        serverFactory = WebSocketServerFactory(f"ws://0.0.0.0:{port}")
+        serverFactory.buildbot_dispatcher = self
+        serverFactory.protocol = BuildbotWebSocketServerProtocol
+        return serverFactory
 
-    def start_listening_port(self) -> IListeningPort:
-        port = super().start_listening_port()
+    @async_to_deferred
+    async def startService(self) -> None:
+        await super().startService()
+
         if self._zero_port:
             # Check that websocket port is actually stored into the port attribute, as we're
             # relying on undocumented behavior.
             if self.serverFactory.port != self.DUMMY_PORT:  # type: ignore[attr-defined]
                 raise RuntimeError("Expected websocket port to be set to dummy port")
-            self.serverFactory.port = port.getHost().port  # type: ignore[attr-defined]
-        return port
+            assert self.bound_port is not None
+            self.serverFactory.port = self.bound_port  # type: ignore[attr-defined]
 
 
 class MsgManager(BaseManager[Dispatcher]):

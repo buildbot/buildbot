@@ -24,6 +24,7 @@ import msgpack
 from autobahn.websocket.types import ConnectionDeny
 from parameterized import parameterized
 from twisted.internet import defer
+from twisted.logger import capturedLogs
 from twisted.trial import unittest
 
 from buildbot.worker.protocols.base import FileReaderImpl
@@ -125,14 +126,16 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     @defer.inlineCallbacks
     def connect_authenticated_worker(self) -> InlineCallbacksType[None]:
         # worker has to be authenticated before opening the connection
-        pfactory = mock.Mock()
-        pfactory.connection = mock.Mock()
+        connection = mock.Mock()
+        connection.get_peer = mock.Mock(return_value="mock-conn-peer")
+        pfactory = mock.Mock(return_value=connection)
+        pfactory.connection = connection
 
         self.setup_mock_users({'name': ('pass', pfactory)})
 
         request = mock.Mock()
         request.headers = {"authorization": 'Basic bmFtZTpwYXNz'}
-        request.peer = ''
+        request.peer = 'mock-request-peer'
 
         yield self.protocol.onConnect(request)
         yield self.protocol.onOpen()
@@ -163,9 +166,16 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('update_upload_directory_write_seq_number', {'op': 'update_upload_directory_write'}),
     ])
     def test_msg_missing_arg(self, name: str, msg: dict[str, Any]) -> None:
-        with mock.patch('twisted.python.log.msg') as mock_log:
+        with capturedLogs() as captured:
             self.protocol.onMessage(msgpack.packb(msg), True)
-            mock_log.assert_any_call(f'Invalid message from worker: {msg}')
+
+        self.assertEqual(len(captured), 2)
+        self.assertEqual(captured[0]["log_format"], "WORKER -> MASTER message: {msg!r}")
+        self.assertEqual(captured[0]["msg"], msg)
+
+        # for some reason, this happens in tests
+        self.assertEqual(captured[1]["log_format"], f'Invalid message from worker: {msg}')
+        self.assertTrue(str(captured[1]["log_legacy"]).startswith("Unable to format event "))
 
         # if msg does not have 'sep_number' or 'op', response sendMessage should not be called
         self.protocol.sendMessage.assert_not_called()
@@ -618,6 +628,8 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         # Worker disconnected, master will never get the response message.
         # Stop waiting and raise Exception
+        connection = self.protocol.connection
+
         self.protocol.onClose(True, None, 'worker is gone')
         self.assertEqual(d1.called, True)
         with self.assertRaises(ConnectioLostError):
@@ -627,8 +639,8 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         with self.assertRaises(ConnectioLostError):
             yield d2
 
-        assert self.protocol.connection is not None
-        assert isinstance(self.protocol.connection.detached, mock.Mock)
-        self.protocol.connection.detached.assert_called()
+        assert connection is not None
+        assert isinstance(connection.detached, mock.Mock)
+        connection.detached.assert_called()
         # contents of dict_def are deleted to stop waiting for the responses of all commands
         self.assertEqual(len(self.protocol.seq_num_to_waiters_map), 0)

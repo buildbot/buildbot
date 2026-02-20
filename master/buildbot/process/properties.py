@@ -270,6 +270,8 @@ class RenderableOperatorsMixin:
     Properties and Interpolate instances can be manipulated with standard operators.
     """
 
+    __hash__: Callable[[], int] = None  # type: ignore[assignment]
+
     def __eq__(self, other):
         return _OperatorRenderer(self, other, "==", lambda v1, v2: v1 == v2)
 
@@ -339,6 +341,8 @@ class _OperatorRenderer(RenderableOperatorsMixin, util.ComparableMixin):
 
     def __repr__(self):
         return f'{self.v1!r} {self.cstr!s} {self.v2!r}'
+
+    __hash__ = util.ComparableMixin.__hash__
 
 
 class _PropertyMap:
@@ -636,6 +640,8 @@ class Interpolate(RenderableOperatorsMixin, util.ComparableMixin):
             self.interpolations = {}
             self._parse(fmtstring)
 
+    __hash__ = util.ComparableMixin.__hash__
+
     def __repr__(self):
         if self.args:
             return f'Interpolate({self.fmtstring!r}, *{self.args!r})'
@@ -836,6 +842,8 @@ class Property(RenderableOperatorsMixin, util.ComparableMixin):
         self.default = default
         self.defaultWhenFalse = defaultWhenFalse
 
+    __hash__ = util.ComparableMixin.__hash__
+
     def __repr__(self):
         return f"Property({self.key})"
 
@@ -871,6 +879,8 @@ class FlattenList(RenderableOperatorsMixin, util.ComparableMixin):
         """
         self.nestedlist = nestedlist
         self.types = types
+
+    __hash__ = util.ComparableMixin.__hash__
 
     @defer.inlineCallbacks
     def getRenderingFor(self, props):
