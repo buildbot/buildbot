@@ -1,0 +1,1 @@
+Fixed favicon missing on most pages due to double slash in URL path (:issue:`8722`).
