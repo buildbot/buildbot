@@ -407,6 +407,8 @@ class ListResult(UserList):
             f"total={self.total!r}, limit={self.limit!r})"
         )
 
+    __hash__ = None
+
     def __eq__(self, other):
         if isinstance(other, ListResult):
             return (

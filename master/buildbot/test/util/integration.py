@@ -338,7 +338,8 @@ class TestedRealMaster(TestedMaster):
                 # We currently don't handle connection closing cleanly.
                 dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)
 
-            worker_port = dispatcher.port.getHost().port
+            assert dispatcher.bound_port is not None
+            worker_port = dispatcher.bound_port
 
             # create a worker, and attach it to the master, it will be started, and stopped
             # along with the master

@@ -32,8 +32,9 @@ from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.worker import AbstractLatentWorker
 
 try:
-    import docker
     from docker.errors import NotFound
+
+    import docker
 
     docker_py_version = parse_version(docker.__version__)  # type: ignore[attr-defined]
 except ImportError:
