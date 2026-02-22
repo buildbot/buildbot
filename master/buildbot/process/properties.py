@@ -265,7 +265,7 @@ class PropertiesMixin:
 
 
 @implementer(IRenderable)
-class RenderableOperatorsMixin:
+class RenderableOperatorsMixin:  # noqa: PLW1641
     """
     Properties and Interpolate instances can be manipulated with standard operators.
     """

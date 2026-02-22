@@ -422,6 +422,8 @@ class ListResult(UserList):
             and (self.total is None or self.total == len(other))
         )
 
+    __hash__ = None
+
     def __ne__(self, other):
         return not self == other
 
