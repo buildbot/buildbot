@@ -11,7 +11,7 @@ coverage==7.13.2; python_version >= "3.10"
 docker==7.1.0
 hvac==2.3.0
 ldap3==2.9.1
-mypy==1.16.0
+mypy==1.19.1
 mypy-zope==1.0.14
 psutil==7.0.0
 
