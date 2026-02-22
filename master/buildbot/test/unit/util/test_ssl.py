@@ -24,7 +24,7 @@ from buildbot.util import ssl
 class Tests(unittest.TestCase, ConfigErrorsMixin):
     @ssl.skipUnless
     def test_ClientContextFactory(self):
-        from twisted.internet.ssl import ClientContextFactory
+        from twisted.internet.ssl import ClientContextFactory  # noqa: PLC0415
 
         self.assertEqual(ssl.ClientContextFactory, ClientContextFactory)
 

@@ -35,11 +35,11 @@ if TYPE_CHECKING:
 
 
 def get_environment_versions() -> list[tuple[str, str]]:
-    import sys  # pylint: disable=import-outside-toplevel
+    import sys  # noqa: PLC0415
 
-    import twisted  # pylint: disable=import-outside-toplevel
+    import twisted  # noqa: PLC0415
 
-    from buildbot import version as bbversion  # pylint: disable=import-outside-toplevel
+    from buildbot import version as bbversion  # noqa: PLC0415
 
     pyversion = '.'.join(map(str, sys.version_info[:3]))
 

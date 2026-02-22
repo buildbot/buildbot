@@ -69,9 +69,9 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         got_properties = yield self.master.db.buildsets.getBuildsetProperties(bsid)
         self.assertEqual(got_properties, properties)
 
-        from datetime import datetime
+        from datetime import datetime  # noqa: PLC0415
 
-        from buildbot.util import UTC
+        from buildbot.util import UTC  # noqa: PLC0415
 
         self.assertEqual(
             buildset,

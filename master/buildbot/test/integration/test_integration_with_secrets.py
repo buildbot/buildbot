@@ -24,10 +24,10 @@ class SecretsConfig(RunMasterBase):
     @defer.inlineCallbacks
     def setup_config(self, use_with=False):
         c = {}
-        from buildbot.config import BuilderConfig
-        from buildbot.plugins import schedulers
-        from buildbot.plugins import steps
-        from buildbot.process.factory import BuildFactory
+        from buildbot.config import BuilderConfig  # noqa: PLC0415
+        from buildbot.plugins import schedulers  # noqa: PLC0415
+        from buildbot.plugins import steps  # noqa: PLC0415
+        from buildbot.process.factory import BuildFactory  # noqa: PLC0415
 
         c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 

@@ -30,7 +30,7 @@ def exit(level, msg):
 
 
 def main():
-    from optparse import OptionParser
+    from optparse import OptionParser  # noqa: PLC0415
 
     parser = OptionParser(__doc__)
     parser.set_defaults(hostname=None, httpport=None, url=None, verbosity=0)

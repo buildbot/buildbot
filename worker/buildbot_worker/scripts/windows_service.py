@@ -432,7 +432,7 @@ def RegisterWithFirewall(exe_name, description):
     # Register our executable as an exception with Windows Firewall.
     # taken from  http://msdn.microsoft.com/library/default.asp?url=\
     # /library/en-us/ics/ics/wf_adding_an_application.asp
-    from win32com.client import Dispatch
+    from win32com.client import Dispatch  # noqa: PLC0415
 
     # Scope
     NET_FW_SCOPE_ALL = 0
@@ -522,7 +522,7 @@ def ConfigureLogOnAsAServicePolicy(accountName):
 
 def CustomInstall(opts):
     # Register this process with the Windows Firewaall
-    import pythoncom
+    import pythoncom  # noqa: PLC0415
 
     try:
         RegisterWithFirewall(sys.executable, "BuildBot")
@@ -573,7 +573,7 @@ def _WaitForShutdown(h):
     win32event.WaitForSingleObject(h, win32event.INFINITE)
     print("Shutdown requested")
 
-    from twisted.internet import reactor
+    from twisted.internet import reactor  # noqa: PLC0415
 
     reactor.callLater(0, reactor.stop)
 
@@ -582,7 +582,7 @@ def DetermineRunner(bbdir):
     """Checks if the given directory is a buildbot worker or a master and
     returns the appropriate run function."""
     try:
-        import buildbot_worker.scripts.runner
+        import buildbot_worker.scripts.runner  # noqa: PLC0415
 
         tacfile = os.path.join(bbdir, 'buildbot.tac')
 
@@ -596,7 +596,7 @@ def DetermineRunner(bbdir):
         # Use the default
         pass
 
-    import buildbot.scripts.runner
+    import buildbot.scripts.runner  # noqa: PLC0415
 
     return buildbot.scripts.runner.run
 

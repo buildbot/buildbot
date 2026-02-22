@@ -217,8 +217,8 @@ class SubcommandOptions(usage.Options):
 
         if runtime.platformType == 'win32':
             # never trust env-vars, use the proper API
-            from win32com.shell import shell
-            from win32com.shell import shellcon
+            from win32com.shell import shell  # noqa: PLC0415
+            from win32com.shell import shellcon  # noqa: PLC0415
 
             appdata = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
             home = os.path.join(appdata, "buildbot")

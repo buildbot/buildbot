@@ -51,21 +51,21 @@ def patch_testcase_timeout():
 
 @onlyOnce
 def patch_servicechecks():
-    from buildbot.monkeypatches import servicechecks
+    from buildbot.monkeypatches import servicechecks  # noqa: PLC0415
 
     servicechecks.patch()
 
 
 @onlyOnce
 def patch_decorators():
-    from buildbot.monkeypatches import decorators
+    from buildbot.monkeypatches import decorators  # noqa: PLC0415
 
     decorators.patch()
 
 
 @onlyOnce
 def patch_config_for_unit_tests():
-    from buildbot.config.master import set_is_in_unit_tests
+    from buildbot.config.master import set_is_in_unit_tests  # noqa: PLC0415
 
     # by default, buildbot.config warns about not configured buildbotNetUsageData.
     # its important for users to not leak information, but unneeded and painful for tests

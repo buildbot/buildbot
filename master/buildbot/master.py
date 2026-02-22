@@ -70,7 +70,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         super().__init__()
 
         if reactor is None:
-            from twisted.internet import reactor
+            from twisted.internet import reactor  # noqa: PLC0415
         self.reactor = reactor
 
         self.setName("buildmaster")

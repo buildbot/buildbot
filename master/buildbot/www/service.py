@@ -271,11 +271,11 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         plugin_root = root
         current_version = parse_version(twisted.__version__)
         if current_version < parse_version("22.10.0"):
-            from twisted.web.resource import NoResource
+            from twisted.web.resource import NoResource  # noqa: PLC0415
 
             plugin_root = NoResource()
         else:
-            from twisted.web.pages import notFound
+            from twisted.web.pages import notFound  # noqa: PLC0415
 
             plugin_root = cast(resource.Resource, notFound())
         root.putChild(b"plugins", plugin_root)

@@ -719,7 +719,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         config = json.loads(jsonData).get(self.authClass, None)
         if config is None:
             raise unittest.SkipTest(f"{self.authClass} is not in OAUTHCONF file")
-        from buildbot.www import oauth2
+        from buildbot.www import oauth2  # noqa: PLC0415
 
         self.auth = self._instantiateAuth(getattr(oauth2, self.authClass), config)
 
@@ -729,7 +729,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         self.auth.reconfigAuth(master, master.config)
 
     def tearDown(self):
-        from twisted.internet.tcp import Server
+        from twisted.internet.tcp import Server  # noqa: PLC0415
 
         # browsers has the bad habit on not closing the persistent
         # connections, so we need to hack them away to make trial happy

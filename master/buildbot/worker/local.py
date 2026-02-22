@@ -29,7 +29,7 @@ class LocalWorker(Worker):
         self.LocalWorkerFactory = None
         try:
             # importing here to avoid dependency on buildbot worker package
-            from buildbot_worker.bot import LocalWorker as RemoteLocalWorker
+            from buildbot_worker.bot import LocalWorker as RemoteLocalWorker  # noqa: PLC0415
 
             self.LocalWorkerFactory = RemoteLocalWorker
         except ImportError:

@@ -36,11 +36,11 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
     def __init__(self):
         super().__init__()
         try:
-            from subunit import PROGRESS_CUR
-            from subunit import PROGRESS_POP
-            from subunit import PROGRESS_PUSH
-            from subunit import PROGRESS_SET
-            from subunit import TestProtocolServer
+            from subunit import PROGRESS_CUR  # noqa: PLC0415
+            from subunit import PROGRESS_POP  # noqa: PLC0415
+            from subunit import PROGRESS_PUSH  # noqa: PLC0415
+            from subunit import PROGRESS_SET  # noqa: PLC0415
+            from subunit import TestProtocolServer  # noqa: PLC0415
         except ImportError as e:
             raise ImportError(
                 "subunit is not importable, but is required for SubunitLogObserver support."

@@ -139,7 +139,7 @@ class TestExpanduser(unittest.TestCase):
 
     @skipUnlessPlatformIs('posix')
     def test_posix_no_home(self):
-        import pwd
+        import pwd  # noqa: PLC0415
 
         home = pwd.getpwuid(os.getuid()).pw_dir
         # $HOME can end with a trailing /, so strip it (see cpython #17809)

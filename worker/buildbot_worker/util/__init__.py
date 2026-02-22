@@ -178,7 +178,7 @@ def rewrap(text: str, width: int | None = None) -> str:
 
 
 def twisted_connection_string_to_ws_url(description: str) -> str:
-    from twisted.internet.endpoints import _parse
+    from twisted.internet.endpoints import _parse  # noqa: PLC0415
 
     args, kwargs = _parse(description)
     protocol = args.pop(0).upper()

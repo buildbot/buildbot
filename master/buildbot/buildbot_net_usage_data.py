@@ -215,7 +215,7 @@ def _sendWithUrlib(url: str, data: dict[str, Any]) -> bytes | None:
 
 def _sendWithRequests(url: str, data: dict[str, Any]) -> str | None:
     try:
-        import requests  # pylint: disable=import-outside-toplevel
+        import requests  # noqa: PLC0415
     except ImportError:
         return None
     r = requests.post(url, json=data, timeout=30)

@@ -44,9 +44,9 @@ class TransferStepsMasterPb(RunMasterBase):
     @defer.inlineCallbacks
     def setup_config(self, bigfilename):
         c = {}
-        from buildbot.config import BuilderConfig
-        from buildbot.plugins import schedulers
-        from buildbot.process.factory import BuildFactory
+        from buildbot.config import BuilderConfig  # noqa: PLC0415
+        from buildbot.plugins import schedulers  # noqa: PLC0415
+        from buildbot.process.factory import BuildFactory  # noqa: PLC0415
 
         c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
@@ -69,9 +69,9 @@ class TransferStepsMasterPb(RunMasterBase):
     @defer.inlineCallbacks
     def setup_config_glob(self):
         c = {}
-        from buildbot.config import BuilderConfig
-        from buildbot.plugins import schedulers
-        from buildbot.process.factory import BuildFactory
+        from buildbot.config import BuilderConfig  # noqa: PLC0415
+        from buildbot.plugins import schedulers  # noqa: PLC0415
+        from buildbot.process.factory import BuildFactory  # noqa: PLC0415
 
         class CustomStep(BuildStep, CompositeStepMixin):
             @defer.inlineCallbacks
@@ -102,9 +102,9 @@ class TransferStepsMasterPb(RunMasterBase):
     @defer.inlineCallbacks
     def setup_config_single_step(self, step):
         c = {}
-        from buildbot.config import BuilderConfig
-        from buildbot.plugins import schedulers
-        from buildbot.process.factory import BuildFactory
+        from buildbot.config import BuilderConfig  # noqa: PLC0415
+        from buildbot.plugins import schedulers  # noqa: PLC0415
+        from buildbot.process.factory import BuildFactory  # noqa: PLC0415
 
         c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 

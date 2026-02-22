@@ -16,7 +16,7 @@ from twisted.spread import pb
 class ViewCvsPoller:
     def __init__(self):
         def _load_rc():
-            import user
+            import user  # noqa: PLC0415
 
             ret = {}
             for line in open(os.path.join(user.home, ".cvsblamerc")).readlines():

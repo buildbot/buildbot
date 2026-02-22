@@ -32,9 +32,9 @@ if TYPE_CHECKING:
 
 class Follower:
     def follow(self) -> int:
-        from twisted.internet import reactor
+        from twisted.internet import reactor  # noqa: PLC0415
 
-        from buildbot_worker.scripts.logwatcher import LogWatcher
+        from buildbot_worker.scripts.logwatcher import LogWatcher  # noqa: PLC0415
 
         self.rc = 0
         print("Following twistd.log until startup finished..")
@@ -45,16 +45,16 @@ class Follower:
         return self.rc
 
     def _success(self, processtype: str) -> None:
-        from twisted.internet import reactor
+        from twisted.internet import reactor  # noqa: PLC0415
 
         print(f"The {processtype} appears to have (re)started correctly.")
         self.rc = 0
         cast("IReactorCore", reactor).stop()
 
     def _failure(self, why: Failure) -> None:
-        from twisted.internet import reactor
+        from twisted.internet import reactor  # noqa: PLC0415
 
-        from buildbot_worker.scripts.logwatcher import WorkerTimeoutError
+        from buildbot_worker.scripts.logwatcher import WorkerTimeoutError  # noqa: PLC0415
 
         if why.check(WorkerTimeoutError):
             print(
@@ -137,8 +137,8 @@ def launch(nodaemon: bool) -> int:
     # see if we can launch the application without actually having to
     # spawn twistd, since spawning processes correctly is a real hassle
     # on windows.
-    from twisted.python.runtime import platformType
-    from twisted.scripts.twistd import run
+    from twisted.python.runtime import platformType  # noqa: PLC0415
+    from twisted.scripts.twistd import run  # noqa: PLC0415
 
     argv = [
         "twistd",

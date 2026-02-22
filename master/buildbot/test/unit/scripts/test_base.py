@@ -193,7 +193,7 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.T
         patches = []
 
         if runtime.platformType == 'win32':
-            from win32com.shell import shell
+            from win32com.shell import shell  # noqa: PLC0415
 
             patches.append(self.patch(shell, 'SHGetFolderPath', lambda *args: self.home))
         else:

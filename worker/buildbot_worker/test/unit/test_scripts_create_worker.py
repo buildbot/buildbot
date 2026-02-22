@@ -92,10 +92,10 @@ class TestMakeTAC(TestDefaultOptionsMixin, unittest.TestCase):
 
         # pylint: disable=import-outside-toplevel
         # import modules for mocking
-        import twisted.application.service
-        import twisted.python.logfile
+        import twisted.application.service  # noqa: PLC0415
+        import twisted.python.logfile  # noqa: PLC0415
 
-        import buildbot_worker.bot
+        import buildbot_worker.bot  # noqa: PLC0415
 
         # mock service.Application class
         application_mock = mock.Mock()

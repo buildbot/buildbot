@@ -184,7 +184,7 @@ class MasterConfig(util.ComparableMixin):
 
     def __init__(self) -> None:
         # local import to avoid circular imports
-        from buildbot.process import properties
+        from buildbot.process import properties  # noqa: PLC0415
 
         # default values for all attributes
         # global
@@ -433,7 +433,7 @@ class MasterConfig(util.ComparableMixin):
 
         if self.logCompressionMethod == "lz4":
             try:
-                import lz4  # pylint: disable=import-outside-toplevel
+                import lz4  # noqa: PLC0415
 
                 _ = lz4
             except ImportError:
@@ -443,7 +443,7 @@ class MasterConfig(util.ComparableMixin):
                 )
         elif self.logCompressionMethod == "zstd":
             try:
-                import zstandard  # pylint: disable=import-outside-toplevel
+                import zstandard  # noqa: PLC0415
 
                 _ = zstandard
             except ImportError:
@@ -453,7 +453,7 @@ class MasterConfig(util.ComparableMixin):
                 )
         elif self.logCompressionMethod == "br":
             try:
-                import brotli  # pylint: disable=import-outside-toplevel
+                import brotli  # noqa: PLC0415
 
                 _ = brotli
             except ImportError:
@@ -564,7 +564,7 @@ class MasterConfig(util.ComparableMixin):
         self.db = self.get_dbconfig_from_config(config_dict)
 
     def load_mq(self, filename: str, config_dict: dict[str, Any]) -> None:
-        from buildbot.mq import connector  # avoid circular imports
+        from buildbot.mq import connector  # avoid circular imports  # noqa: PLC0415
 
         if 'mq' in config_dict:
             self.mq.update(config_dict['mq'])

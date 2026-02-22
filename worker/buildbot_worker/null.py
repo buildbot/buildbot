@@ -55,7 +55,7 @@ class LocalWorker(WorkerBase):
     @defer.inlineCallbacks
     def startService(self) -> InlineCallbacksType[None]:
         # importing here to avoid dependency on buildbot master package
-        from buildbot.worker.protocols.null import Connection
+        from buildbot.worker.protocols.null import Connection  # noqa: PLC0415
 
         yield WorkerBase.startService(self)
         self.workername = self.name

@@ -545,7 +545,7 @@ class TestForceScheduler(
             expectSpec = json.loads(expectJson)
             if gotSpec != expectSpec:
                 try:
-                    import xerox  # pylint: disable=import-outside-toplevel
+                    import xerox  # noqa: PLC0415
 
                     formatted = self.formatJsonForTest(gotJson)
                     print("You may update the test with (copied to clipboard):\n" + formatted)

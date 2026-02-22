@@ -502,7 +502,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
     @async_to_deferred
     async def test_lz4_compress_big_chunk(self):
         try:
-            import lz4  # noqa: F401
+            import lz4  # noqa: F401, PLC0415
         except ImportError as e:
             raise unittest.SkipTest("lz4 not installed, skip the test") from e
 
@@ -512,7 +512,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
     @async_to_deferred
     async def test_zstd_compress_big_chunk(self):
         try:
-            import zstandard  # noqa: F401
+            import zstandard  # noqa: F401, PLC0415
         except ImportError as e:
             raise unittest.SkipTest("zstandard not installed, skip the test") from e
 
@@ -522,7 +522,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
     @async_to_deferred
     async def test_br_compress_big_chunk(self):
         try:
-            import brotli  # noqa: F401
+            import brotli  # noqa: F401, PLC0415
         except ImportError as e:
             raise unittest.SkipTest("brotli not installed, skip the test") from e
 

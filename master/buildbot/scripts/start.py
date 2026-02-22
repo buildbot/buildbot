@@ -104,7 +104,7 @@ def launchNoDaemon(config):
     # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
     # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
     # windows.
-    from twisted.scripts import twistd
+    from twisted.scripts import twistd  # noqa: PLC0415
 
     twistd.run()
 

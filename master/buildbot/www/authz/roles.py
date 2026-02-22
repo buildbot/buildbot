@@ -91,7 +91,7 @@ class RolesFromUsername(RolesFromBase):
     def __init__(self, roles: list[str], usernames: list[str]) -> None:
         self.roles = roles
         if None in usernames:
-            from buildbot import config
+            from buildbot import config  # noqa: PLC0415
 
             config.error('Usernames cannot be None')
         self.usernames = usernames
