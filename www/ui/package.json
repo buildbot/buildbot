@@ -37,6 +37,7 @@
     "react-router-dom": "^6.3.0"
   },
   "devDependencies": {
+    "@types/jquery": "^3.5.16",
     "@types/node": "^22.8.6",
     "@types/react-dom": "^18.2.7",
     "@types/react-test-renderer": "^18.0.0",
@@ -59,6 +60,7 @@
     "react-router-dom": "^6.3.0",
     "react-test-renderer": "^18.2.0",
     "sass": "^1.56.0",
+    "typescript": "^5.8.3",
     "vite": "~5.4.12",
     "vite-plugin-checker": "^0.9.0",
     "vite-plugin-dts": "^4.1.0",
@@ -68,6 +70,8 @@
   "license": "GPL-2.0",
   "dependencies": {
     "buildbot-data-js": "link:../data-module",
+    "jquery": "^3.6.0",
+    "popper.js": "^1.16.1",
     "react-icons": "^5.3.0"
   }
 }
