@@ -80,7 +80,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         path_escape='\\',
     ):
         try:
-            import hvac
+            import hvac  # noqa: PLC0415
 
             _ = hvac
         except ImportError:  # pragma: no cover
@@ -114,7 +114,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         path_escape='\\',
     ):
         try:
-            import hvac
+            import hvac  # noqa: PLC0415
         except ImportError:  # pragma: no cover
             config.error(
                 f"{self.__class__.__name__} needs the hvac package installed "

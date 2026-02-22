@@ -21,7 +21,7 @@ def patch():
 
     (used for debugging only)
     """
-    from twisted.application.service import Service
+    from twisted.application.service import Service  # noqa: PLC0415
 
     old_startService = Service.startService
     old_stopService = Service.stopService

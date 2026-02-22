@@ -244,7 +244,7 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
     @async_to_deferred
     async def test_brotli_compression(self):
         try:
-            import brotli
+            import brotli  # noqa: PLC0415
         except ImportError as e:
             raise unittest.SkipTest("brotli not installed, skip the test") from e
         await self._test_compression(b'br', decompress_fn=brotli.decompress)
@@ -252,7 +252,7 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
     @async_to_deferred
     async def test_zstandard_compression(self):
         try:
-            import zstandard
+            import zstandard  # noqa: PLC0415
         except ImportError as e:
             raise unittest.SkipTest("zstandard not installed, skip the test") from e
 

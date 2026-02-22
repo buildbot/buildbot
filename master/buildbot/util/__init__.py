@@ -382,8 +382,8 @@ def in_reactor(f):
     """decorate a function by running it with maybeDeferred in a reactor"""
 
     def wrap(*args, **kwargs):
-        from twisted.internet import defer
-        from twisted.internet import reactor
+        from twisted.internet import defer  # noqa: PLC0415
+        from twisted.internet import reactor  # noqa: PLC0415
 
         result = []
 
@@ -423,8 +423,8 @@ def string2boolean(str):
 
 
 def asyncSleep(delay, reactor=None):
-    from twisted.internet import defer
-    from twisted.internet import reactor as internet_reactor
+    from twisted.internet import defer  # noqa: PLC0415
+    from twisted.internet import reactor as internet_reactor  # noqa: PLC0415
 
     if reactor is None:
         reactor = internet_reactor
@@ -543,9 +543,9 @@ def dictionary_merge(a, b):
     """
     for key, value in b.items():
         if key in a and isinstance(a[key], dict) and isinstance(value, dict):
-            dictionary_merge(a[key], b[key])
+            dictionary_merge(a[key], value)
             continue
-        a[key] = b[key]
+        a[key] = value
     return a
 
 

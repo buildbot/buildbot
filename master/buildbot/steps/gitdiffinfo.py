@@ -31,7 +31,7 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
 
     def __init__(self, compareToRef='master', dataName='diffinfo-master', **kwargs):
         try:
-            from unidiff import PatchSet
+            from unidiff import PatchSet  # noqa: PLC0415
 
             _ = PatchSet  # silence pylint
         except ImportError:
@@ -92,7 +92,7 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
         if cmd.results() != results.SUCCESS:
             return cmd.results()
 
-        from unidiff import PatchSet
+        from unidiff import PatchSet  # noqa: PLC0415
 
         patchset = PatchSet(self._observer.getStdout(), metadata_only=True)
 

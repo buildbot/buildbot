@@ -53,3 +53,5 @@ class SecretDetails:
 
     def __eq__(self, other):
         return self._source == other._source and self.key == other.key and self.value == other.value
+
+    __hash__ = None  # type: ignore[assignment]

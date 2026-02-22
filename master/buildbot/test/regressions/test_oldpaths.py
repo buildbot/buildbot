@@ -39,49 +39,49 @@ class OldImportPaths(unittest.TestCase):
     """
 
     def test_scheduler_Scheduler(self):
-        from buildbot.scheduler import Scheduler  # noqa: F401
+        from buildbot.scheduler import Scheduler  # noqa: F401, PLC0415
 
     def test_schedulers_basic_Scheduler(self):
         # renamed to basic.SingleBranchScheduler
-        from buildbot.schedulers.basic import Scheduler  # noqa: F401
+        from buildbot.schedulers.basic import Scheduler  # noqa: F401, PLC0415
 
     def test_scheduler_AnyBranchScheduler(self):
-        from buildbot.scheduler import AnyBranchScheduler  # noqa: F401
+        from buildbot.scheduler import AnyBranchScheduler  # noqa: F401, PLC0415
 
     def test_scheduler_basic_Dependent(self):
         with assertProducesWarnings(DeprecationWarning, message_pattern='.*was deprecated.*'):
-            from buildbot.schedulers.basic import Dependent  # noqa: F401
+            from buildbot.schedulers.basic import Dependent  # noqa: F401, PLC0415
 
     def test_scheduler_Dependent(self):
-        from buildbot.scheduler import Dependent  # noqa: F401
+        from buildbot.scheduler import Dependent  # noqa: F401, PLC0415
 
     def test_scheduler_Periodic(self):
-        from buildbot.scheduler import Periodic  # noqa: F401
+        from buildbot.scheduler import Periodic  # noqa: F401, PLC0415
 
     def test_scheduler_Nightly(self):
-        from buildbot.scheduler import Nightly  # noqa: F401
+        from buildbot.scheduler import Nightly  # noqa: F401, PLC0415
 
     def test_scheduler_Triggerable(self):
-        from buildbot.scheduler import Triggerable  # noqa: F401
+        from buildbot.scheduler import Triggerable  # noqa: F401, PLC0415
 
     def test_scheduler_Try_Jobdir(self):
-        from buildbot.scheduler import Try_Jobdir  # noqa: F401
+        from buildbot.scheduler import Try_Jobdir  # noqa: F401, PLC0415
 
     def test_scheduler_Try_Userpass(self):
-        from buildbot.scheduler import Try_Userpass  # noqa: F401
+        from buildbot.scheduler import Try_Userpass  # noqa: F401, PLC0415
 
     def test_schedulers_filter_ChangeFilter(self):
         # this was the location of ChangeFilter until 0.8.4
-        from buildbot.schedulers.filter import ChangeFilter  # noqa: F401
+        from buildbot.schedulers.filter import ChangeFilter  # noqa: F401, PLC0415
 
     def test_process_base_Build(self):
-        from buildbot.process.base import Build  # noqa: F401
+        from buildbot.process.base import Build  # noqa: F401, PLC0415
 
     def test_buildrequest_BuildRequest(self):
-        from buildbot.buildrequest import BuildRequest  # noqa: F401
+        from buildbot.buildrequest import BuildRequest  # noqa: F401, PLC0415
 
     def test_process_subunitlogobserver_SubunitShellCommand(self):
-        from buildbot.process.subunitlogobserver import SubunitShellCommand  # noqa: F401
+        from buildbot.process.subunitlogobserver import SubunitShellCommand  # noqa: F401, PLC0415
 
     def test_steps_source_Source(self):
-        from buildbot.steps.source import Source  # noqa: F401
+        from buildbot.steps.source import Source  # noqa: F401, PLC0415

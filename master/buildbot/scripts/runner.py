@@ -617,7 +617,7 @@ class UserOptions(base.SubcommandOptions):
         return "Usage:    buildbot user [options]"
 
     def _checkValidTypes(self, info):
-        from buildbot.process.users import users
+        from buildbot.process.users import users  # noqa: PLC0415
 
         valid = set(["identifier", "email", *users.srcs])
 
@@ -841,7 +841,7 @@ class Options(usage.Options):
         super().opt_version()
 
     def opt_verbose(self):
-        from twisted.python import log
+        from twisted.python import log  # noqa: PLC0415
 
         log.startLogging(sys.stderr)
 

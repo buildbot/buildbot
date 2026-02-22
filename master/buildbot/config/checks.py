@@ -83,7 +83,7 @@ def check_param_number_none(value: Any, class_inst: Any, name: str) -> int | flo
 
 def check_markdown_support(class_inst: Any) -> bool:
     try:
-        import markdown  # pylint: disable=import-outside-toplevel
+        import markdown  # noqa: PLC0415
 
         _ = markdown
         return True

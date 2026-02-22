@@ -189,6 +189,8 @@ class BuildDictLookAlike:
                 return False
         return True
 
+    __hash__ = None  # type: ignore[assignment]
+
     def __ne__(self, b):
         return not self == b
 

@@ -129,14 +129,14 @@ class RemoteUserAuth(AuthBase):
     def getLoginResource(self) -> resource.Resource:
         current_version = parse_version(twisted.__version__)
         if current_version < parse_version("22.10.0"):
-            from twisted.web.resource import ForbiddenResource
+            from twisted.web.resource import ForbiddenResource  # noqa: PLC0415
 
             return cast(
                 resource.Resource,
                 ForbiddenResource(message="URL is not supported for authentication"),
             )
 
-        from twisted.web.pages import forbidden
+        from twisted.web.pages import forbidden  # noqa: PLC0415
 
         return cast(resource.Resource, forbidden(message="URL is not supported for authentication"))
 

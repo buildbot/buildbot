@@ -211,7 +211,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         # send changeset
         node = repo.changelog.node(rev)
         log = repo.changelog.read(node)
-        manifest, user, (time, timezone), files, desc, extra = log
+        _, user, (time, _), files, desc, extra = log
         parents = [p for p in repo.changelog.parents(node) if p != nullid]
 
         if branchtype == 'inrepo':

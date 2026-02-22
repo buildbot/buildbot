@@ -157,8 +157,8 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         """
         Returns a list of all members in the attribute group.
         """
-        from inspect import getmembers
-        from inspect import ismethod
+        from inspect import getmembers  # noqa: PLC0415
+        from inspect import ismethod  # noqa: PLC0415
 
         methods = getmembers(self, ismethod)
         group_prefix = attrGroup + '_'

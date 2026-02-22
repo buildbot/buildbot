@@ -231,7 +231,7 @@ class Trial(BuildFactory):
         if recurse is not None:
             self.recurse = recurse
 
-        from buildbot.steps.python_twisted import Trial
+        from buildbot.steps.python_twisted import Trial  # noqa: PLC0415
 
         buildcommand = [*buildpython, "./setup.py", "build"]
         self.addStep(Compile(command=buildcommand, env=env))

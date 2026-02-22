@@ -15,7 +15,7 @@
 
 
 def trycmd(config):
-    from buildbot.clients import tryclient
+    from buildbot.clients import tryclient  # noqa: PLC0415
 
     t = tryclient.Try(config)
     t.run()

@@ -88,7 +88,7 @@ disallow_untyped_calls = false
 disallow_untyped_defs = true
 warn_unused_ignores = true
 no_implicit_optional = true
-mypy_path = "$MYPY_CONFIG_FILE_DIR/master"
+mypy_path = ["$MYPY_CONFIG_FILE_DIR/master", "$MYPY_CONFIG_FILE_DIR/worker"]
 plugins = "mypy_zope:plugin"
     [[tool.mypy.overrides]]
     module = [

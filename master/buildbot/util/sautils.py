@@ -105,7 +105,7 @@ def withoutSqliteForeignKeys(connection: Connection):
 
 
 def get_sqlite_version():
-    import sqlite3
+    import sqlite3  # noqa: PLC0415
 
     return sqlite3.sqlite_version_info
 
@@ -133,7 +133,7 @@ def _upsert_sqlite(
     update_values: Sequence[tuple[sa.Column, Any]],
     _race_hook: Callable[[Connection], None] | None = None,
 ):
-    from sqlalchemy.dialects.sqlite import insert  # pylint: disable=import-outside-toplevel
+    from sqlalchemy.dialects.sqlite import insert  # noqa: PLC0415
 
     _upsert_on_conflict_do_update(
         insert,
@@ -153,7 +153,7 @@ def _upsert_postgresql(
     update_values: Sequence[tuple[sa.Column, Any]],
     _race_hook: Callable[[Connection], None] | None = None,
 ):
-    from sqlalchemy.dialects.postgresql import insert  # pylint: disable=import-outside-toplevel
+    from sqlalchemy.dialects.postgresql import insert  # noqa: PLC0415
 
     _upsert_on_conflict_do_update(
         insert,
@@ -197,7 +197,7 @@ def _upsert_mysql(
     update_values: Sequence[tuple[sa.Column, Any]],
     _race_hook: Callable[[Connection], None] | None = None,
 ):
-    from sqlalchemy.dialects.mysql import insert  # pylint: disable=import-outside-toplevel
+    from sqlalchemy.dialects.mysql import insert  # noqa: PLC0415
 
     if _race_hook is not None:
         _race_hook(connection)

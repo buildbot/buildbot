@@ -31,10 +31,10 @@ class CustomServiceMaster(RunFakeMasterTestCase):
 
     def create_master_config(self):
         self.num_reconfig += 1
-        from buildbot.config import BuilderConfig
-        from buildbot.process.factory import BuildFactory
-        from buildbot.steps.shell import ShellCommand
-        from buildbot.util.service import BuildbotService
+        from buildbot.config import BuilderConfig  # noqa: PLC0415
+        from buildbot.process.factory import BuildFactory  # noqa: PLC0415
+        from buildbot.steps.shell import ShellCommand  # noqa: PLC0415
+        from buildbot.util.service import BuildbotService  # noqa: PLC0415
 
         class MyShellCommand(ShellCommand):
             def getResultSummary(self):

@@ -30,7 +30,7 @@ def add_debugging_monkeypatches() -> None:
     This adds a few "harmless" monkeypatches which make it easier to debug
     failing tests.
     """
-    from twisted.application.service import Service
+    from twisted.application.service import Service  # noqa: PLC0415
 
     old_startService = Service.startService
     old_stopService = Service.stopService

@@ -28,9 +28,9 @@ class InterruptCommand(RunMasterBase):
     @defer.inlineCallbacks
     def setup_config(self):
         c = {}
-        from buildbot.plugins import schedulers
-        from buildbot.plugins import steps
-        from buildbot.plugins import util
+        from buildbot.plugins import schedulers  # noqa: PLC0415
+        from buildbot.plugins import steps  # noqa: PLC0415
+        from buildbot.plugins import util  # noqa: PLC0415
 
         class SleepAndInterrupt(steps.ShellSequence):
             @defer.inlineCallbacks

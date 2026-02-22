@@ -268,7 +268,7 @@ class Tests(RunFakeMasterTestCase):
 
         props = worker.info
 
-        from buildbot_worker.base import BotBase
+        from buildbot_worker.base import BotBase  # noqa: PLC0415
 
         expected_props_dict = {}
         BotBase._read_os_release(BotBase.os_release_file, expected_props_dict)

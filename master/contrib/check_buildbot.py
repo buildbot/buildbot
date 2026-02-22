@@ -30,7 +30,7 @@ def exit(level, msg):
 
 
 def main():
-    from optparse import OptionParser
+    from optparse import OptionParser  # noqa: PLC0415
 
     parser = OptionParser(__doc__)
     parser.set_defaults(hostname=None, httpport=None, url=None, verbosity=0)
@@ -40,7 +40,7 @@ def main():
     parser.add_option(
         "-v", "--verbose", dest="verbosity", action="count", help="Increase verbosity"
     )
-    options, args = parser.parse_args()
+    options, _ = parser.parse_args()
 
     if options.hostname and options.httpport:
         url = f"http://{options.hostname}:{options.httpport}/json/metrics"

@@ -95,10 +95,10 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def setup_config(self, extra_config):
         c = {}
-        from buildbot.config import BuilderConfig
-        from buildbot.process import results
-        from buildbot.process.buildstep import BuildStep
-        from buildbot.process.factory import BuildFactory
+        from buildbot.config import BuilderConfig  # noqa: PLC0415
+        from buildbot.process import results  # noqa: PLC0415
+        from buildbot.process.buildstep import BuildStep  # noqa: PLC0415
+        from buildbot.process.factory import BuildFactory  # noqa: PLC0415
 
         class MyBuildStep(BuildStep):
             def run(self):

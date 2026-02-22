@@ -79,7 +79,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
         # factory is required
         if factory is None:
             error(f"builder {self.name!r}: has no factory")
-        from buildbot.process.factory import BuildFactory
+        from buildbot.process.factory import BuildFactory  # noqa: PLC0415
 
         if factory is not None and not isinstance(factory, BuildFactory):
             error(f"builder {self.name!r}: factory is not a BuildFactory instance")

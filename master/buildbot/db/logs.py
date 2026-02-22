@@ -819,7 +819,7 @@ async def _async_iter_on_pool(
     # avoiding too many compressed chunks in memory awaiting DB insert
     # use 0 (unlimited) in tests as there isn't really a threadpool / reactor running
     if get_is_in_unit_tests():
-        from buildbot.test.fake.reactor import NonThreadPool
+        from buildbot.test.fake.reactor import NonThreadPool  # noqa: PLC0415
 
         if isinstance(provider_threadpool, NonThreadPool):
             max_backlog = 0

@@ -157,14 +157,14 @@ class DBThreadPool:
 
     def get_sqlalchemy_result_type(self):
         try:
-            from sqlalchemy.engine import ResultProxy  # sqlalchemy 1.x - 1.3
+            from sqlalchemy.engine import ResultProxy  # sqlalchemy 1.x - 1.3  # noqa: PLC0415
 
             return ResultProxy
         except ImportError:
             pass
 
         try:
-            from sqlalchemy.engine import Result  # sqlalchemy 1.4 and newer
+            from sqlalchemy.engine import Result  # sqlalchemy 1.4 and newer  # noqa: PLC0415
 
             return Result
         except ImportError:

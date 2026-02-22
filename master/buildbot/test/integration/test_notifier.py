@@ -39,11 +39,11 @@ class NotifierMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def create_master_config(self, build_set_summary=False):
-        from buildbot.config import BuilderConfig
-        from buildbot.plugins import reporters
-        from buildbot.plugins import schedulers
-        from buildbot.plugins import steps
-        from buildbot.process.factory import BuildFactory
+        from buildbot.config import BuilderConfig  # noqa: PLC0415
+        from buildbot.plugins import reporters  # noqa: PLC0415
+        from buildbot.plugins import schedulers  # noqa: PLC0415
+        from buildbot.plugins import steps  # noqa: PLC0415
+        from buildbot.process.factory import BuildFactory  # noqa: PLC0415
 
         self.mailDeferred = defer.Deferred()
 

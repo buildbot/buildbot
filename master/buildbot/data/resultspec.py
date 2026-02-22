@@ -137,6 +137,8 @@ class FieldBase:
                 return False
         return True
 
+    __hash__ = None  # type: ignore[assignment]
+
     def __ne__(self, b):
         return not self == b
 
@@ -177,6 +179,8 @@ class NoneComparator:
     def __eq__(self, other):
         return self.value == other.value
 
+    __hash__ = None  # type: ignore[assignment]
+
     def __ne__(self, other):
         return self.value != other.value
 
@@ -206,6 +210,8 @@ class ReverseComparator:
 
     def __eq__(self, other):
         return other.value == self.value
+
+    __hash__ = None  # type: ignore[assignment]
 
     def __ne__(self, other):
         return other.value != self.value
@@ -240,6 +246,8 @@ class ResultSpec:
             if getattr(self, i) != getattr(b, i):
                 return False
         return True
+
+    __hash__ = None  # type: ignore[assignment]
 
     def __ne__(self, b):
         return not self == b

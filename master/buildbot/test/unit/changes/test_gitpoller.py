@@ -133,7 +133,7 @@ class TestGitPoller(TestGitPollerBase):
                 self.fail("run_process should have failed on empty output")
         except Exception as error:
             if not emptyRaisesException:
-                import traceback
+                import traceback  # noqa: PLC0415
 
                 traceback.print_exc()
                 self.fail("run_process should NOT have failed on empty output: " + repr(error))

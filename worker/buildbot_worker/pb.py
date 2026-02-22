@@ -839,8 +839,8 @@ class Worker(WorkerBase):
                 cast("IStreamClientEndpoint", proxy_endpoint),
             )
             if useTls:
-                from twisted.internet.endpoints import wrapClientTLS
-                from twisted.internet.ssl import optionsForClientTLS
+                from twisted.internet.endpoints import wrapClientTLS  # noqa: PLC0415
+                from twisted.internet.ssl import optionsForClientTLS  # noqa: PLC0415
 
                 contextFactory = optionsForClientTLS(hostname=buildmaster_host)
                 endpoint = wrapClientTLS(contextFactory, endpoint)

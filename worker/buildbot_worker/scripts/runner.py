@@ -248,7 +248,7 @@ class Options(usage.Options):
     ]
 
     def opt_version(self) -> NoReturn:  # type: ignore[misc]
-        import buildbot_worker  # pylint: disable=import-outside-toplevel
+        import buildbot_worker  # noqa: PLC0415
 
         print(f"worker version: {buildbot_worker.version}")
         usage.Options.opt_version(self)

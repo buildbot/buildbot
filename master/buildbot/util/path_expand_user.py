@@ -37,7 +37,7 @@ def posix_expanduser(path, worker_environ):
     if i == 1:
         if 'HOME' not in worker_environ:
             try:
-                import pwd
+                import pwd  # noqa: PLC0415
             except ImportError:
                 # pwd module unavailable, return path unchanged
                 return path
@@ -51,7 +51,7 @@ def posix_expanduser(path, worker_environ):
             userhome = worker_environ['HOME']
     else:
         try:
-            import pwd
+            import pwd  # noqa: PLC0415
         except ImportError:
             # pwd module unavailable, return path unchanged
             return path

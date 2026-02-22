@@ -61,7 +61,7 @@ class HangCheckProtocol(
             the hang check.
         """
         if reactor is None:
-            from twisted.internet import reactor as default_reactor
+            from twisted.internet import reactor as default_reactor  # noqa: PLC0415
 
             reactor = cast("IReactorTime", default_reactor)
 

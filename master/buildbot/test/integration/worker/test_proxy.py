@@ -43,7 +43,7 @@ def write_to_log(msg, with_traceback=False):
     with open(get_log_path(), 'a', encoding='utf-8') as outfile:
         outfile.write(msg)
         if with_traceback:
-            import traceback
+            import traceback  # noqa: PLC0415
 
             traceback.print_exc(file=outfile)
 

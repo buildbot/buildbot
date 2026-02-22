@@ -26,9 +26,9 @@ from buildbot.test.util.integration import RunMasterBase
 class ShellMaster(RunMasterBase):
     def create_config(self):
         c = {}
-        from buildbot.config import BuilderConfig
-        from buildbot.plugins import steps
-        from buildbot.process.factory import BuildFactory
+        from buildbot.config import BuilderConfig  # noqa: PLC0415
+        from buildbot.plugins import steps  # noqa: PLC0415
+        from buildbot.process.factory import BuildFactory  # noqa: PLC0415
 
         c['schedulers'] = [
             schedulers.AnyBranchScheduler(name="sched1", builderNames=["testy1"]),

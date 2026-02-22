@@ -305,7 +305,7 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
                 waiter.callback(time.time())
                 worker.keepalive_waiter = None
 
-        from buildbot.worker.protocols.pb import Connection
+        from buildbot.worker.protocols.pb import Connection  # noqa: PLC0415
 
         self.patch(Connection, 'perspective_keepalive', perspective_keepalive)
 

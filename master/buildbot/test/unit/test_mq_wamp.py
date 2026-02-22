@@ -40,6 +40,8 @@ class ComparableSubscribeOptions(SubscribeOptions):
             return False
         return self.match == other.match
 
+    __hash__ = None  # type: ignore[assignment]
+
     __repr__ = SubscribeOptions.__str__
 
 
