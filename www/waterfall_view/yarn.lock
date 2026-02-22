@@ -1894,6 +1894,7 @@ __metadata:
     mobx: "npm:^6.13.4"
     mobx-react: "npm:^9.1.1"
     moment: "npm:^2.29.4"
+    prettier: "npm:^3.5.3"
     react: "npm:^18.2.0"
     react-app-polyfill: "npm:~3.0.0"
     react-bootstrap: "npm:^1.6.5"
@@ -3880,6 +3881,15 @@ __metadata:
   version: 1.2.1
   resolution: "prelude-ls@npm:1.2.1"
   checksum: 10c0/b00d617431e7886c520a6f498a2e14c75ec58f6d93ba48c3b639cf241b54232d90daa05d83a9e9b9fef6baa63cb7e1e4602c2372fea5bc169668401eb127d0cd
+  languageName: node
+  linkType: hard
+
+"prettier@npm:^3.5.3":
+  version: 3.8.1
+  resolution: "prettier@npm:3.8.1"
+  bin:
+    prettier: bin/prettier.cjs
+  checksum: 10c0/33169b594009e48f570471271be7eac7cdcf88a209eed39ac3b8d6d78984039bfa9132f82b7e6ba3b06711f3bfe0222a62a1bfb87c43f50c25a83df1b78a2c42
   languageName: node
   linkType: hard
 
