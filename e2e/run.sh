@@ -62,6 +62,6 @@ if [ -z $YARNPROG ]; then
     exit 1
 fi
 
-$YARNPROG install --pure-lockfile
+$YARNPROG install --immutable
 $YARNPROG playwright install
 LIBGL_ALWAYS_SOFTWARE=1 $YARNPROG playwright test

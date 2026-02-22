@@ -9,6 +9,7 @@
     "./colors.scss": "dist/colors.scss"
   },
   "type": "module",
+  "packageManager": "yarn@4.12.0",
   "types": "dist/main.d.ts",
   "files": [
     "dist"

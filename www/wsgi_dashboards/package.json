@@ -2,6 +2,7 @@
   "name": "buildbot-wsgi-dashboards",
   "private": true,
   "type": "module",
+  "packageManager": "yarn@4.12.0",
   "module": "buildbot_wsgi_dashboards/static/scripts.js",
   "style": "buildbot_wsgi_dashboards/static/styles.css",
   "scripts": {

@@ -224,7 +224,7 @@ class BuildJsCommand(Command):
             assert yarn_program is not None, "need nodejs and yarn installed in current PATH"
 
             commands = [
-                [yarn_program, 'install', '--pure-lockfile'],
+                [yarn_program, 'install', '--immutable'],
                 [yarn_program, 'run', 'build'],
             ]
 

@@ -9,7 +9,7 @@
     "request": "^2.88.2",
     "typescript": "^5.8.3"
   },
-  "scripts": {},
+  "packageManager": "yarn@4.12.0",
   "author": "",
   "license": "GPL-2.0"
 }

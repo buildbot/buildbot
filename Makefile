@@ -66,7 +66,7 @@ docs-release-spelling: docs-towncrier
 
 frontend_yarn_install: check_for_yarn
 	for i in $(WWW_PURE_DEP_PKGS) $(WWW_DEP_PKGS) $(WWW_PKGS); \
-		do (cd $$i; $(YARN) install --pure-lockfile); done
+		do (cd $$i; $(YARN) install --immutable); done
 
 frontend_deps: $(VENV_NAME) frontend_yarn_install check_for_yarn
 	$(PIP) install build wheel -r requirements-ci.txt

@@ -4,6 +4,7 @@
   "description": "Buildbot WWW shared eslint config",
   "main": "index.js",
   "type": "module",
+  "packageManager": "yarn@4.12.0",
   "private": true,
   "license": "MPL-2.0",
   "dependencies": {

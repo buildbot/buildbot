@@ -6,6 +6,7 @@
   "module": "dist/buildbot-data-js.js",
   "exports": "src/main.ts",
   "type": "module",
+  "packageManager": "yarn@4.12.0",
   "types": "dist/main.d.ts",
   "scripts": {
     "start": "vite",

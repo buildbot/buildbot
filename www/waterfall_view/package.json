@@ -2,6 +2,7 @@
   "name": "buildbot-waterfall-view",
   "private": true,
   "type": "module",
+  "packageManager": "yarn@4.12.0",
   "module": "buildbot_waterfall_view/static/scripts.js",
   "style": "buildbot_waterfall_view/static/styles.css",
   "scripts": {

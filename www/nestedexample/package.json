@@ -1,5 +1,6 @@
 {
     "name": "buildbot-nestedexample",
+    "packageManager": "yarn@4.12.0",
     "engines": {
         "node": ">=0.10.0",
         "npm": ">=1.4.0"

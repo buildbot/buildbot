@@ -2,6 +2,7 @@
   "name": "buildbot-console-view",
   "private": true,
   "type": "module",
+  "packageManager": "yarn@4.12.0",
   "module": "buildbot_console_view/static/scripts.js",
   "style": "buildbot_console_view/static/styles.css",
   "scripts": {

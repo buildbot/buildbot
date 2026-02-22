@@ -76,7 +76,7 @@ Prerequisites
 
 .. note::
 
-  Buildbot UI requires at least node 14.18 or newer and yarn 1.x.
+  Buildbot UI requires at least node 22 or newer and yarn 4.x.
 
 * Install LTS release of Node.js.
 
@@ -91,7 +91,7 @@ Prerequisites
 
     sudo apt install nodejs yarnpkg
 
-  In other cases, use https://deb.nodesource.com and https://classic.yarnpkg.com/lang/en/docs/install.
+  In other cases, use https://deb.nodesource.com and https://yarnpkg.com/getting-started/install.
 
 .. _JSDevQuickStart:
 
