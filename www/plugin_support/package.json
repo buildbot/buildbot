@@ -13,7 +13,7 @@
     "build-dev": "vite build -m development"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
+    "@types/node": "^22.8.6",
     "@types/react": "^18.0.31",
     "build-config-buildbot": "link:../common-config",
     "eslint": "^9.27.0",
