@@ -72,7 +72,8 @@ six==1.17.0
 SQLAlchemy==2.0.41
 treq==25.5.0
 Twisted==25.5.0
-txaio==23.1.1
+txaio==23.6.1; python_version < "3.11"  # pyup: ignore
+txaio==25.12.2; python_version >= "3.11"
 txrequests==0.9.6
 typing_extensions==4.14.0
 unidiff==0.7.5

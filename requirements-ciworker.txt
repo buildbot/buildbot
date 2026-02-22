@@ -27,7 +27,9 @@ pycparser==2.22;  python_version >= "3.8"
 six==1.17.0
 Twisted==23.8.0;  python_version < "3.8" # pyup: ignore
 Twisted==25.5.0;  python_version >= "3.8"
-txaio==23.1.1
+txaio==23.1.1; python_version < "3.9"  # pyup: ignore
+txaio==23.6.1; python_version >= "3.9" and python_version < "3.11"  # pyup: ignore
+txaio==25.12.2; python_version >= "3.11"
 typing-extensions==4.7.1;  python_version < "3.8" # pyup: ignore
 typing-extensions==4.13.2;  python_version >= "3.8" and python_version < "3.9"
 typing-extensions==4.14.0;  python_version >= "3.9"
