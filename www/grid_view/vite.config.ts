@@ -69,6 +69,6 @@ export default defineConfig({
       threads: {
         singleThread: true,
       },
-    }
+    },
   },
 });
