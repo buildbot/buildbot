@@ -64,10 +64,18 @@
 
 # Written by Mark Hammond, 2006.
 
+from __future__ import annotations
+
 import os
 import sys
 import threading
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
+from typing import Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from collections.abc import Generator
 
 import pywintypes
 import servicemanager
@@ -108,7 +116,7 @@ class BBService(win32serviceutil.ServiceFramework):
     _svc_display_name_ = _svc_name_
     _svc_description_ = 'Manages local buildbot workers and masters - see https://buildbot.net'
 
-    def __init__(self, args):
+    def __init__(self, args: Any) -> None:
         win32serviceutil.ServiceFramework.__init__(self, args)
 
         # Create an event which we will use to wait on. The "service stop"
@@ -122,8 +130,8 @@ class BBService(win32serviceutil.ServiceFramework):
         self.hWaitStop = win32event.CreateEvent(sa, True, False, None)
 
         self.args = args
-        self.dirs = None
-        self.runner_prefix = None
+        self.dirs: list[str] | None = None
+        self.runner_prefix: str | None = None
 
         # Patch up the service messages file in a frozen exe.
         # (We use the py2exe option that magically bundles the .pyd files
@@ -135,7 +143,7 @@ class BBService(win32serviceutil.ServiceFramework):
             else:
                 self.warning(f"Strange - '{msg_file}' does not exist")
 
-    def _checkConfig(self):
+    def _checkConfig(self) -> bool:
         # Locate our child process runner (but only when run from source)
         if not is_frozen:
             # Running from source
@@ -203,7 +211,7 @@ class BBService(win32serviceutil.ServiceFramework):
             win32serviceutil.SetServiceCustomOption(self, "directories", dir_string)
         return True
 
-    def SvcStop(self):
+    def SvcStop(self) -> None:
         # Tell the SCM we are starting the stop process.
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         # Set the stop event - the main loop takes care of termination.
@@ -214,10 +222,13 @@ class BBService(win32serviceutil.ServiceFramework):
     # down, we also need to hook SvcShutdown.
     SvcShutdown = SvcStop
 
-    def SvcDoRun(self):
+    def SvcDoRun(self) -> None:
         if not self._checkConfig():
             # stopped status set by caller.
             return
+
+        assert self.dirs is not None
+        assert self.runner_prefix is not None
 
         self.logmsg(servicemanager.PYS_SERVICE_STARTED)
 
@@ -249,16 +260,16 @@ class BBService(win32serviceutil.ServiceFramework):
             index = rc - win32event.WAIT_OBJECT_0 - 1
             bbdir, dead_handle, _, output_blocks = child_infos[index]
             status = win32process.GetExitCodeProcess(dead_handle)
-            output = "".join(output_blocks)
-            if not output:
-                output = (
+            output_text = "".join(output_blocks)
+            if not output_text:
+                output_text = (
                     "The child process generated no output. "
                     "Please check the twistd.log file in the "
                     "indicated directory."
                 )
 
             self.warning(
-                f"BuildBot for directory {bbdir!r} terminated with exit code {status}.\n{output}"
+                f"BuildBot for directory {bbdir!r} terminated with exit code {status}.\n{output_text}"
             )
 
             del child_infos[index]
@@ -307,7 +318,7 @@ class BBService(win32serviceutil.ServiceFramework):
     # Error reporting/logging functions.
     #
 
-    def logmsg(self, event):
+    def logmsg(self, event: int) -> None:
         # log a service event using servicemanager.LogMsg
         try:
             servicemanager.LogMsg(
@@ -324,7 +335,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 # No valid stdout!  Ignore it.
                 pass
 
-    def _dolog(self, func, msg):
+    def _dolog(self, func: Any, msg: str) -> None:
         try:
             func(msg)
         except win32api.error as details:
@@ -336,20 +347,20 @@ class BBService(win32serviceutil.ServiceFramework):
             except OSError:
                 pass
 
-    def info(self, s):
+    def info(self, s: str) -> None:
         self._dolog(servicemanager.LogInfoMsg, s)
 
-    def warning(self, s):
+    def warning(self, s: str) -> None:
         self._dolog(servicemanager.LogWarningMsg, s)
 
-    def error(self, s):
+    def error(self, s: str) -> None:
         self._dolog(servicemanager.LogErrorMsg, s)
 
     # Functions that spawn a child process, redirecting any output.
     # Although buildbot itself does this, it is very handy to debug issues
     # such as ImportErrors that happen before buildbot has redirected.
 
-    def createProcess(self, cmd):
+    def createProcess(self, cmd: str) -> tuple[Any, threading.Thread, list[Any]]:
         hInputRead, hInputWriteTemp = self.newPipe()
         hOutReadTemp, hOutWrite = self.newPipe()
         pid = win32api.GetCurrentProcess()
@@ -385,12 +396,12 @@ class BBService(win32serviceutil.ServiceFramework):
         hInputWrite.Close()
 
         # start a thread collecting output
-        blocks = []
+        blocks: list[Any] = []
         t = threading.Thread(target=self.redirectCaptureThread, args=(hOutRead, blocks))
         t.start()
         return info[0], t, blocks
 
-    def redirectCaptureThread(self, handle, captured_blocks):
+    def redirectCaptureThread(self, handle: Any, captured_blocks: list[Any]) -> None:
         # One of these running per child process we are watching.  It
         # handles both stdout and stderr on a single handle. The read data is
         # never referenced until the thread dies - so no need for locks
@@ -410,12 +421,12 @@ class BBService(win32serviceutil.ServiceFramework):
         handle.Close()
         # self.info("Redirect capture thread terminating")
 
-    def newPipe(self):
+    def newPipe(self) -> tuple[Any, Any]:
         sa = win32security.SECURITY_ATTRIBUTES()
         sa.bInheritHandle = True
         return win32pipe.CreatePipe(sa, 0)
 
-    def dup(self, pipe):
+    def dup(self, pipe: Any) -> Any:
         # create a duplicate handle that is not inherited, so that
         # it can be closed in the parent.  close the original pipe in
         # the process.
@@ -428,7 +439,7 @@ class BBService(win32serviceutil.ServiceFramework):
 # Service registration and startup
 
 
-def RegisterWithFirewall(exe_name, description):
+def RegisterWithFirewall(exe_name: str, description: str) -> None:
     # Register our executable as an exception with Windows Firewall.
     # taken from  http://msdn.microsoft.com/library/default.asp?url=\
     # /library/en-us/ics/ics/wf_adding_an_application.asp
@@ -462,14 +473,14 @@ def RegisterWithFirewall(exe_name, description):
 
 
 @contextmanager
-def GetLocalSecurityPolicyHandle(systemName, desiredAccess):
+def GetLocalSecurityPolicyHandle(systemName: str, desiredAccess: int) -> Generator[Any, None, None]:
     # Context manager for GetPolicyHandle
     policyHandle = win32security.GetPolicyHandle(systemName, desiredAccess)
     yield policyHandle
     win32security.LsaClose(policyHandle)
 
 
-def ConfigureLogOnAsAServicePolicy(accountName):
+def ConfigureLogOnAsAServicePolicy(accountName: str) -> None:
     # Modifies LocalSecurityPolicy to allow run buildbot as specified user
     # You can do it manually by running "secpol.msc"
     # Open Local Policies > User Rights Assignment > Log on as a service
@@ -520,7 +531,7 @@ def ConfigureLogOnAsAServicePolicy(accountName):
 # A custom install function.
 
 
-def CustomInstall(opts):
+def CustomInstall(opts: Any) -> None:
     # Register this process with the Windows Firewaall
     import pythoncom  # noqa: PLC0415
 
@@ -534,7 +545,7 @@ def CustomInstall(opts):
     for opt, val in opts:
         if opt == '--username':
             userName = val
-    ConfigureLogOnAsAServicePolicy(userName)
+    ConfigureLogOnAsAServicePolicy(userName)  # type: ignore[arg-type]
 
 
 # Magic code to allow shutdown.  Note that this code is executed in
@@ -542,7 +553,7 @@ def CustomInstall(opts):
 # special cmdline args (which includes the service stop handle!)
 
 
-def _RunChild(runfn):
+def _RunChild(runfn: Callable[[], None]) -> None:
     del sys.argv[1]  # The --spawn arg.
     # Create a new thread that just waits for the event to be signalled.
     t = threading.Thread(target=_WaitForShutdown, args=(int(sys.argv[1]),))
@@ -551,7 +562,7 @@ def _RunChild(runfn):
     # users log off, or as the system shuts down.  We want to ignore these
     # signals as the service parent is responsible for our shutdown.
 
-    def ConsoleHandler(what):
+    def ConsoleHandler(what: int) -> bool:
         # We can ignore *everything* - ctrl+c will never be sent as this
         # process is never attached to a console the user can press the
         # key in!
@@ -569,16 +580,16 @@ def _RunChild(runfn):
     print("Service child process terminating normally.")
 
 
-def _WaitForShutdown(h):
+def _WaitForShutdown(h: int) -> None:
     win32event.WaitForSingleObject(h, win32event.INFINITE)
     print("Shutdown requested")
 
     from twisted.internet import reactor  # noqa: PLC0415
 
-    reactor.callLater(0, reactor.stop)
+    reactor.callLater(0, reactor.stop)  # type: ignore[attr-defined]
 
 
-def DetermineRunner(bbdir):
+def DetermineRunner(bbdir: str) -> Callable[[], None]:
     """Checks if the given directory is a buildbot worker or a master and
     returns the appropriate run function."""
     try:
@@ -604,7 +615,7 @@ def DetermineRunner(bbdir):
 # This function is also called by the py2exe startup code.
 
 
-def HandleCommandLine():
+def HandleCommandLine() -> None:
     if len(sys.argv) > 1 and sys.argv[1] == "--spawn":
         # Special command-line created by the service to execute the
         # child-process.
