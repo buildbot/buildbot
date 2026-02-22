@@ -275,7 +275,7 @@ class FakeDBConnector(DBConnector):
         return non_matched_rows
 
     def _thd_maybe_insert_buildset(self, conn, rows):
-        matched_rows, non_matched_rows = self._match_rows(rows, Buildset)
+        matched_rows, _ = self._match_rows(rows, Buildset)
         for row in matched_rows:
             conn.execute(
                 self.model.buildsets.insert(),

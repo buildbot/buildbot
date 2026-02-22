@@ -40,7 +40,7 @@ def main():
     parser.add_option(
         "-v", "--verbose", dest="verbosity", action="count", help="Increase verbosity"
     )
-    options, args = parser.parse_args()
+    options, _ = parser.parse_args()
 
     if options.hostname and options.httpport:
         url = f"http://{options.hostname}:{options.httpport}/json/metrics"

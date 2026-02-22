@@ -187,7 +187,7 @@ def generate_change(
             kind = info[2]
             files.append(' '.join([path, kind, name]))
     for info in changes.renamed:
-        oldpath, newpath, id, kind, text_modified, meta_modified = info
+        oldpath, newpath, _, kind, text_modified, meta_modified = info
         elements = [oldpath, kind, 'RENAMED', newpath]
         if text_modified or meta_modified:
             elements.append('MODIFIED')

@@ -280,7 +280,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
     mergebasecommand = subprocess.Popen(
         ["git", "merge-base", oldrev, newrev], stdout=subprocess.PIPE
     )
-    (baserev, err) = mergebasecommand.communicate()
+    (baserev, _) = mergebasecommand.communicate()
     baserev = baserev.strip()  # remove newline
     baserev = baserev.decode(encoding)
 
@@ -443,7 +443,7 @@ def parse_options():
     parser.add_option("-a", "--auth", action="store", type="string", help=auth_help)
     first_parent_help = "If set, don't trigger builds for merged in commits"
     parser.add_option("--first-parent", action="store_true", help=first_parent_help)
-    options, args = parser.parse_args()
+    options, _ = parser.parse_args()
     return options
 
 
