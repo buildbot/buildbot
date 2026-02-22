@@ -12,7 +12,7 @@ docker==7.1.0
 hvac==2.3.0
 ldap3==2.9.1
 mypy==1.16.0
-mypy-zope==1.0.12
+mypy-zope==1.0.14
 psutil==7.0.0
 
 pywin32==311; platform_system=="Windows"
