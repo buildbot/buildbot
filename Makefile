@@ -33,7 +33,7 @@ ALL_PKGS := master worker pkg $(WWW_PKGS)
 
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 WWW_PKGS_FOR_PRETTIER := $(filter-out www/plugin_support www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
-
+WWW_PKGS_FOR_YARN := $(filter-out www/badges, $(WWW_PURE_DEP_PKGS) $(WWW_DEP_PKGS) $(WWW_PKGS))
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
 
@@ -65,7 +65,7 @@ docs-release-spelling: docs-towncrier
 	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
 
 frontend_yarn_install: check_for_yarn
-	for i in $(WWW_PURE_DEP_PKGS) $(WWW_DEP_PKGS) $(WWW_PKGS); \
+	for i in $(WWW_PKGS_FOR_YARN); \
 		do (cd $$i; $(YARN) install --immutable); done
 
 frontend_deps: $(VENV_NAME) frontend_yarn_install check_for_yarn
@@ -92,7 +92,7 @@ frontend_install_tests: frontend_deps
 
 # upgrade FE dependencies
 frontend_yarn_upgrade: check_for_yarn
-	for i in $(WWW_PKGS) $(WWW_EX_PKGS) $(WWW_DEP_PKGS) $(WWW_PURE_DEP_PKGS); \
+	for i in $(WWW_PKGS_FOR_YARN); \
 		do (cd $$i; echo $$i; rm -rf yarn.lock; $(YARN) install || echo $$i failed); done
 
 # install git hooks for validating patches at commit time
