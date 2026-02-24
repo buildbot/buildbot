@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "npm@9.9.4",
+  "packageManager": "npm@11.10.1",
   "dependencies": {
     "@types/react": "^18.0.0",
     "@types/react-copy-to-clipboard": "^5.0.4",
