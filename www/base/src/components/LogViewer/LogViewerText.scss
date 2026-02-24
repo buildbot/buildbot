@@ -1,9 +1,9 @@
-@import '../../styles/colors.scss';
+@use '../../styles/colors.scss';
 
 .bb-logviewer-text-area {
   padding-left: 0.5em;
   background-color: #000;
-  color: $bb-color-log-white;
+  color: colors.$bb-color-log-white;
   .padding {
     // zebra pattern
     background: repeating-linear-gradient(
@@ -15,14 +15,14 @@
   }
   .log_o,
   .ansi_white {
-    color: $bb-color-log-white;
+    color: colors.$bb-color-log-white;
   }
   // note: As log output window is always black and text always has to be visible, background and
   // foreground text color ansi classes are reverted: ansi30 refers to white (whereas by SGR code 30
   // is actually a black display) and ansi40 refers to black (whereas by SGR code 40 is actually a
   // 40 black background).
   .ansi30 {
-    color: $bb-color-log-white;
+    color: colors.$bb-color-log-white;
   }
   .log_e,
   .ansi_red,

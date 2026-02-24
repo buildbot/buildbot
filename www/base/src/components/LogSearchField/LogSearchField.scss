@@ -1,5 +1,5 @@
-@import 'bootstrap/scss/bootstrap';
-@import '../../styles/colors.scss';
+@use 'bootstrap/scss/bootstrap';
+@use '../../styles/colors.scss';
 
 .bb-log-search-field {
   position: relative;
@@ -12,7 +12,7 @@
   position: absolute;
   top: 0.7rem;
   margin-left: 0.5rem;
-  color: $body-color;
+  color: bootstrap.$body-color;
 }
 
 .bb-log-search-field-nav {
@@ -21,7 +21,7 @@
   top: 0;
   display: flex;
   flex-wrap: nowrap;
-  color: $body-color;
+  color: bootstrap.$body-color;
 }
 
 .bb-log-search-field-result-count {
@@ -31,7 +31,7 @@
 .bb-log-search-field-options {
   position: absolute;
   top: 0.4rem;
-  color: $body-color;
+  color: bootstrap.$body-color;
   padding: 0;
   border: none;
   background: none;
@@ -65,7 +65,7 @@
 }
 
 .bb-log-search-field-nav-button:hover {
-  background-color: $bb-color-button-hover-light;
+  background-color: colors.$bb-color-button-hover-light;
 }
 
 .bb-log-search-field-text {

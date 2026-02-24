@@ -1,9 +1,9 @@
-@import 'bootstrap/scss/bootstrap';
-@import 'animations.scss';
-@import 'colors.scss';
-@import 'mobile.scss';
-@import 'guanlecoja.scss';
-@import 'buildbot-ui/style.css';
+@use 'bootstrap/scss/bootstrap';
+@use 'animations.scss';
+@use 'colors.scss';
+@use 'mobile.scss';
+@use 'guanlecoja.scss';
+@use 'buildbot-ui/style.css';
 
 // Dashboards which use SVG to draw contents such as waterfall may require
 //  setting  body height to 100vh. (100% of viewport height)
@@ -28,7 +28,7 @@ body.hundredpercent {
 
 /* make the sidebar be on the back of the modals dialog */
 .sidebar {
-  z-index: ($zindex-modal - 1) !important;
+  z-index: (bootstrap.$zindex-modal - 1) !important;
 }
 
 /* button bar inside the breadcrum, used for forcesched buttons */
@@ -70,7 +70,7 @@ Firefox will insert newlines if the selection go over a no-select span, so we ne
 [data-linenumber-content--before]::before,
 [data-linenumber-content--after]::after {
   content: attr(data-linenumber-content);
-  color: $bb-color-log-white;
+  color: colors.$bb-color-log-white;
   padding-right: 10px;
   white-space: pre;
 }

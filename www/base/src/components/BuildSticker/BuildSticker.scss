@@ -1,4 +1,4 @@
-@import 'buildbot-ui/colors.scss';
+@use 'buildbot-ui/colors.scss';
 
 .bb-buildsticker {
   width: 100%;
@@ -18,38 +18,38 @@
   }
 
   &.results_SUCCESS {
-    border-color: $bb-color-border-results-success;
+    border-color: colors.$bb-color-border-results-success;
   }
 
   &.results_WARNINGS {
-    border-color: $bb-color-border-results-warnings;
+    border-color: colors.$bb-color-border-results-warnings;
   }
 
   &.results_FAILURE {
-    border-color: $bb-color-border-results-failure;
+    border-color: colors.$bb-color-border-results-failure;
   }
 
   &.results_SKIPPED {
-    border-color: $bb-color-border-results-skipped;
+    border-color: colors.$bb-color-border-results-skipped;
   }
 
   &.results_EXCEPTION {
-    border-color: $bb-color-border-results-exception;
+    border-color: colors.$bb-color-border-results-exception;
   }
 
   &.results_RETRY {
-    border-color: $bb-color-border-results-retry;
+    border-color: colors.$bb-color-border-results-retry;
   }
 
   &.results_CANCELLED {
-    border-color: $bb-color-border-results-cancelled;
+    border-color: colors.$bb-color-border-results-cancelled;
   }
 
   &.results_PENDING {
-    border-color: $bb-color-border-results-pending;
+    border-color: colors.$bb-color-border-results-pending;
   }
 
   &.results_UNKNOWN {
-    border-color: $bb-color-border-results-unknown;
+    border-color: colors.$bb-color-border-results-unknown;
   }
 }

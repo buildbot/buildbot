@@ -1,5 +1,5 @@
-@import 'bootstrap/scss/bootstrap';
+@use 'bootstrap/scss/bootstrap';
 
 .bb-about-view .card {
-  margin-bottom: $spacer;
+  margin-bottom: bootstrap.$spacer;
 }

@@ -1,4 +1,4 @@
-@import 'bootstrap/scss/bootstrap';
+@use 'bootstrap/scss/bootstrap';
 
 .bb-build-summary {
   .card-header {
@@ -17,7 +17,7 @@
   }
 
   .bb-build-request-counter {
-    color: $gray-600;
+    color: bootstrap.$gray-600;
     font-style: italic;
   }
 
@@ -52,7 +52,7 @@
   }
   .bb-build-summary-step-anchor-link {
     display: none;
-    color: $gray-500;
+    color: bootstrap.$gray-500;
     position: absolute;
     left: 0.5em;
   }
