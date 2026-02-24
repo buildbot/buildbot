@@ -11,5 +11,6 @@
   },
   "scripts": {},
   "author": "",
+  "packageManager": "npm@11.10.1",
   "license": "GPL-2.0"
 }

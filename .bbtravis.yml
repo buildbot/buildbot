@@ -75,6 +75,7 @@ matrix:
 install:
   - title: setup virtualenv
     cmd: |
+      set -e
       rm -rf /tmp/bbvenv
       python$PYTHON -m venv /tmp/bbvenv
   - /tmp/bbvenv/bin/pip install -r requirements-pip.txt
@@ -132,6 +133,7 @@ before_script:
     cmd: /prepare_mysql
   - condition: '"postgresql" in BUILDBOT_TEST_DB_URL'
     cmd: |
+        set -e
         /prepare_postgres
         # for pg8000 driver we can't use peer authentication or empty password, so set a dummy password
         # This also serves as a way to wait that the database is ready
@@ -142,12 +144,14 @@ script:
   - title: frontend tests
     condition: TESTS == "js_build"
     cmd: |
+      set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
       make frontend_install_tests
 
   - title: frontend unit tests
     condition: TESTS == "js_unit"
     cmd: |
+      set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
       export VITEST_MIN_THREADS=1
       export VITEST_MAX_THREADS=8
@@ -160,6 +164,7 @@ script:
   - title: interop tests
     condition: TESTS == "interop"
     cmd: |
+      set -e
       SANDBOXED_WORKER_PATH=/tmp/bbworkervenv/bin/buildbot-worker \
         /tmp/bbvenv/bin/coverage run --rcfile=.coveragerc \
           /tmp/bbvenv/bin/trial --reporter=text --rterrors buildbot.test.integration.interop
@@ -176,6 +181,7 @@ script:
   - title: ruff
     condition: TESTS == "ruff"
     cmd:  |
+      set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
       ruff check `git ls-files |grep '.py$'` && \
       ruff format --check `git ls-files |grep '.py$'`
@@ -183,17 +189,15 @@ script:
   - title: prettier
     condition: TESTS == "prettier"
     cmd:  |
+      set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
-      make frontend_yarn_install
-      for subdir in www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/data-module www/ui; do \
-        cd $$subdir; \
-        $(YARN) run prettier -w src *.ts *.js --check; \
-        cd - > /dev/null; \
-      done
+      make frontend_npm_install
+      make prettier-check
 
   - title: mypy
     condition: TESTS == "mypy"
     cmd:  |
+      set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
       make mypy
 
@@ -201,6 +205,7 @@ script:
   - title: docs
     condition: TESTS == "docs"
     cmd:  |
+      set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
       make docs-release
 
@@ -208,12 +213,14 @@ script:
   - title: spelling
     condition: TESTS == "docs"
     cmd:  |
+      set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
       make docs-release-spelling
 
   - title: maketarballs
     condition: TESTS in ("e2e_react_whl", "e2e_react_tgz")
     cmd:  |
+      set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
       make tarballs
 

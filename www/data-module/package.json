@@ -30,17 +30,20 @@
     "@vitejs/plugin-react": "~4.3.1",
     "axios": "~1.7.7",
     "axios-mock-adapter": "~2.0.0",
-    "build-config-buildbot": "link:../common-config",
+    "build-config-buildbot": "file:../common-config",
     "eslint": "^9.27.0",
     "jsdom": "^25.0.0",
     "mobx": "^6.13.4",
     "moment": "^2.29.4",
+    "prettier": "^3.8.1",
     "react": "^18.2.0",
     "react-app-polyfill": "~3.0.0",
+    "typescript": "^5.9.3",
     "vite": "~5.4.19",
     "vite-plugin-checker": "^0.9.0",
     "vite-plugin-dts": "^4.1.0",
     "vitest": "~3.0.5"
   },
+  "packageManager": "npm@11.10.1",
   "license": "MPL-2.0"
 }
