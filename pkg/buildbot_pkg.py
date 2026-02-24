@@ -211,21 +211,12 @@ class BuildJsCommand(Command):
         if os.path.exists("package.json"):
             shell = bool(os.name == 'nt')
 
-            yarn_program = None
-            for program in ["yarnpkg", "yarn"]:
-                try:
-                    yarn_version = check_output([program, "--version"], shell=shell)
-                    if yarn_version != "":
-                        yarn_program = program
-                        break
-                except subprocess.CalledProcessError:
-                    pass
-
-            assert yarn_program is not None, "need nodejs and yarn installed in current PATH"
+            npm_version = check_output(["npm", "--version"], shell=shell)
+            assert npm_version, "need nodejs and npm installed in current PATH"
 
             commands = [
-                [yarn_program, 'install', '--pure-lockfile'],
-                [yarn_program, 'run', 'build'],
+                ["npm", 'ci'],
+                ["npm", 'run', 'build'],
             ]
 
             for command in commands:

@@ -51,11 +51,11 @@ Installation
 
 The Data module is available as a standalone AngularJS module.
 
-Installation via yarn:
+Installation via npm:
 
   .. code-block:: sh
 
-      yarn add buildbot-data
+      npm add buildbot-data
 
 Inject the ``bbData`` module to your application:
 

@@ -3,13 +3,13 @@ set -e
 set -v
 cd `dirname $0`
 
-YARN=$(which yarnpkg || which yarn)
+NPM=$(which npm)
 if [ $?  -ne 0 ]; then
-    echo "Neither yarnpkg nor yarn is available"
+    echo "npm is not available"
     exit 1
 fi
 
-echo "Using ${YARN} as yarn"
+echo "Using ${NPM}"
 
 function finish_failed_start {
     set +e
@@ -48,20 +48,12 @@ buildbot-worker start workdir/worker
 trap finish EXIT
 cat workdir/twistd.log &
 
-YARNPROG=""
-
-for Y in yarnpkg yarn; do
-    $Y --version > /dev/null
-    if [ $? -eq 0 ]; then
-        YARNPROG=$Y
-    fi
-done
-
-if [ -z $YARNPROG ]; then
-    echo "Neither yarn nor yarnpkg is installed"
+NPM=`which npm`
+if [ -z $NPM ]; then
+    echo "npm is not available"
     exit 1
 fi
 
-$YARNPROG install --pure-lockfile
-$YARNPROG playwright install
-LIBGL_ALWAYS_SOFTWARE=1 $YARNPROG playwright test
+$NPM ci
+$NPM exec playwright install
+LIBGL_ALWAYS_SOFTWARE=1 $NPM exec playwright test

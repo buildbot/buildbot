@@ -5,7 +5,7 @@
 DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg https_proxy=$$https_proxy
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-.PHONY: docs ruff virtualenv check_for_yarn
+.PHONY: docs ruff virtualenv check_for_npm
 
 ifeq ($(OS),Windows_NT)
   VENV_BIN_DIR := Scripts
@@ -20,10 +20,10 @@ endif
 VENV_NAME := .venv$(VENV_PY_VERSION)
 PIP ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/pip
 VENV_PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
-YARN := $(shell which yarnpkg || which yarn)
+NPM := $(shell which npm)
 
-check_for_yarn:
-	@if [ "$(YARN)" = "" ]; then echo "yarnpkg or yarn is not installed" ; exit 1; fi
+check_for_npm:
+	@if [ "$(NPM)" = "" ]; then echo "npm is not installed" ; exit 1; fi
 
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample
@@ -33,7 +33,7 @@ ALL_PKGS := master worker pkg $(WWW_PKGS)
 
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 WWW_PKGS_FOR_PRETTIER := $(filter-out www/plugin_support www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
-WWW_PKGS_FOR_YARN := $(filter-out www/badges, $(WWW_PURE_DEP_PKGS) $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_NPM := $(filter-out www/badges, $(WWW_PURE_DEP_PKGS) $(WWW_DEP_PKGS) $(WWW_PKGS))
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
 
@@ -64,18 +64,18 @@ docs-release: docs-towncrier
 docs-release-spelling: docs-towncrier
 	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
 
-frontend_yarn_install: check_for_yarn
-	for i in $(WWW_PKGS_FOR_YARN); \
-		do (cd $$i; $(YARN) install --pure-lockfile); done
+frontend_npm_install: check_for_npm
+	for i in $(WWW_PKGS_FOR_NPM); \
+		do (cd $$i; $(NPM) ci); done
 
-frontend_deps: $(VENV_NAME) frontend_yarn_install check_for_yarn
+frontend_deps: $(VENV_NAME) frontend_npm_install check_for_npm
 	$(PIP) install build wheel -r requirements-ci.txt
 	for i in $(WWW_DEP_PKGS); \
-		do (cd $$i; $(YARN) run build); done
+		do (cd $$i; $(NPM) run build); done
 
-frontend_tests: frontend_deps check_for_yarn
+frontend_tests: frontend_deps check_for_npm
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
-		do (cd $$i; $(YARN) run build-dev || exit 1; $(YARN) run test || exit 1) || exit 1; done
+		do (cd $$i; $(NPM) run build-dev || exit 1; $(NPM) run test || exit 1) || exit 1; done
 
 # rebuild front-end from source
 frontend: frontend_deps
@@ -91,9 +91,9 @@ frontend_install_tests: frontend_deps
 	trial pkg/test_buildbot_pkg.py
 
 # upgrade FE dependencies
-frontend_yarn_upgrade: check_for_yarn
-	for i in $(WWW_PKGS_FOR_YARN); \
-		do (cd $$i; echo $$i; rm -rf yarn.lock; $(YARN) install || echo $$i failed); done
+frontend_npm_upgrade: check_for_npm
+	for i in $(WWW_PKGS_FOR_NPM); \
+		do (cd $$i; echo $$i; rm -rf package-lock.json; $(NPM) install || echo $$i failed); done
 
 # install git hooks for validating patches at commit time
 hooks:
@@ -101,11 +101,11 @@ hooks:
 rmpyc:
 	find master worker \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
 
-prettier: check_for_yarn
+prettier: check_for_npm
 	for subdir in $(WWW_PKGS_FOR_PRETTIER); do \
 		cd $$subdir; \
 		echo "Running prettier in $$subdir"; \
-		$(YARN) run prettier -w src *.ts *.js; \
+		$(NPM) exec -- prettier -w src *.ts *.js; \
 		cd - > /dev/null; \
 	done
 
@@ -132,7 +132,7 @@ $(VENV_NAME):
 	$(PIP) install -r requirements-pip.txt
 
 # helper for virtualenv creation
-virtualenv: $(VENV_NAME) check_for_yarn   # usage: make virtualenv VENV_PY_VERSION=python3.8
+virtualenv: $(VENV_NAME) check_for_npm   # usage: make virtualenv VENV_PY_VERSION=python3.8
 	$(PIP) install -r requirements-ci.txt \
 		-r requirements-ciworker.txt \
 		-r requirements-cidocs.txt \

@@ -69,29 +69,29 @@ Create a JavaScript Frontend Environment
 
 This section describes how to get set up quickly to hack on the JavaScript UI.
 It does not assume familiarity with Python, although a Python installation is required, as well as ``virtualenv``.
-You will also need ``NodeJS``, and ``yarn`` installed.
+You will also need ``NodeJS`` installed, and ``corepack`` enabled for ``npm`` (``corepack enable npm``).
 
 Prerequisites
 ~~~~~~~~~~~~~
 
 .. note::
 
-  Buildbot UI requires at least node 14.18 or newer and yarn 1.x.
+  Buildbot UI requires at least node 14.18 or newer and npm 9.4 or newer.
 
 * Install LTS release of Node.js.
 
   http://nodejs.org/ is a good start for Windows and macOS.
 
   For modern Linux distributions, you can often just install the distribution-provided packages if
-  they are recent enough. Note, that on Debian-based distributions yarn is available as yarnpkg.
+  they are recent enough.
 
   The below method has been tested on Debian Bookworm.
 
   .. code-block:: none
 
-    sudo apt install nodejs yarnpkg
+    sudo apt install nodejs
 
-  In other cases, use https://deb.nodesource.com and https://classic.yarnpkg.com/lang/en/docs/install.
+  In other cases, use https://deb.nodesource.com.
 
 .. _JSDevQuickStart:
 
@@ -132,7 +132,7 @@ This can be done by running the following in e.g. ``www/base`` directory:
 
 .. code-block:: none
 
-    yarn run build-dev
+    npm run build-dev
 
 The above rebuilds the resources only once. After each change you need to refresh the built resources.
 The actual commands that are run are stored in the ``package.json`` file under the ``scripts`` key.
@@ -141,7 +141,7 @@ To avoid the need to type the above command after each change, you can use the f
 
 .. code-block:: none
 
-    yarn run dev
+    npm run dev
 
 This will watch files for changes and reload automatically.
 
@@ -149,7 +149,7 @@ To run unit tests, do the following:
 
 .. code-block:: none
 
-    yarn run test
+    npm run test
 
 To run unit tests within all frontend packages within Buildbot, do the following at the root of the project:
 

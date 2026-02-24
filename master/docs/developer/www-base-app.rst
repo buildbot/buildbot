@@ -211,5 +211,5 @@ To start the development server:
 .. code-block:: bash
 
     cd www/base
-    yarn run start
+    npm run start
 

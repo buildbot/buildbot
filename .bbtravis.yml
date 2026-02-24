@@ -191,11 +191,11 @@ script:
     cmd:  |
       set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
-      make frontend_yarn_install
+      make frontend_npm_install
       for subdir in www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/data-module www/ui; do \
         ( \
         cd $$subdir && \
-        $(YARN) run prettier -w src *.ts *.js --check; \
+        $(NPM) exec -- prettier -w src *.ts *.js --check; \
         )
       done
 
