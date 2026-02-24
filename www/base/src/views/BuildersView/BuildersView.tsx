@@ -66,7 +66,8 @@ export const BuildersView = observer(() => {
     .filter((builder) => {
       return (
         isBuilderFiltered(builder, filterManager, masters, showOldBuilders) &&
-        (builderNameFilter === null || builder.name.toLowerCase().indexOf(builderNameFilter.toLowerCase()) >= 0)
+        (builderNameFilter === null ||
+          builder.name.toLowerCase().indexOf(builderNameFilter.toLowerCase()) >= 0)
       );
     })
     .sort((a, b) => a.name.localeCompare(b.name));

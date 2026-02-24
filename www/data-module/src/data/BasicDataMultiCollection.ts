@@ -16,8 +16,7 @@ import {IDataAccessor} from './DataAccessor';
 export class BasicDataMultiCollection<
   ParentDataType extends BaseClass,
   Collection extends IDataCollection,
-> implements IDataCollection
-{
+> implements IDataCollection {
   accessor: IDataAccessor;
   parentArray: IObservableArray<ParentDataType> | null;
   parentArrayMap: ObservableMap<string, DataCollection<ParentDataType>> | null;
