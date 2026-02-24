@@ -35,6 +35,7 @@
     "jsdom": "^25.0.0",
     "mobx": "^6.13.4",
     "moment": "^2.29.4",
+    "prettier": "^3.8.1",
     "react": "^18.2.0",
     "react-app-polyfill": "~3.0.0",
     "typescript": "^5.9.3",

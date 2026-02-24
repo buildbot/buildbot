@@ -101,12 +101,22 @@ hooks:
 rmpyc:
 	find master worker \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
 
+prettier-check: check_for_npm
+	for subdir in $(WWW_PKGS_FOR_PRETTIER); do \
+		( \
+		cd $$subdir && \
+		echo "Running prettier in $$subdir" && \
+		$(NPM) exec -- prettier --check src *.ts *.js \
+		) \
+	done
+
 prettier: check_for_npm
 	for subdir in $(WWW_PKGS_FOR_PRETTIER); do \
-		cd $$subdir; \
-		echo "Running prettier in $$subdir"; \
-		$(NPM) exec -- prettier -w src *.ts *.js; \
-		cd - > /dev/null; \
+		( \
+		cd $$subdir && \
+		echo "Running prettier in $$subdir" && \
+		$(NPM) exec -- prettier --write src *.ts *.js \
+		) \
 	done
 
 ruff:
