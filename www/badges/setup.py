@@ -47,5 +47,5 @@ setup_www_plugin(
         [buildbot.www]
         badges = buildbot_badges:ep
     """,
-    classifiers=['License :: OSI Approved :: GNU General Public License v2 (GPLv2)'],
+    license='GPL-2.0-or-later',
 )
