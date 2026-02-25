@@ -28,8 +28,8 @@ attrs==25.3.0
 autobahn==24.4.2
 Automat==25.4.16
 boto==2.49.0
-boto3==1.38.36
-botocore==1.38.36
+boto3==1.42.56
+botocore==1.42.56
 certifi==2025.10.5
 cffi==2.0.0
 charset-normalizer==3.4.2
@@ -66,7 +66,7 @@ PyYAML==6.0.2
 requests==2.32.4
 responses==0.25.7
 ruff==0.14.14
-s3transfer==0.13.0
+s3transfer==0.16.0
 service-identity==24.2.0
 six==1.17.0
 SQLAlchemy==2.0.41
