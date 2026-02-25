@@ -47,7 +47,7 @@ zstandard==0.25.0
 Brotli==1.2.0
 Mako==1.3.10
 MarkupSafe==3.0.2
-moto==5.1.6
+moto==5.1.21
 msgpack==1.1.2
 mypy-extensions==1.1.0
 packaging==25.0
