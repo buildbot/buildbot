@@ -1,4 +1,4 @@
-@import 'bootstrap/scss/bootstrap';
+@use 'bootstrap/scss/bootstrap';
 
 .bb-pending-build-request-table-line {
   &.bb-anchor-target {
@@ -24,6 +24,6 @@
 
 .bb-pending-build-request-table-line:hover {
   .bb-pending-build-request-anchor-link {
-    color: $gray-500;
+    color: bootstrap.$gray-500;
   }
 }

@@ -103,6 +103,14 @@ export default defineConfig({
     outDir: outDir,
     emptyOutDir: true,
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler',
+        quietDeps: true,
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     // required to fake nextTick: https://vitest.dev/guide/migration.html#timer-mocks-3925

@@ -1,13 +1,13 @@
-@import 'bootstrap/scss/bootstrap';
-@import '../../styles/colors.scss';
+@use 'bootstrap/scss/bootstrap';
+@use '../../styles/colors.scss';
 
 .bb-badge-round {
   display: inline-block;
   min-width: 10px;
   padding: 3px 7px;
-  font-size: $font-size-sm;
-  font-weight: $badge-font-weight;
-  line-height: $font-size-sm;
+  font-size: bootstrap.$font-size-sm;
+  font-weight: bootstrap.$badge-font-weight;
+  line-height: bootstrap.$font-size-sm;
   vertical-align: baseline;
   white-space: nowrap;
   text-align: center;
@@ -31,57 +31,57 @@
 
   &.results_SUCCESS,
   &.worker_CONNECTED {
-    color: $bb-color-results-success;
-    background-color: $bb-color-background-results-success;
-    border-color: $bb-color-border-results-success;
+    color: colors.$bb-color-results-success;
+    background-color: colors.$bb-color-background-results-success;
+    border-color: colors.$bb-color-border-results-success;
   }
 
   &.results_WARNINGS {
-    color: $bb-color-results-warnings;
-    background-color: $bb-color-background-results-warnings;
-    border-color: $bb-color-border-results-warnings;
+    color: colors.$bb-color-results-warnings;
+    background-color: colors.$bb-color-background-results-warnings;
+    border-color: colors.$bb-color-border-results-warnings;
   }
 
   &.results_FAILURE,
   &.worker_DISCONNECTED {
-    color: $bb-color-results-failure;
-    background-color: $bb-color-background-results-failure;
-    border-color: $bb-color-border-results-failure;
+    color: colors.$bb-color-results-failure;
+    background-color: colors.$bb-color-background-results-failure;
+    border-color: colors.$bb-color-border-results-failure;
   }
 
   &.results_SKIPPED {
-    color: $bb-color-results-skipped;
-    background: $bb-color-background-results-skipped;
-    border-color: $bb-color-border-results-skipped;
+    color: colors.$bb-color-results-skipped;
+    background: colors.$bb-color-background-results-skipped;
+    border-color: colors.$bb-color-border-results-skipped;
   }
 
   &.results_EXCEPTION {
-    color: $bb-color-results-exception;
-    background-color: $bb-color-background-results-exception;
-    border-color: $bb-color-border-results-exception;
+    color: colors.$bb-color-results-exception;
+    background-color: colors.$bb-color-background-results-exception;
+    border-color: colors.$bb-color-border-results-exception;
   }
 
   &.results_RETRY {
-    color: $bb-color-results-retry;
-    background-color: $bb-color-background-results-retry;
-    border-color: $bb-color-border-results-retry;
+    color: colors.$bb-color-results-retry;
+    background-color: colors.$bb-color-background-results-retry;
+    border-color: colors.$bb-color-border-results-retry;
   }
 
   &.results_CANCELLED {
-    color: $bb-color-results-cancelled;
-    background-color: $bb-color-background-results-cancelled;
-    border-color: $bb-color-border-results-cancelled;
+    color: colors.$bb-color-results-cancelled;
+    background-color: colors.$bb-color-background-results-cancelled;
+    border-color: colors.$bb-color-border-results-cancelled;
   }
 
   &.results_PENDING {
-    color: $bb-color-results-pending;
-    background-color: $bb-color-background-results-pending;
-    border-color: $bb-color-border-results-pending;
+    color: colors.$bb-color-results-pending;
+    background-color: colors.$bb-color-background-results-pending;
+    border-color: colors.$bb-color-border-results-pending;
   }
 
   &.results_UNKNOWN {
-    color: $bb-color-results-unknown;
-    background-color: $bb-color-background-results-unknown;
-    border-color: $bb-color-border-results-unknown;
+    color: colors.$bb-color-results-unknown;
+    background-color: colors.$bb-color-background-results-unknown;
+    border-color: colors.$bb-color-border-results-unknown;
   }
 }

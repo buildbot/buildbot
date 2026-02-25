@@ -1,4 +1,4 @@
-@import 'bootstrap/scss/bootstrap';
+@use 'bootstrap/scss/bootstrap';
 
 $gl-sidebar-small-threshold: 600px;
 
@@ -93,11 +93,11 @@ $gl-sidebar-small-threshold: 600px;
 
 // Reset link color for hierarchy links because otherwise it's not clear which of these are clickable
 .navbar-light .bb-topbar-navbar-elements .nav-link {
-  color: $link-color;
+  color: bootstrap.$link-color;
 
-  @include hover() {
-    color: $link-hover-color;
-    text-decoration: $link-hover-decoration;
+  @include bootstrap.hover() {
+    color: bootstrap.$link-hover-color;
+    text-decoration: bootstrap.$link-hover-decoration;
   }
 }
 
