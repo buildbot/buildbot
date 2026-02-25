@@ -26,12 +26,15 @@ from twisted.web.error import Error
 
 from buildbot.interfaces import IConfigured
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import any_to_async
+from buildbot.util.twisted import async_to_deferred
 from buildbot.www import auth
 from buildbot.www import resource
 
 if TYPE_CHECKING:
     from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.www.authz.authz import Authz
 
 
 def get_environment_versions() -> list[tuple[str, str]]:
@@ -122,6 +125,22 @@ def replace_placeholder_range(string: str, start: str, end: str, replacement: st
     return string[0:i1] + replacement + string[i2 + len(end) :]
 
 
+async def _get_any_access_allowed(user_info: dict[str, Any], authz: Authz) -> bool:
+    try:
+        await any_to_async(auth.assert_user_allowed_any_access(authz, user_info))
+        return True
+    except Exception:
+        return False
+
+
+def _render_frontend_config(
+    config: dict[str, Any],
+    user_info: dict[str, Any],
+    user_any_access_allowed: bool,
+) -> dict[str, Any]:
+    return {**config, "user": user_info, "user_any_access_allowed": user_any_access_allowed}
+
+
 class ConfigResource(resource.Resource):
     needsReconfig = True
 
@@ -131,17 +150,22 @@ class ConfigResource(resource.Resource):
     def render_GET(self, request: Any) -> int:
         return self.asyncRenderHelper(request, self.do_render)
 
-    def do_render(self, request: Any) -> defer.Deferred:
-        config: dict[str, Any] = {}
+    @async_to_deferred
+    async def do_render(self, request: Any) -> bytes:
         request.setHeader(b"content-type", b'application/json')
         request.setHeader(b"Cache-Control", b"public,max-age=0")
 
-        config.update(self.frontend_config)
-        config.update({"user": self.master.www.getUserInfos(request)})
-
-        return defer.succeed(
-            unicode2bytes(serialize_www_frontend_config_dict_to_json(config), encoding='ascii')
+        user_info = self.master.www.getUserInfos(request)
+        config = _render_frontend_config(
+            config=self.frontend_config,
+            user_info=user_info,
+            user_any_access_allowed=await _get_any_access_allowed(
+                user_info=user_info,
+                authz=self.master.www.authz,
+            ),
         )
+
+        return unicode2bytes(serialize_www_frontend_config_dict_to_json(config), encoding='ascii')
 
 
 class IndexResource(resource.Resource):
@@ -162,30 +186,26 @@ class IndexResource(resource.Resource):
         return self.asyncRenderHelper(request, self.renderIndex)
 
     @defer.inlineCallbacks
-    def _get_any_access_allowed(self, user_info: dict[str, Any]) -> InlineCallbacksType[bool]:
-        try:
-            yield auth.assert_user_allowed_any_access(self.master.www.authz, user_info)
-            return True
-        except Exception:
-            return False
-
-    @defer.inlineCallbacks
     def renderIndex(self, request: Any) -> InlineCallbacksType[bytes]:
-        config = {}
         request.setHeader(b"content-type", b'text/html')
         request.setHeader(b"Cache-Control", b"public,max-age=0")
+
+        user_info = self.master.www.getUserInfos(request)
+        config = _render_frontend_config(
+            config=self.frontend_config,
+            user_info=user_info,
+            user_any_access_allowed=(
+                yield _get_any_access_allowed(
+                    user_info=user_info,
+                    authz=self.master.www.authz,
+                )
+            ),
+        )
 
         try:
             yield self.config['auth'].maybeAutoLogin(request)
         except Error as e:
             config["on_load_warning"] = e.message
-
-        user_info = self.master.www.getUserInfos(request)
-        any_access_allowed = yield self._get_any_access_allowed(user_info)
-
-        config.update(self.frontend_config)
-        config.update({"user": user_info})
-        config.update({"user_any_access_allowed": any_access_allowed})
 
         serialized_config = serialize_www_frontend_config_dict_to_json(config)
         serialized_css = serialize_www_frontend_theme_to_css(config, indent=8)
