@@ -6,7 +6,7 @@
 # Provides a base Debian image with latest buildbot worker installed
 
 FROM docker.io/library/debian:12
-MAINTAINER  Buildbot maintainers
+LABEL org.opencontainers.image.authors="Buildbot maintainers"
 
 # Last build date - this can be updated whenever there are security updates so
 # that everything is rebuilt

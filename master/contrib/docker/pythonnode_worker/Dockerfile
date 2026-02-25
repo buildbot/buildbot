@@ -4,7 +4,7 @@
 # to add build dependencies to build the python+nodejs buildbot_www package
 
 FROM        buildbot/buildbot-worker:master
-MAINTAINER  Buildbot maintainers
+LABEL org.opencontainers.image.authors="Buildbot maintainers"
 
 # This will make apt-get install without question
 ARG         DEBIAN_FRONTEND=noninteractive
