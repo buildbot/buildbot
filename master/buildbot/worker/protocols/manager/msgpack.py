@@ -28,6 +28,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import deferwaiter
+from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.protocols.manager.base import BaseDispatcher
 from buildbot.worker.protocols.manager.base import BaseManager
 from buildbot.worker.protocols.msgpack import Connection
@@ -35,7 +36,7 @@ from buildbot.worker.protocols.msgpack import Connection
 if TYPE_CHECKING:
     from autobahn.websocket.types import ConnectionRequest
     from twisted.internet.defer import Deferred
-    from twisted.internet.interfaces import IListeningPort
+    from twisted.internet.protocol import ServerFactory
 
     from buildbot.util.twisted import InlineCallbacksType
     from buildbot.worker.protocols.base import FileReaderImpl
@@ -412,8 +413,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 class Dispatcher(BaseDispatcher):
     DUMMY_PORT = 1
 
-    def __init__(self, config_port: str | int) -> None:
-        super().__init__(config_port=config_port)
+    def _create_server_factory(self, config_port: str | int) -> ServerFactory:
         try:
             port = int(config_port)
         except ValueError as e:
@@ -427,19 +427,22 @@ class Dispatcher(BaseDispatcher):
         if self._zero_port:
             port = self.DUMMY_PORT
 
-        self.serverFactory = WebSocketServerFactory(f"ws://0.0.0.0:{port}")
-        self.serverFactory.buildbot_dispatcher = self  # type: ignore[attr-defined]
-        self.serverFactory.protocol = BuildbotWebSocketServerProtocol
+        serverFactory = WebSocketServerFactory(f"ws://0.0.0.0:{port}")
+        serverFactory.buildbot_dispatcher = self
+        serverFactory.protocol = BuildbotWebSocketServerProtocol
+        return serverFactory
 
-    def start_listening_port(self) -> IListeningPort:
-        port = super().start_listening_port()
+    @async_to_deferred
+    async def startService(self) -> None:
+        await super().startService()
+
         if self._zero_port:
             # Check that websocket port is actually stored into the port attribute, as we're
             # relying on undocumented behavior.
             if self.serverFactory.port != self.DUMMY_PORT:  # type: ignore[attr-defined]
                 raise RuntimeError("Expected websocket port to be set to dummy port")
-            self.serverFactory.port = port.getHost().port  # type: ignore[attr-defined]
-        return port
+            assert self.bound_port is not None
+            self.serverFactory.port = self.bound_port  # type: ignore[attr-defined]
 
 
 class MsgManager(BaseManager[Dispatcher]):
