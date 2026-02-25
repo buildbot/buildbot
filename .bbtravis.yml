@@ -200,7 +200,7 @@ script:
     cmd:  |
       set -e
       export PATH=/tmp/bbvenv/bin/:$PATH
-      make mypy
+      make -j mypy
 
   # Build documentation
   - title: docs
