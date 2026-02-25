@@ -10,7 +10,7 @@ cffi==1.17.1;  python_version == "3.8"
 cffi==2.0.0;  python_version >= "3.9"
 constantly==23.10.4; python_version >= "3.8"
 constantly==15.1.0; python_version < "3.8"  # pyup: ignore
-cryptography==45.0.4
+cryptography==46.0.5
 funcsigs==1.0.2
 hyperlink==21.0.0
 idna==3.10
