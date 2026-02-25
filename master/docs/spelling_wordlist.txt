@@ -39,6 +39,7 @@ auth
 Auth
 authenticator
 authenticators
+authid
 authorisation
 authUri
 authz

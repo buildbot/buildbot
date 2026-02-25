@@ -1,0 +1,1 @@
+Master that uses a WAMP MQ now log the authid of the session on join
