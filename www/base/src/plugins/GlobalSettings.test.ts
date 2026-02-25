@@ -194,6 +194,26 @@ describe('GlobalSettings', () => {
     expect(settings.getSetting('Group.setting_boolean')).toEqual(false);
   });
 
+  it('returns default on unknown setting', () => {
+    const settings = new GlobalSettings();
+    settings.addGroup({
+      name: 'Group',
+      caption: 'group caption',
+      items: [
+        {
+          type: 'integer',
+          name: 'setting_integer',
+          caption: 'caption2',
+          defaultValue: 1,
+        },
+      ],
+    });
+    settings.fillDefaults({
+      'Group.unknown': 2,
+    });
+    expect(settings.getIntegerSetting('Group.unknown')).toEqual(0);
+  });
+
   it('setting retrieval with overridden default value', () => {
     const settings = new GlobalSettings();
     settings.addGroup({
