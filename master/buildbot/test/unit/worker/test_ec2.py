@@ -15,6 +15,7 @@
 # Portions Copyright 2014 Longaccess private company
 
 import os
+import warnings
 
 from twisted.trial import unittest
 
@@ -67,6 +68,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         super().setUp()
         if boto3 is None:
             raise unittest.SkipTest("moto not found")
+        warnings.filterwarnings('ignore', message='Boto3 will no longer support Python 3')
 
     def botoSetup(self, name='latent_buildbot_worker'):
         # the proxy system is also not properly mocked, so we need to delete environment variables
@@ -590,6 +592,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
         super().setUp()
         if boto3 is None:
             raise unittest.SkipTest("moto not found")
+        warnings.filterwarnings('ignore', message='Boto3 will no longer support Python 3')
 
     def botoSetup(self):
         c = boto3.client('ec2', region_name='us-east-1')
