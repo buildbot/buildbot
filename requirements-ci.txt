@@ -5,7 +5,7 @@
 buildbot-www==4.3.0
 
 Markdown==3.9; python_version < "3.10"  # pyup: ignore
-Markdown==3.10.1; python_version >= "3.10"
+Markdown==3.10.2; python_version >= "3.10"
 coverage==7.10.7; python_version < "3.10"  # pyup: ignore
 coverage==7.13.2; python_version >= "3.10"
 docker==7.1.0
