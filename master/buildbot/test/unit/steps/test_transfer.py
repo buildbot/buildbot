@@ -1057,6 +1057,7 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         self.setup_step(transfer.StringDownload("Hello World", "hello.txt"))
 
         self.get_nth_step(0).worker = Mock()
+        self.get_nth_step(0).worker.workername = "mock-worker"
         self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
@@ -1086,6 +1087,7 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         self.setup_step(transfer.StringDownload("Hello World", "hello.txt"))
 
         self.get_nth_step(0).worker = Mock()
+        self.get_nth_step(0).worker.workername = "mock-worker"
         self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
@@ -1154,6 +1156,7 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
         self.get_nth_step(0).worker = Mock()
+        self.get_nth_step(0).worker.workername = "mock-worker"
         self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
@@ -1183,6 +1186,7 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
         self.get_nth_step(0).worker = Mock()
+        self.get_nth_step(0).worker.workername = "mock-worker"
         self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read

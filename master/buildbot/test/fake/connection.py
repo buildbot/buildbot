@@ -75,3 +75,6 @@ class FakeConnection:
     def unblock_waiters(self):
         for d in self._blocked_deferreds:
             d.callback(None)
+
+    def get_peer(self) -> str:
+        return self.name

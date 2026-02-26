@@ -182,6 +182,7 @@ class Tests(interfaces.InterfaceTests, unittest.TestCase):
         step.workerVersion = workerVersion
         conn = mock.Mock()
         conn.remoteStartCommand = mock.Mock(return_value=None)
+        conn.get_peer = mock.Mock(return_value="peer")
 
         cmd.run(step, conn, 'builder')
 
