@@ -80,6 +80,7 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             "buildbotURL": "h:/a/b/",
             "multiMaster": False,
             "port": None,
+            "user_any_access_allowed": False,
         }
         self.assertEqual(res, exp)
 
