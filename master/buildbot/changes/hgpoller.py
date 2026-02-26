@@ -84,7 +84,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         encoding: str = "utf-8",
         name: str | None = None,
         pollAtLaunch: bool = False,
-        revlink: Callable[[str, str], str] = lambda branch, revision: (""),
+        revlink: Callable[[str, str], str] = lambda branch, revision: "",
         pollRandomDelayMin: int = 0,
         pollRandomDelayMax: int = 0,
     ) -> None:
@@ -124,7 +124,7 @@ class HgPoller(base.ReconfigurablePollingChangeSource, StateMixin):
         encoding: str = "utf-8",
         name: str | None = None,
         pollAtLaunch: bool = False,
-        revlink: Callable[[str, str], str] = lambda branch, revision: (""),
+        revlink: Callable[[str, str], str] = lambda branch, revision: "",
         pollRandomDelayMin: int = 0,
         pollRandomDelayMax: int = 0,
     ) -> InlineCallbacksType[None]:

@@ -383,7 +383,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
         def _thd_update_num_lines(conn: SAConnection, num_lines: int) -> None:
             res = conn.execute(
-                self.db.model.logs.update()
+                self.db.model.logs
+                .update()
                 .where(self.db.model.logs.c.id == logid)
                 .values(num_lines=num_lines)
             )
@@ -528,7 +529,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             chunks list is empty if not force, and no chunks would be grouped.
             """
             q = (
-                sa.select(
+                sa
+                .select(
                     tbl.c.first_line,
                     tbl.c.last_line,
                     sa.func.length(tbl.c.content),
@@ -595,7 +597,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             last_line: int,
         ) -> list[tuple[int, bytes]]:
             q = (
-                sa.select(tbl.c.content, tbl.c.compressed)
+                sa
+                .select(tbl.c.content, tbl.c.compressed)
                 .where(tbl.c.logid == logid)
                 .where(tbl.c.first_line >= first_line)
                 .where(tbl.c.last_line <= last_line)
@@ -617,7 +620,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             with conn.begin():
                 # we remove the chunks that we are compressing
                 deletion_query = (
-                    tbl.delete()
+                    tbl
+                    .delete()
                     .where(tbl.c.logid == logid)
                     .where(tbl.c.first_line >= first_line)
                     .where(tbl.c.last_line <= last_line)
@@ -713,7 +717,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # SELECT steps.id from steps WHERE steps.started_at < older_than_timestamp ORDER BY
             # steps.id DESC LIMIT 1;
             res = conn.execute(
-                sa.select(model.steps.c.id)
+                sa
+                .select(model.steps.c.id)
                 .where(model.steps.c.started_at < older_than_timestamp)
                 .order_by(model.steps.c.id.desc())
                 .limit(1)
@@ -727,7 +732,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # UPDATE logs SET logs.type = 'd' WHERE logs.stepid <= stepid_max AND type != 'd';
             if stepid_max:
                 res = conn.execute(
-                    model.logs.update()
+                    model.logs
+                    .update()
                     .where(sa.and_(model.logs.c.stepid <= stepid_max, model.logs.c.type != 'd'))
                     .values(type='d')
                 )

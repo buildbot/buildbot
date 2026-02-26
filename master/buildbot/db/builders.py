@@ -170,7 +170,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             if workerid is not None:
                 j = j.join(configured_workers_tbl)
             q = (
-                sa.select(
+                sa
+                .select(
                     bldr_tbl.c.id,
                     bldr_tbl.c.name,
                     bldr_tbl.c.description,

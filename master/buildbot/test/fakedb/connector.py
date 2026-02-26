@@ -300,7 +300,8 @@ class FakeDBConnector(DBConnector):
         matched_rows, non_matched_rows = self._match_rows(rows, Buildset)
         for row in matched_rows:
             conn.execute(
-                self.model.buildsets.update()
+                self.model.buildsets
+                .update()
                 .where(self.model.buildsets.c.id == row.id)
                 .values(rebuilt_buildid=row.rebuilt_buildid, parent_buildid=row.parent_buildid)
             )

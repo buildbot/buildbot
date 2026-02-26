@@ -123,7 +123,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
 
         bldr.workers = []
         bldr.getAvailableWorkers = lambda: [w for w in bldr.workers if w.isAvailable()]
-        bldr.getBuilderId = lambda: (builderid)
+        bldr.getBuilderId = lambda: builderid
         if builder_config is None:
             bldr.config.nextWorker = None
             bldr.config.nextBuild = None

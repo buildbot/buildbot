@@ -167,8 +167,8 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         ticket_login_interval: int = 60 * 60 * 24,
         server_tz: str | None = None,
         pollAtLaunch: bool = False,
-        revlink: Callable[[str, str], str] = lambda branch, revision: (""),
-        resolvewho: Callable[[str], str] = lambda who: (who),
+        revlink: Callable[[str, str], str] = lambda branch, revision: "",
+        resolvewho: Callable[[str], str] = lambda who: who,
         pollRandomDelayMin: int = 0,
         pollRandomDelayMax: int = 0,
     ) -> None:
@@ -215,8 +215,8 @@ class P4Source(base.ReconfigurablePollingChangeSource, util.ComparableMixin):
         ticket_login_interval: int = 60 * 60 * 24,
         server_tz: str | None = None,
         pollAtLaunch: bool = False,
-        revlink: Callable[[str, str], str] = lambda branch, revision: (""),
-        resolvewho: Callable[[str], str] = lambda who: (who),
+        revlink: Callable[[str, str], str] = lambda branch, revision: "",
+        resolvewho: Callable[[str], str] = lambda who: who,
         pollRandomDelayMin: int = 0,
         pollRandomDelayMax: int = 0,
     ) -> InlineCallbacksType[None]:

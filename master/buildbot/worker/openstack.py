@@ -367,9 +367,8 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         instances = []
         try:
             if instance_param is None:
-                filter_f = (
-                    lambda instance: instance.metadata.get("BUILDBOT:instance", "")
-                    == self.masterhash
+                filter_f = lambda instance: (
+                    instance.metadata.get("BUILDBOT:instance", "") == self.masterhash
                 )
                 instances = list(filter(filter_f, self.novaclient.servers.findall(name=self.name)))
             else:

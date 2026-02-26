@@ -680,12 +680,9 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
         builder_updates = []
         self.master.data.updates.updateBuilderInfo = (
-            lambda builderid,
-            desc,
-            desc_format,
-            desc_html,
-            projectid,
-            tags: builder_updates.append((builderid, desc, desc_format, desc_html, projectid, tags))
+            lambda builderid, desc, desc_format, desc_html, projectid, tags: (
+                builder_updates.append((builderid, desc, desc_format, desc_html, projectid, tags))
+            )
         )
 
         yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
@@ -701,12 +698,9 @@ class TestReconfig(TestReactorMixin, BuilderMixin, unittest.TestCase):
 
         builder_updates = []
         self.master.data.updates.updateBuilderInfo = (
-            lambda builderid,
-            desc,
-            desc_format,
-            desc_html,
-            projectid,
-            tags: builder_updates.append((builderid, desc, desc_format, desc_html, projectid, tags))
+            lambda builderid, desc, desc_format, desc_html, projectid, tags: (
+                builder_updates.append((builderid, desc, desc_format, desc_html, projectid, tags))
+            )
         )
 
         yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)

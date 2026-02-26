@@ -154,7 +154,8 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             j = j.join(self.db.model.builds)
             j = j.join(self.db.model.test_result_sets)
             q = (
-                sa.select(self.db.model.test_result_sets)
+                sa
+                .select(self.db.model.test_result_sets)
                 .select_from(j)
                 .where(self.db.model.codebase_commits.c.id.in_(commit_ids))
             )
