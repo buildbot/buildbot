@@ -40,10 +40,15 @@ from buildbot.util import bytes2unicode
 from buildbot.util import runprocess
 from buildbot.util import unicode2bytes
 from buildbot.util.eventual import flushEventualQueue
+from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from twisted.trial import unittest
+
+    from buildbot.process.remotecommand import RemoteCommand
 
     _TestBuildStepMixinBase = unittest.TestCase
 else:
@@ -190,17 +195,21 @@ class Expect:
         self.connection_broken = True
         return self
 
-    @defer.inlineCallbacks
-    def runBehavior(self, behavior, args, command):
+    @async_to_deferred
+    async def runBehavior(self, behavior, args, command: RemoteCommand) -> None:
         """
         Implement the given behavior.  Returns a Deferred.
         """
+
+        def _update_obj(key, value) -> tuple[dict[Any, Any], int]:
+            return ({key: value}, 0)
+
         if behavior == 'rc':
-            yield command.remoteUpdate('rc', args[0], False)
+            await command.remote_update([_update_obj('rc', args[0])])
         elif behavior == 'err':
             raise args[0]
         elif behavior == 'update':
-            yield command.remoteUpdate(args[0], args[1], False)
+            await command.remote_update([_update_obj(args[0], args[1])])
         elif behavior == 'log':
             name, streams = args
             for stream in streams:
@@ -209,23 +218,22 @@ class Expect:
 
             if name == command.stdioLogName:
                 if 'header' in streams:
-                    yield command.remote_update([({"header": streams['header']}, 0)])
+                    await command.remote_update([_update_obj("header", streams['header'])])
                 if 'stdout' in streams:
-                    yield command.remote_update([({"stdout": streams['stdout']}, 0)])
+                    await command.remote_update([_update_obj("stdout", streams['stdout'])])
                 if 'stderr' in streams:
-                    yield command.remote_update([({"stderr": streams['stderr']}, 0)])
+                    await command.remote_update([_update_obj("stderr", streams['stderr'])])
             else:
                 if 'header' in streams or 'stderr' in streams:
                     raise RuntimeError('Non stdio streams only support stdout')
-                yield command.addToLog(name, streams['stdout'])
+                await command.addToLog(name, streams['stdout'])
                 if name not in command.logs:
                     raise RuntimeError(f"{command}.addToLog: no such log {name}")
 
         elif behavior == 'callable':
-            yield args[0](command)
+            await args[0](command)
         else:
             raise AssertionError(f'invalid behavior {behavior}')
-        return None
 
     @defer.inlineCallbacks
     def runBehaviors(self, command):

@@ -24,6 +24,8 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util.eventual import fireEventually
+from buildbot.util.twisted import any_to_async
+from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 from buildbot.worker.protocols import base
 
@@ -45,17 +47,18 @@ class ProxyMixin:
         assert isinstance(impl, self.ImplClass)
         self.impl = impl
 
-    def callRemote(self, message: str, *args: Any, **kw: Any) -> Deferred[Any]:
+    @async_to_deferred
+    async def callRemote(self, message: str, *args: Any, **kw: Any) -> Any:
         method = getattr(self.impl, f"remote_{message}", None)
         if method is None:
             raise AttributeError(f"No such method: remote_{message}")
         try:
-            state = method(*args, **kw)
+            state = await any_to_async(method(*args, **kw))
         except TypeError:
             log.msg(f"{method} didn't accept {args} and {kw}")
             raise
         # break callback recursion for large transfers by using fireEventually
-        return fireEventually(state)
+        return await fireEventually(state)
 
     def notifyOnDisconnect(self, cb: Callable) -> None:
         pass
