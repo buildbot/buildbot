@@ -51,6 +51,7 @@ PRICE_TOO_LOW = 'price-too-low'
 class EC2LatentWorker(AbstractLatentWorker):
     instance = image = None
     _poll_resolution = 5  # hook point for tests
+    _max_runtime = 600
 
     def __init__(
         self,
@@ -82,73 +83,150 @@ class EC2LatentWorker(AbstractLatentWorker):
         session=None,
         **kwargs,
     ):
-        if not boto3:
-            config.error("The python module 'boto3' is needed to use a EC2LatentWorker")
-
-        if keypair_name is None:
-            config.error("EC2LatentWorker: 'keypair_name' parameter must be specified")
-
-        if security_name is None and not subnet_id:
-            config.error("EC2LatentWorker: 'security_name' parameter must be specified")
-
-        if volumes is None:
-            volumes = []
-
-        if tags is None:
-            tags = {}
+        self._validate_requirements(
+            keypair_name,
+            security_name,
+            subnet_id,
+            spot_instance,
+            price_multiplier,
+            max_spot_price,
+        )
+        self._initialize_defaults(volumes, tags)
 
         super().__init__(name, password, **kwargs)
 
-        if security_name and subnet_id:
-            raise ValueError(
-                'security_name (EC2 classic security groups) is not supported '
-                'in a VPC.  Use security_group_ids instead.'
-            )
-        if not (
-            (ami is not None)
-            ^ (valid_ami_owners is not None or valid_ami_location_regex is not None)
-        ):
-            raise ValueError(
-                'You must provide either a specific ami, or one or both of '
-                'valid_ami_location_regex and valid_ami_owners'
-            )
-        self.ami = ami
-        if valid_ami_owners is not None:
-            if isinstance(valid_ami_owners, int):
-                valid_ami_owners = (valid_ami_owners,)
-            else:
-                for element in valid_ami_owners:
-                    if not isinstance(element, int):
-                        raise ValueError(
-                            'valid_ami_owners should be int or iterable of ints', element
-                        )
-        if valid_ami_location_regex is not None:
-            if not isinstance(valid_ami_location_regex, str):
-                raise ValueError('valid_ami_location_regex should be a string')
-            # pre-compile the regex
-            valid_ami_location_regex = re.compile(valid_ami_location_regex)
-        if spot_instance and price_multiplier is None and max_spot_price is None:
-            raise ValueError(
-                'You must provide either one, or both, of price_multiplier or max_spot_price'
-            )
-        self.valid_ami_owners = None
-        if valid_ami_owners:
-            self.valid_ami_owners = [str(o) for o in valid_ami_owners]
-        self.valid_ami_location_regex = valid_ami_location_regex
-        self.instance_type = instance_type
+        self._validate_and_process_ami_filters(ami, valid_ami_owners, valid_ami_location_regex)
+        self._build_placement(region, placement)
+        identifier, secret_identifier = self._setup_aws_id(
+            identifier, secret_identifier, aws_id_file_path
+        )
+        self._setup_ec2_connection(
+            session,
+            region,
+            identifier,
+            secret_identifier,
+        )
+
         self.keypair_name = keypair_name
+        self._ensure_keypair(keypair_name)
+
+        self._ensure_security_group(security_name)
+        self._define_image(elastic_ip)
+
+        self.instance_type = instance_type
         self.security_name = security_name
         self.user_data = user_data
         self.spot_instance = spot_instance
         self.max_spot_price = max_spot_price
-        self.volumes = volumes
         self.price_multiplier = price_multiplier
         self.product_description = product_description
+        self.subnet_id = subnet_id
+        self.security_group_ids = security_group_ids
+        self.classic_security_groups = [self.security_name] if self.security_name else None
+        self.instance_profile_name = instance_profile_name
+        self.block_device_map = (
+            self.create_block_device_mapping(block_device_map) if block_device_map else None
+        )
 
-        if None not in [placement, region]:
-            self.placement = f'{region}{placement}'
-        else:
-            self.placement = None
+    def _validate_requirements(
+        self,
+        keypair_name,
+        security_name,
+        subnet_id,
+        spot_instance,
+        price_multiplier,
+        max_spot_price,
+    ):
+        if not boto3:
+            config.error("The python module 'boto3' is needed to use EC2LatentWorker")
+        if keypair_name is None:
+            config.error("EC2LatentWorker: 'keypair_name' parameter must be specified")
+        if security_name is None and not subnet_id:
+            config.error("EC2LatentWorker: 'security_name' parameter must be specified")
+        if security_name and subnet_id:
+            raise ValueError(
+                'security_name (EC2 classic) not supported in a VPC; use security_group_ids'
+            )
+        if (spot_instance) and (price_multiplier is None) and (max_spot_price is None):
+            raise ValueError(
+                'You must provide either one, or both, of price_multiplier or max_spot_price'
+            )
+
+    def _initialize_defaults(self, volumes, tags):
+        if volumes is None:
+            volumes = []
+        if tags is None:
+            tags = {}
+        self.volumes = volumes
+        self.tags = tags
+
+    def _validate_and_process_ami_filters(self, ami, valid_ami_owners, valid_ami_location_regex):
+        def _validate_owners(owners):
+            if owners is None:
+                return None
+            if isinstance(owners, int):
+                return [str(owners)]
+            for element in owners:
+                if not isinstance(element, int):
+                    raise ValueError('valid_ami_owners should be int or iterable of ints', element)
+            return [str(o) for o in owners]
+
+        def _compile_regex(regex):
+            if regex is None:
+                return None
+            if not isinstance(regex, str):
+                raise ValueError('valid_ami_location_regex should be a string')
+            return re.compile(regex)
+
+        only_ami = ami is not None
+        only_filters = valid_ami_owners is not None or valid_ami_location_regex is not None
+        if only_ami == only_filters:
+            raise ValueError(
+                'You must provide either a specific ami, or one or both of '
+                'valid_ami_location_regex and valid_ami_owners'
+            )
+
+        self.ami = ami
+        self.valid_ami_owners = _validate_owners(valid_ami_owners)
+        self.valid_ami_location_regex = _compile_regex(valid_ami_location_regex)
+
+    def _build_placement(self, region, placement):
+        self.placement = f"{region}{placement}" if region and placement else None
+
+    def _setup_ec2_connection(self, session, region, identifier, secret_identifier):
+        # Make the EC2 connection.
+        self.session = session
+        if self.session is None:
+            if region is not None:
+                avalaible_regions = boto3.Session(
+                    aws_access_key_id=identifier, aws_secret_access_key=secret_identifier
+                ).get_available_regions('ec2')
+                if region in avalaible_regions:
+                    self.session = boto3.Session(
+                        region_name=region,
+                        aws_access_key_id=identifier,
+                        aws_secret_access_key=secret_identifier,
+                    )
+                else:
+                    raise ValueError('The specified region does not exist: ' + region)
+
+            else:
+                # boto2 defaulted to us-east-1 when region was unset, we
+                # mimic this here in boto3
+                region = botocore.session.get_session().get_config_variable('region')
+                if region is None:
+                    log.msg("No AWS region specified, defaulting to 'us-east-1'")
+                    region = 'us-east-1'
+                self.session = boto3.Session(
+                    aws_access_key_id=identifier,
+                    aws_secret_access_key=secret_identifier,
+                    region_name=region,
+                )
+
+        self.ec2 = self.session.resource('ec2')
+        self.ec2_client = self.session.client('ec2')
+
+    def _setup_aws_id(self, identifier, secret_identifier, aws_id_file_path):
         if identifier is None:
             assert secret_identifier is None, (
                 'supply both or neither of identifier, secret_identifier'
@@ -171,45 +249,9 @@ class EC2LatentWorker(AbstractLatentWorker):
             assert secret_identifier is not None, (
                 'supply both or neither of identifier, secret_identifier'
             )
+        return identifier, secret_identifier
 
-        region_found = None
-
-        # Make the EC2 connection.
-        self.session = session
-        if self.session is None:
-            if region is not None:
-                for r in boto3.Session(
-                    aws_access_key_id=identifier, aws_secret_access_key=secret_identifier
-                ).get_available_regions('ec2'):
-                    if r == region:
-                        region_found = r
-
-                if region_found is not None:
-                    self.session = boto3.Session(
-                        region_name=region,
-                        aws_access_key_id=identifier,
-                        aws_secret_access_key=secret_identifier,
-                    )
-                else:
-                    raise ValueError('The specified region does not exist: ' + region)
-
-            else:
-                # boto2 defaulted to us-east-1 when region was unset, we
-                # mimic this here in boto3
-                region = botocore.session.get_session().get_config_variable('region')
-                if region is None:
-                    region = 'us-east-1'
-                self.session = boto3.Session(
-                    aws_access_key_id=identifier,
-                    aws_secret_access_key=secret_identifier,
-                    region_name=region,
-                )
-
-        self.ec2 = self.session.resource('ec2')
-        self.ec2_client = self.session.client('ec2')
-
-        # Make a keypair
-        #
+    def _ensure_keypair(self, keypair_name):
         # We currently discard the keypair data because we don't need it.
         # If we do need it in the future, we will always recreate the keypairs
         # because there is no way to
@@ -236,7 +278,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             # use paramiko to use the key to connect.
             self.ec2.create_key_pair(KeyName=keypair_name)
 
-        # create security group
+    def _ensure_security_group(self, security_name):
         if security_name:
             try:
                 self.ec2_client.describe_security_groups(GroupNames=[security_name])
@@ -256,7 +298,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 else:
                     raise
 
-        # get the image
+    def _define_image(self, elastic_ip):
         if self.ami is not None:
             self.image = self.ec2.Image(self.ami)
         else:
@@ -275,14 +317,6 @@ class EC2LatentWorker(AbstractLatentWorker):
             allocation_id = addresses[0]['AllocationId']
             elastic_ip = self.ec2.VpcAddress(allocation_id)
         self.elastic_ip = elastic_ip
-        self.subnet_id = subnet_id
-        self.security_group_ids = security_group_ids
-        self.classic_security_groups = [self.security_name] if self.security_name else None
-        self.instance_profile_name = instance_profile_name
-        self.tags = tags
-        self.block_device_map = (
-            self.create_block_device_mapping(block_device_map) if block_device_map else None
-        )
 
     def create_block_device_mapping(self, mapping_definitions):
         if not isinstance(mapping_definitions, list):
@@ -295,50 +329,64 @@ class EC2LatentWorker(AbstractLatentWorker):
         return mapping_definitions
 
     def get_image(self):
-        # pylint: disable=too-many-nested-blocks
-
         if self.image is not None:
             return self.image
+        images = self._get_all_images()
+
+        images_options_sorted = self._sort_images_options(images)
+
+        candidate_images = [
+            f'{candidate[-1].id} ({candidate[-1].image_location})'
+            for candidate in images_options_sorted
+        ]
+        log.msg(f"sorted images (last is chosen): {', '.join(candidate_images)}")
+        if not images_options_sorted:
+            raise ValueError('no available images match constraints')
+        return images_options_sorted[-1][-1]
+
+    def _get_all_images(self):
         images = self.ec2.images.all()
         if self.valid_ami_owners:
             images = images.filter(Owners=self.valid_ami_owners)
+        return [img for img in images if img and img.state == 'available']
+
+    def _extract_sort(self, level, match):
+        # Gather sorting information
+        alpha_sort = int_sort = None
+        if level < 2:
+            try:
+                alpha_sort = match.group(1)
+            except IndexError:
+                return None, None, 2
+            else:
+                if level == 0:
+                    try:
+                        int_sort = int(alpha_sort)
+                    except ValueError:
+                        return None, None, 1
+        return alpha_sort, int_sort, level
+
+    def _sort_images_options(self, images):
         if self.valid_ami_location_regex:
             level = 0
             options = []
             get_match = self.valid_ami_location_regex.match
             for image in images:
-                # Image must be available
-                if image.state != 'available':
-                    continue
                 # Image must match regex
                 match = get_match(image.image_location)
                 if not match:
                     continue
-                # Gather sorting information
-                alpha_sort = int_sort = None
-                if level < 2:
-                    try:
-                        alpha_sort = match.group(1)
-                    except IndexError:
-                        level = 2
-                    else:
-                        if level == 0:
-                            try:
-                                int_sort = int(alpha_sort)
-                            except ValueError:
-                                level = 1
+
+                alpha_sort, int_sort, level = self._extract_sort(level, match)
+
                 options.append([int_sort, alpha_sort, image.image_location, image.id, image])
             if level:
                 log.msg(f'sorting images at level {level}')
                 options = [candidate[level:] for candidate in options]
+            options.sort()
         else:
-            options = [(image.image_location, image.id, image) for image in images]
-        options.sort()
-        images = [f'{candidate[-1].id} ({candidate[-1].image_location})' for candidate in options]
-        log.msg(f"sorted images (last is chosen): {', '.join(images)}")
-        if not options:
-            raise ValueError('no available images match constraints')
-        return options[-1][-1]
+            options = [(image.image_location, image.id, image) for image in images if image]
+        return options
 
     def _dns(self):
         if self.instance is None:
@@ -540,25 +588,28 @@ class EC2LatentWorker(AbstractLatentWorker):
     def _thd_wait_for_request(self, reservation):
         duration = 0
         interval = self._poll_resolution
+        request_id = reservation['SpotInstanceRequestId']
 
         while True:
             # Sometimes it can take a second or so for the spot request to be
             # ready.  If it isn't ready, you will get a "Spot instance request
             # ID 'sir-abcd1234' does not exist" exception.
-            try:
-                requests = self.ec2.meta.client.describe_spot_instance_requests(
-                    SpotInstanceRequestIds=[reservation['SpotInstanceRequestId']]
-                )
-            except ClientError as e:
-                if 'InvalidSpotInstanceRequestID.NotFound' in str(e):
-                    requests = None
-                else:
-                    raise
 
-            if requests is not None:
-                request = requests['SpotInstanceRequests'][0]
-                request_status = request['Status']['Code']
-                if request_status not in SPOT_REQUEST_PENDING_STATES:
+            if duration > self._max_runtime:
+                log.msg(
+                    f"{self.__class__.__name__} {self.workername} spot request {request_id} timed out "
+                    f"after waiting {duration} seconds"
+                )
+                self._cancel_spot_request(request_id)
+                raise LatentWorkerFailedToSubstantiate(
+                    request_id, "timeout-waiting-for-fulfillment"
+                )
+
+            request = self._get_spot_request_status(request_id)
+
+            if request is not None:
+                status = request['Status']['Code']
+                if status not in SPOT_REQUEST_PENDING_STATES:
                     break
 
             time.sleep(interval)
@@ -566,34 +617,45 @@ class EC2LatentWorker(AbstractLatentWorker):
             if duration % 10 == 0:
                 log.msg(
                     f"{self.__class__.__name__} {self.workername} has waited {duration} "
-                    f"seconds for spot request {reservation['SpotInstanceRequestId']}"
+                    f"seconds for spot request {request_id}"
                 )
 
-        if request_status == FULFILLED:
+        if status == FULFILLED:
             minutes = duration // 60
             seconds = duration % 60
             log.msg(
                 f"{self.__class__.__name__} {self.workername} spot request "
-                f"{request['SpotInstanceRequestId']} fulfilled in about {minutes} minutes "
+                f"{request_id} fulfilled in about {minutes} minutes "
                 f"{seconds} seconds"
             )
             return request, True
-        elif request_status == PRICE_TOO_LOW:
-            self.ec2.meta.client.cancel_spot_instance_requests(
-                SpotInstanceRequestIds=[request['SpotInstanceRequestId']]
-            )
+
+        elif status == PRICE_TOO_LOW:
             log.msg(
                 f'{self.__class__.__name__} {self.workername} spot request rejected, spot '
                 'price too low'
             )
-            raise LatentWorkerFailedToSubstantiate(request['SpotInstanceRequestId'], request_status)
+            self._cancel_spot_request(request_id)
+            raise LatentWorkerFailedToSubstantiate(request_id, status)
+
         else:
             log.msg(
                 f"{self.__class__.__name__} {self.workername} failed to fulfill spot request "
-                f"{request['SpotInstanceRequestId']} with status {request_status}"
+                f"{request_id} with status {status}"
             )
-            # try to cancel, just for good measure
-            self.ec2.meta.client.cancel_spot_instance_requests(
-                SpotInstanceRequestIds=[request['SpotInstanceRequestId']]
+            self._cancel_spot_request(request_id)
+            raise LatentWorkerFailedToSubstantiate(request_id, status)
+
+    def _get_spot_request_status(self, request_id):
+        try:
+            response = self.ec2.meta.client.describe_spot_instance_requests(
+                SpotInstanceRequestIds=[request_id]
             )
-            raise LatentWorkerFailedToSubstantiate(request['SpotInstanceRequestId'], request_status)
+            return response['SpotInstanceRequests'][0]
+        except ClientError as e:
+            if 'InvalidSpotInstanceRequestID.NotFound' in str(e):
+                return None
+            raise
+
+    def _cancel_spot_request(self, request_id):
+        self.ec2.meta.client.cancel_spot_instance_requests(SpotInstanceRequestIds=[request_id])

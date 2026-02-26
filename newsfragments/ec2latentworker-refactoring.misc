@@ -1,0 +1,2 @@
+Refactored methods ``get_image``, ``__init__`` and ``_thd_wait_for_request`` from ``:class:EC2LatentWorker`` to improve understandability and readability. 
+Now each of these methods uses internal methods to do its features. The changes are related to :issue:`8571`.
