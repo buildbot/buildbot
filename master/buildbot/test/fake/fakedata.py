@@ -598,11 +598,19 @@ class FakeDataConnector(service.AsyncMultiService):
     def getResourceType(self, name):
         return getattr(self.rtypes, name)
 
-    def get(self, path, filters=None, fields=None, order=None, limit=None, offset=None):
+    def get(
+        self, path, filters=None, fields=None, order=None, limit=None, offset=None, properties=None
+    ):
         if not isinstance(path, tuple):
             raise TypeError('path must be a tuple')
         return self.realConnector.get(
-            path, filters=filters, fields=fields, order=order, limit=limit, offset=offset
+            path,
+            filters=filters,
+            fields=fields,
+            order=order,
+            limit=limit,
+            offset=offset,
+            properties=properties,
         )
 
     def get_with_resultspec(self, path, rspec):

@@ -127,9 +127,16 @@ class DataConnector(service.AsyncService):
     def getResourceType(self, name):
         return getattr(self.rtypes, name, None)
 
-    def get(self, path, filters=None, fields=None, order=None, limit=None, offset=None):
+    def get(
+        self, path, filters=None, fields=None, order=None, limit=None, offset=None, properties=None
+    ):
         resultSpec = resultspec.ResultSpec(
-            filters=filters, fields=fields, order=order, limit=limit, offset=offset
+            filters=filters,
+            fields=fields,
+            order=order,
+            limit=limit,
+            offset=offset,
+            properties=[resultspec.Property(b"property", "eq", properties)] if properties else None,
         )
         return self.get_with_resultspec(path, resultSpec)
 
