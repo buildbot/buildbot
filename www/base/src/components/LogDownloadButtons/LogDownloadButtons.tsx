@@ -16,9 +16,9 @@
 */
 
 import './LogDownloadButtons.scss';
-import {useContext} from 'react';
+import {useContext, useState} from 'react';
 import {Button, ButtonGroup} from 'react-bootstrap';
-import {FaDownload} from 'react-icons/fa';
+import {FaCopy, FaCheck, FaDownload} from 'react-icons/fa';
 import {DataClientContext, Log} from 'buildbot-data-js';
 
 export type LogDownloadButtonsProps = {
@@ -28,6 +28,19 @@ export type LogDownloadButtonsProps = {
 export const LogDownloadButtons = ({log}: LogDownloadButtonsProps) => {
   const dataClient = useContext(DataClientContext);
   const apiRootUrl = dataClient.restClient.rootUrl;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyToClipboard = async () => {
+    try {
+      const response = await fetch(new URL(`logs/${log.id}/raw`, apiRootUrl).toString());
+      const text = await response.text();
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error('Failed to copy log to clipboard', e);
+    }
+  };
 
   return (
     <ButtonGroup>
@@ -38,6 +51,16 @@ export const LogDownloadButtons = ({log}: LogDownloadButtonsProps) => {
         className="bb-log-download-button btn-sm"
       >
         <FaDownload />
+      </Button>
+      <Button
+        variant="default"
+        title={copied ? 'copied!' : 'copy log to clipboard'}
+        className="bb-log-download-button btn-sm"
+        onClick={() => {
+          void handleCopyToClipboard();
+        }}
+      >
+        {copied ? <FaCheck /> : <FaCopy />}
       </Button>
       <Button
         href={new URL(`logs/${log.id}/raw_inline`, apiRootUrl).toString()}
