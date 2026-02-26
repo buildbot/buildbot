@@ -4,13 +4,15 @@
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
 buildbot-www==4.3.0
 
-Markdown==3.8
-coverage==7.9.1
+Markdown==3.9; python_version < "3.10"  # pyup: ignore
+Markdown==3.10.1; python_version >= "3.10"
+coverage==7.10.7; python_version < "3.10"  # pyup: ignore
+coverage==7.13.2; python_version >= "3.10"
 docker==7.1.0
 hvac==2.3.0
 ldap3==2.9.1
-mypy==1.16.0
-mypy-zope==1.0.12
+mypy==1.19.1
+mypy-zope==1.0.14
 psutil==7.0.0
 
 pywin32==311; platform_system=="Windows"
@@ -33,7 +35,7 @@ cffi==2.0.0
 charset-normalizer==3.4.2
 constantly==23.10.4
 croniter==6.0.0
-cryptography==45.0.4
+cryptography==46.0.5
 dill==0.4.0
 evalidate==2.0.5
 greenlet==3.2.3
@@ -56,7 +58,7 @@ pyasn1==0.6.2
 pyasn1-modules==0.4.2
 pycparser==2.22
 PyJWT==2.10.1
-pyOpenSSL==25.1.0
+pyOpenSSL==25.3.0
 pypugjs==5.12.0
 python-dateutil==2.9.0.post0
 pytz==2025.2
@@ -70,14 +72,15 @@ six==1.17.0
 SQLAlchemy==2.0.41
 treq==25.5.0
 Twisted==25.5.0
-txaio==23.1.1
+txaio==23.6.1; python_version < "3.11"  # pyup: ignore
+txaio==25.12.2; python_version >= "3.11"
 txrequests==0.9.6
 typing_extensions==4.14.0
 unidiff==0.7.5
 # botocore for py3.9 depends on urllib3<1.27
 urllib3==1.26.19; python_version <= "3.9"  # pyup: ignore
-urllib3==2.5.0; python_version > "3.9"
-Werkzeug==3.1.4
+urllib3==2.6.3; python_version > "3.9"
+Werkzeug==3.1.6
 xmltodict==0.14.2
 zope.event==6.0
 zope.interface==7.2
