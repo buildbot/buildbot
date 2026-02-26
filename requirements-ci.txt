@@ -33,7 +33,7 @@ cffi==2.0.0
 charset-normalizer==3.4.2
 constantly==23.10.4
 croniter==6.0.0
-cryptography==45.0.4
+cryptography==46.0.3
 dill==0.4.0
 evalidate==2.0.5
 greenlet==3.2.3
@@ -56,7 +56,7 @@ pyasn1==0.6.2
 pyasn1-modules==0.4.2
 pycparser==2.22
 PyJWT==2.10.1
-pyOpenSSL==25.1.0
+pyOpenSSL==25.3.0
 pypugjs==5.12.0
 python-dateutil==2.9.0.post0
 pytz==2025.2

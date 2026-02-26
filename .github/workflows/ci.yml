@@ -10,8 +10,8 @@ permissions:
 
 jobs:
   win:
-    name: Win / python ${{ matrix.python-version }}
-    runs-on: windows-2022
+    name: ${{ matrix.windows-version }} / python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.windows-version }}
 
     strategy:
       fail-fast: false
@@ -23,6 +23,16 @@ jobs:
           - "3.12"
           - "3.13"
           - "3.14"
+        windows-version:
+          - windows-2022
+        include:
+          # setup-python only has 3.11 python for win ARM
+          - windows-version: windows-11-arm
+            python-version: "3.11"
+          - windows-version: windows-11-arm
+            python-version: "3.12"
+          - windows-version: windows-11-arm
+            python-version: "3.13"
 
     env:
       # Needed to ignore specific warns, otherwise, it'll warn a generic message
@@ -58,13 +68,22 @@ jobs:
         timeout-minutes: 30
 
   win-sandboxed-worker:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - windows-version: windows-latest
+            python-version: =3.10
+          - windows-version: windows-11-arm
+            python-version: =3.11
+
+    runs-on: ${{ matrix.windows-version }}
 
     steps:
       - uses: "actions/checkout@v6"
       - uses: "actions/setup-python@v5"
         with:
-          python-version: "=3.10"
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
           cache-dependency-path: |
             requirements-pip.txt
