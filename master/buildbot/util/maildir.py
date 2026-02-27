@@ -22,6 +22,8 @@ relative to the top of the maildir (so it will look like "new/blahblah").
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+from typing import cast
 
 from twisted.application import internet
 from twisted.internet import defer
@@ -32,6 +34,14 @@ from twisted.python import log
 from twisted.python import runtime
 
 from buildbot.util import service
+
+if TYPE_CHECKING:
+    from io import TextIOWrapper
+
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 dnotify = None
 try:
@@ -48,15 +58,15 @@ class MaildirService(service.BuildbotService):
     pollInterval = 10  # only used if we don't have DNotify
     name: str | None = 'MaildirService'
 
-    def __init__(self, basedir=None):
+    def __init__(self, basedir: str | None = None) -> None:
         super().__init__()
         if basedir:
             self.setBasedir(basedir)
-        self.files = []
+        self.files: list[str] = []
         self.dnotify = None
-        self.timerService = None
+        self.timerService: internet.TimerService | None = None
 
-    def setBasedir(self, basedir):
+    def setBasedir(self, basedir: str) -> None:
         # some users of MaildirService (scheduler.Try_Jobdir, in particular)
         # don't know their basedir until setServiceParent, since it is
         # relative to the buildmaster's basedir. So let them set it late. We
@@ -66,7 +76,7 @@ class MaildirService(service.BuildbotService):
         self.curdir = os.path.join(self.basedir, "cur")
 
     @defer.inlineCallbacks
-    def startService(self):
+    def startService(self) -> InlineCallbacksType[None]:
         if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
             raise NoSuchMaildir(f"invalid maildir '{self.basedir}'")
         try:
@@ -88,7 +98,7 @@ class MaildirService(service.BuildbotService):
         self.poll()
         yield super().startService()
 
-    def dnotify_callback(self):
+    def dnotify_callback(self) -> None:
         log.msg("dnotify noticed something, now polling")
 
         # give it a moment. I found that qmail had problems when the message
@@ -100,9 +110,9 @@ class MaildirService(service.BuildbotService):
         # why, and I'd have to hack qmail to investigate further, so it's
         # easier to just wait a second before yanking the message out of new/
 
-        reactor.callLater(0.1, self.poll)
+        cast("IReactorTime", reactor).callLater(0.1, self.poll)
 
-    def stopService(self):
+    def stopService(self) -> Deferred[None]:
         if self.dnotify:
             self.dnotify.remove()
             self.dnotify = None
@@ -112,14 +122,14 @@ class MaildirService(service.BuildbotService):
         return super().stopService()
 
     @defer.inlineCallbacks
-    def poll(self):
+    def poll(self) -> InlineCallbacksType[None]:
         try:
             assert self.basedir
             # see what's new
             for f in self.files:
                 if not os.path.isfile(os.path.join(self.newdir, f)):
                     self.files.remove(f)
-            newfiles = []
+            newfiles: list[str] = []
             for f in os.listdir(self.newdir):
                 if f not in self.files:
                     newfiles.append(f)
@@ -132,8 +142,8 @@ class MaildirService(service.BuildbotService):
         except Exception:
             log.err(None, f"while polling maildir '{self.basedir}':")
 
-    def moveToCurDir(self, filename):
-        f = None
+    def moveToCurDir(self, filename: str) -> TextIOWrapper | None:
+        f: TextIOWrapper | None = None
         if runtime.platformType == "posix":
             # open the file before moving it, because I'm afraid that once
             # it's in cur/, someone might delete it at any moment
@@ -150,5 +160,5 @@ class MaildirService(service.BuildbotService):
 
         return f
 
-    def messageReceived(self, filename):
+    def messageReceived(self, filename: str) -> Deferred[None]:
         raise NotImplementedError
