@@ -796,7 +796,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.util.private_tempdir",
       "buildbot.util.protocol",
       "buildbot.util.pullrequest",
-      "buildbot.util.queue",
       "buildbot.util.render_description",
       "buildbot.util.service",
       "buildbot.util.ssl",
