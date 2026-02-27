@@ -771,7 +771,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.util.warnings",
       "buildbot.test.util.www",
       "buildbot.test",
-      "buildbot.util.async_sort",
       "buildbot.util.config",
       "buildbot.util.httpclientservice",
       "buildbot.util.identifiers",
