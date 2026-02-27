@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
+from typing import Callable
 
 import sqlalchemy as sa
 from sqlalchemy.ext import compiler
@@ -25,8 +26,10 @@ from sqlalchemy.sql.elements import BooleanClauseList
 from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.expression import Executable
+from typing_extensions import Protocol
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from collections.abc import Sequence
     from typing import Any
     from typing import Callable
@@ -44,33 +47,33 @@ if TYPE_CHECKING:
 class InsertFromSelect(Executable, ClauseElement):
     _execution_options = Executable._execution_options.union({'autocommit': True})
 
-    def __init__(self, table, select):
+    def __init__(self, table: sa.Table, select: Any) -> None:
         self.table = table
         self.select = select
 
 
 @compiler.compiles(InsertFromSelect)
-def _visit_insert_from_select(element, compiler, **kw):
+def _visit_insert_from_select(element: InsertFromSelect, compiler: Any, **kw: Any) -> str:
     return (
         f"INSERT INTO {compiler.process(element.table, asfrom=True)} "
         f"{compiler.process(element.select)}"
     )
 
 
-def sa_version():
+def sa_version() -> tuple[int, int, int]:
     if hasattr(sa, '__version__'):
 
-        def tryint(s):
+        def tryint(s: str) -> int:
             try:
                 return int(s)
             except (ValueError, TypeError):
                 return -1
 
-        return tuple(map(tryint, sa.__version__.split('.')))
+        return tuple(map(tryint, sa.__version__.split('.')))  # type: ignore[return-value]
     return (0, 0, 0)  # "it's old"
 
 
-def Table(*args, **kwargs):
+def Table(*args: Any, **kwargs: Any) -> sa.Table:
     """Wrap table creation to add any necessary dialect-specific options"""
     # work around the case where a database was created for us with
     # a non-utf8 character set (mysql's default)
@@ -79,7 +82,7 @@ def Table(*args, **kwargs):
 
 
 @contextmanager
-def withoutSqliteForeignKeys(connection: Connection):
+def withoutSqliteForeignKeys(connection: Connection) -> Iterator[None]:
     if connection.engine.dialect.name != 'sqlite':
         yield
         return
@@ -104,13 +107,25 @@ def withoutSqliteForeignKeys(connection: Connection):
         connection.exec_driver_sql('pragma foreign_keys=ON')
 
 
-def get_sqlite_version():
+def get_sqlite_version() -> tuple[int, int, int]:
     import sqlite3  # noqa: PLC0415
 
     return sqlite3.sqlite_version_info
 
 
-def get_upsert_method(engine: Engine | None):
+class _UpsertMethod(Protocol):
+    def __call__(
+        self,
+        connection: Connection,
+        table: sa.Table,
+        *,
+        where_values: Sequence[tuple[sa.Column, Any]],
+        update_values: Sequence[tuple[sa.Column, Any]],
+        _race_hook: Callable[[Connection], None] | None = None,
+    ) -> None: ...
+
+
+def get_upsert_method(engine: Engine | None) -> _UpsertMethod:
     if engine is None:
         return _upsert_default
 
@@ -132,7 +147,7 @@ def _upsert_sqlite(
     where_values: Sequence[tuple[sa.Column, Any]],
     update_values: Sequence[tuple[sa.Column, Any]],
     _race_hook: Callable[[Connection], None] | None = None,
-):
+) -> None:
     from sqlalchemy.dialects.sqlite import insert  # noqa: PLC0415
 
     _upsert_on_conflict_do_update(
@@ -152,7 +167,7 @@ def _upsert_postgresql(
     where_values: Sequence[tuple[sa.Column, Any]],
     update_values: Sequence[tuple[sa.Column, Any]],
     _race_hook: Callable[[Connection], None] | None = None,
-):
+) -> None:
     from sqlalchemy.dialects.postgresql import insert  # noqa: PLC0415
 
     _upsert_on_conflict_do_update(
@@ -173,7 +188,7 @@ def _upsert_on_conflict_do_update(
     where_values: Sequence[tuple[sa.Column, Any]],
     update_values: Sequence[tuple[sa.Column, Any]],
     _race_hook: Callable[[Connection], None] | None = None,
-):
+) -> None:
     if _race_hook is not None:
         _race_hook(connection)
 
@@ -196,7 +211,7 @@ def _upsert_mysql(
     where_values: Sequence[tuple[sa.Column, Any]],
     update_values: Sequence[tuple[sa.Column, Any]],
     _race_hook: Callable[[Connection], None] | None = None,
-):
+) -> None:
     from sqlalchemy.dialects.mysql import insert  # noqa: PLC0415
 
     if _race_hook is not None:
@@ -220,7 +235,7 @@ def _upsert_default(
     where_values: Sequence[tuple[sa.Column, Any]],
     update_values: Sequence[tuple[sa.Column, Any]],
     _race_hook: Callable[[Connection], None] | None = None,
-):
+) -> None:
     q = table.update()
     if where_values:
         q = q.where(_column_values_where_clause(where_values))
@@ -248,8 +263,8 @@ def _column_values_where_clause(values: Sequence[tuple[sa.Column, Any]]) -> Colu
     return BooleanClauseList.and_(*[c == v for (c, v) in values])
 
 
-def hash_columns(*args):
-    def encode(x):
+def hash_columns(*args: Any) -> str:
+    def encode(x: Any) -> bytes:
         if x is None:
             return b'\xf5'
         elif isinstance(x, str):
