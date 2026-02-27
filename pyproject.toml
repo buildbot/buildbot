@@ -774,7 +774,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.util.async_sort",
       "buildbot.util.backoff",
       "buildbot.util.bbcollections",
-      "buildbot.util.codebase",
       "buildbot.util.config",
       "buildbot.util.httpclientservice",
       "buildbot.util.identifiers",
