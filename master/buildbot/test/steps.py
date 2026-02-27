@@ -119,7 +119,8 @@ class ExpectRemoteRef:
     def __eq__(self, other):
         return isinstance(other, self.rrclass)
 
-    __hash__ = None  # type: ignore[assignment]
+    def __hash__(self) -> int:
+        return hash(self.rrclass)
 
 
 class Expect:
