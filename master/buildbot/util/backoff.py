@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import time
 from typing import TYPE_CHECKING
-from typing import Any
 
 from twisted.internet import defer
 
@@ -78,8 +77,16 @@ class ExponentialBackoffEngineSync(ExponentialBackoffEngine):
 
 
 class ExponentialBackoffEngineAsync(ExponentialBackoffEngine):
-    def __init__(self, reactor: IReactorTime, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        reactor: IReactorTime,
+        start_seconds: float,
+        multiplier: float,
+        max_wait_seconds: float,
+    ) -> None:
+        super().__init__(
+            start_seconds=start_seconds, multiplier=multiplier, max_wait_seconds=max_wait_seconds
+        )
         self.reactor = reactor
 
     @defer.inlineCallbacks
