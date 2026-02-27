@@ -139,9 +139,12 @@ class Connection(base.Connection):
         self.master = master
         self.worker = worker
         self.protocol: BuildbotWebSocketServerProtocol | None = protocol
-        self._keepalive_waiter = deferwaiter.DeferWaiter()
+        self._keepalive_waiter: deferwaiter.DeferWaiter[None] = deferwaiter.DeferWaiter()
         self._keepalive_action_handler = deferwaiter.RepeatedActionHandler(
-            master.reactor, self._keepalive_waiter, self.keepalive_interval, self._do_keepalive
+            master.reactor,
+            self._keepalive_waiter,
+            self.keepalive_interval,
+            self._do_keepalive,
         )
         self.path_cls: type[PurePath] | None = None
 

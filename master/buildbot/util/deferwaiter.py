@@ -13,21 +13,39 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import Generic
+from typing import TypeVar
+
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 
 from buildbot.util import Notifier
 
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
 
-class DeferWaiter:
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IDelayedCall
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot.util.twisted import InlineCallbacksType
+
+_SelfResultT = TypeVar("_SelfResultT")
+
+
+class DeferWaiter(Generic[_SelfResultT]):
     """This class manages a set of Deferred objects and allows waiting for their completion"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._waited_count = 0
-        self._finish_notifier = Notifier()
+        self._finish_notifier: Notifier[None] = Notifier()
 
-    def _finished(self, result, d):
+    def _finished(self, result: _SelfResultT, d: Deferred) -> _SelfResultT:
         # most likely nothing is consuming the errors, so do it here
         if isinstance(result, failure.Failure):
             log.err(result)
@@ -37,7 +55,7 @@ class DeferWaiter:
             self._finish_notifier.notify(None)
         return result
 
-    def add(self, d):
+    def add(self, d: Deferred[_SelfResultT]) -> Deferred[_SelfResultT]:
         if not isinstance(d, defer.Deferred):
             return None
 
@@ -45,11 +63,11 @@ class DeferWaiter:
         d.addBoth(self._finished, d)
         return d
 
-    def has_waited(self):
+    def has_waited(self) -> bool:
         return self._waited_count > 0
 
     @defer.inlineCallbacks
-    def wait(self):
+    def wait(self) -> InlineCallbacksType[None]:
         if self._waited_count == 0:
             return
         yield self._finish_notifier.wait()
@@ -60,26 +78,33 @@ class RepeatedActionHandler:
     with DeferWaiter to correctly control shutdown of such process.
     """
 
-    def __init__(self, reactor, waiter, interval, action, start_timer_after_action_completes=False):
+    def __init__(
+        self,
+        reactor: IReactorTime,
+        waiter: DeferWaiter,
+        interval: int,
+        action: Callable[[], Awaitable[None]],
+        start_timer_after_action_completes: bool = False,
+    ) -> None:
         self._reactor = reactor
         self._waiter = waiter
         self._interval = interval
         self._action = action
         self._enabled = False
-        self._timer = None
+        self._timer: IDelayedCall | None = None
         self._start_timer_after_action_completes = start_timer_after_action_completes
         self._running = False
 
-    def set_interval(self, interval):
+    def set_interval(self, interval: int) -> None:
         self._interval = interval
 
-    def start(self):
+    def start(self) -> None:
         if self._enabled:
             return
         self._enabled = True
         self._start_timer()
 
-    def stop(self):
+    def stop(self) -> None:
         if not self._enabled:
             return
 
@@ -88,25 +113,26 @@ class RepeatedActionHandler:
             self._timer.cancel()
             self._timer = None
 
-    def delay(self):
+    def delay(self) -> None:
         if not self._enabled or not self._timer:
             # If self._timer is None, then the action is running and timer will be started once
             # it's done.
             return
         self._timer.reset(self._interval)
 
-    def force(self):
+    def force(self) -> None:
         if not self._enabled or self._running:
             return
 
-        self._timer.cancel()
+        if self._timer is not None:
+            self._timer.cancel()
         self._waiter.add(self._handle_action())
 
-    def _start_timer(self):
+    def _start_timer(self) -> None:
         self._timer = self._reactor.callLater(self._interval, self._handle_timeout)
 
     @defer.inlineCallbacks
-    def _do_action(self):
+    def _do_action(self) -> InlineCallbacksType[None]:
         try:
             self._running = True
             yield self._action()
@@ -115,11 +141,11 @@ class RepeatedActionHandler:
         finally:
             self._running = False
 
-    def _handle_timeout(self):
+    def _handle_timeout(self) -> None:
         self._waiter.add(self._handle_action())
 
     @defer.inlineCallbacks
-    def _handle_action(self):
+    def _handle_action(self) -> InlineCallbacksType[None]:
         self._timer = None
         if self._start_timer_after_action_completes:
             yield self._do_action()
@@ -136,15 +162,20 @@ class NonRepeatedActionHandler:
     invocations of an action do not overlap.
     """
 
-    def __init__(self, reactor, waiter, action):
+    def __init__(
+        self,
+        reactor: IReactorTime,
+        waiter: DeferWaiter[None],
+        action: Callable[[], Awaitable[None]],
+    ) -> None:
         self._reactor = reactor
         self._waiter = waiter
         self._action = action
-        self._timer = None
+        self._timer: IDelayedCall | None = None
         self._running = False
         self._repeat_after_finished = False
 
-    def force(self, invoke_again_if_running=False):
+    def force(self, invoke_again_if_running: bool = False) -> None:
         if self._running:
             if not invoke_again_if_running:
                 return
@@ -157,7 +188,7 @@ class NonRepeatedActionHandler:
 
         self._waiter.add(self._do_action())
 
-    def schedule(self, seconds_from_now, invoke_again_if_running=False):
+    def schedule(self, seconds_from_now: int, invoke_again_if_running: bool = False) -> None:
         if self._running and not invoke_again_if_running:
             return
 
@@ -171,13 +202,13 @@ class NonRepeatedActionHandler:
 
         self._timer.reset(seconds_from_now)
 
-    def stop(self):
+    def stop(self) -> None:
         if self._timer:
             self._timer.cancel()
             self._timer = None
 
     @defer.inlineCallbacks
-    def _do_action(self):
+    def _do_action(self) -> InlineCallbacksType[None]:
         try:
             self._running = True
             yield self._action()
@@ -189,6 +220,6 @@ class NonRepeatedActionHandler:
             self._repeat_after_finished = False
             self._waiter.add(self._do_action())
 
-    def _handle_timeout(self):
+    def _handle_timeout(self) -> None:
         self._timer = None
         self._waiter.add(self._do_action())
