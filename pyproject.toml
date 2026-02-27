@@ -807,7 +807,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.util.state",
       "buildbot.util.test_result_submitter",
       "buildbot.util.tuplematch",
-      "buildbot.util.watchdog",
       "buildbot.util",
       "buildbot.wamp.connector",
       "buildbot.warnings",
