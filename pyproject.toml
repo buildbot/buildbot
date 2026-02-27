@@ -779,7 +779,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.util.debounce",
       "buildbot.util.eventual",
       "buildbot.util.git_credential",
-      "buildbot.util.git",
       "buildbot.util.httpclientservice",
       "buildbot.util.identifiers",
       "buildbot.util.importlib_compat",
