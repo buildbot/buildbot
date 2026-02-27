@@ -235,6 +235,8 @@ class GitStepMixin(GitMixin):
         collectStdout: bool = False,
         initialStdin: str | None = None,
     ) -> InlineCallbacksType[str | int | None]:
+        assert isinstance(self, buildstep.BuildStep)
+
         full_command = ['git']
         full_env = self.env.copy() if self.env else {}
 
