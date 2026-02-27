@@ -81,8 +81,8 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
                     'description': 'desc',
                     'category': 'cat',
                     'value_unit': 'unit',
-                    'tests_passed': None,
-                    'tests_failed': None,
+                    'tests_passed': 0,
+                    'tests_failed': 0,
                     'complete': True,
                 }
             ],
@@ -109,8 +109,8 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
                     'description': 'desc',
                     'category': 'cat',
                     'value_unit': 'unit',
-                    'tests_passed': None,
-                    'tests_failed': None,
+                    'tests_passed': 0,
+                    'tests_failed': 0,
                     'complete': True,
                 }
             ],

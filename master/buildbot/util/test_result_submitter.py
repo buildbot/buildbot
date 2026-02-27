@@ -13,27 +13,58 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import TypedDict
+
 from twisted.internet import defer
 from twisted.python import log
+from typing_extensions import NotRequired
 
 from buildbot.util import deferwaiter
 
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
+    from buildbot.process.buildstep import BuildStep
+    from buildbot.util.twisted import InlineCallbacksType
+
+
+class TestResultInfo(TypedDict):
+    value: str
+    test_name: NotRequired[str]
+    test_code_path: NotRequired[str]
+    line: NotRequired[int]
+    duration_ns: NotRequired[int]
+
 
 class TestResultSubmitter:
-    def __init__(self, batch_n=3000):
+    def __init__(self, batch_n: int = 3000) -> None:
         self._batch_n = batch_n
-        self._curr_batch = []
-        self._pending_batches = []
-        self._waiter = deferwaiter.DeferWaiter()
-        self._master = None
-        self._builderid = None
+        self._curr_batch: list[TestResultInfo] = []
+        self._pending_batches: list[list[TestResultInfo]] = []
+        self._waiter: deferwaiter.DeferWaiter[None] = deferwaiter.DeferWaiter()
+        self._master: BuildMaster | None = None
+        self._builderid: int | None = None
 
-        self._add_pass_fail_result = None  # will be set to a callable if enabled
-        self._tests_passed = None
-        self._tests_failed = None
+        # will be set to a callable if enabled
+        self._add_pass_fail_result: Callable[[str], None] | None = None
+        self._tests_passed = 0
+        self._tests_failed = 0
 
     @defer.inlineCallbacks
-    def setup(self, step, description, category, value_unit):
+    def setup(
+        self,
+        step: BuildStep,
+        description: str,
+        category: str,
+        value_unit: str,
+    ) -> InlineCallbacksType[None]:
+        assert step.build is not None
+        assert step.build.buildid is not None
+        assert step.master is not None
+        assert step.stepid is not None
         builderid = yield step.build.getBuilderId()
         yield self.setup_by_ids(
             step.master,
@@ -46,7 +77,16 @@ class TestResultSubmitter:
         )
 
     @defer.inlineCallbacks
-    def setup_by_ids(self, master, builderid, buildid, stepid, description, category, value_unit):
+    def setup_by_ids(
+        self,
+        master: BuildMaster,
+        builderid: int,
+        buildid: int,
+        stepid: int,
+        description: str,
+        category: str,
+        value_unit: str,
+    ) -> InlineCallbacksType[None]:
         self._master = master
         self._category = category
         self._value_unit = value_unit
@@ -59,17 +99,18 @@ class TestResultSubmitter:
         )
 
     @defer.inlineCallbacks
-    def finish(self):
+    def finish(self) -> InlineCallbacksType[None]:
         self._submit_batch()
         yield self._waiter.wait()
+        assert self._master is not None
         yield self._master.data.updates.completeTestResultSet(
             self._setid, tests_passed=self._tests_passed, tests_failed=self._tests_failed
         )
 
-    def get_test_result_set_id(self):
+    def get_test_result_set_id(self) -> int:
         return self._setid
 
-    def _submit_batch(self):
+    def _submit_batch(self) -> None:
         batch = self._curr_batch
         self._curr_batch = []
 
@@ -83,19 +124,20 @@ class TestResultSubmitter:
         self._waiter.add(self._process_batches())
 
     @defer.inlineCallbacks
-    def _process_batches(self):
+    def _process_batches(self) -> InlineCallbacksType[None]:
         # at most one instance of this function may be running at the same time
+        assert self._master is not None
         while self._pending_batches:
             batch = self._pending_batches.pop(0)
             yield self._master.data.updates.addTestResults(self._builderid, self._setid, batch)
 
-    def _initialize_pass_fail_recording(self, function):
+    def _initialize_pass_fail_recording(self, function: Callable[[str], None]) -> None:
         self._add_pass_fail_result = function
         self._compute_pass_fail = True
         self._tests_passed = 0
         self._tests_failed = 0
 
-    def _initialize_pass_fail_recording_if_needed(self):
+    def _initialize_pass_fail_recording_if_needed(self) -> None:
         if self._category == 'pass_fail' and self._value_unit == 'boolean':
             self._initialize_pass_fail_recording(self._add_pass_fail_result_category_pass_fail)
             return
@@ -106,13 +148,13 @@ class TestResultSubmitter:
             self._initialize_pass_fail_recording(self._add_pass_fail_result_category_fail_only)
             return
 
-    def _add_pass_fail_result_category_fail_only(self, value):
+    def _add_pass_fail_result_category_fail_only(self, value: str) -> None:
         self._tests_failed += 1
 
-    def _add_pass_fail_result_category_pass_only(self, value):
+    def _add_pass_fail_result_category_pass_only(self, value: str) -> None:
         self._tests_passed += 1
 
-    def _add_pass_fail_result_category_pass_fail(self, value):
+    def _add_pass_fail_result_category_pass_fail(self, value: str) -> None:
         try:
             is_success = bool(int(value))
             if is_success:
@@ -124,11 +166,16 @@ class TestResultSubmitter:
             log.err(e, 'When parsing test result success status')
 
     def add_test_result(
-        self, value, test_name=None, test_code_path=None, line=None, duration_ns=None
-    ):
+        self,
+        value: str,
+        test_name: str | None = None,
+        test_code_path: str | None = None,
+        line: int | None = None,
+        duration_ns: int | None = None,
+    ) -> None:
         if not isinstance(value, str):
             raise TypeError('value must be a string')
-        result = {'value': value}
+        result: TestResultInfo = {'value': value}
 
         if test_name is not None:
             if not isinstance(test_name, str):

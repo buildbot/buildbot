@@ -706,7 +706,7 @@ class BuildStep(
     def addTestResult(
         self,
         setid: int,
-        value: float,
+        value: str,
         test_name: str | None = None,
         test_code_path: str | None = None,
         line: int | None = None,
