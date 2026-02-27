@@ -13,16 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import copy
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
+
+if TYPE_CHECKING:
+    from buildbot.process.properties import Properties
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class CompatibleLatentWorkerMixin:
     builds_may_be_incompatible = True
     _actual_build_props = None
 
-    def renderWorkerProps(self, build):
+    def renderWorkerProps(self, build: Properties) -> defer.Deferred[Any]:
         # Deriving classes should implement this method to render and return
         # a Deferred that will have all properties that are needed to start a
         # worker as its result. The Deferred should result in data that can
@@ -34,16 +42,16 @@ class CompatibleLatentWorkerMixin:
         raise NotImplementedError()
 
     @defer.inlineCallbacks
-    def renderWorkerPropsOnStart(self, build):
+    def renderWorkerPropsOnStart(self, build: Properties) -> InlineCallbacksType[Any]:
         props = yield self.renderWorkerProps(build)
         self._actual_build_props = copy.deepcopy(props)
         return props
 
-    def resetWorkerPropsOnStop(self):
+    def resetWorkerPropsOnStop(self) -> None:
         self._actual_build_props = None
 
     @defer.inlineCallbacks
-    def isCompatibleWithBuild(self, build):
+    def isCompatibleWithBuild(self, build: Properties) -> InlineCallbacksType[bool]:
         if self._actual_build_props is None:
             return True
 

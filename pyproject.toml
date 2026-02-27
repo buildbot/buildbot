@@ -784,7 +784,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.util.identifiers",
       "buildbot.util.importlib_compat",
       "buildbot.util.kubeclientservice",
-      "buildbot.util.latent",
       "buildbot.util.lineboundaries",
       "buildbot.util.netstrings",
       "buildbot.util.path_expand_user",
