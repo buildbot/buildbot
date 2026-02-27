@@ -22,6 +22,7 @@ from typing import Any
 from typing import Callable
 from typing import TypeVar
 from typing import Union
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -31,6 +32,8 @@ from typing_extensions import ParamSpec
 if TYPE_CHECKING:
     from collections.abc import Coroutine
     from collections.abc import Generator
+
+    from twisted.internet.interfaces import IReactorCore
 
     _T = TypeVar('_T')
     _P = ParamSpec('_P')
@@ -63,25 +66,25 @@ class ThreadPool(threadpool.ThreadPool):
 
     _stop_event = None  # if not None, then pool is running
 
-    def start(self):
+    def start(self) -> None:
         if self._stop_event:
             return
 
         super().start()
-        self._stop_event = reactor.addSystemEventTrigger(
+        self._stop_event = cast("IReactorCore", reactor).addSystemEventTrigger(
             'during', 'shutdown', self._stop_on_shutdown
         )
 
-    def _stop_on_shutdown(self):
+    def _stop_on_shutdown(self) -> None:
         self._stop_impl(remove_trigger=False)
 
-    def stop(self):
+    def stop(self) -> None:
         self._stop_impl(remove_trigger=True)
 
-    def _stop_impl(self, remove_trigger):
+    def _stop_impl(self, remove_trigger: bool) -> None:
         if not self._stop_event:
             return
         super().stop()
         if remove_trigger:
-            reactor.removeSystemEventTrigger(self._stop_event)
+            cast("IReactorCore", reactor).removeSystemEventTrigger(self._stop_event)
         self._stop_event = None
