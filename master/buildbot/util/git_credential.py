@@ -21,6 +21,7 @@ from typing import NamedTuple
 
 from zope.interface import implementer
 
+from buildbot.interfaces import IMaybeRenderableType
 from buildbot.interfaces import IRenderable
 from buildbot.util import ComparableMixin
 from buildbot.util.twisted import async_to_deferred
@@ -28,16 +29,18 @@ from buildbot.util.twisted import async_to_deferred
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.interfaces import IProperties
+
 
 @implementer(IRenderable)
 class GitCredentialInputRenderer(ComparableMixin):
     compare_attrs: ClassVar[Sequence[str]] = ('_credential_attributes',)
 
-    def __init__(self, **credential_attributes) -> None:
-        self._credential_attributes: dict[str, IRenderable | str] = credential_attributes
+    def __init__(self, **credential_attributes: IMaybeRenderableType[str]) -> None:
+        self._credential_attributes: dict[str, IMaybeRenderableType[str]] = credential_attributes
 
     @async_to_deferred
-    async def getRenderingFor(self, build):
+    async def getRenderingFor(self, build: IProperties) -> str:
         props = build.getProperties()
 
         rendered_attributes = []
@@ -61,15 +64,15 @@ class GitCredentialInputRenderer(ComparableMixin):
 class GitCredentialOptions(NamedTuple):
     # Each element of `credentials` should be a `str` which is a input format for git-credential
     # ref: https://git-scm.com/docs/git-credential#IOFMT
-    credentials: list[IRenderable | str]
+    credentials: list[IMaybeRenderableType[str]]
     # value to set the git config `credential.useHttpPath` to.
     # ref: https://git-scm.com/docs/gitcredentials#Documentation/gitcredentials.txt-useHttpPath
     use_http_path: bool | None = None
 
 
 def add_user_password_to_credentials(
-    auth_credentials: tuple[IRenderable | str, IRenderable | str],
-    url: IRenderable | str | None,
+    auth_credentials: tuple[IMaybeRenderableType[str], IMaybeRenderableType[str]],
+    url: IMaybeRenderableType[str] | None,
     credential_options: GitCredentialOptions | None,
 ) -> GitCredentialOptions:
     if credential_options is None:
@@ -86,7 +89,7 @@ def add_user_password_to_credentials(
         0,
         IRenderable(  # placate typing
             GitCredentialInputRenderer(
-                url=url,
+                url=url,  # type: ignore[arg-type]
                 username=username,
                 password=password,
             )
