@@ -150,7 +150,7 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(conn.keepalive_timer, None)
         assert conn.mind is not None
-        conn.mind.broker.transport.loseConnection.assert_called_with()
+        conn.mind.broker.transport.abortConnection.assert_called_with()
 
     def test_remotePrint(self) -> None:
         conn = pb.Connection(self.master, self.worker, self.mind)
