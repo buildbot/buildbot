@@ -27,6 +27,7 @@ import time
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
+from typing import Literal
 from typing import overload
 from urllib.parse import urlsplit
 from urllib.parse import urlunsplit
@@ -167,76 +168,83 @@ class ComparableMixin:
     class _None:
         pass
 
-    def __hash__(self):
-        compare_attrs = []
+    def __hash__(self) -> int:
+        compare_attrs: list[str] = []
         reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
 
         alist = [self.__class__] + [getattr(self, name, self._None) for name in compare_attrs]
         return hash(tuple(map(str, alist)))
 
-    def _cmp_common(self, them):
+    def _cmp_common(
+        self, them: object
+    ) -> tuple[Literal[True], list[Any], list[Any]] | tuple[Literal[False], None, None]:
         if type(self) is not type(them):
             return (False, None, None)
 
         if self.__class__ != them.__class__:
             return (False, None, None)
 
-        compare_attrs = []
+        compare_attrs: list[str] = []
         reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
 
-        self_list = [getattr(self, name, self._None) for name in compare_attrs]
-        them_list = [getattr(them, name, self._None) for name in compare_attrs]
+        self_list: list[Any] = [getattr(self, name, self._None) for name in compare_attrs]
+        them_list: list[Any] = [getattr(them, name, self._None) for name in compare_attrs]
         return (True, self_list, them_list)
 
-    def __eq__(self, them):
+    def __eq__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
         return self_list == them_list
 
     @staticmethod
-    def isEquivalent(us, them):
+    def isEquivalent(us: object, them: object) -> bool:
         if isinstance(them, ComparableMixin):
             them, us = us, them
         if isinstance(us, ComparableMixin):
             (isComparable, us_list, them_list) = us._cmp_common(them)
             if not isComparable:
                 return False
+            assert us_list is not None and them_list is not None
             return all(ComparableMixin.isEquivalent(v, them_list[i]) for i, v in enumerate(us_list))
         return us == them
 
-    def __ne__(self, them):
+    def __ne__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return True
         return self_list != them_list
 
-    def __lt__(self, them):
+    def __lt__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list < them_list
 
-    def __le__(self, them):
+    def __le__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list <= them_list
 
-    def __gt__(self, them):
+    def __gt__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list > them_list
 
-    def __ge__(self, them):
+    def __ge__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list >= them_list
 
-    def getConfigDict(self):
-        compare_attrs = []
+    def getConfigDict(self) -> dict[str, Any]:
+        compare_attrs: list[str] = []
         reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
         return {
             k: getattr(self, k)
