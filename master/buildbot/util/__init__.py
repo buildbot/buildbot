@@ -25,6 +25,7 @@ import sys
 import textwrap
 import time
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 from typing import overload
 from urllib.parse import urlsplit
@@ -41,23 +42,27 @@ from buildbot.util.misc import deferredLocked
 from ._notifier import Notifier
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from collections.abc import Iterator
     from collections.abc import Sequence
     from typing import ClassVar
     from typing import TypeVar
 
+    from twisted.internet.interfaces import IReactorTime
+
     _T = TypeVar('_T')
 
 
-def naturalSort(array):
+def naturalSort(array: Sequence[str]) -> list[str]:
     array = array[:]
 
-    def try_int(s):
+    def try_int(s: str | bytes) -> int | str | bytes:
         try:
             return int(s)
         except ValueError:
             return s
 
-    def key_func(item):
+    def key_func(item: str) -> list[int | str | bytes]:
         return [try_int(s) for s in re.split(r'(\d+)', item)]
 
     # prepend integer keys to each element, sort them, then strip the keys
@@ -66,7 +71,9 @@ def naturalSort(array):
     return array
 
 
-def flattened_iterator(l, types=(list, tuple)):
+def flattened_iterator(
+    l: Iterable[Any], types: tuple[type[Iterable[Any]], ...] = (list, tuple)
+) -> Iterator[Any]:
     """
     Generator for a list/tuple that potentially contains nested/lists/tuples of arbitrary nesting
     that returns every individual non-list/tuple element.  In other words,
@@ -82,7 +89,7 @@ def flattened_iterator(l, types=(list, tuple)):
         yield from flattened_iterator(element, types)
 
 
-def flatten(l, types=(list,)):
+def flatten(l: Iterable[Any], types: tuple[type[Iterable[Any]], ...] = (list,)) -> Iterable[Any]:
     """
     Given a list/tuple that potentially contains nested lists/tuples of arbitrary nesting,
     flatten into a single dimension.  In other words, turn [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
@@ -97,13 +104,13 @@ def flatten(l, types=(list,)):
     return list(flattened_iterator(l, types))
 
 
-def now(_reactor=None):
+def now(_reactor: IReactorTime | None = None) -> float:
     if _reactor and hasattr(_reactor, "seconds"):
         return _reactor.seconds()
     return time.time()
 
 
-def formatInterval(eta):
+def formatInterval(eta: int) -> str:
     eta_parts = []
     if eta > 3600:
         eta_parts.append(f"{eta // 3600} hrs")
@@ -115,7 +122,7 @@ def formatInterval(eta):
     return ", ".join(eta_parts)
 
 
-def fuzzyInterval(seconds):
+def fuzzyInterval(seconds: int) -> str:
     """
     Convert time interval specified in seconds into fuzzy, human-readable form
     """
