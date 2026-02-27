@@ -17,6 +17,7 @@ import datetime
 import locale
 import os
 import sys
+from typing import Any
 from unittest import mock
 
 from twisted.internet import reactor
@@ -211,6 +212,8 @@ class TimeFunctions(unittest.TestCase):
 
 class DiffSets(unittest.TestCase):
     def test_empty(self) -> None:
+        removed: set[Any]
+        added: set[Any]
         removed, added = util.diffSets(set([]), set([]))
         self.assertEqual((removed, added), (set([]), set([])))
 
