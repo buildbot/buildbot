@@ -205,6 +205,7 @@ class ComparableMixin:
             (isComparable, us_list, them_list) = us._cmp_common(them)
             if not isComparable:
                 return False
+            assert us_list is not None and them_list is not None
             return all(ComparableMixin.isEquivalent(v, them_list[i]) for i, v in enumerate(us_list))
         return us == them
 
@@ -218,24 +219,28 @@ class ComparableMixin:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list < them_list
 
     def __le__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list <= them_list
 
     def __gt__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list > them_list
 
     def __ge__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list >= them_list
 
     def getConfigDict(self) -> dict[str, Any]:
