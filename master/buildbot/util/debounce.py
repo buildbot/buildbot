@@ -85,6 +85,7 @@ class Debouncer:
             self.phase = PH_WAITING
         elif phase == PH_WAITING:
             if self.until_idle:
+                assert self.timer is not None
                 self.timer.reset(self.wait)
         elif phase == PH_RUNNING:
             self.phase = PH_RUNNING_QUEUED
@@ -120,6 +121,7 @@ class Debouncer:
     def stop(self) -> Deferred[None]:
         self.stopped = True
         if self.phase == PH_WAITING:
+            assert self.timer is not None
             self.timer.cancel()
             self.invoke()
             # fall through with PH_RUNNING
