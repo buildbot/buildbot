@@ -787,7 +787,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.util.latent",
       "buildbot.util.lineboundaries",
       "buildbot.util.lru",
-      "buildbot.util.maildir",
       "buildbot.util.netstrings",
       "buildbot.util.path_expand_user",
       "buildbot.util.poll",

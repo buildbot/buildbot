@@ -71,7 +71,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
 
     @defer.inlineCallbacks
     def messageReceived(self, filename: str) -> InlineCallbacksType:
-        with self.moveToCurDir(filename) as f:
+        with self.moveToCurDir(filename) as f:  # type: ignore[union-attr]
             chtuple = self.parse_file(f, self.prefix)
 
         src = None
