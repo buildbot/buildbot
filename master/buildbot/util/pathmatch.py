@@ -13,40 +13,48 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
+from typing import Any
+from typing import Callable
+from typing import Generic
+from typing import TypeVar
 
 _ident_re = re.compile('^[a-zA-Z_-][.a-zA-Z0-9_-]*$')
 
+_T = TypeVar('_T')
 
-def ident(x):
+
+def ident(x: str) -> str:
     if _ident_re.match(x):
         return x
     raise TypeError
 
 
-class Matcher:
-    def __init__(self):
-        self._patterns = {}
-        self._dirty = True
+class Matcher(Generic[_T]):
+    def __init__(self) -> None:
+        self._patterns: dict[tuple[str, ...], _T] = {}
+        self._dirty: bool = True
 
-    def __setitem__(self, path, value):
+    def __setitem__(self, path: tuple[str, ...], value: _T) -> None:
         assert path not in self._patterns, f"duplicate path {path}"
         self._patterns[path] = value
         self._dirty = True
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Matcher {self._patterns!r}>'
 
     path_elt_re = re.compile('^(.?):([a-z0-9_.]+)$')
-    type_fns = {"n": int, "i": ident, "s": str}
+    type_fns: dict[str, Callable[[str], Any]] = {"n": int, "i": ident, "s": str}
 
-    def __getitem__(self, path):
+    def __getitem__(self, path: tuple[str, ...]) -> tuple[_T, dict[str, Any]]:
         if self._dirty:
             self._compile()
 
         patterns = self._by_length.get(len(path), {})
         for pattern in patterns:
-            kwargs = {}
+            kwargs: dict[str, Any] = {}
             for pattern_elt, path_elt in zip(pattern, path):
                 mo = self.path_elt_re.match(pattern_elt)
                 if mo:
@@ -69,11 +77,11 @@ class Matcher:
                 return patterns[pattern], kwargs
         raise KeyError(f'No match for {path!r}')
 
-    def iterPatterns(self):
+    def iterPatterns(self) -> list[tuple[tuple[str, ...], _T]]:
         return list(self._patterns.items())
 
-    def _compile(self):
-        self._by_length = {}
+    def _compile(self) -> None:
+        self._by_length: dict[int, dict[tuple[str, ...], _T]] = {}
         for k, v in self.iterPatterns():
             length = len(k)
             self._by_length.setdefault(length, {})[k] = v
