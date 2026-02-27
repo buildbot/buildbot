@@ -799,7 +799,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.util.queue",
       "buildbot.util.raml",
       "buildbot.util.render_description",
-      "buildbot.util.runprocess",
       "buildbot.util.service",
       "buildbot.util.ssl",
       "buildbot.util.state",

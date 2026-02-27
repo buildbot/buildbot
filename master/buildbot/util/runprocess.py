@@ -13,36 +13,57 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import io
 import os
 import subprocess
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import protocol
+from twisted.internet.error import ProcessDone
+from twisted.internet.error import ProcessTerminated
 from twisted.python import log
 from twisted.python import runtime
 
 from buildbot.util import unicode2bytes
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from collections.abc import Sequence
+
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IDelayedCall
+    from twisted.internet.interfaces import IProcessTransport
+    from twisted.internet.interfaces import IReactorProcess
+    from twisted.internet.interfaces import IReactorTime
+    from twisted.python.failure import Failure
+
 
 class RunProcessPP(protocol.ProcessProtocol):
-    def __init__(self, run_process, initial_stdin=None):
+    def __init__(self, run_process: RunProcess, initial_stdin: bytes | None = None) -> None:
         self.run_process = run_process
         self.initial_stdin = initial_stdin
 
-    def connectionMade(self):
+    def connectionMade(self) -> None:
+        assert self.transport is not None
         if self.initial_stdin:
             self.transport.write(self.initial_stdin)
         self.transport.closeStdin()
 
-    def outReceived(self, data):
+    def outReceived(self, data: bytes) -> None:
         self.run_process.add_stdout(data)
 
-    def errReceived(self, data):
+    def errReceived(self, data: bytes) -> None:
         self.run_process.add_stderr(data)
 
-    def processEnded(self, reason):
+    def processEnded(self, reason: Failure) -> None:
+        assert isinstance(reason.value, (ProcessDone, ProcessTerminated))
         self.run_process.process_ended(reason.value.signal, reason.value.exitCode)
 
 
@@ -52,31 +73,31 @@ class RunProcess:
 
     def __init__(
         self,
-        reactor,
-        command,
-        workdir=None,
-        env=None,
-        collect_stdout=True,
-        collect_stderr=True,
-        stderr_is_error=False,
-        io_timeout=300,
-        runtime_timeout=3600,
-        sigterm_timeout=5,
-        initial_stdin=None,
-        use_pty=False,
-    ):
+        reactor: IReactorTime | IReactorProcess,
+        command: Sequence[str],
+        workdir: str | None = None,
+        env: Mapping[str, str] | None = None,
+        collect_stdout: bool | Callable[[bytes], None] = True,
+        collect_stderr: bool | Callable[[bytes], None] = True,
+        stderr_is_error: bool = False,
+        io_timeout: float = 300,
+        runtime_timeout: int = 3600,
+        sigterm_timeout: int = 5,
+        initial_stdin: bytes | None = None,
+        use_pty: bool = False,
+    ) -> None:
         self._reactor = reactor
         self.command = command
 
         self.workdir = workdir
-        self.process = None
+        self.process: IProcessTransport | None = None
 
         self.environ = env
 
         self.initial_stdin = initial_stdin
 
-        self.output_stdout = None
-        self.consumer_stdout = None
+        self.output_stdout: io.BytesIO | None = None
+        self.consumer_stdout: Callable[[bytes], Any] | None = None
 
         if collect_stdout is True:
             self.output_stdout = io.BytesIO()
@@ -84,8 +105,8 @@ class RunProcess:
         elif callable(collect_stdout):
             self.consumer_stdout = collect_stdout
 
-        self.output_stderr = None
-        self.consumer_stderr = None
+        self.output_stderr: io.BytesIO | None = None
+        self.consumer_stderr: Callable[[bytes], Any] | None = None
 
         if collect_stderr is True:
             self.output_stderr = io.BytesIO()
@@ -96,31 +117,36 @@ class RunProcess:
         self.stderr_is_error = stderr_is_error
 
         self.io_timeout = io_timeout
-        self.io_timer = None
+        self.io_timer: IDelayedCall | None = None
 
         self.sigterm_timeout = sigterm_timeout
-        self.sigterm_timer = None
+        self.sigterm_timer: IDelayedCall | None = None
 
         self.runtime_timeout = runtime_timeout
-        self.runtime_timer = None
+        self.runtime_timer: IDelayedCall | None = None
 
         self.killed = False
-        self.kill_timer = None
+        self.kill_timer: IDelayedCall | None = None
         self.use_pty = use_pty
 
-        self.result_signal = None
-        self.result_rc = None
+        self.result_signal: int | None = None
+        self.result_rc: int | None = None
 
-    def __repr__(self):
+        # TODO(tdesveaux): Make this a simple tuple[int, bytes | None, bytes | None]?
+        self.deferred: (
+            Deferred[tuple[int | None, bytes] | tuple[int | None, bytes, bytes] | int | None] | None
+        ) = None
+
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} '{self.command}'>"
 
-    def get_os_env(self):
+    def get_os_env(self) -> Mapping[str, str]:
         return os.environ
 
-    def resolve_environment(self, env):
+    def resolve_environment(self, env: Mapping[str, str] | None) -> dict[str, str]:
         os_env = self.get_os_env()
         if env is None:
-            return os_env.copy()
+            return dict(os_env)
 
         new_env = {}
         for key, value in os_env.items():
@@ -131,7 +157,9 @@ class RunProcess:
                 new_env[key] = value
         return new_env
 
-    def start(self):
+    def start(
+        self,
+    ) -> Deferred[tuple[int | None, bytes] | tuple[int | None, bytes, bytes] | int | None]:
         self.deferred = defer.Deferred()
         try:
             self._start_command()
@@ -139,7 +167,7 @@ class RunProcess:
             self.deferred.errback(e)
         return self.deferred
 
-    def _start_command(self):
+    def _start_command(self) -> None:
         self.pp = RunProcessPP(self, initial_stdin=self.initial_stdin)
 
         environ = self.resolve_environment(self.environ)
@@ -151,26 +179,28 @@ class RunProcess:
             environ['PWD'] = os.path.abspath(self.workdir)
 
         argv = unicode2bytes(self.command)
-        self.process = self._reactor.spawnProcess(
+        self.process = cast("IReactorProcess", self._reactor).spawnProcess(
             self.pp, argv[0], argv, environ, self.workdir, usePTY=self.use_pty
         )
 
         if self.io_timeout:
-            self.io_timer = self._reactor.callLater(self.io_timeout, self.io_timed_out)
+            self.io_timer = cast("IReactorTime", self._reactor).callLater(
+                self.io_timeout, self.io_timed_out
+            )
 
         if self.runtime_timeout:
-            self.runtime_timer = self._reactor.callLater(
+            self.runtime_timer = cast("IReactorTime", self._reactor).callLater(
                 self.runtime_timeout, self.runtime_timed_out
             )
 
-    def add_stdout(self, data):
+    def add_stdout(self, data: bytes) -> None:
         if self.consumer_stdout is not None:
             self.consumer_stdout(data)
 
         if self.io_timer:
             self.io_timer.reset(self.io_timeout)
 
-    def add_stderr(self, data):
+    def add_stderr(self, data: bytes) -> None:
         if self.consumer_stderr is not None:
             self.consumer_stderr(data)
 
@@ -180,7 +210,9 @@ class RunProcess:
         if self.io_timer:
             self.io_timer.reset(self.io_timeout)
 
-    def _build_result(self, rc):
+    def _build_result(
+        self, rc: int | None
+    ) -> tuple[int | None, bytes] | tuple[int | None, bytes, bytes] | int | None:
         if self.output_stdout is not None and self.output_stderr is not None:
             return (rc, self.output_stdout.getvalue(), self.output_stderr.getvalue())
         if self.output_stdout is not None:
@@ -189,7 +221,7 @@ class RunProcess:
             return (rc, self.output_stderr.getvalue())
         return rc
 
-    def process_ended(self, sig, rc):
+    def process_ended(self, sig: int | None, rc: int | None) -> None:
         self.result_signal = sig
         self.result_rc = rc
 
@@ -213,7 +245,7 @@ class RunProcess:
         else:
             log.err(f"{self}: command finished twice")
 
-    def failed(self, why):
+    def failed(self, why: Failure | BaseException) -> None:
         self._cancel_timers()
         d = self.deferred
         self.deferred = None
@@ -222,18 +254,18 @@ class RunProcess:
         else:
             log.err(f"{self}: command finished twice")
 
-    def io_timed_out(self):
+    def io_timed_out(self) -> None:
         self.io_timer = None
         msg = f"{self}: command timed out: {self.io_timeout} seconds without output"
         self.kill(msg)
 
-    def runtime_timed_out(self):
+    def runtime_timed_out(self) -> None:
         self.runtime_timer = None
         msg = f"{self}: command timed out: {self.runtime_timeout} seconds elapsed"
         self.kill(msg)
 
-    def is_dead(self):
-        if self.process.pid is None:
+    def is_dead(self) -> bool:
+        if self.process is None or self.process.pid is None:
             return True
         pid = int(self.process.pid)
         try:
@@ -242,7 +274,7 @@ class RunProcess:
             return True
         return False
 
-    def check_process_was_killed(self):
+    def check_process_was_killed(self) -> None:
         self.sigterm_timer = None
         if not self.is_dead():
             if not self.send_signal(self.interrupt_signal):
@@ -250,24 +282,28 @@ class RunProcess:
 
         self.cleanup_killed_process()
 
-    def cleanup_killed_process(self):
+    def cleanup_killed_process(self) -> None:
         if runtime.platformType == "posix":
             # we only do this under posix because the win32eventreactor
             # blocks here until the process has terminated, while closing
             # stderr. This is weird.
+            assert self.pp.transport is not None
             self.pp.transport.loseConnection()
 
         if self.deferred:
             # finished ought to be called momentarily. Just in case it doesn't,
             # set a timer which will abandon the command.
-            self.kill_timer = self._reactor.callLater(self.TIMEOUT_KILL, self.kill_timed_out)
+            self.kill_timer = cast("IReactorTime", self._reactor).callLater(
+                self.TIMEOUT_KILL, self.kill_timed_out
+            )
 
-    def send_signal(self, interrupt_signal):
+    def send_signal(self, interrupt_signal: str) -> bool:
         success = False
 
         log.msg(f'{self}: killing process using {interrupt_signal}')
 
         if runtime.platformType == "win32":
+            assert self.process is not None
             pid = self.process.pid
             if interrupt_signal is not None and pid is not None:
                 try:
@@ -291,6 +327,7 @@ class RunProcess:
 
         # try signalling the process itself (works on Windows too, sorta)
         if not success:
+            assert self.process is not None
             try:
                 self.process.signalProcess(interrupt_signal)
                 success = True
@@ -305,7 +342,7 @@ class RunProcess:
 
         return success
 
-    def kill(self, msg):
+    def kill(self, msg: str) -> None:
         log.msg(f'{self}: killing process because {msg}')
         self._cancel_timers()
 
@@ -313,7 +350,7 @@ class RunProcess:
 
         if self.sigterm_timeout is not None:
             self.send_signal("TERM")
-            self.sigterm_timer = self._reactor.callLater(
+            self.sigterm_timer = cast("IReactorTime", self._reactor).callLater(
                 self.sigterm_timeout, self.check_process_was_killed
             )
         else:
@@ -322,13 +359,13 @@ class RunProcess:
 
             self.cleanup_killed_process()
 
-    def kill_timed_out(self):
+    def kill_timed_out(self) -> None:
         self.kill_timer = None
         log.msg(f"{self}: attempted to kill process, but it wouldn't die")
 
         self.failed(RuntimeError(f"SIG{self.interrupt_signal} failed to kill process"))
 
-    def _cancel_timers(self):
+    def _cancel_timers(self) -> None:
         for name in ('io_timer', 'kill_timer', 'runtime_timer', 'sigterm_timer'):
             timer = getattr(self, name, None)
             if timer:
@@ -336,10 +373,12 @@ class RunProcess:
                 setattr(self, name, None)
 
 
-def create_process(*args, **kwargs):
+def create_process(*args: Any, **kwargs: Any) -> RunProcess:
     return RunProcess(*args, **kwargs)
 
 
-def run_process(*args, **kwargs):
+def run_process(
+    *args: Any, **kwargs: Any
+) -> Deferred[tuple[int | None, bytes] | tuple[int | None, bytes, bytes] | int | None]:
     process = create_process(*args, **kwargs)
     return process.start()

@@ -13,13 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-
 import os
 from unittest import mock
 
 from parameterized import parameterized
 from twisted.internet import defer
+from twisted.internet.error import ProcessDone
 from twisted.python import runtime
+from twisted.python.failure import Failure
 from twisted.trial import unittest
 
 from buildbot.test.reactor import TestReactorMixin
@@ -59,7 +60,8 @@ class TestRunProcess(TestReactorMixin, LoggingMixin, unittest.TestCase):
         return self.run_process_obj.start()
 
     def end_process(self, signal=None, rc=0):
-        reason = mock.Mock()
+        reason = mock.Mock(spec=Failure)
+        reason.value = mock.Mock(spec=ProcessDone)
         reason.value.signal = signal
         reason.value.exitCode = rc
         self.pp.processEnded(reason)
