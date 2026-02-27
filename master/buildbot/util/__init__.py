@@ -253,7 +253,7 @@ class ComparableMixin:
         }
 
 
-def diffSets(old, new):
+def diffSets(old: Iterable[_T], new: Iterable[_T]) -> tuple[set[_T], set[_T]]:
     if not isinstance(old, set):
         old = set(old)
     if not isinstance(new, set):
@@ -268,41 +268,43 @@ badchars_map = bytes.maketrans(
 )
 
 
-def safeTranslate(s):
+def safeTranslate(s: str | bytes) -> bytes:
     if isinstance(s, str):
         s = s.encode('utf8')
     return s.translate(badchars_map)
 
 
-def none_or_str(x):
+def none_or_str(x: Any) -> str | None:
     if x is not None and not isinstance(x, str):
         return str(x)
     return x
 
 
 @overload
-def unicode2bytes(x: str, encoding='utf-8', errors='strict') -> bytes: ...
+def unicode2bytes(x: str, encoding: str = 'utf-8', errors: str = 'strict') -> bytes: ...
 
 
 @overload
-def unicode2bytes(x: _T, encoding='utf-8', errors='strict') -> _T: ...
+def unicode2bytes(x: _T, encoding: str = 'utf-8', errors: str = 'strict') -> _T: ...
 
 
-def unicode2bytes(x, encoding='utf-8', errors='strict'):
+def unicode2bytes(x: Any, encoding: str = 'utf-8', errors: str = 'strict') -> Any:
     if isinstance(x, str):
         x = x.encode(encoding, errors)
     return x
 
 
 @overload
-def bytes2unicode(x: None, encoding='utf-8', errors='strict') -> None: ...
+def bytes2unicode(x: None, encoding: str = 'utf-8', errors: str = 'strict') -> None: ...
 
 
 @overload
-def bytes2unicode(x: bytes | str, encoding='utf-8', errors='strict') -> str: ...
+def bytes2unicode(x: bytes | str, encoding: str = 'utf-8', errors: str = 'strict') -> str: ...
 
 
-def bytes2unicode(x: str | bytes | None, encoding='utf-8', errors='strict') -> str | None:
+def bytes2unicode(
+    x: str | bytes | None, encoding: str = 'utf-8', errors: str = 'strict'
+) -> str | None:
     if isinstance(x, (str, type(None))):
         return x
     return str(x, encoding, errors)
@@ -311,7 +313,7 @@ def bytes2unicode(x: str | bytes | None, encoding='utf-8', errors='strict') -> s
 _hush_pyflakes = [json]
 
 
-def toJson(obj):
+def toJson(obj: Any) -> int | None:
     if isinstance(obj, datetime.datetime):
         return datetime2epoch(obj)
     return None
@@ -323,7 +325,7 @@ def toJson(obj):
 
 
 class _NotABranch:
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
 
@@ -335,7 +337,13 @@ NotABranch = _NotABranch()
 UTC = dateutil.tz.tzutc()
 
 
-def epoch2datetime(epoch):
+@overload
+def epoch2datetime(epoch: float) -> datetime.datetime: ...
+@overload
+def epoch2datetime(epoch: None) -> None: ...
+
+
+def epoch2datetime(epoch: float | None) -> datetime.datetime | None:
     """Convert a UNIX epoch time to a datetime object, in the UTC timezone"""
     if epoch is not None:
         return datetime.datetime.fromtimestamp(epoch, tz=UTC)
