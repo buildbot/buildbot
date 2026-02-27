@@ -788,7 +788,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.util.ssl",
       "buildbot.util.state",
       "buildbot.util.tuplematch",
-      "buildbot.util",
       "buildbot.wamp.connector",
       "buildbot.warnings",
       "buildbot.worker.base",

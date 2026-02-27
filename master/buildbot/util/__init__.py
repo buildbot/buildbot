@@ -28,12 +28,14 @@ from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
 from typing import Literal
+from typing import cast
 from typing import overload
 from urllib.parse import urlsplit
 from urllib.parse import urlunsplit
 
 import dateutil.tz
 from twisted.python import reflect
+from typing_extensions import ParamSpec
 from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
@@ -45,13 +47,20 @@ from ._notifier import Notifier
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Iterator
+    from collections.abc import Mapping
+    from collections.abc import MutableMapping
     from collections.abc import Sequence
+    from typing import Callable
     from typing import ClassVar
     from typing import TypeVar
 
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IReactorCore
     from twisted.internet.interfaces import IReactorTime
+    from twisted.python.failure import Failure
 
     _T = TypeVar('_T')
+    _P = ParamSpec('_P')
 
 
 def naturalSort(array: Sequence[str]) -> list[str]:
@@ -366,7 +375,7 @@ def datetime2epoch(dt: datetime.datetime | None) -> int | None:
 
 
 # TODO: maybe "merge" with formatInterval?
-def human_readable_delta(start, end):
+def human_readable_delta(start: float, end: float) -> str:
     """
     Return a string of human readable time delta.
     """
@@ -393,7 +402,15 @@ def human_readable_delta(start, end):
     return 'super fast'
 
 
-def makeList(input):
+@overload
+def makeList(input: str) -> list[str]: ...
+
+
+@overload
+def makeList(input: Iterable[_T] | None) -> list[_T]: ...
+
+
+def makeList(input: Iterable[_T] | str | None) -> list[_T] | list[str]:
     if isinstance(input, str):
         return [input]
     elif input is None:
@@ -401,38 +418,41 @@ def makeList(input):
     return list(input)
 
 
-def in_reactor(f):
+def in_reactor(f: Callable[_P, _T]) -> Callable[_P, Any]:
     """decorate a function by running it with maybeDeferred in a reactor"""
 
-    def wrap(*args, **kwargs):
+    def wrap(*args: _P.args, **kwargs: _P.kwargs) -> Any:
         from twisted.internet import defer  # noqa: PLC0415
         from twisted.internet import reactor  # noqa: PLC0415
 
-        result = []
+        _reactor = cast("IReactorCore", reactor)
 
-        def _async():
+        result: list[_T | Failure] = []
+
+        def _async() -> None:
             d = defer.maybeDeferred(f, *args, **kwargs)
 
             @d.addErrback
-            def eb(f):
+            def eb(f: Failure) -> None:
                 f.printTraceback(file=sys.stderr)
 
             @d.addBoth
-            def do_stop(r):
+            def do_stop(r: _T | Failure) -> None:
                 result.append(r)
-                reactor.stop()
+                _reactor.stop()
 
-        reactor.callWhenRunning(_async)
-        reactor.run()
+        _reactor.callWhenRunning(_async)
+        _reactor.run()
         return result[0]
 
     wrap.__doc__ = f.__doc__
     wrap.__name__ = f.__name__
-    wrap._orig = f  # for tests
+    # for tests
+    wrap._orig = f  # type: ignore[attr-defined]
     return wrap
 
 
-def string2boolean(str):
+def string2boolean(str: bytes) -> bool:
     return {
         b'on': True,
         b'true': True,
@@ -445,21 +465,21 @@ def string2boolean(str):
     }[str.lower()]
 
 
-def asyncSleep(delay, reactor=None):
+def asyncSleep(delay: float, reactor: IReactorTime | None = None) -> Deferred[None]:
     from twisted.internet import defer  # noqa: PLC0415
     from twisted.internet import reactor as internet_reactor  # noqa: PLC0415
 
     if reactor is None:
-        reactor = internet_reactor
+        reactor = cast("IReactorTime", internet_reactor)
 
-    d = defer.Deferred()
+    d: Deferred[None] = defer.Deferred()
     reactor.callLater(delay, d.callback, None)
     return d
 
 
-def check_functional_environment(config):
+def check_functional_environment(config: Any) -> None:
     try:
-        if sys.version_info >= (3, 11, 0):
+        if sys.version_info >= (3, 11):
             locale.getencoding()
         else:
             locale.getdefaultlocale()
@@ -478,19 +498,28 @@ def check_functional_environment(config):
 _netloc_url_re = re.compile(r':[^@]*@')
 
 
-def stripUrlPassword(url):
+def stripUrlPassword(url: str) -> str:
     parts = list(urlsplit(url))
     parts[1] = _netloc_url_re.sub(':xxxx@', parts[1])
     return urlunsplit(parts)
 
 
-def join_list(maybeList):
+@overload
+def join_list(maybeList: None) -> None: ...
+
+
+@overload
+def join_list(maybeList: str | bytes | list[str | bytes] | tuple[str | bytes]) -> str: ...
+
+
+# TODO(tdesveaux): This should take an Iterable[str | bytes] and test with iter()
+def join_list(maybeList: str | bytes | None | list[str | bytes] | tuple[str | bytes]) -> str | None:
     if isinstance(maybeList, (list, tuple)):
         return ' '.join(bytes2unicode(s) for s in maybeList)
     return bytes2unicode(maybeList)
 
 
-def command_to_string(command):
+def command_to_string(command: Any) -> str | None:
     words = command
     if isinstance(words, (bytes, str)):
         words = words.split()
@@ -525,7 +554,7 @@ def command_to_string(command):
     return rv
 
 
-def rewrap(text, width=None):
+def rewrap(text: str, width: int | None = None) -> str:
     """
     Rewrap text for output to the console.
 
@@ -543,7 +572,7 @@ def rewrap(text, width=None):
     # Remove common indentation.
     text = textwrap.dedent(text)
 
-    def needs_wrapping(line):
+    def needs_wrapping(line: str) -> bool:
         # Line always non-empty.
         return not line[0].isspace()
 
@@ -560,7 +589,7 @@ def rewrap(text, width=None):
     return wrapped_text
 
 
-def dictionary_merge(a, b):
+def dictionary_merge(a: MutableMapping[Any, Any], b: Mapping[Any, Any]) -> MutableMapping[Any, Any]:
     """merges dictionary b into a
     Like dict.update, but recursive
     """

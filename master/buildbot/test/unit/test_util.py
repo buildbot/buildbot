@@ -405,7 +405,10 @@ class JoinList(unittest.TestCase):
         self.assertEqual(util.join_list(['aa', 'bb']), 'aa bb')
 
     def test_tuple(self) -> None:
-        self.assertEqual(util.join_list(('aa', 'bb')), 'aa bb')
+        self.assertEqual(
+            util.join_list(('aa', 'bb')),  # type: ignore[arg-type]
+            'aa bb',
+        )
 
     def test_string(self) -> None:
         self.assertEqual(util.join_list('abc'), 'abc')
@@ -436,7 +439,10 @@ class CommandToString(unittest.TestCase):
         self.assertEqual(util.command_to_string(object()), None)
 
     def test_list_with_objects(self) -> None:
-        self.assertRegex(util.command_to_string(['ab', object(), 'cd']), r"'ab <object .*> \.\.\.'")
+        self.assertRegex(  # type: ignore[type-var]
+            util.command_to_string(['ab', object(), 'cd']),
+            r"'ab <object .*> \.\.\.'",
+        )
 
     def test_invalid_ascii(self) -> None:
         self.assertEqual(util.command_to_string(b'a\xffc'), "'a\ufffdc'")
