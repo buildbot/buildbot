@@ -802,7 +802,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.util.runprocess",
       "buildbot.util.sautils",
       "buildbot.util.service",
-      "buildbot.util.ssfilter",
       "buildbot.util.ssl",
       "buildbot.util.state",
       "buildbot.util.tuplematch",
