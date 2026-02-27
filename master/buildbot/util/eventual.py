@@ -15,27 +15,43 @@
 #
 # copied from foolscap
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import TypeVar
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IDelayedCall
+    from twisted.internet.interfaces import IReactorTime
+    from typing_extensions import ParamSpec
+
+    _T = TypeVar('_T')
+    _P = ParamSpec('_P')
+
 
 class _SimpleCallQueue:
-    _reactor = reactor
+    _reactor: IReactorTime = cast("IReactorTime", reactor)
 
-    def __init__(self):
-        self._events = []
-        self._flushObservers = []
-        self._timer = None
+    def __init__(self) -> None:
+        self._events: list[tuple[Callable[..., Any], Any, dict[str, Any]]] = []
+        self._flushObservers: list[Deferred[None]] = []
+        self._timer: IDelayedCall | None = None
         self._in_turn = False
 
-    def append(self, cb, args, kwargs):
+    def append(self, cb: Callable[..., Any], args: Any, kwargs: dict[str, Any]) -> None:
         self._events.append((cb, args, kwargs))
         if not self._timer:
             self._timer = self._reactor.callLater(0, self._turn)
 
-    def _turn(self):
+    def _turn(self) -> None:
         self._timer = None
         self._in_turn = True
         # flush all the messages that are currently in the queue. If anything
@@ -57,10 +73,10 @@ class _SimpleCallQueue:
             for o in observers:
                 o.callback(None)
 
-    def flush(self):
+    def flush(self) -> Deferred[None]:
         if not self._events and not self._in_turn:
             return defer.succeed(None)
-        d = defer.Deferred()
+        d: Deferred[None] = defer.Deferred()
         self._flushObservers.append(d)
         return d
 
@@ -68,24 +84,24 @@ class _SimpleCallQueue:
 _theSimpleQueue = _SimpleCallQueue()
 
 
-def eventually(cb, *args, **kwargs):
+def eventually(cb: Callable[_P, _T], *args: _P.args, **kwargs: _P.kwargs) -> None:
     _theSimpleQueue.append(cb, args, kwargs)
 
 
-def fireEventually(value=None):
-    d = defer.Deferred()
+def fireEventually(value: _T | None = None) -> Deferred[_T | None]:
+    d: Deferred[_T | None] = defer.Deferred()
     eventually(d.callback, value)
     return d
 
 
-def flushEventualQueue(_ignored=None):
+def flushEventualQueue(_ignored: None = None) -> Deferred:
     return _theSimpleQueue.flush()
 
 
-def _setReactor(r=None):
+def _setReactor(r: IReactorTime | None = None) -> None:
     # This sets the reactor used to schedule future events to r.  If r is None
     # (the default), the reactor is reset to its default value.
     # This should only be used for unit tests.
     if r is None:
-        r = reactor
+        r = cast("IReactorTime", reactor)
     _theSimpleQueue._reactor = r
