@@ -13,11 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import time
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.util import asyncSleep
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
+
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class BackoffTimeoutExceededError(Exception):
@@ -25,7 +36,7 @@ class BackoffTimeoutExceededError(Exception):
 
 
 class ExponentialBackoffEngine:
-    def __init__(self, start_seconds, multiplier, max_wait_seconds):
+    def __init__(self, start_seconds: float, multiplier: float, max_wait_seconds: float) -> None:
         if start_seconds < 0:
             raise ValueError('start_seconds cannot be negative')
         if multiplier < 0:
@@ -39,14 +50,14 @@ class ExponentialBackoffEngine:
 
         self.on_success()
 
-    def on_success(self):
-        self.current_total_wait_seconds = 0
+    def on_success(self) -> None:
+        self.current_total_wait_seconds = 0.0
         self.current_wait_seconds = self.start_seconds
 
-    def wait_on_failure(self):
+    def wait_on_failure(self) -> Awaitable[None] | None:
         raise NotImplementedError()
 
-    def calculate_wait_on_failure_seconds(self):
+    def calculate_wait_on_failure_seconds(self) -> float:
         if self.current_total_wait_seconds >= self.max_wait_seconds:
             raise BackoffTimeoutExceededError()
 
@@ -61,17 +72,17 @@ class ExponentialBackoffEngine:
 
 
 class ExponentialBackoffEngineSync(ExponentialBackoffEngine):
-    def wait_on_failure(self):
+    def wait_on_failure(self) -> None:
         seconds = self.calculate_wait_on_failure_seconds()
         time.sleep(seconds)
 
 
 class ExponentialBackoffEngineAsync(ExponentialBackoffEngine):
-    def __init__(self, reactor, *args, **kwargs):
+    def __init__(self, reactor: IReactorTime, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.reactor = reactor
 
     @defer.inlineCallbacks
-    def wait_on_failure(self):
+    def wait_on_failure(self) -> InlineCallbacksType[None]:
         seconds = self.calculate_wait_on_failure_seconds()
         yield asyncSleep(seconds, reactor=self.reactor)
