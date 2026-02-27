@@ -20,6 +20,8 @@ from typing import TypedDict
 
 from twisted.internet import defer
 
+from buildbot.util.state import StateMixin
+
 if TYPE_CHECKING:
     from buildbot.changes.changes import Change
     from buildbot.util.twisted import InlineCallbacksType
@@ -39,9 +41,8 @@ class AbsoluteSourceStampsMixin:
 
     @defer.inlineCallbacks
     def getCodebaseDict(self, codebase: str) -> InlineCallbacksType[_CodeBase]:
-        assert self.codebases
-
         if self._lastCodebases is None:
+            assert isinstance(self, StateMixin)
             self._lastCodebases = yield self.getState('lastCodebases', {})
 
         # may fail with KeyError
@@ -53,10 +54,12 @@ class AbsoluteSourceStampsMixin:
         lastChange = codebase.get('lastChange', -1)
 
         if change.number > lastChange:
+            assert self._lastCodebases is not None
             self._lastCodebases[change.codebase] = {
                 'repository': change.repository,
                 'branch': change.branch,
                 'revision': change.revision,
                 'lastChange': change.number,
             }
+            assert isinstance(self, StateMixin)
             yield self.setState('lastCodebases', self._lastCodebases)
