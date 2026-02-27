@@ -13,17 +13,32 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import TypedDict
 
 from twisted.internet import defer
 
+if TYPE_CHECKING:
+    from buildbot.changes.changes import Change
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class AbsoluteSourceStampsMixin:
+    class _CodeBase(TypedDict):
+        repository: str
+        branch: str | None
+        revision: str | None
+        lastChange: int | None
+
     # record changes and revisions per codebase
 
-    _lastCodebases = None
+    _lastCodebases: dict[str, _CodeBase] | None = None
+    codebases: dict[str, _CodeBase]
 
     @defer.inlineCallbacks
-    def getCodebaseDict(self, codebase):
+    def getCodebaseDict(self, codebase: str) -> InlineCallbacksType[_CodeBase]:
         assert self.codebases
 
         if self._lastCodebases is None:
@@ -33,7 +48,7 @@ class AbsoluteSourceStampsMixin:
         return self._lastCodebases.get(codebase, self.codebases[codebase])
 
     @defer.inlineCallbacks
-    def recordChange(self, change):
+    def recordChange(self, change: Change) -> InlineCallbacksType[None]:
         codebase = yield self.getCodebaseDict(change.codebase)
         lastChange = codebase.get('lastChange', -1)
 
