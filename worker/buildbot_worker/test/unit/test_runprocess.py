@@ -194,6 +194,105 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.assertTrue(('rc', 0) in self.updates, self.show())
 
     @defer.inlineCallbacks
+    def testMergeStreams(self) -> InlineCallbacksType[None]:
+        """When mergeStreams=True, stderr output should arrive as stdout"""
+        s = runprocess.RunProcess(
+            0,
+            stderrCommand("hello"),
+            self.basedir,
+            'utf-8',
+            self.send_update,
+            mergeStreams=True,
+        )
+
+        yield s.start()
+
+        # stderr should not appear as 'stderr' updates
+        self.assertFalse(
+            any(tag == 'stderr' for tag, _ in self.updates),
+            f"Expected no stderr updates when mergeStreams=True, got: {self.show()}",
+        )
+        # instead it should appear as stdout
+        self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
+        self.assertTrue(('rc', 0) in self.updates, self.show())
+
+    @defer.inlineCallbacks
+    def testMergeStreamsBothOutputs(self) -> InlineCallbacksType[None]:
+        """When mergeStreams=True, both stdout and stderr end up in stdout updates"""
+        # Command that writes to both stdout and stderr
+        cmd = [
+            sys.executable,
+            '-c',
+            'import sys; sys.stdout.write("out\\n"); sys.stdout.flush(); '
+            'sys.stderr.write("err\\n"); sys.stderr.flush()',
+        ]
+        s = runprocess.RunProcess(
+            0,
+            cmd,
+            self.basedir,
+            'utf-8',
+            self.send_update,
+            mergeStreams=True,
+        )
+
+        yield s.start()
+
+        stdout_data = ''.join(data for tag, data in self.updates if tag == 'stdout')
+        self.assertIn('out', stdout_data)
+        self.assertIn('err', stdout_data)
+        self.assertFalse(
+            any(tag == 'stderr' for tag, _ in self.updates),
+            f"Expected no stderr updates when mergeStreams=True, got: {self.show()}",
+        )
+        self.assertTrue(('rc', 0) in self.updates, self.show())
+
+    @defer.inlineCallbacks
+    def testMergeStreamsHeader(self) -> InlineCallbacksType[None]:
+        """When mergeStreams=True, a header message should be emitted"""
+        s = runprocess.RunProcess(
+            0,
+            stderrCommand("hello"),
+            self.basedir,
+            'utf-8',
+            self.send_update,
+            mergeStreams=True,
+        )
+
+        yield s.start()
+
+        headers = [data for tag, data in self.updates if tag == 'header']
+        self.assertTrue(
+            any('merging stdout and stderr' in h for h in headers),
+            f"Expected 'merging stdout and stderr' header, got headers: {headers}",
+        )
+
+    @defer.inlineCallbacks
+    def testMergeStreamsKeepStderr(self) -> InlineCallbacksType[None]:
+        """When mergeStreams=True and keepStderr=True, stderr data should still
+        be accumulated in self.stderr even though it is sent as stdout."""
+        s = runprocess.RunProcess(
+            0,
+            stderrCommand("hello"),
+            self.basedir,
+            'utf-8',
+            self.send_update,
+            mergeStreams=True,
+            keepStderr=True,
+        )
+
+        yield s.start()
+
+        # stderr data should be accumulated via keepStderr
+        self.assertIn('hello', s.stderr)
+        # but it should also appear as stdout updates (merged)
+        self.assertTrue(('stdout', nl('hello\n')) in self.updates, self.show())
+        # and no stderr updates should be sent
+        self.assertFalse(
+            any(tag == 'stderr' for tag, _ in self.updates),
+            f"Expected no stderr updates when mergeStreams=True, got: {self.show()}",
+        )
+
+    @defer.inlineCallbacks
     def test_incrementalDecoder(self) -> InlineCallbacksType[None]:
         s = runprocess.RunProcess(
             0, stderrCommand("hello"), self.basedir, 'utf-8', self.send_update, sendStderr=True

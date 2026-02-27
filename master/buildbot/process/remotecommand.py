@@ -521,6 +521,7 @@ class RemoteShellCommand(RemoteCommand):
         sigtermTime=None,
         logfiles=None,
         usePTY=None,
+        merge_streams=False,
         logEnviron=True,
         collectStdout=False,
         collectStderr=False,
@@ -563,6 +564,7 @@ class RemoteShellCommand(RemoteCommand):
             'max_lines': max_lines,
             'sigtermTime': sigtermTime,
             'usePTY': usePTY,
+            'merge_streams': merge_streams,
             'logEnviron': logEnviron,
             'initial_stdin': initialStdin,
         }

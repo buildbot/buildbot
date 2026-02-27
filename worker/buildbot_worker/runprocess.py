@@ -262,7 +262,16 @@ class RunProcessPP(protocol.ProcessProtocol):
         if self.debug:
             self.command.log_msg("RunProcessPP.errReceived")
         decodedData = self.stderrDecode.decode(data)
-        self.command.addStderr(decodedData)
+        if self.command.mergeStreams:
+            # When merging streams, route stderr data through stdout
+            # so both appear as 'stdout' updates in the build log.
+            self.command.addStdout(decodedData)
+            # Still accumulate in self.stderr if keepStderr is set,
+            # so that collectStderr continues to work.
+            if self.command.keepStderr:
+                self.command.stderr += decodedData
+        else:
+            self.command.addStderr(decodedData)
 
     def processEnded(self, status_object: Failure) -> None:
         if self.debug:
@@ -329,6 +338,7 @@ class RunProcess:
         logEnviron: bool = True,
         logfiles: dict[str, Any] | None = None,
         usePTY: bool = False,
+        mergeStreams: bool = False,
         useProcGroup: bool = True,
     ) -> None:
         """
@@ -340,6 +350,11 @@ class RunProcess:
         @param keepStderr: same, for stderr
 
         @param usePTY: true to use a PTY, false to not use a PTY.
+
+        @param mergeStreams: if True, stderr data is routed through stdout
+            updates at the protocol level, so both streams appear as 'stdout'
+            in build logs. Note: when usePTY is True the PTY already merges
+            the streams, making this flag redundant.
 
         @param useProcGroup: (default True) use a process group for non-PTY
             process invocations
@@ -416,6 +431,18 @@ class RunProcess:
             False,
         ), f"Unexpected usePTY argument value: {usePTY!r}. Expected boolean."
         self.usePTY = usePTY
+
+        assert mergeStreams in (
+            True,
+            False,
+        ), f"Unexpected mergeStreams argument value: {mergeStreams!r}. Expected boolean."
+
+        # mergeStreams routes stderr data through addStdout() at the protocol
+        # level (in errReceived), so both streams appear as stdout updates.
+        # Note: this does NOT merge at the file-descriptor level — stdout and
+        # stderr are still separate pipes. Ordering between the two streams is
+        # therefore approximate, not guaranteed.
+        self.mergeStreams = mergeStreams
 
         # usePTY=True is a convenience for cleaning up all children and
         # grandchildren of a hung command. Fall back to usePTY=False on systems
@@ -575,6 +602,14 @@ class RunProcess:
         msg = f" using PTY: {bool(self.usePTY)}"
         self.log_msg(" " + msg)
         self.send_update([('header', msg + "\n")])
+
+        if self.mergeStreams:
+            if self.usePTY:
+                msg = " WARNING: mergeStreams is redundant when usePTY is enabled (PTY already merges streams)"
+            else:
+                msg = " merging stdout and stderr"
+            self.log_msg(" " + msg)
+            self.send_update([('header', msg + "\n")])
 
         # put data into stdin and close it, if necessary.  This will be
         # buffered until connectionMade is called

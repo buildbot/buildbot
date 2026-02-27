@@ -979,6 +979,7 @@ class ShellMixin:
     want_stdout = True
     want_stderr = True
     usePTY: bool | None = None
+    merge_streams: bool = False
     logfiles: dict[str, str] = {}
     lazylogfiles: bool = False
     timeout = 1200
@@ -1006,6 +1007,7 @@ class ShellMixin:
         ('want_stdout', check_param_bool),
         ('want_stderr', check_param_bool),
         ('usePTY', check_param_bool),
+        ('merge_streams', check_param_bool),
         ('logfiles', None),
         ('lazylogfiles', check_param_bool),
         ('timeout', check_param_number_none),

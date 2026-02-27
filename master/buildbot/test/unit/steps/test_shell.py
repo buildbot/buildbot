@@ -61,6 +61,16 @@ class TestShellCommandExecution(
         self.expect_outcome(result=SUCCESS, state_string="'echo hello'")
         return self.run_step()
 
+    def test_run_merge_streams(self):
+        self.setup_step(
+            shell.ShellCommand(workdir='build', command="echo hello", merge_streams=True)
+        )
+        self.expect_commands(
+            ExpectShell(workdir='build', command='echo hello', merge_streams=True).exit(0)
+        )
+        self.expect_outcome(result=SUCCESS, state_string="'echo hello'")
+        return self.run_step()
+
     def test_run_list(self):
         self.setup_step(
             shell.ShellCommand(workdir='build', command=['trial', '-b', '-B', 'buildbot.test'])
