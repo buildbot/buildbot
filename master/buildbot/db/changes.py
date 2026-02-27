@@ -92,7 +92,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> list[int]:
             changes_tbl = self.db.model.changes
             q = (
-                sa.select(
+                sa
+                .select(
                     changes_tbl.c.changeid,
                 )
                 .where(
@@ -368,7 +369,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> int:
             changes_tbl = self.db.model.changes
             q = (
-                sa.select(
+                sa
+                .select(
                     changes_tbl.c.changeid,
                 )
                 .order_by(
@@ -401,7 +403,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # leaves much to be desired, and doesn't support this particular
             # form.
             q = (
-                sa.select(
+                sa
+                .select(
                     changes_tbl.c.changeid,
                 )
                 .order_by(

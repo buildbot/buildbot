@@ -107,7 +107,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 )
 
             q = (
-                q.order_by(
+                q
+                .order_by(
                     sa.desc(tbl.c.complete_at),
                 )
                 .offset(offset)
@@ -172,7 +173,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             from_clause = from_clause.join(builds_tbl, reqs_tbl.c.id == builds_tbl.c.buildrequestid)
 
             q = (
-                sa.select(builds_tbl)
+                sa
+                .select(builds_tbl)
                 .select_from(from_clause)
                 .where(changes_tbl.c.changeid == changeid)
             )
@@ -220,7 +222,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             j = j.join(self.db.model.builds)
 
             q = (
-                sa.select(self.db.model.builds)
+                sa
+                .select(self.db.model.builds)
                 .select_from(j)
                 .where(self.db.model.buildsets.c.parent_buildid == buildid)
             )
@@ -346,7 +349,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             builds_tbl = self.db.model.builds
             conn.execute(
-                builds_tbl.update()
+                builds_tbl
+                .update()
                 .where(builds_tbl.c.id == buildid)
                 .values(locks_duration_s=builds_tbl.c.locks_duration_s + duration_s)
             )

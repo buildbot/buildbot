@@ -178,7 +178,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 )
 
                 q = (
-                    sa.select(
+                    sa
+                    .select(
                         self.db.model.masters.c.name,
                         sch_mst_tbl.c.masterid,
                     )

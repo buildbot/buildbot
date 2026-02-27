@@ -209,7 +209,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             j = j.outerjoin(cfg_tbl)
             j = j.outerjoin(bm_tbl)
             q = (
-                sa.select(
+                sa
+                .select(
                     workers_tbl.c.id,
                     workers_tbl.c.name,
                     workers_tbl.c.info,
@@ -260,7 +261,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 # workers, they were captured in rv above
                 j = j.join(workers_tbl)
             q = (
-                sa.select(
+                sa
+                .select(
                     conn_tbl.c.workerid,
                     conn_tbl.c.masterid,
                 )

@@ -311,6 +311,8 @@ class EC2LatentWorker(AbstractLatentWorker):
                 if image.state != 'available':
                     continue
                 # Image must match regex
+                if image.image_location is None:
+                    continue
                 match = get_match(image.image_location)
                 if not match:
                     continue

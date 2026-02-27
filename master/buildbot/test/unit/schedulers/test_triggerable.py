@@ -297,8 +297,9 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ],
         )
         d.addCallback(
-            lambda res_brids: self.assertEqual(res_brids[0], 11)
-            and self.assertEqual(res_brids[1], {77: 1})
+            lambda res_brids: (
+                self.assertEqual(res_brids[0], 11) and self.assertEqual(res_brids[1], {77: 1})
+            )
         )
 
         waited_for = True
@@ -319,8 +320,9 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             ],
         )
         d.addCallback(
-            lambda res_brids1: self.assertEqual(res_brids1[0], 22)
-            and self.assertEqual(res_brids1[1], {77: 2})
+            lambda res_brids1: (
+                self.assertEqual(res_brids1[0], 22) and self.assertEqual(res_brids1[1], {77: 2})
+            )
         )
 
         # check that the scheduler has subscribed to buildset changes

@@ -245,7 +245,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
             self.ExpectShell(command=['stat', '-c%Y', '/tarball.tar']).stdout(str(10000)).exit(0)
         )
         self.expect_commands(
-            self.ExpectShell(command=['stat', '-c%Y', '.'])
+            self
+            .ExpectShell(command=['stat', '-c%Y', '.'])
             .stdout(str(10000 + 7 * 24 * 3600))
             .exit(0)
         )
@@ -262,7 +263,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         )
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['stat', '-c%Y', '/tarball.tgz'])
+            self
+            .ExpectShell(command=['stat', '-c%Y', '/tarball.tgz'])
             .stderr("file not found!")
             .exit(1),
             self.ExpectShell(command=['tar', '-z', '-cvf', '/tarball.tgz', '.repo']).exit(0),
@@ -278,10 +280,12 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         )
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
+            self
+            .ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
             .stdout(str(10000))
             .exit(0),
-            self.ExpectShell(command=['stat', '-c%Y', '.'])
+            self
+            .ExpectShell(command=['stat', '-c%Y', '.'])
             .stdout(str(10001 + 7 * 24 * 3600))
             .exit(0),
             self.ExpectShell(command=["tar", *option, "-cvf", "/tarball." + suffix, ".repo"]).exit(
@@ -325,10 +329,12 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         )
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
+            self
+            .ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
             .stdout(str(10000))
             .exit(0),
-            self.ExpectShell(command=['stat', '-c%Y', '.'])
+            self
+            .ExpectShell(command=['stat', '-c%Y', '.'])
             .stdout(str(10001 + 7 * 24 * 3600))
             .exit(0),
             self.ExpectShell(command=["tar", *option, "-cvf", "/tarball." + suffix, ".repo"]).exit(
@@ -349,10 +355,12 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         )
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
+            self
+            .ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])
             .stdout(str(10000))
             .exit(0),
-            self.ExpectShell(command=['stat', '-c%Y', '.'])
+            self
+            .ExpectShell(command=['stat', '-c%Y', '.'])
             .stdout(str(10001 + 7 * 24 * 3600))
             .exit(0),
             self.ExpectShell(command=["tar", *option, "-cvf", "/tarball." + suffix, ".repo"]).exit(
@@ -370,7 +378,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.expectnoClobber()
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
+            self
+            .ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
             .exit(0)
             .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
             .stderr("HEAD is now at 0123456789abcdef...\n")
@@ -441,10 +450,12 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.expectnoClobber()
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
+            self
+            .ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
             .exit(1)
             .stderr("fatal: Couldn't find remote ref \n"),
-            self.ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
+            self
+            .ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
             .exit(1)
             .stderr("fatal: Couldn't find remote ref \n"),
             self.ExpectShell(command=['repo', 'download', 'test/bla', '564/12']).exit(0),
@@ -461,10 +472,12 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.expectnoClobber()
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
+            self
+            .ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
             .exit(1)
             .stderr("fatal: Couldn't find remote ref \n"),
-            self.ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
+            self
+            .ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
             .exit(1)
             .stderr("fatal: Couldn't find remote ref \n"),
         )
@@ -479,7 +492,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.expectnoClobber()
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
+            self
+            .ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
             .exit(1)
             .stderr("patch \n"),
             self.ExpectShell(command=['repo', 'forall', '-c', 'git', 'diff', 'HEAD']).exit(0),
@@ -495,7 +509,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.expectnoClobber()
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
+            self
+            .ExpectShell(command=['repo', 'download', 'test/bla', '564/12'])
             .exit(0)
             .stderr("Automatic cherry-pick failed \n"),
             self.ExpectShell(command=['repo', 'forall', '-c', 'git', 'diff', 'HEAD']).exit(0),
@@ -529,7 +544,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.expectnoClobber()
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['repo', 'download', 'pr', '4321/12'])
+            self
+            .ExpectShell(command=['repo', 'download', 'pr', '4321/12'])
             .exit(0)
             .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
             .stderr("HEAD is now at 0123456789abcdef...\n")
@@ -564,7 +580,8 @@ class TestRepo(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase)
         self.expectnoClobber()
         self.expectRepoSync()
         self.expect_commands(
-            self.ExpectShell(command=['repo', 'download', 'pr', '4321/12'])
+            self
+            .ExpectShell(command=['repo', 'download', 'pr', '4321/12'])
             .exit(0)
             .stderr("test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
             .stderr("HEAD is now at 0123456789abcdef...\n")
