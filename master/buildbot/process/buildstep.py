@@ -420,18 +420,18 @@ class BuildStep(
 
     def getCurrentSummary(self) -> dict[str, str]:
         if self.description is not None:
-            stepsumm = util.join_list(self.description)
+            stepsumm = util.join_list(self.description)  # type: ignore[arg-type]
             if self.descriptionSuffix:
-                stepsumm += ' ' + util.join_list(self.descriptionSuffix)
+                stepsumm += ' ' + util.join_list(self.descriptionSuffix)  # type: ignore[arg-type]
         else:
             stepsumm = 'running'
         return {'step': stepsumm}
 
     def getResultSummary(self) -> dict[str, str]:
         if self.descriptionDone is not None or self.description is not None:
-            stepsumm = util.join_list(self.descriptionDone or self.description)
+            stepsumm = util.join_list(self.descriptionDone or self.description or '')  # type: ignore[arg-type]
             if self.descriptionSuffix:
-                stepsumm += ' ' + util.join_list(self.descriptionSuffix)
+                stepsumm += ' ' + util.join_list(self.descriptionSuffix)  # type: ignore[arg-type]
         else:
             stepsumm = 'finished'
 

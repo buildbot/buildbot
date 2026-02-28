@@ -108,7 +108,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         # builddir defaults to name
         if builddir is None:
-            builddir = safeTranslate(name)
+            builddir = safeTranslate(name)  # type: ignore[assignment]
             builddir = bytes2unicode(builddir)
         self.builddir = builddir
 

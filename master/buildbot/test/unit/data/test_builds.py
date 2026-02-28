@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -362,7 +363,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
-    new_build_event = {
+    new_build_event: dict[str, Any] = {
         'builderid': 10,
         'buildid': 100,
         'buildrequestid': 13,
