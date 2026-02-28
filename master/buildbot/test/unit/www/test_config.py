@@ -84,7 +84,6 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         }
         self.assertEqual(res, exp)
 
-
     @defer.inlineCallbacks
     def test_render_with_default_page(self):
         _auth = auth.NoAuth()
