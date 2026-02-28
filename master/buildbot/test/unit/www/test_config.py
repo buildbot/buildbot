@@ -85,6 +85,39 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, exp)
 
 
+    @defer.inlineCallbacks
+    def test_render_with_default_page(self):
+        _auth = auth.NoAuth()
+        _auth.maybeAutoLogin = mock.Mock()
+
+        custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
+
+        master = yield self.make_master(
+            url='h:/a/b/', auth=_auth, versions=custom_versions, default_page='console'
+        )
+        rsrc = config.ConfigResource(master)
+        rsrc.reconfigResource(master.config)
+
+        vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
+
+        res = yield self.render_resource(rsrc, b'/config')
+        res = json.loads(bytes2unicode(res))
+        exp = {
+            "authz": {},
+            "titleURL": "http://buildbot.net/",
+            "versions": vjson,
+            "title": "Buildbot",
+            "auth": {"name": "NoAuth"},
+            "user": {"anonymous": True},
+            "buildbotURL": "h:/a/b/",
+            "multiMaster": False,
+            "port": None,
+            "default_page": "console",
+            "user_any_access_allowed": False,
+        }
+        self.assertEqual(res, exp)
+
+
 class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.setup_test_reactor()

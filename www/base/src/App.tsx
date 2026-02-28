@@ -3,7 +3,7 @@ import {useContext, useEffect, useState} from 'react';
 import './App.css';
 import './styles/styles.scss';
 import 'bootstrap';
-import {Routes, Route} from 'react-router-dom';
+import {Navigate, Routes, Route} from 'react-router-dom';
 import {ConfigContext, TopbarContext, useCurrentTimeSetupTimers} from 'buildbot-ui';
 import {DataClientContext} from 'buildbot-data-js';
 
@@ -37,6 +37,7 @@ import {AccessForbiddenView} from './views/AccessForbiddenView/AccessForbiddenVi
 import {LoginView} from './views/LoginView/LoginView';
 import {UrlNotFoundView} from './views/UrlNotFoundView/UrlNotFoundView';
 import {AlertNotification} from './components/AlertNotification/AlertNotification';
+import {resolveDefaultPage} from './util/DefaultPage';
 
 export const App = observer(() => {
   const stores = useContext(StoresContext);
@@ -61,9 +62,18 @@ export const App = observer(() => {
 
   useCurrentTimeSetupTimers();
 
-  const routeElements = [...globalRoutes.configs.values()].map((config) => {
-    return <Route key={config.route} path={config.route} element={config.element()} />;
-  });
+  const defaultPagePath = resolveDefaultPage(config.default_page);
+
+  const routeElements = [...globalRoutes.configs.values()]
+    .filter((routeConfig) => defaultPagePath === null || routeConfig.route !== '/')
+    .map((routeConfig) => (
+      <Route key={routeConfig.route} path={routeConfig.route} element={routeConfig.element()} />
+    ));
+  if (defaultPagePath !== null) {
+    routeElements.push(
+      <Route key="/" path="/" element={<Navigate to={defaultPagePath} replace />} />,
+    );
+  }
   routeElements.push(<Route key="*" path="*" element={<UrlNotFoundView />} />);
 
   if (!config.user_any_access_allowed) {

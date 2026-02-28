@@ -1,0 +1,1 @@
+Web frontend now correctly applies the ``default_page`` configuration to redirect users from the home page to the configured default page (:issue:`8758`).
