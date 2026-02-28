@@ -49,5 +49,5 @@ class Notifier(Generic[_SelfResultT]):
             for waiter in waiters:
                 waiter.callback(result)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self._waiters)

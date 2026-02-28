@@ -316,7 +316,7 @@ class BuildStep(
         self.stepid = None
         self.results: int | None = None
         self._start_unhandled_deferreds = None
-        self._interrupt_deferwaiter = deferwaiter.DeferWaiter()
+        self._interrupt_deferwaiter: deferwaiter.DeferWaiter[None] = deferwaiter.DeferWaiter()
 
         def get_master_reactor() -> ReactorBase:
             assert self.master is not None
@@ -706,7 +706,7 @@ class BuildStep(
     def addTestResult(
         self,
         setid: int,
-        value: float,
+        value: str,
         test_name: str | None = None,
         test_code_path: str | None = None,
         line: int | None = None,

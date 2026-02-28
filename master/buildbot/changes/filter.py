@@ -76,8 +76,8 @@ class ChangeFilter(ComparableMixin):
         codebase_fn: Callable[[str], bool] | None = None,
         property_eq: dict[str, Any] | None = None,
         property_not_eq: dict[str, Any] | None = None,
-        property_re: dict[str, str | Pattern] | None = None,
-        property_not_re: dict[str, str | Pattern] | None = None,
+        property_re: dict[str, list[str | Pattern[str]] | str | Pattern[str]] | None = None,
+        property_not_re: dict[str, list[str | Pattern[str]] | str | Pattern[str]] | None = None,
     ) -> None:
         self.filter_fn = filter_fn
         self.project_fn = project_fn

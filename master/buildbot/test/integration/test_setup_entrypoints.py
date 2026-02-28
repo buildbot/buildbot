@@ -161,6 +161,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.util.state.StateMixin',
             'buildbot.util.subscription.Subscription',
             'buildbot.util.subscription.SubscriptionPoint',
+            'buildbot.util.test_result_submitter.TestResultInfo',
             'buildbot.util.test_result_submitter.TestResultSubmitter',
             "buildbot.util.watchdog.Watchdog",
             "buildbot.util.twisted.ThreadPool",

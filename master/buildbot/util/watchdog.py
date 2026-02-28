@@ -13,27 +13,36 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Callable
+
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IDelayedCall
+    from twisted.internet.interfaces import IReactorTime
+
 
 class Watchdog:
-    def __init__(self, reactor, fn, timeout):
+    def __init__(self, reactor: IReactorTime, fn: Callable[[], None], timeout: int) -> None:
         self._reactor = reactor
         self._fn = fn
         self._timeout = timeout
-        self._delayed_call = None
+        self._delayed_call: IDelayedCall | None = None
 
-    def _timed_out(self):
+    def _timed_out(self) -> None:
         self._delayed_call = None
         self._fn()
 
-    def start(self):
+    def start(self) -> None:
         if self._delayed_call is None:
             self._delayed_call = self._reactor.callLater(self._timeout, self._timed_out)
 
-    def stop(self):
+    def stop(self) -> None:
         if self._delayed_call is not None:
             self._delayed_call.cancel()
 
-    def notify(self):
+    def notify(self) -> None:
         if self._delayed_call is None:
             return
 

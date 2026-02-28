@@ -22,15 +22,18 @@ from __future__ import annotations
 import os
 from functools import wraps
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.defer import DeferredLock
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from typing import Callable
     from typing import TypeVar
 
+    from twisted.internet.interfaces import IReactorTime
     from typing_extensions import ParamSpec
 
     _T = TypeVar('_T')
@@ -55,12 +58,16 @@ def deferredLocked(
     return decorator
 
 
-def cancelAfter(seconds, deferred, _reactor=reactor):
+def cancelAfter(
+    seconds: int,
+    deferred: Deferred[Any],
+    _reactor: IReactorTime = reactor,  # type: ignore[assignment]
+) -> Deferred:
     delayedCall = _reactor.callLater(seconds, deferred.cancel)
 
     # cancel the delayedCall when the underlying deferred fires
     @deferred.addBoth
-    def cancelTimer(x):
+    def cancelTimer(x: Any) -> Any:
         if delayedCall.active():
             delayedCall.cancel()
         return x
@@ -68,13 +75,13 @@ def cancelAfter(seconds, deferred, _reactor=reactor):
     return deferred
 
 
-def writeLocalFile(path, contents, mode=None):  # pragma: no cover
+def writeLocalFile(path: str, contents: str, mode: int | None = None) -> None:  # pragma: no cover
     with open(path, 'w', encoding='utf-8') as file:
         if mode is not None:
             os.chmod(path, mode)
         file.write(contents)
 
 
-def chunkify_list(l, chunk_size):
+def chunkify_list(l: list[_T], chunk_size: int) -> Iterator[list[_T]]:
     chunk_size = max(1, chunk_size)
     return (l[i : i + chunk_size] for i in range(0, len(l), chunk_size))

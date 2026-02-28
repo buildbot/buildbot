@@ -633,7 +633,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         # variable is support single database transaction for message batches.
         self._last_event_ts_saved: int | None = None
 
-        self._deferwaiter = deferwaiter.DeferWaiter()
+        self._deferwaiter: deferwaiter.DeferWaiter[None] = deferwaiter.DeferWaiter()
         self._poll_handler: deferwaiter.NonRepeatedActionHandler | None = None
         self._stream_activity_watchdog: watchdog.Watchdog | None = None
 

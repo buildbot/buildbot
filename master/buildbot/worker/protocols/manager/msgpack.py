@@ -79,7 +79,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         self.seq_num_to_waiters_map: dict[int, Deferred[Any]] = {}
         self.connection: Connection | None = None
         self.worker_name: str | None = None
-        self._deferwaiter = deferwaiter.DeferWaiter()
+        self._deferwaiter: deferwaiter.DeferWaiter[None] = deferwaiter.DeferWaiter()
 
         self._logger = Logger()
         self._update_logger_ns()

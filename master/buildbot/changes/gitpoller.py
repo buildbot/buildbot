@@ -699,9 +699,10 @@ class GitPoller(base.ReconfigurablePollingChangeSource, StateMixin, GitMixin):
             env=full_env,
             initial_stdin=unicode2bytes(initial_stdin) if initial_stdin is not None else None,
         )
-        (code, stdout, stderr) = res
-        stdout = bytes2unicode(stdout, self.encoding)
-        stderr = bytes2unicode(stderr, self.encoding)
+        assert isinstance(res, tuple) and len(res) == 3
+        (code, stdout_bytes, stderr_bytes) = res
+        stdout = bytes2unicode(stdout_bytes, self.encoding)
+        stderr = bytes2unicode(stderr_bytes, self.encoding)
         if code != 0:
             if code == 128:
                 raise GitError(
