@@ -85,15 +85,12 @@ def add_user_password_to_credentials(
         )
 
     username, password = auth_credentials
-    credential_options.credentials.insert(
-        0,
-        IRenderable(  # placate typing
-            GitCredentialInputRenderer(
-                url=url,  # type: ignore[arg-type]
-                username=username,
-                password=password,
-            )
-        ),
-    )
+    credential_kwargs = {
+        "username": username,
+        "password": password,
+    }
+    if url is not None:
+        credential_kwargs["url"] = url
+    credential_options.credentials.insert(0, GitCredentialInputRenderer(**credential_kwargs))
 
     return credential_options
