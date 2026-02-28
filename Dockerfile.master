@@ -14,35 +14,14 @@
 # which get installed in the final image.
 # This allows us to avoid installing build tools like gcc in the final image.
 
-FROM docker.io/library/debian:bookworm AS buildbot-build
-MAINTAINER  Buildbot maintainers
+ARG DEBIAN_VERSION="trixie"
 
-# Last build date - this can be updated whenever there are security updates so
-# that everything is rebuilt
-ENV         security_updates_as_of 2024-09-27
+FROM docker.io/library/debian:${DEBIAN_VERSION} AS buildbot-build
+LABEL org.opencontainers.image.authors="Buildbot maintainers"
 
 RUN \
     apt-get update && \
     apt-get -y upgrade && \
-    apt-get -y install -q \
-        wget \
-        gpg \
-        && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN \
-    KEYRING=/usr/share/keyrings/nodesource.gpg && \
-    wget --quiet -O - https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor > "$KEYRING" && \
-    gpg --no-default-keyring --keyring "$KEYRING" --list-keys && \
-    chmod a+r /usr/share/keyrings/nodesource.gpg && \
-    VERSION=node_18.x && \
-    DISTRO=bookworm && \
-    echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
-    echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
-    cat /etc/apt/sources.list.d/nodesource.list
-
-RUN \
-    apt-get update && \
     apt-get -y install -q \
         curl \
         git \
@@ -54,6 +33,7 @@ RUN \
         libpq-dev \
         libssl-dev \
         nodejs \
+        npm \
         pkg-config \
         python3 \
         python3-dev \
@@ -63,6 +43,10 @@ RUN \
         virtualenv \
         && \
     rm -rf /var/lib/apt/lists/*
+
+RUN \
+    npm install -g corepack && \
+    corepack enable npm
 
 COPY . /usr/src/buildbot
 
@@ -86,12 +70,8 @@ RUN mkdir -p /wheels && \
 # Note that the UI and worker packages are the latest version published on pypi
 # This is to avoid pulling node inside this container
 
-FROM docker.io/library/debian:bookworm-slim
-MAINTAINER  Buildbot maintainers
-
-# Last build date - this can be updated whenever there are security updates so
-# that everything is rebuilt
-ENV         security_updates_as_of 2024-09-27
+FROM docker.io/library/debian:${DEBIAN_VERSION}-slim
+LABEL org.opencontainers.image.authors="Buildbot maintainers"
 
 RUN \
     apt-get update && \
