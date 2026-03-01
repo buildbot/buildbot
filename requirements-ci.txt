@@ -56,7 +56,7 @@ packaging==25.0
 parameterized==0.9.0
 pyasn1==0.6.2
 pyasn1-modules==0.4.2
-pycparser==2.22
+pycparser==3.0
 PyJWT==2.10.1
 pyOpenSSL==25.3.0
 pypugjs==5.12.0
