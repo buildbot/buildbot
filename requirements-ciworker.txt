@@ -1,6 +1,6 @@
 attrs==24.2.0;  python_version < "3.8"  # pyup: ignore
 attrs==25.3.0;  python_version >= "3.8"
-autobahn==24.4.2;  python_version >= "3.9"
+autobahn==25.12.2;  python_version >= "3.9"
 autobahn==22.7.1;  python_version < "3.9"  # pyup: ignore
 Automat==22.10.0;  python_version < "3.8"  # pyup: ignore
 Automat==24.8.1;  python_version >= "3.8" and python_version < "3.9"
