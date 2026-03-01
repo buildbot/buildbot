@@ -68,7 +68,7 @@ RUN mkdir -p /wheels && \
 # Note that the UI and worker packages are the latest version published on pypi
 # This is to avoid pulling node inside this container
 
-FROM docker.io/library/debian:${DEBIAN_VERSION}-slim
+FROM docker.io/library/debian:${DEBIAN_VERSION}-slim AS buildbot-master
 LABEL org.opencontainers.image.authors="Buildbot maintainers"
 
 RUN \
