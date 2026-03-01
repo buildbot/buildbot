@@ -295,6 +295,10 @@ class Trigger(BuildStep):
 
         unimportant_brids = []
 
+        # Transmit the maximum priority of the buildrequest of this build to the
+        # triggered buildrequests
+        priority = max(r.priority for r in self.build.requests)
+
         for sch, props_to_set, unimportant in schedulers_and_props:
             idsDeferred, resultsDeferred = sch.trigger(
                 waited_for=self.waitForFinish,
@@ -302,6 +306,7 @@ class Trigger(BuildStep):
                 set_props=props_to_set,
                 parent_buildid=self.build.buildid,
                 parent_relationship=self.parent_relationship,
+                priority=priority,
             )
             # we are not in a hurry of starting all in parallel and managing
             # the deferred lists, just let the db writes be serial.

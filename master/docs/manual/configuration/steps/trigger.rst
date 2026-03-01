@@ -22,6 +22,8 @@ The counterpart to the :bb:Sched:`Triggerable` scheduler is the :bb:step:`Trigge
 
 The SourceStamps to use for the triggered build are controlled by the arguments ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamps``.
 
+The triggered build will inherit the priority of the triggering build.
+
 Hyperlinks are added to the build detail web pages for each triggered build.
 
 ``schedulerNames``
