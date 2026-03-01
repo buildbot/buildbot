@@ -57,11 +57,8 @@ RUN virtualenv --python=python3 /buildbot_venv && \
     env CRYPTOGRAPHY_DONT_BUILD_RUST=1 /buildbot_venv/bin/pip3 install /usr/src/buildbot/dist/*.whl
 
 RUN mkdir -p /wheels && \
-    /buildbot_venv/bin/pip3 list --format freeze | grep -v '^buildbot' | grep -v '^pkg-resources' > /wheels/wheels.txt && \
-    cat /wheels/wheels.txt && \
-    cd /wheels && \
-    /buildbot_venv/bin/pip3 wheel -r wheels.txt && \
-    rm /wheels/wheels.txt && \
+    /buildbot_venv/bin/pip3 list --format freeze > /requirements.txt && \
+    cat /requirements.txt && \
     cp /usr/src/buildbot/dist/*.whl /wheels
 
 #==============================================================================================
@@ -96,12 +93,14 @@ RUN \
 # and copy them into this container.
 # We do this to avoid having to pull gcc for building native extensions.
 COPY --from=buildbot-build /wheels /wheels
+COPY --from=buildbot-build /requirements.txt /requirements.txt
+
 
 # install pip dependencies
 RUN virtualenv --python=python3 /buildbot_venv && \
     /buildbot_venv/bin/pip3 install --upgrade pip setuptools && \
-    cd /wheels && /buildbot_venv/bin/pip3 install $(ls -1 | grep -v 'buildbot-worker') && \
-    rm -r /root/.cache /wheels
+    cd /wheels && /buildbot_venv/bin/pip3 install --requirement /requirements.txt $(ls -1 | grep -v 'buildbot-worker') && \
+    rm -r /root/.cache /wheels /requirements.txt
 
 COPY master/docker/buildbot.tac /usr/src/buildbot/buildbot.tac
 COPY master/docker/start_buildbot.sh /usr/src/buildbot/start_buildbot.sh
