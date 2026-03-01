@@ -1,4 +1,4 @@
 requests==2.32.4
-psycopg2==2.9.10
+psycopg2-binary==2.9.10
 txrequests==0.9.6
 cairocffi==1.7.1
