@@ -25,7 +25,8 @@ pbr==6.1.1
 PyHamcrest==2.1.0
 psutil==7.0.0
 pycparser==2.21;  python_version < "3.8" # pyup: ignore
-pycparser==2.22;  python_version >= "3.8"
+pycparser==2.22;  python_version >= "3.8" and python_version < "3.10"  # pyup: ignore
+pycparser==3.0;  python_version >= "3.10"
 six==1.17.0
 Twisted==23.8.0;  python_version < "3.8" # pyup: ignore
 Twisted==25.5.0;  python_version >= "3.8"
