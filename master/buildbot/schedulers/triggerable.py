@@ -64,8 +64,10 @@ class Triggerable(base.ReconfigurableBaseScheduler):
         set_props=None,
         parent_buildid=None,
         parent_relationship=None,
+        priority=None,
     ):
-        """Trigger this scheduler with the optional given list of sourcestamps
+        """Trigger this scheduler with the optional given list of sourcestamps and the optional
+        priority.
         Returns two deferreds:
             idsDeferred -- yields the ids of the buildset and buildrequest, as soon as they are
             available.
@@ -83,6 +85,9 @@ class Triggerable(base.ReconfigurableBaseScheduler):
         if reason is None:
             reason = f"The Triggerable scheduler named '{self.name}' triggered this build"
 
+        if priority is None:
+            priority = self.priority
+
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
@@ -90,7 +95,7 @@ class Triggerable(base.ReconfigurableBaseScheduler):
             reason,
             sourcestamps,
             waited_for,
-            priority=self.priority,
+            priority=priority,
             properties=props,
             parent_buildid=parent_buildid,
             parent_relationship=parent_relationship,

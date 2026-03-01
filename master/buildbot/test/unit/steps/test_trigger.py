@@ -55,6 +55,7 @@ class FakeTriggerable:
         set_props=None,
         parent_buildid=None,
         parent_relationship=None,
+        priority=None,
     ):
         self.triggered_with = (waited_for, sourcestamps, set_props.properties)
         idsDeferred = defer.Deferred()
