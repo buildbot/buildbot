@@ -16,7 +16,8 @@
 
 ARG DEBIAN_VERSION="trixie"
 
-FROM docker.io/library/debian:${DEBIAN_VERSION} AS buildbot-build
+# Only build on one platform as Buildbot's wheels are pure-python, so cross-platform
+FROM --platform=${BUILDPLATFORM} docker.io/library/debian:${DEBIAN_VERSION} AS buildbot-build
 LABEL org.opencontainers.image.authors="Buildbot maintainers"
 
 RUN \
