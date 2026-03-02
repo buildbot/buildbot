@@ -1,0 +1,1 @@
+Fixed a deadlock in DB logs processing (both read / write scenario)
