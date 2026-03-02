@@ -36,7 +36,13 @@ class Project(util.ComparableMixin):
         "description_format",
     )
 
-    def __init__(self, name, slug=None, description=None, description_format=None):
+    def __init__(
+        self,
+        name: str,
+        slug: str | None = None,
+        description: str | None = None,
+        description_format: str | None = None,
+    ) -> None:
         if slug is None:
             slug = name
 
