@@ -824,12 +824,12 @@ async def _async_iter_on_pool(
     # occupy a thread of the pool
     # avoiding too many compressed chunks in memory awaiting DB insert
     # use 0 (unlimited) in tests as there isn't really a threadpool / reactor running
+    _is_non_threadpool_mode = False
     if get_is_in_unit_tests():
         from buildbot.test.fake.reactor import NonThreadPool  # noqa: PLC0415
 
         if isinstance(provider_threadpool, NonThreadPool):
-            max_backlog = 0
-            wait_backlog_consuption = False
+            _is_non_threadpool_mode = True
 
     queue: defer.DeferredQueue[_T | _CloseObj] = defer.DeferredQueue()
 
@@ -845,17 +845,21 @@ async def _async_iter_on_pool(
 
     close_obj = _CloseObj()
 
-    def _can_put_in_queue():
-        return max_backlog <= 0 or len(queue.pending) < max_backlog
+    def _can_put_in_queue() -> bool:
+        return _is_non_threadpool_mode or max_backlog <= 0 or len(queue.pending) < max_backlog
 
     def _provider_wrapped() -> None:
         try:
             for item in generator_sync():
                 with condition:
                     condition.wait_for(_can_put_in_queue)
-                reactor.callFromThread(queue.put, item)
+
+                if not _is_non_threadpool_mode:
+                    threads.blockingCallFromThread(reactor, queue.put, item)
+                else:
+                    reactor.callFromThread(queue.put, item)
         finally:
-            if wait_backlog_consuption:
+            if not _is_non_threadpool_mode and wait_backlog_consuption:
                 with condition:
                     condition.wait_for(lambda: len(queue.pending) <= 0)
 
