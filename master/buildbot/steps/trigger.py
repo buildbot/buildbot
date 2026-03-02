@@ -226,7 +226,7 @@ class Trigger(BuildStep):
                 yield self.addLogWithFailure(results)
                 results = EXCEPTION
 
-            overall_results = worst_status(overall_results, results)
+            overall_results = worst_status(overall_results, results)  # type: ignore[assignment]
         return overall_results
 
     @defer.inlineCallbacks
