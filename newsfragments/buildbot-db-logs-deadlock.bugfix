@@ -1,0 +1,1 @@
+Clean up DBLogCompression threads that exit with an exception preventing deadlocks.

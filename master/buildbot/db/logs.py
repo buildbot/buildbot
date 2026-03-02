@@ -848,16 +848,33 @@ async def _async_iter_on_pool(
     def _can_put_in_queue():
         return max_backlog <= 0 or len(queue.pending) < max_backlog
 
+    # Timeout for condition.wait_for() calls in the producer thread.
+    # If the consumer coroutine stops iterating (e.g. due to an unhandled exception),
+    # the producer thread would otherwise deadlock permanently.
+    _PRODUCER_WAIT_TIMEOUT = 300
+
     def _provider_wrapped() -> None:
         try:
             for item in generator_sync():
                 with condition:
-                    condition.wait_for(_can_put_in_queue)
+                    if not condition.wait_for(_can_put_in_queue, timeout=_PRODUCER_WAIT_TIMEOUT):
+                        raise RuntimeError(
+                            "Log compression producer timed out waiting for queue space "
+                            "— consumer may have abandoned the async iteration"
+                        )
                 reactor.callFromThread(queue.put, item)
         finally:
             if wait_backlog_consuption:
                 with condition:
-                    condition.wait_for(lambda: len(queue.pending) <= 0)
+                    if not condition.wait_for(
+                        lambda: len(queue.pending) <= 0,
+                        timeout=_PRODUCER_WAIT_TIMEOUT,
+                    ):
+                        log.err(
+                            None,
+                            "Log compression producer timed out waiting for queue drain "
+                            "— consumer may have abandoned the async iteration",
+                        )
 
     def _put_close(res: None | Failure) -> None | Failure:
         queue.put(close_obj)
