@@ -15,24 +15,30 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 
 from buildbot.util import service
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     name: str | None = 'debug_services'  # type: ignore[assignment]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.debug_port = None
         self.debug_password = None
         self.debug_registration = None
-        self.manhole = None
+        self.manhole: service.AsyncService | None = None
 
     @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config: Any) -> InlineCallbacksType[None]:
         if new_config.manhole != self.manhole:
             if self.manhole:
                 yield self.manhole.disownServiceParent()
@@ -46,7 +52,7 @@ class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         yield super().reconfigServiceWithBuildbotConfig(new_config)
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         # manhole will get stopped as a sub-service
         yield super().stopService()
 
