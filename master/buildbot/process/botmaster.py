@@ -417,7 +417,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
 
                 del self.builders[n]
                 builder.master = None
-                builder.botmaster = None  # type: ignore[attr-defined]
+                builder.botmaster = None
 
                 yield builder.disownServiceParent()
 
@@ -425,7 +425,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                 builder = Builder(n)
                 self.builders[n] = builder
 
-                builder.botmaster = self  # type: ignore[attr-defined]
+                builder.botmaster = self
                 builder.master = self.master
                 yield builder.setServiceParent(self)
 
