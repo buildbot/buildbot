@@ -17,11 +17,15 @@
 module for regrouping all FileWriterImpl and FileReaderImpl away from steps
 """
 
+from __future__ import annotations
+
 import os
 import shutil
 import tarfile
 import tempfile
 from io import BytesIO
+from typing import IO
+from typing import Literal
 
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
@@ -33,7 +37,7 @@ class FileWriter(base.FileWriterImpl):
     Helper class that acts as a file-object with write access
     """
 
-    def __init__(self, destfile, maxsize, mode):
+    def __init__(self, destfile: str, maxsize: int | None, mode: int | None) -> None:
         # Create missing directories.
         destfile = os.path.abspath(destfile)
         dirname = os.path.dirname(destfile)
@@ -43,10 +47,10 @@ class FileWriter(base.FileWriterImpl):
         self.destfile = destfile
         self.mode = mode
         fd, self.tmpname = tempfile.mkstemp(dir=dirname, prefix='buildbot-transfer-')
-        self.fp = os.fdopen(fd, 'wb')
+        self.fp: IO[bytes] | None = os.fdopen(fd, 'wb')
         self.remaining = maxsize
 
-    def remote_write(self, data):
+    def remote_write(self, data: str | bytes) -> None:  # type: ignore[override]
         """
         Called from remote worker to write L{data} to L{fp} within boundaries
         of L{maxsize}
@@ -58,30 +62,30 @@ class FileWriter(base.FileWriterImpl):
         if self.remaining is not None:
             if len(data) > self.remaining:
                 data = data[: self.remaining]
-            self.fp.write(data)
+            self.fp.write(data)  # type: ignore[union-attr]
             self.remaining = self.remaining - len(data)
         else:
-            self.fp.write(data)
+            self.fp.write(data)  # type: ignore[union-attr]
 
-    def remote_utime(self, accessed_modified):
+    def remote_utime(self, accessed_modified: tuple[float, float]) -> None:  # type: ignore[override]
         os.utime(self.destfile, accessed_modified)
 
-    def remote_close(self):
+    def remote_close(self) -> None:  # type: ignore[override]
         """
         Called by remote worker to state that no more data will be transferred
         """
-        self.fp.close()
+        self.fp.close()  # type: ignore[union-attr]
         self.fp = None
         # on windows, os.rename does not automatically unlink, so do it
         # manually
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
         os.rename(self.tmpname, self.destfile)
-        self.tmpname = None
+        self.tmpname = None  # type: ignore[assignment]
         if self.mode is not None:
             os.chmod(self.destfile, self.mode)
 
-    def cancel(self):
+    def cancel(self) -> None:
         # unclean shutdown, the file is probably truncated, so delete it
         # altogether rather than deliver a corrupted file
         fp = getattr(self, "fp", None)
@@ -89,7 +93,7 @@ class FileWriter(base.FileWriterImpl):
             fp.close()
             self.purge()
 
-    def purge(self):
+    def purge(self) -> None:
         if self.destfile and os.path.exists(self.destfile):
             os.unlink(self.destfile)
         if self.tmpname and os.path.exists(self.tmpname):
@@ -102,7 +106,9 @@ class DirectoryWriter(FileWriter):
     step to unpack the archive, once the transfer has completed.
     """
 
-    def __init__(self, destroot, maxsize, compress, mode):
+    def __init__(
+        self, destroot: str, maxsize: int | None, compress: str | None, mode: int | None
+    ) -> None:
         self.destroot = destroot
         self.compress = compress
 
@@ -111,7 +117,7 @@ class DirectoryWriter(FileWriter):
 
         super().__init__(self.tarname, maxsize, mode)
 
-    def remote_unpack(self):
+    def remote_unpack(self) -> None:  # type: ignore[override]
         """
         Called by remote worker to state that no more data will be transferred
         """
@@ -119,22 +125,23 @@ class DirectoryWriter(FileWriter):
         self.remote_close()
 
         # Map configured compression to a TarFile setting
+        tar_mode: Literal['r|bz2', 'r|gz', 'r']
         if self.compress == 'bz2':
-            mode = 'r|bz2'
+            tar_mode = 'r|bz2'
         elif self.compress == 'gz':
-            mode = 'r|gz'
+            tar_mode = 'r|gz'
         else:
-            mode = 'r'
+            tar_mode = 'r'
 
         # Unpack archive and clean up after self
-        with tarfile.open(name=self.tarname, mode=mode) as archive:
+        with tarfile.open(name=self.tarname, mode=tar_mode) as archive:
             if hasattr(tarfile, 'data_filter'):
                 archive.extractall(path=self.destroot, filter='data')
             else:
                 archive.extractall(path=self.destroot)
         os.remove(self.tarname)
 
-    def purge(self):
+    def purge(self) -> None:
         super().purge()
         if os.path.isdir(self.destroot):
             shutil.rmtree(self.destroot)
@@ -145,10 +152,10 @@ class FileReader(base.FileReaderImpl):
     Helper class that acts as a file-object with read access
     """
 
-    def __init__(self, fp):
-        self.fp = fp
+    def __init__(self, fp: IO[bytes]) -> None:
+        self.fp: IO[bytes] | None = fp
 
-    def remote_read(self, maxlength):
+    def remote_read(self, maxlength: int) -> bytes | str:  # type: ignore[override]
         """
         Called from remote worker to read at most L{maxlength} bytes of data
 
@@ -164,7 +171,7 @@ class FileReader(base.FileReaderImpl):
         data = self.fp.read(maxlength)
         return data
 
-    def remote_close(self):
+    def remote_close(self) -> None:  # type: ignore[override]
         """
         Called by remote worker to state that no more data will be transferred
         """
@@ -181,13 +188,13 @@ class StringFileWriter(base.FileWriterImpl):
     writing into a file on master.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.buffer = ""
 
-    def remote_write(self, data):
+    def remote_write(self, data: str | bytes) -> None:  # type: ignore[override]
         self.buffer += bytes2unicode(data)
 
-    def remote_close(self):
+    def remote_close(self) -> None:  # type: ignore[override]
         pass
 
 
@@ -199,6 +206,6 @@ class StringFileReader(FileReader):
     writing into a file on master.
     """
 
-    def __init__(self, s):
+    def __init__(self, s: str | bytes) -> None:
         s = unicode2bytes(s)
         super().__init__(BytesIO(s))
