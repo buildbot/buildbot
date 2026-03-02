@@ -16,6 +16,9 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
 
 from twisted.internet import defer
 from twisted.python import log
@@ -23,18 +26,28 @@ from twisted.python import log
 from buildbot import util
 from buildbot.util import lineboundaries
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class Log:
     _byType: dict[str, type[Log]] = {}
 
-    def __init__(self, master, name, type, logid, decoder):
+    def __init__(
+        self,
+        master: Any,
+        name: str,
+        type: str,
+        logid: int,
+        decoder: Callable[[bytes], str],
+    ) -> None:
         self.type = type
         self.logid = logid
         self.master = master
         self.name = name
 
         self.subPoint = util.subscription.SubscriptionPoint(f"{name!r} log")
-        self.subscriptions = {}
+        self.subscriptions: dict[Any, Any] = {}
         self._finishing = False
         self.finished = False
         self._had_errors = False
@@ -42,7 +55,7 @@ class Log:
         self.decoder = decoder
 
     @staticmethod
-    def _decoderFromString(cfg):
+    def _decoderFromString(cfg: str | bytes | Callable[[bytes], str]) -> Callable[[bytes], str]:
         """
         Return a decoder function.
         If cfg is a string such as 'latin-1' or u'latin-1',
@@ -50,11 +63,11 @@ class Log:
         If cfg is already a lambda or function, then we return that.
         """
         if isinstance(cfg, (bytes, str)):
-            return lambda s: s.decode(cfg, 'replace')
+            return lambda s: s.decode(cfg, 'replace')  # type: ignore[arg-type]
         return cfg
 
     @classmethod
-    def new(cls, master, name, type, logid, logEncoding):
+    def new(cls, master: Any, name: str, type: str, logid: int, logEncoding: Any) -> Log:
         type = str(type)
         try:
             subcls = cls._byType[type]
@@ -68,13 +81,13 @@ class Log:
 
     # subscriptions
 
-    def subscribe(self, callback) -> util.subscription.Subscription:
+    def subscribe(self, callback: Callable[..., Any]) -> util.subscription.Subscription:
         return self.subPoint.subscribe(callback)
 
     # adding lines
 
     @defer.inlineCallbacks
-    def addRawLines(self, lines):
+    def addRawLines(self, lines: str) -> InlineCallbacksType[None]:
         # used by subclasses to add lines that are already appropriately
         # formatted for the log type, and newline-terminated
         assert lines[-1] == '\n'
@@ -86,16 +99,16 @@ class Log:
     def had_errors(self) -> bool:
         return self._had_errors
 
-    def flush(self):
+    def flush(self) -> defer.Deferred[None]:
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def finish(self):
+    def finish(self) -> InlineCallbacksType[None]:
         assert not self._finishing, "Did you maybe forget to yield the method?"
         assert not self.finished
         self._finishing = True
 
-        def fToRun():
+        def fToRun() -> defer.Deferred[None]:
             self.finished = True
             return self.master.data.updates.finishLog(self.logid)
 
@@ -105,7 +118,7 @@ class Log:
 
         yield self.subPoint.waitForDeliveriesToFinish()
 
-        self._had_errors = len(self.subPoint.pop_exceptions()) > 0
+        self._had_errors = len(self.subPoint.pop_exceptions()) > 0  # type: ignore[arg-type]
 
         # start a compressLog call but don't make our caller wait for
         # it to complete
@@ -116,12 +129,19 @@ class Log:
 
 
 class PlainLog(Log):
-    def __init__(self, master, name, type, logid, decoder):
+    def __init__(
+        self,
+        master: Any,
+        name: str,
+        type: str,
+        logid: int,
+        decoder: Callable[[bytes], str],
+    ) -> None:
         super().__init__(master, name, type, logid, decoder)
 
         self.lbf = lineboundaries.LineBoundaryFinder()
 
-    def addContent(self, text: str | bytes):
+    def addContent(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = self.decoder(text)
         # add some text in the log's default stream
@@ -132,14 +152,14 @@ class PlainLog(Log):
         return self.addRawLines(lines)
 
     @defer.inlineCallbacks
-    def flush(self):
+    def flush(self) -> InlineCallbacksType[None]:
         lines = self.lbf.flush()
         if lines is not None:
             self.subPoint.deliver(None, lines)
             yield self.addRawLines(lines)
 
     @defer.inlineCallbacks
-    def finish(self):
+    def finish(self) -> InlineCallbacksType[None]:
         yield self.flush()
         yield super().finish()
 
@@ -161,62 +181,69 @@ Log._byType['h'] = HtmlLog
 class StreamLog(Log):
     pat = re.compile('^', re.M)
 
-    def __init__(self, step, name, type, logid, decoder):
+    def __init__(
+        self,
+        step: Any,
+        name: str,
+        type: str,
+        logid: int,
+        decoder: Callable[[bytes], str],
+    ) -> None:
         super().__init__(step, name, type, logid, decoder)
-        self.lbfs = {}
+        self.lbfs: dict[str, lineboundaries.LineBoundaryFinder] = {}
 
-    def _getLbf(self, stream):
+    def _getLbf(self, stream: str) -> lineboundaries.LineBoundaryFinder:
         try:
             return self.lbfs[stream]
         except KeyError:
             lbf = self.lbfs[stream] = lineboundaries.LineBoundaryFinder()
             return lbf
 
-    def _on_whole_lines(self, stream, lines):
+    def _on_whole_lines(self, stream: str, lines: str) -> defer.Deferred[None]:
         # deliver the un-annotated version to subscribers
         self.subPoint.deliver(stream, lines)
         # strip the last character, as the regexp will add a
         # prefix character after the trailing newline
         return self.addRawLines(self.pat.sub(stream, lines)[:-1])
 
-    def split_lines(self, stream, text):
+    def split_lines(self, stream: str, text: str) -> defer.Deferred[None]:
         lbf = self._getLbf(stream)
         lines = lbf.append(text)
         if lines is None:
             return defer.succeed(None)
         return self._on_whole_lines(stream, lines)
 
-    def addStdout(self, text):
+    def addStdout(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = self.decoder(text)
         return self.split_lines('o', text)
 
-    def addStderr(self, text):
+    def addStderr(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = self.decoder(text)
         return self.split_lines('e', text)
 
-    def addHeader(self, text):
+    def addHeader(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = self.decoder(text)
         return self.split_lines('h', text)
 
-    def add_stdout_lines(self, text):
+    def add_stdout_lines(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = self.decoder(text)
         return self._on_whole_lines('o', text)
 
-    def add_stderr_lines(self, text):
+    def add_stderr_lines(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = self.decoder(text)
         return self._on_whole_lines('e', text)
 
-    def add_header_lines(self, text):
+    def add_header_lines(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = self.decoder(text)
         return self._on_whole_lines('h', text)
 
-    def flush(self):
+    def flush(self) -> defer.Deferred[None]:
         for stream, lbf in self.lbfs.items():
             lines = lbf.flush()
             if lines is not None:
@@ -224,7 +251,7 @@ class StreamLog(Log):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def finish(self):
+    def finish(self) -> InlineCallbacksType[None]:
         yield self.flush()
         yield super().finish()
 
