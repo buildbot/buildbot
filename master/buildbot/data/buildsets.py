@@ -245,7 +245,7 @@ class Buildset(base.ResourceType):
         brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid)
 
         # figure out the overall results of the buildset:
-        cumulative_results = SUCCESS
+        cumulative_results: int | None = SUCCESS
         for brdict in brdicts:
             cumulative_results = worst_status(cumulative_results, brdict.results)
 
