@@ -884,4 +884,4 @@ async def _async_iter_on_pool(
     # but only if error, as await a successfully resolved Deferred will
     # never finish
     if isinstance(worker_task.result, Failure):
-        await worker_task
+        worker_task.result.raiseException()
