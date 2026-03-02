@@ -19,8 +19,10 @@ import dataclasses
 import io
 import os
 import threading
+from collections.abc import AsyncIterator
 from functools import partial
 from typing import TYPE_CHECKING
+from typing import TypeVar
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -28,6 +30,7 @@ from twisted.internet import threads
 from twisted.python import log
 from twisted.python import threadpool
 from twisted.python.failure import Failure
+from typing_extensions import override
 
 from buildbot import util
 from buildbot.config.master import get_is_in_unit_tests
@@ -47,16 +50,17 @@ if TYPE_CHECKING:
     from collections.abc import Generator
     from typing import Callable
     from typing import Literal
-    from typing import TypeVar
 
     from sqlalchemy.engine import Connection as SAConnection
+    from twisted.internet.defer import Deferred
     from twisted.internet.interfaces import IReactorThreads
     from typing_extensions import ParamSpec
 
-    _T = TypeVar('_T')
     _P = ParamSpec('_P')
 
     LogType = Literal['s', 't', 'h', 'd']
+
+_T = TypeVar('_T')
 
 
 class LogSlugExistsError(KeyError):
@@ -295,7 +299,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     line_idx += 1
 
         async for chunk_first_line, _, compressed, content in _iter_chunks_batched():
-            async for line in _async_iter_on_pool(
+            async for line in _AsyncIterOnPool(
                 partial(
                     _iter_uncompress_lines,
                     chunk_first_line=chunk_first_line,
@@ -478,7 +482,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             compressed_chunk,
             compressed_id,
             chunk_lines_count,
-        ) in _async_iter_on_pool(
+        ) in _AsyncIterOnPool(
             partial(
                 _thd_iter_chunk_compress,
                 content=content,
@@ -777,64 +781,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         )
 
 
-async def _async_iter_on_pool(
-    generator_sync: Callable[[], Generator[_T, None, None]],
-    *,
-    reactor: IReactorThreads,
-    provider_threadpool: threadpool.ThreadPool | None = None,
-    max_backlog: int = 1,
-    wait_backlog_consuption: bool = True,
-) -> AsyncGenerator[_T, None]:
-    """
-    Utility to transform a sync `Generator` function into an `AsyncGenerator`
-    by executing it on a threadpool.
-
-    :param generator_sync:
-        sync Generator function (if arguments are necessary, use functools.partial)
-
-    :param reactor: Twisted reactor to use
-
-    :param provider_threadpool:
-        Threadpool to run the Generator on (default to reactor's ThreadPool)
-
-    :param max_backlog:
-        Maximum size of the buffer used to communicate between sync and async Generators.
-
-        A value of 0 or less means unlimited.
-
-        When the buffer contains `max_backlog` items,
-        the threaded sync Generator will wait until at least one element is consumed.
-
-        Note: this is forced to `0` if in unit tests and `provider_threadpool` is a `NonThreadPool`.
-
-    :param wait_backlog_consuption:
-        If `True`, will wait until all items in the buffer are consumed.
-
-        This is used to prevent a new threadpool task to run,
-        potentially creating a new buffer consuming memory
-        while the previous buffer is still in use.
-
-        Note: this is forced to `False` if in unit tests and `provider_threadpool` is a `NonThreadPool`.
-    """
-
-    if provider_threadpool is None:
-        provider_threadpool = reactor.getThreadPool()
-
-    # create a single element queue as to
-    # occupy a thread of the pool
-    # avoiding too many compressed chunks in memory awaiting DB insert
-    # use 0 (unlimited) in tests as there isn't really a threadpool / reactor running
-    _is_non_threadpool_mode = False
-    if get_is_in_unit_tests():
-        from buildbot.test.fake.reactor import NonThreadPool  # noqa: PLC0415
-
-        if isinstance(provider_threadpool, NonThreadPool):
-            _is_non_threadpool_mode = True
-
-    queue: defer.DeferredQueue[_T | _CloseObj] = defer.DeferredQueue()
-
-    condition = threading.Condition()
-
+class _AsyncIterOnPool(AsyncIterator[_T]):
     # dummy object that resolve the callback of the task.
     # Needed as we can't know what the callable will provide,
     # so None, False, ... can't be used.
@@ -845,43 +792,123 @@ async def _async_iter_on_pool(
 
     close_obj = _CloseObj()
 
-    def _can_put_in_queue() -> bool:
-        return _is_non_threadpool_mode or max_backlog <= 0 or len(queue.pending) < max_backlog
+    def __init__(
+        self,
+        generator_sync: Callable[[], Generator[_T, None, None]],
+        *,
+        reactor: IReactorThreads,
+        provider_threadpool: threadpool.ThreadPool | None = None,
+        max_backlog: int = 1,
+        wait_backlog_consuption: bool = True,
+    ) -> None:
+        """
+        Utility to transform a sync `Generator` function into an `AsyncGenerator`
+        by executing it on a threadpool.
 
-    def _provider_wrapped() -> None:
+        :param generator_sync:
+            sync Generator function (if arguments are necessary, use functools.partial)
+
+        :param reactor: Twisted reactor to use
+
+        :param provider_threadpool:
+            Threadpool to run the Generator on (default to reactor's ThreadPool)
+
+        :param max_backlog:
+            Maximum size of the buffer used to communicate between sync and async Generators.
+
+            A value of 0 or less means unlimited.
+
+            When the buffer contains `max_backlog` items,
+            the threaded sync Generator will wait until at least one element is consumed.
+
+            Note: this is forced to `0` if in unit tests and `provider_threadpool` is a `NonThreadPool`.
+
+        :param wait_backlog_consuption:
+            If `True`, will wait until all items in the buffer are consumed.
+
+            This is used to prevent a new threadpool task to run,
+            potentially creating a new buffer consuming memory
+            while the previous buffer is still in use.
+
+            Note: this is forced to `False` if in unit tests and `provider_threadpool` is a `NonThreadPool`.
+        """
+
+        self._generator_sync = generator_sync
+
+        self._reactor = reactor
+        if provider_threadpool is None:
+            provider_threadpool = reactor.getThreadPool()
+
+        self._provider_threadpool = provider_threadpool
+        self._max_backlog = max_backlog
+        self._wait_backlog_consuption = wait_backlog_consuption
+
+        # create a single element queue as to
+        # occupy a thread of the pool
+        # avoiding too many compressed chunks in memory awaiting DB insert
+        # use 0 (unlimited) in tests as there isn't really a threadpool / reactor running
+        self._is_non_threadpool_mode = False
+        if get_is_in_unit_tests():
+            from buildbot.test.fake.reactor import NonThreadPool  # noqa: PLC0415
+
+            if isinstance(self._provider_threadpool, NonThreadPool):
+                self._is_non_threadpool_mode = True
+
+        self._queue: defer.DeferredQueue[_T | _AsyncIterOnPool._CloseObj] = defer.DeferredQueue()
+
+        self._condition = threading.Condition()
+
+        self._worker_task: Deferred[None] | None = None
+
+    def __aiter__(self) -> AsyncIterator[_T]:
+        assert self._worker_task is None
+        self._worker_task = threads.deferToThreadPool(
+            self._reactor,
+            self._provider_threadpool,
+            self._provider_wrapped,
+        ).addBoth(callback=self._put_close)
+
+        return self
+
+    @override
+    async def __anext__(self) -> _T:
+        item = await self._queue.get()
+        if item is self.close_obj:
+            if self._worker_task is not None:
+                assert self._worker_task.called
+
+                if isinstance(self._worker_task.result, Failure):
+                    self._worker_task.result.raiseException()
+
+                self._worker_task = None
+            raise StopAsyncIteration
+        assert not isinstance(item, _AsyncIterOnPool._CloseObj)
+        with self._condition:
+            self._condition.notify()
+        return item
+
+    def _can_put_in_queue(self) -> bool:
+        return (
+            self._is_non_threadpool_mode
+            or self._max_backlog <= 0
+            or len(self._queue.pending) < self._max_backlog
+        )
+
+    def _provider_wrapped(self) -> None:
         try:
-            for item in generator_sync():
-                with condition:
-                    condition.wait_for(_can_put_in_queue)
+            for item in self._generator_sync():
+                with self._condition:
+                    self._condition.wait_for(self._can_put_in_queue)
 
-                if not _is_non_threadpool_mode:
-                    threads.blockingCallFromThread(reactor, queue.put, item)
+                if not self._is_non_threadpool_mode:
+                    threads.blockingCallFromThread(self._reactor, self._queue.put, item)
                 else:
-                    reactor.callFromThread(queue.put, item)
+                    self._reactor.callFromThread(self._queue.put, item)
         finally:
-            if not _is_non_threadpool_mode and wait_backlog_consuption:
-                with condition:
-                    condition.wait_for(lambda: len(queue.pending) <= 0)
+            if not self._is_non_threadpool_mode and self._wait_backlog_consuption:
+                with self._condition:
+                    self._condition.wait_for(lambda: len(self._queue.pending) <= 0)
 
-    def _put_close(res: None | Failure) -> None | Failure:
-        queue.put(close_obj)
+    def _put_close(self, res: None | Failure) -> None | Failure:
+        self._queue.put(self.close_obj)
         return res
-
-    worker_task = threads.deferToThreadPool(
-        reactor,
-        provider_threadpool,
-        _provider_wrapped,
-    ).addBoth(callback=_put_close)
-
-    while (item := await queue.get()) is not close_obj:
-        assert not isinstance(item, _CloseObj)
-        with condition:
-            condition.notify()
-        yield item
-
-    assert worker_task.called
-    # so that if task ended in exception, it's correctly propagated
-    # but only if error, as await a successfully resolved Deferred will
-    # never finish
-    if isinstance(worker_task.result, Failure):
-        worker_task.result.raiseException()
