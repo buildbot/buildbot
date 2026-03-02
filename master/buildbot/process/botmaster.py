@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -36,12 +37,17 @@ from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.latent import AbstractLatentWorker
 
 if TYPE_CHECKING:
+    from buildbot.config.master import MasterConfig
+    from buildbot.mq.base import QueueRef
+    from buildbot.util.twisted import InlineCallbacksType
     from buildbot.worker import AbstractWorker
 
 
 class LockRetrieverMixin:
     @defer.inlineCallbacks
-    def getLockByID(self, lockid, config_version):
+    def getLockByID(
+        self, lockid: Any, config_version: int
+    ) -> InlineCallbacksType[locks.RealMasterLock | locks.RealWorkerLock]:
         """Convert a Lock identifier into an actual Lock instance.
         @lockid: a locks.MasterLock or locks.WorkerLock instance
         @config_version: The version of the config from which the list of locks has been
@@ -69,7 +75,9 @@ class LockRetrieverMixin:
             lock.updateFromLockId(lockid, config_version)
         return lock
 
-    def getLockFromLockAccess(self, access, config_version):
+    def getLockFromLockAccess(
+        self, access: Any, config_version: int
+    ) -> defer.Deferred[locks.RealMasterLock | locks.RealWorkerLock]:
         # Convert a lock-access object into an actual Lock instance.
         if not isinstance(access, locks.LockAccess):
             # Buildbot 0.7.7 compatibility: user did not specify access
@@ -77,7 +85,9 @@ class LockRetrieverMixin:
         return self.getLockByID(access.lockid, config_version)
 
     @defer.inlineCallbacks
-    def getLockFromLockAccesses(self, accesses, config_version):
+    def getLockFromLockAccesses(
+        self, accesses: list[Any], config_version: int
+    ) -> InlineCallbacksType[zip[tuple[locks.RealMasterLock | locks.RealWorkerLock, Any]]]:
         # converts locks to their real forms
         locks = yield defer.gatherResults(
             [self.getLockFromLockAccess(access, config_version) for access in accesses],
@@ -108,21 +118,23 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.shuttingDown = False
 
         # subscription to new build requests
-        self.buildrequest_consumer_new = None
-        self.buildrequest_consumer_unclaimed = None
-        self.buildrequest_consumer_cancel = None
+        self.buildrequest_consumer_new: QueueRef | None = None
+        self.buildrequest_consumer_unclaimed: QueueRef | None = None
+        self.buildrequest_consumer_cancel: QueueRef | None = None
 
         # a distributor for incoming build requests; see below
         self.brd = BuildRequestDistributor(self)
         self.brd.setServiceParent(self)
-        self._pending_builderids: set[str] = set()
+        self._pending_builderids: set[int] = set()
 
         # Dictionary of build request ID to False or cancellation reason string in case cancellation
         # has been requested.
         self._starting_brid_to_cancel: dict[int, bool | str] = {}
 
     @defer.inlineCallbacks
-    def cleanShutdown(self, quickMode=False, stopReactor=True):
+    def cleanShutdown(
+        self, quickMode: bool = False, stopReactor: bool = True
+    ) -> InlineCallbacksType[None]:
         """Shut down the entire process, once all currently-running builds are
         complete.
         quickMode will mark all builds as retry (except the ones that were triggered)
@@ -163,13 +175,13 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                         # Master should not wait build.stopBuild for ages to complete if worker
                         # does not send any message about shutting the builds down quick enough.
                         # Just kill the connection with the worker
-                        def lose_connection(b):
+                        def lose_connection(b: Any) -> None:
                             if b.workerforbuilder.worker.conn is not None:
                                 b.workerforbuilder.worker.conn.loseConnection()
 
                         sheduled_call = self.master.reactor.callLater(5, lose_connection, build)
 
-                        def cancel_lose_connection(_, call):
+                        def cancel_lose_connection(_: Any, call: Any) -> None:
                             if call.active():
                                 call.cancel()
 
@@ -191,7 +203,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                     # build may be waiting for ping to worker to succeed which
                     # may never happen if the connection to worker was broken
                     # without TCP connection being severed
-                    build.workerforbuilder.abortPingIfAny()
+                    build.workerforbuilder.abortPingIfAny()  # type: ignore[union-attr]
 
                     dl.append(build.waitUntilFinished())
             if not dl:
@@ -227,7 +239,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
             log.msg("Stopping reactor")
             self.master.reactor.stop()
 
-    def cancelCleanShutdown(self):
+    def cancelCleanShutdown(self) -> None:
         """Cancel a clean shutdown that is already in progress, if any"""
         if not self.shuttingDown:
             return
@@ -235,27 +247,27 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.shuttingDown = False
 
     @metrics.countMethod('BotMaster.workerLost()')
-    def workerLost(self, bot: AbstractWorker):
+    def workerLost(self, bot: AbstractWorker) -> None:
         metrics.MetricCountEvent.log("BotMaster.attached_workers", -1)
         for b in self.builders.values():
             if b.config is not None and bot.workername in b.config.workernames:
                 b.detached(bot)
 
     @metrics.countMethod('BotMaster.getBuildersForWorker()')
-    def getBuildersForWorker(self, workername: str):
+    def getBuildersForWorker(self, workername: str) -> list[Builder]:
         return [
             b
             for b in self.builders.values()
             if b.config is not None and workername in b.config.workernames
         ]
 
-    def getBuildernames(self):
+    def getBuildernames(self) -> list[str]:
         return self.builderNames
 
-    def getBuilders(self):
+    def getBuilders(self) -> list[Builder]:
         return list(self.builders.values())
 
-    def _buildrequest_added(self, key, msg):
+    def _buildrequest_added(self, key: Any, msg: Any) -> None:
         self._pending_builderids.add(msg['builderid'])
         self._flush_pending_builders()
 
@@ -264,22 +276,22 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
     # We debounce them to let the brd manage them as a whole
     # without having to debounce the brd itself
     @debounce.method(wait=0.1, until_idle=True)
-    def _flush_pending_builders(self):
+    def _flush_pending_builders(self) -> None:
         if not self._pending_builderids:
             return
-        buildernames = []
+        buildernames: list[str] = []
         for builderid in self._pending_builderids:
             builder = self.getBuilderById(builderid)
             if builder:
-                buildernames.append(builder.name)
+                buildernames.append(builder.name)  # type: ignore[arg-type]
         self._pending_builderids.clear()
         self.brd.maybeStartBuildsOn(buildernames)
 
-    def getBuilderById(self, builderid):
+    def getBuilderById(self, builderid: int) -> Builder | None:
         return self._builders_byid.get(builderid)
 
     @defer.inlineCallbacks
-    def startService(self):
+    def startService(self) -> InlineCallbacksType[None]:
         # consume both 'new' and 'unclaimed' build requests events
         startConsuming = self.master.mq.startConsuming
         self.buildrequest_consumer_new = yield startConsuming(
@@ -294,7 +306,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         yield super().startService()
 
     @defer.inlineCallbacks
-    def _buildrequest_canceled(self, key, msg):
+    def _buildrequest_canceled(self, key: Any, msg: Any) -> InlineCallbacksType[None]:
         brid = int(key[2])
         reason = msg.get('reason', 'no reason')
 
@@ -329,7 +341,9 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         self.master.mq.produce(('buildrequests', str(brid), 'cancel'), brdict)
 
     @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(
+        self, new_config: MasterConfig
+    ) -> InlineCallbacksType[None]:
         timer = metrics.Timer("BotMaster.reconfigServiceWithBuildbotConfig")
         timer.start()
 
@@ -347,7 +361,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         timer.stop()
 
     @defer.inlineCallbacks
-    def reconfigProjects(self, new_config):
+    def reconfigProjects(self, new_config: MasterConfig) -> InlineCallbacksType[None]:
         for project_config in new_config.projects:
             projectid = yield self.master.data.updates.find_project_id(project_config.name)
             yield self.master.data.updates.update_project_info(
@@ -359,7 +373,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
             )
 
     @async_to_deferred
-    async def reconfig_codebases(self, new_config):
+    async def reconfig_codebases(self, new_config: MasterConfig) -> None:
         for codebase_config in new_config.codebases:
             projectid = await self.master.data.updates.find_project_id(
                 codebase_config.project, auto_create=False
@@ -382,7 +396,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
             )
 
     @defer.inlineCallbacks
-    def reconfigServiceBuilders(self, new_config):
+    def reconfigServiceBuilders(self, new_config: MasterConfig) -> InlineCallbacksType[None]:
         timer = metrics.Timer("BotMaster.reconfigServiceBuilders")
         timer.start()
 
@@ -403,7 +417,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
 
                 del self.builders[n]
                 builder.master = None
-                builder.botmaster = None
+                builder.botmaster = None  # type: ignore[attr-defined]
 
                 yield builder.disownServiceParent()
 
@@ -411,7 +425,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
                 builder = Builder(n)
                 self.builders[n] = builder
 
-                builder.botmaster = self
+                builder.botmaster = self  # type: ignore[attr-defined]
                 builder.master = self.master
                 yield builder.setServiceParent(self)
 
@@ -428,7 +442,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
 
         timer.stop()
 
-    def stopService(self):
+    def stopService(self) -> defer.Deferred[None]:
         if self.buildrequest_consumer_new:
             self.buildrequest_consumer_new.stopConsuming()
             self.buildrequest_consumer_new = None
@@ -443,13 +457,13 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         return super().stopService()
 
     # Used to track buildrequests that are in progress of being started on this master.
-    def add_in_progress_buildrequest(self, brid):
+    def add_in_progress_buildrequest(self, brid: int) -> None:
         self._starting_brid_to_cancel[brid] = False
 
-    def remove_in_progress_buildrequest(self, brid):
+    def remove_in_progress_buildrequest(self, brid: int) -> bool | str | None:
         return self._starting_brid_to_cancel.pop(brid, None)
 
-    def maybe_cancel_in_progress_buildrequest(self, brid, reason):
+    def maybe_cancel_in_progress_buildrequest(self, brid: int, reason: str) -> None:
         """
         Ensures that after this call any builds resulting from build request will be visible or
         cancelled.
@@ -457,7 +471,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         if brid in self._starting_brid_to_cancel:
             self._starting_brid_to_cancel[brid] = reason
 
-    def maybeStartBuildsForBuilder(self, buildername):
+    def maybeStartBuildsForBuilder(self, buildername: str) -> None:
         """
         Call this when something suggests that a particular builder may now
         be available to start a build.
@@ -466,7 +480,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         """
         self.brd.maybeStartBuildsOn([buildername])
 
-    def maybeStartBuildsForWorker(self, worker_name):
+    def maybeStartBuildsForWorker(self, worker_name: str) -> None:
         """
         Call this when something suggests that a particular worker may now be
         available to start a build.
@@ -476,7 +490,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         builders = self.getBuildersForWorker(worker_name)
         self.brd.maybeStartBuildsOn([b.name for b in builders])
 
-    def maybeStartBuildsForAllBuilders(self):
+    def maybeStartBuildsForAllBuilders(self) -> None:
         """
         Call this when something suggests that this would be a good time to
         start some builds, but nothing more specific.
