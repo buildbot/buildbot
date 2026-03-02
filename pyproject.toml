@@ -238,7 +238,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.pbutil",
       "buildbot.plugins.db",
       "buildbot.plugins",
-      "buildbot.process.metrics",
       "buildbot.process.project",
       "buildbot.process.properties",
       "buildbot.process.remotecommand",
