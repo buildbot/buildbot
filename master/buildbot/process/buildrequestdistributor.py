@@ -268,9 +268,7 @@ class BasicBuildChooser(BuildChooserBase):
                 nextBreq = None
         else:
             # otherwise just return the build with highest priority
-            brdict = sorted(self.unclaimedBrdicts.data, key=lambda b: b['priority'], reverse=True)[
-                0
-            ]
+            brdict = sorted(self.unclaimedBrdicts, key=lambda b: b['priority'], reverse=True)[0]
             nextBreq = yield self._getBuildRequestForBrdict(brdict)
 
         return nextBreq
