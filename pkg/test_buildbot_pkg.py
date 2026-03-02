@@ -22,6 +22,9 @@ from textwrap import dedent
 
 from twisted.trial import unittest
 
+# do this here because __file__ may be relative and cwd may be changed
+repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 class BuildbotWWWPkg(unittest.TestCase):
     pkgName = "buildbot_www"
@@ -55,7 +58,7 @@ class BuildbotWWWPkg(unittest.TestCase):
 
     @property
     def path(self):
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", *self.pkgPaths))
+        return os.path.join(repo_root, *self.pkgPaths)
 
     def rmtree(self, d):
         if os.path.isdir(d):
