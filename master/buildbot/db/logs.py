@@ -803,7 +803,7 @@ class _AsyncIterOnPool(AbstractAsyncContextManager, AsyncIterator[_T]):
         reactor: IReactorThreads,
         provider_threadpool: threadpool.ThreadPool | None = None,
         max_backlog: int = 1,
-        wait_backlog_consuption: bool = True,
+        wait_backlog_consumption: bool = True,
     ) -> None:
         """
         Utility to transform a sync `Generator` function into an `AsyncGenerator`
@@ -827,7 +827,7 @@ class _AsyncIterOnPool(AbstractAsyncContextManager, AsyncIterator[_T]):
 
             Note: this is forced to `0` if in unit tests and `provider_threadpool` is a `NonThreadPool`.
 
-        :param wait_backlog_consuption:
+        :param wait_backlog_consumption:
             If `True`, will wait until all items in the buffer are consumed.
 
             This is used to prevent a new threadpool task to run,
@@ -845,7 +845,7 @@ class _AsyncIterOnPool(AbstractAsyncContextManager, AsyncIterator[_T]):
 
         self._provider_threadpool = provider_threadpool
         self._max_backlog = max_backlog
-        self._wait_backlog_consuption = wait_backlog_consuption
+        self._wait_backlog_consumption = wait_backlog_consumption
 
         # create a single element queue as to
         # occupy a thread of the pool
@@ -951,7 +951,7 @@ class _AsyncIterOnPool(AbstractAsyncContextManager, AsyncIterator[_T]):
         finally:
             if (
                 not self._is_non_threadpool_mode
-                and self._wait_backlog_consuption
+                and self._wait_backlog_consumption
                 and not cancel_event.is_set()
             ):
                 with self._condition:
