@@ -238,7 +238,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.pbutil",
       "buildbot.plugins.db",
       "buildbot.plugins",
-      "buildbot.process.cache",
       "buildbot.process.debug",
       "buildbot.process.factory",
       "buildbot.process.locks",
