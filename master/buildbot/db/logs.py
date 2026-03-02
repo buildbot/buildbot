@@ -20,6 +20,7 @@ import io
 import os
 import threading
 from collections.abc import AsyncIterator
+from contextlib import AbstractAsyncContextManager
 from functools import partial
 from typing import TYPE_CHECKING
 from typing import TypeVar
@@ -48,6 +49,7 @@ from buildbot.warnings import warn_deprecated
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
     from collections.abc import Generator
+    from types import TracebackType
     from typing import Callable
     from typing import Literal
 
@@ -299,7 +301,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     line_idx += 1
 
         async for chunk_first_line, _, compressed, content in _iter_chunks_batched():
-            async for line in _AsyncIterOnPool(
+            async with _AsyncIterOnPool(
                 partial(
                     _iter_uncompress_lines,
                     chunk_first_line=chunk_first_line,
@@ -310,8 +312,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 provider_threadpool=self._compression_pool,
                 # disable limit as we process one chunk at a time
                 max_backlog=0,
-            ):
-                yield line
+            ) as iterator:
+                async for line in iterator:
+                    yield line
 
     @async_to_deferred
     async def getLogLines(self, logid: int, first_line: int, last_line: int) -> str:
@@ -478,11 +481,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
         # Break the content up into chunks
         chunk_first_line = last_line = num_lines
-        async for (
-            compressed_chunk,
-            compressed_id,
-            chunk_lines_count,
-        ) in _AsyncIterOnPool(
+        async with _AsyncIterOnPool(
             partial(
                 _thd_iter_chunk_compress,
                 content=content,
@@ -496,18 +495,23 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             #   - max_backlog = 100
             # ~6MB per thread
             max_backlog=100,
-        ):
-            last_line = chunk_first_line + chunk_lines_count - 1
+        ) as iterator:
+            async for (
+                compressed_chunk,
+                compressed_id,
+                chunk_lines_count,
+            ) in iterator:
+                last_line = chunk_first_line + chunk_lines_count - 1
 
-            await self.db.pool.do(
-                _thd_insert_chunk,
-                first_line=chunk_first_line,
-                last_line=last_line,
-                content=compressed_chunk,
-                compressed_id=compressed_id,
-            )
+                await self.db.pool.do(
+                    _thd_insert_chunk,
+                    first_line=chunk_first_line,
+                    last_line=last_line,
+                    content=compressed_chunk,
+                    compressed_id=compressed_id,
+                )
 
-            chunk_first_line = last_line + 1
+                chunk_first_line = last_line + 1
 
         await self.db.pool.do(_thd_update_num_lines, last_line + 1)
         return num_lines, last_line
@@ -781,7 +785,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         )
 
 
-class _AsyncIterOnPool(AsyncIterator[_T]):
+class _AsyncIterOnPool(AbstractAsyncContextManager, AsyncIterator[_T]):
     # dummy object that resolve the callback of the task.
     # Needed as we can't know what the callable will provide,
     # so None, False, ... can't be used.
@@ -859,13 +863,47 @@ class _AsyncIterOnPool(AsyncIterator[_T]):
         self._condition = threading.Condition()
 
         self._worker_task: Deferred[None] | None = None
+        self._worker_cancel_event: threading.Event | None = None
 
+    @override
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> bool | None:
+        """Raise any exception triggered within the runtime context."""
+        if self._worker_task is not None:
+            worker_task = self._worker_task
+            self._worker_task = None
+
+            assert self._worker_cancel_event is not None
+            self._worker_cancel_event.set()
+            if self._queue.pending:
+                self._queue.pending.clear()
+            with self._condition:
+                self._condition.notify()
+
+            self._worker_cancel_event = None
+
+            if not worker_task.called:
+                await worker_task
+
+            if isinstance(worker_task.result, Failure):
+                worker_task.result.raiseException()
+
+        return None
+
+    @override
     def __aiter__(self) -> AsyncIterator[_T]:
         assert self._worker_task is None
+        assert self._worker_cancel_event is None
+        self._worker_cancel_event = threading.Event()
         self._worker_task = threads.deferToThreadPool(
             self._reactor,
             self._provider_threadpool,
             self._provider_wrapped,
+            cancel_event=self._worker_cancel_event,
         ).addBoth(callback=self._put_close)
 
         return self
@@ -894,18 +932,28 @@ class _AsyncIterOnPool(AsyncIterator[_T]):
             or len(self._queue.pending) < self._max_backlog
         )
 
-    def _provider_wrapped(self) -> None:
+    def _provider_wrapped(self, cancel_event: threading.Event) -> None:
+        def _wait_put_in_queue() -> bool:
+            return self._can_put_in_queue() or cancel_event.is_set()
+
         try:
             for item in self._generator_sync():
                 with self._condition:
-                    self._condition.wait_for(self._can_put_in_queue)
+                    self._condition.wait_for(_wait_put_in_queue)
+
+                if cancel_event.is_set():
+                    break
 
                 if not self._is_non_threadpool_mode:
                     threads.blockingCallFromThread(self._reactor, self._queue.put, item)
                 else:
                     self._reactor.callFromThread(self._queue.put, item)
         finally:
-            if not self._is_non_threadpool_mode and self._wait_backlog_consuption:
+            if (
+                not self._is_non_threadpool_mode
+                and self._wait_backlog_consuption
+                and not cancel_event.is_set()
+            ):
                 with self._condition:
                     self._condition.wait_for(lambda: len(self._queue.pending) <= 0)
 
