@@ -710,9 +710,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         LOG_ID = 201
 
         # register fake compressor
+        # Copy to not modify the class instance
         FAKE_COMPRESSOR_ID = max(self.db.logs.COMPRESSION_BYID.keys()) + 1
-        self.db.logs.COMPRESSION_BYID[FAKE_COMPRESSOR_ID] = FakeUnavailableCompressor
-        NON_EXISTING_COMPRESSOR_ID = max(self.db.logs.COMPRESSION_BYID.keys()) + 1
+        NON_EXISTING_COMPRESSOR_ID = FAKE_COMPRESSOR_ID + 1
+        self.db.logs.COMPRESSION_BYID = {
+            **self.db.logs.COMPRESSION_BYID,
+            FAKE_COMPRESSOR_ID: FakeUnavailableCompressor,
+        }
 
         await self.db.insert_test_data([
             *self.backgroundData,
