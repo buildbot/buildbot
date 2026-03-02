@@ -13,23 +13,33 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.application import service
 from twisted.internet import defer
 
 from buildbot.util import service as util_service
 
+if TYPE_CHECKING:
+    from buildbot.config.master import MasterConfig
+    from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class UserManagerManager(util_service.ReconfigurableServiceMixin, service.MultiService):
     # this class manages a fleet of user managers; hence the name..
 
-    def __init__(self, master):
+    def __init__(self, master: BuildMaster) -> None:
         super().__init__()
         self.setName('user_manager_manager')
         self.master = master
 
     @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(
+        self, new_config: MasterConfig
+    ) -> InlineCallbacksType[None]:
         # this is easy - kick out all of the old managers, and add the
         # new ones.
 
