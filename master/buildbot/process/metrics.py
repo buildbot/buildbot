@@ -278,7 +278,7 @@ class MetricAlarmHandler(MetricHandler):
     _alarms: defaultdict[str, tuple[int, str]] | None
 
     def reset(self):
-        self._alarms = defaultdict(lambda x: ALARM_OK)
+        self._alarms = defaultdict(lambda: (ALARM_OK, None))
 
     def handle(self, eventDict, metric):
         self._alarms[metric.alarm] = (metric.level, metric.msg)
