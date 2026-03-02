@@ -558,7 +558,8 @@ class _SecretRenderer:
 
     @defer.inlineCallbacks
     def getRenderingFor(self, properties):
-        secretsSrv = properties.master.namedServices.get("secrets")
+        props = properties.getProperties()
+        secretsSrv = props.master.namedServices.get("secrets")
         if not secretsSrv:
             error_message = (
                 "secrets service not started, need to configure"
@@ -566,11 +567,11 @@ class _SecretRenderer:
                 "in Interpolate"
             )
             raise KeyError(error_message)
-        credsservice = properties.master.namedServices['secrets']
+        credsservice = props.master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secret_name)
         if secret_detail is None:
             raise KeyError(f"secret key {self.secret_name} is not found in any provider")
-        properties.useSecret(secret_detail.value, self.secret_name)
+        props.useSecret(secret_detail.value, self.secret_name)
         return secret_detail.value
 
 
