@@ -792,9 +792,8 @@ class _AsyncIterOnPool(AbstractAsyncContextManager, AsyncIterator[_T]):
     # But, we know that callback will return None, so we can
     # override it's callback result
     class _CloseObj:
-        pass
-
-    close_obj = _CloseObj()
+        def __init__(self, result: Failure | None) -> None:
+            self.result = result
 
     def __init__(
         self,
@@ -911,14 +910,14 @@ class _AsyncIterOnPool(AbstractAsyncContextManager, AsyncIterator[_T]):
     @override
     async def __anext__(self) -> _T:
         item = await self._queue.get()
-        if item is self.close_obj:
+        if isinstance(item, _AsyncIterOnPool._CloseObj):
             if self._worker_task is not None:
                 assert self._worker_task.called
-
-                if isinstance(self._worker_task.result, Failure):
-                    self._worker_task.result.raiseException()
-
                 self._worker_task = None
+
+                if isinstance(item.result, Failure):
+                    item.result.raiseException()
+
             raise StopAsyncIteration
         assert not isinstance(item, _AsyncIterOnPool._CloseObj)
         with self._condition:
@@ -957,6 +956,5 @@ class _AsyncIterOnPool(AbstractAsyncContextManager, AsyncIterator[_T]):
                 with self._condition:
                     self._condition.wait_for(lambda: len(self._queue.pending) <= 0)
 
-    def _put_close(self, res: None | Failure) -> None | Failure:
-        self._queue.put(self.close_obj)
-        return res
+    def _put_close(self, res: None | Failure) -> None:
+        self._queue.put(_AsyncIterOnPool._CloseObj(res))
