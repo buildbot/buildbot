@@ -14,7 +14,7 @@ cryptography==45.0.4;  python_version < "3.8"  # pyup: ignore
 cryptography==46.0.5;  python_version >= "3.8"
 funcsigs==1.0.2
 hyperlink==21.0.0
-idna==3.10
+idna==3.11
 incremental==22.10.0;  python_version < "3.8" # pyup: ignore
 incremental==24.7.2;  python_version >= "3.8"
 mock==5.2.0

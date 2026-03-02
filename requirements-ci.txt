@@ -40,7 +40,7 @@ dill==0.4.1
 evalidate==2.0.5
 greenlet==3.2.3
 hyperlink==21.0.0
-idna==3.10
+idna==3.11
 incremental==24.7.2
 Jinja2==3.1.6
 jmespath==1.0.1
