@@ -1,0 +1,1 @@
+Fixed page titles always showing "Buildbot" instead of reflecting the current view (:issue:`8703`).
