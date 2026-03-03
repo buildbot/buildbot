@@ -74,7 +74,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jquery": "^3.5.16",
     "@types/node": "^22.8.6",
-    "@vitejs/plugin-react": "~4.3.1",
+    "@vitejs/plugin-react": "~5.1.4",
     "axios-mock-adapter": "~2.0.0",
     "buffer": "^6.0.3",
     "build-config-buildbot": "file:../common-config",
