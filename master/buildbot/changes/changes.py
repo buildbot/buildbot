@@ -87,7 +87,7 @@ class Change:
         comments: str | None,
         committer: str | None = None,
         revision: str | None = None,
-        when: int | None = None,
+        when: float | None = None,
         branch: str | None = None,
         category: str | None = None,
         revlink: str = '',
@@ -263,7 +263,7 @@ class Change:
             return "?"
         return time.strftime("%a %d %b %Y %H:%M:%S", time.localtime(self.when))
 
-    def getTimes(self) -> tuple[int | None, None]:
+    def getTimes(self) -> tuple[float, None]:
         return (self.when, None)
 
     def getText(self) -> list[str]:

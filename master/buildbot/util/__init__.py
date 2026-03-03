@@ -25,13 +25,17 @@ import sys
 import textwrap
 import time
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
+from typing import Literal
+from typing import cast
 from typing import overload
 from urllib.parse import urlsplit
 from urllib.parse import urlunsplit
 
 import dateutil.tz
 from twisted.python import reflect
+from typing_extensions import ParamSpec
 from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
@@ -41,23 +45,34 @@ from buildbot.util.misc import deferredLocked
 from ._notifier import Notifier
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from collections.abc import Iterator
+    from collections.abc import Mapping
+    from collections.abc import MutableMapping
     from collections.abc import Sequence
+    from typing import Callable
     from typing import ClassVar
     from typing import TypeVar
 
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IReactorCore
+    from twisted.internet.interfaces import IReactorTime
+    from twisted.python.failure import Failure
+
     _T = TypeVar('_T')
+    _P = ParamSpec('_P')
 
 
-def naturalSort(array):
+def naturalSort(array: Sequence[str]) -> list[str]:
     array = array[:]
 
-    def try_int(s):
+    def try_int(s: str | bytes) -> int | str | bytes:
         try:
             return int(s)
         except ValueError:
             return s
 
-    def key_func(item):
+    def key_func(item: str) -> list[int | str | bytes]:
         return [try_int(s) for s in re.split(r'(\d+)', item)]
 
     # prepend integer keys to each element, sort them, then strip the keys
@@ -66,7 +81,9 @@ def naturalSort(array):
     return array
 
 
-def flattened_iterator(l, types=(list, tuple)):
+def flattened_iterator(
+    l: Iterable[Any], types: tuple[type[Iterable[Any]], ...] = (list, tuple)
+) -> Iterator[Any]:
     """
     Generator for a list/tuple that potentially contains nested/lists/tuples of arbitrary nesting
     that returns every individual non-list/tuple element.  In other words,
@@ -82,7 +99,7 @@ def flattened_iterator(l, types=(list, tuple)):
         yield from flattened_iterator(element, types)
 
 
-def flatten(l, types=(list,)):
+def flatten(l: Iterable[Any], types: tuple[type[Iterable[Any]], ...] = (list,)) -> Iterable[Any]:
     """
     Given a list/tuple that potentially contains nested lists/tuples of arbitrary nesting,
     flatten into a single dimension.  In other words, turn [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
@@ -97,13 +114,13 @@ def flatten(l, types=(list,)):
     return list(flattened_iterator(l, types))
 
 
-def now(_reactor=None):
+def now(_reactor: IReactorTime | None = None) -> float:
     if _reactor and hasattr(_reactor, "seconds"):
         return _reactor.seconds()
     return time.time()
 
 
-def formatInterval(eta):
+def formatInterval(eta: int) -> str:
     eta_parts = []
     if eta > 3600:
         eta_parts.append(f"{eta // 3600} hrs")
@@ -115,7 +132,7 @@ def formatInterval(eta):
     return ", ".join(eta_parts)
 
 
-def fuzzyInterval(seconds):
+def fuzzyInterval(seconds: int) -> str:
     """
     Convert time interval specified in seconds into fuzzy, human-readable form
     """
@@ -160,76 +177,83 @@ class ComparableMixin:
     class _None:
         pass
 
-    def __hash__(self):
-        compare_attrs = []
+    def __hash__(self) -> int:
+        compare_attrs: list[str] = []
         reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
 
         alist = [self.__class__] + [getattr(self, name, self._None) for name in compare_attrs]
         return hash(tuple(map(str, alist)))
 
-    def _cmp_common(self, them):
+    def _cmp_common(
+        self, them: object
+    ) -> tuple[Literal[True], list[Any], list[Any]] | tuple[Literal[False], None, None]:
         if type(self) is not type(them):
             return (False, None, None)
 
         if self.__class__ != them.__class__:
             return (False, None, None)
 
-        compare_attrs = []
+        compare_attrs: list[str] = []
         reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
 
-        self_list = [getattr(self, name, self._None) for name in compare_attrs]
-        them_list = [getattr(them, name, self._None) for name in compare_attrs]
+        self_list: list[Any] = [getattr(self, name, self._None) for name in compare_attrs]
+        them_list: list[Any] = [getattr(them, name, self._None) for name in compare_attrs]
         return (True, self_list, them_list)
 
-    def __eq__(self, them):
+    def __eq__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
         return self_list == them_list
 
     @staticmethod
-    def isEquivalent(us, them):
+    def isEquivalent(us: object, them: object) -> bool:
         if isinstance(them, ComparableMixin):
             them, us = us, them
         if isinstance(us, ComparableMixin):
             (isComparable, us_list, them_list) = us._cmp_common(them)
             if not isComparable:
                 return False
+            assert us_list is not None and them_list is not None
             return all(ComparableMixin.isEquivalent(v, them_list[i]) for i, v in enumerate(us_list))
         return us == them
 
-    def __ne__(self, them):
+    def __ne__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return True
         return self_list != them_list
 
-    def __lt__(self, them):
+    def __lt__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list < them_list
 
-    def __le__(self, them):
+    def __le__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list <= them_list
 
-    def __gt__(self, them):
+    def __gt__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list > them_list
 
-    def __ge__(self, them):
+    def __ge__(self, them: object) -> bool:
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
+        assert self_list is not None and them_list is not None
         return self_list >= them_list
 
-    def getConfigDict(self):
-        compare_attrs = []
+    def getConfigDict(self) -> dict[str, Any]:
+        compare_attrs: list[str] = []
         reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
         return {
             k: getattr(self, k)
@@ -238,7 +262,7 @@ class ComparableMixin:
         }
 
 
-def diffSets(old, new):
+def diffSets(old: Iterable[_T], new: Iterable[_T]) -> tuple[set[_T], set[_T]]:
     if not isinstance(old, set):
         old = set(old)
     if not isinstance(new, set):
@@ -253,41 +277,43 @@ badchars_map = bytes.maketrans(
 )
 
 
-def safeTranslate(s):
+def safeTranslate(s: str | bytes) -> bytes:
     if isinstance(s, str):
         s = s.encode('utf8')
     return s.translate(badchars_map)
 
 
-def none_or_str(x):
+def none_or_str(x: Any) -> str | None:
     if x is not None and not isinstance(x, str):
         return str(x)
     return x
 
 
 @overload
-def unicode2bytes(x: str, encoding='utf-8', errors='strict') -> bytes: ...
+def unicode2bytes(x: str, encoding: str = 'utf-8', errors: str = 'strict') -> bytes: ...
 
 
 @overload
-def unicode2bytes(x: _T, encoding='utf-8', errors='strict') -> _T: ...
+def unicode2bytes(x: _T, encoding: str = 'utf-8', errors: str = 'strict') -> _T: ...
 
 
-def unicode2bytes(x, encoding='utf-8', errors='strict'):
+def unicode2bytes(x: Any, encoding: str = 'utf-8', errors: str = 'strict') -> Any:
     if isinstance(x, str):
         x = x.encode(encoding, errors)
     return x
 
 
 @overload
-def bytes2unicode(x: None, encoding='utf-8', errors='strict') -> None: ...
+def bytes2unicode(x: None, encoding: str = 'utf-8', errors: str = 'strict') -> None: ...
 
 
 @overload
-def bytes2unicode(x: bytes | str, encoding='utf-8', errors='strict') -> str: ...
+def bytes2unicode(x: bytes | str, encoding: str = 'utf-8', errors: str = 'strict') -> str: ...
 
 
-def bytes2unicode(x: str | bytes | None, encoding='utf-8', errors='strict') -> str | None:
+def bytes2unicode(
+    x: str | bytes | None, encoding: str = 'utf-8', errors: str = 'strict'
+) -> str | None:
     if isinstance(x, (str, type(None))):
         return x
     return str(x, encoding, errors)
@@ -296,7 +322,7 @@ def bytes2unicode(x: str | bytes | None, encoding='utf-8', errors='strict') -> s
 _hush_pyflakes = [json]
 
 
-def toJson(obj):
+def toJson(obj: Any) -> int | None:
     if isinstance(obj, datetime.datetime):
         return datetime2epoch(obj)
     return None
@@ -308,7 +334,7 @@ def toJson(obj):
 
 
 class _NotABranch:
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
 
@@ -320,7 +346,13 @@ NotABranch = _NotABranch()
 UTC = dateutil.tz.tzutc()
 
 
-def epoch2datetime(epoch):
+@overload
+def epoch2datetime(epoch: float) -> datetime.datetime: ...
+@overload
+def epoch2datetime(epoch: None) -> None: ...
+
+
+def epoch2datetime(epoch: float | None) -> datetime.datetime | None:
     """Convert a UNIX epoch time to a datetime object, in the UTC timezone"""
     if epoch is not None:
         return datetime.datetime.fromtimestamp(epoch, tz=UTC)
@@ -343,7 +375,7 @@ def datetime2epoch(dt: datetime.datetime | None) -> int | None:
 
 
 # TODO: maybe "merge" with formatInterval?
-def human_readable_delta(start, end):
+def human_readable_delta(start: float, end: float) -> str:
     """
     Return a string of human readable time delta.
     """
@@ -370,7 +402,15 @@ def human_readable_delta(start, end):
     return 'super fast'
 
 
-def makeList(input):
+@overload
+def makeList(input: str) -> list[str]: ...
+
+
+@overload
+def makeList(input: Iterable[_T] | None) -> list[_T]: ...
+
+
+def makeList(input: Iterable[_T] | str | None) -> list[_T] | list[str]:
     if isinstance(input, str):
         return [input]
     elif input is None:
@@ -378,38 +418,41 @@ def makeList(input):
     return list(input)
 
 
-def in_reactor(f):
+def in_reactor(f: Callable[_P, _T]) -> Callable[_P, Any]:
     """decorate a function by running it with maybeDeferred in a reactor"""
 
-    def wrap(*args, **kwargs):
+    def wrap(*args: _P.args, **kwargs: _P.kwargs) -> Any:
         from twisted.internet import defer  # noqa: PLC0415
         from twisted.internet import reactor  # noqa: PLC0415
 
-        result = []
+        _reactor = cast("IReactorCore", reactor)
 
-        def _async():
+        result: list[_T | Failure] = []
+
+        def _async() -> None:
             d = defer.maybeDeferred(f, *args, **kwargs)
 
             @d.addErrback
-            def eb(f):
+            def eb(f: Failure) -> None:
                 f.printTraceback(file=sys.stderr)
 
             @d.addBoth
-            def do_stop(r):
+            def do_stop(r: _T | Failure) -> None:
                 result.append(r)
-                reactor.stop()
+                _reactor.stop()
 
-        reactor.callWhenRunning(_async)
-        reactor.run()
+        _reactor.callWhenRunning(_async)
+        _reactor.run()
         return result[0]
 
     wrap.__doc__ = f.__doc__
     wrap.__name__ = f.__name__
-    wrap._orig = f  # for tests
+    # for tests
+    wrap._orig = f  # type: ignore[attr-defined]
     return wrap
 
 
-def string2boolean(str):
+def string2boolean(str: bytes) -> bool:
     return {
         b'on': True,
         b'true': True,
@@ -422,21 +465,21 @@ def string2boolean(str):
     }[str.lower()]
 
 
-def asyncSleep(delay, reactor=None):
+def asyncSleep(delay: float, reactor: IReactorTime | None = None) -> Deferred[None]:
     from twisted.internet import defer  # noqa: PLC0415
     from twisted.internet import reactor as internet_reactor  # noqa: PLC0415
 
     if reactor is None:
-        reactor = internet_reactor
+        reactor = cast("IReactorTime", internet_reactor)
 
-    d = defer.Deferred()
+    d: Deferred[None] = defer.Deferred()
     reactor.callLater(delay, d.callback, None)
     return d
 
 
-def check_functional_environment(config):
+def check_functional_environment(config: Any) -> None:
     try:
-        if sys.version_info >= (3, 11, 0):
+        if sys.version_info >= (3, 11):
             locale.getencoding()
         else:
             locale.getdefaultlocale()
@@ -455,19 +498,28 @@ def check_functional_environment(config):
 _netloc_url_re = re.compile(r':[^@]*@')
 
 
-def stripUrlPassword(url):
+def stripUrlPassword(url: str) -> str:
     parts = list(urlsplit(url))
     parts[1] = _netloc_url_re.sub(':xxxx@', parts[1])
     return urlunsplit(parts)
 
 
-def join_list(maybeList):
+@overload
+def join_list(maybeList: None) -> None: ...
+
+
+@overload
+def join_list(maybeList: str | bytes | list[str | bytes] | tuple[str | bytes]) -> str: ...
+
+
+# TODO(tdesveaux): This should take an Iterable[str | bytes] and test with iter()
+def join_list(maybeList: str | bytes | None | list[str | bytes] | tuple[str | bytes]) -> str | None:
     if isinstance(maybeList, (list, tuple)):
         return ' '.join(bytes2unicode(s) for s in maybeList)
     return bytes2unicode(maybeList)
 
 
-def command_to_string(command):
+def command_to_string(command: Any) -> str | None:
     words = command
     if isinstance(words, (bytes, str)):
         words = words.split()
@@ -502,7 +554,7 @@ def command_to_string(command):
     return rv
 
 
-def rewrap(text, width=None):
+def rewrap(text: str, width: int | None = None) -> str:
     """
     Rewrap text for output to the console.
 
@@ -520,7 +572,7 @@ def rewrap(text, width=None):
     # Remove common indentation.
     text = textwrap.dedent(text)
 
-    def needs_wrapping(line):
+    def needs_wrapping(line: str) -> bool:
         # Line always non-empty.
         return not line[0].isspace()
 
@@ -537,7 +589,7 @@ def rewrap(text, width=None):
     return wrapped_text
 
 
-def dictionary_merge(a, b):
+def dictionary_merge(a: MutableMapping[Any, Any], b: Mapping[Any, Any]) -> MutableMapping[Any, Any]:
     """merges dictionary b into a
     Like dict.update, but recursive
     """

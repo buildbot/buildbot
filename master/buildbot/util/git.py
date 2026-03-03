@@ -21,6 +21,7 @@ import stat
 from pathlib import Path
 from pathlib import PurePath
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from packaging.version import parse as parse_version
@@ -38,16 +39,22 @@ from buildbot.util.misc import writeLocalFile
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from collections.abc import MutableMapping
     from collections.abc import Sequence
 
     from buildbot.changes.gitpoller import GitPoller
-    from buildbot.interfaces import IRenderable
+    from buildbot.interfaces import IMaybeRenderableType
+    from buildbot.master import BuildMaster
+    from buildbot.process.log import Log
     from buildbot.util.git_credential import GitCredentialOptions
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 RC_SUCCESS = 0
 
 
-def getSshArgsForKeys(keyPath, knownHostsPath):
+def getSshArgsForKeys(keyPath: str | None, knownHostsPath: str | None) -> list[str]:
     args = ['-o', 'BatchMode=yes']
     if keyPath is not None:
         args += ['-i', keyPath]
@@ -56,19 +63,19 @@ def getSshArgsForKeys(keyPath, knownHostsPath):
     return args
 
 
-def escapeShellArgIfNeeded(arg):
+def escapeShellArgIfNeeded(arg: str) -> str:
     if re.match(r"^[a-zA-Z0-9_-]+$", arg):
         return arg
     return f'"{arg}"'
 
 
-def getSshCommand(keyPath, knownHostsPath):
+def getSshCommand(keyPath: str, knownHostsPath: str | None) -> str:
     command = ['ssh', *getSshArgsForKeys(keyPath, knownHostsPath)]
     command = [escapeShellArgIfNeeded(arg) for arg in command]
     return ' '.join(command)
 
 
-def scp_style_to_url_syntax(address, port=22, scheme='ssh'):
+def scp_style_to_url_syntax(address: str, port: int = 22, scheme: str = 'ssh') -> str:
     if any(['://' in address, ':\\' in address, ':' not in address]):
         # the address already has a URL syntax or is a local path
         return address
@@ -78,10 +85,10 @@ def scp_style_to_url_syntax(address, port=22, scheme='ssh'):
 
 def check_ssh_config(
     logname: str,
-    ssh_private_key: IRenderable | str | None,
-    ssh_host_key: IRenderable | str | None,
-    ssh_known_hosts: IRenderable | str | None,
-):
+    ssh_private_key: IMaybeRenderableType[str] | None,
+    ssh_host_key: IMaybeRenderableType[str] | None,
+    ssh_known_hosts: IMaybeRenderableType[str] | None,
+) -> None:
     if ssh_host_key is not None and ssh_private_key is None:
         config.error(f'{logname}: sshPrivateKey must be provided in order use sshHostKey')
 
@@ -93,7 +100,7 @@ def check_ssh_config(
 
 
 class GitMixin:
-    def setupGit(self):
+    def setupGit(self) -> None:
         self.gitInstalled = False
         self.supportsBranch = False
         self.supportsProgress = False
@@ -105,7 +112,7 @@ class GitMixin:
         self.supports_lsremote_symref = False
         self.supports_credential_store = False
 
-    def parseGitFeatures(self, version_stdout):
+    def parseGitFeatures(self, version_stdout: str) -> None:
         match = re.match(r"^git version (\d+(\.\d+)*)", version_stdout)
         if not match:
             return
@@ -134,8 +141,13 @@ class GitMixin:
             self.supportsFilters = True
 
     def adjustCommandParamsForSshPrivateKey(
-        self, command, env, keyPath, sshWrapperPath=None, knownHostsPath=None
-    ):
+        self,
+        command: list[Any],
+        env: MutableMapping[str, str],
+        keyPath: str,
+        sshWrapperPath: str | None = None,
+        knownHostsPath: str | None = None,
+    ) -> None:
         ssh_command = getSshCommand(keyPath, knownHostsPath)
 
         if self.supportsSshPrivateKeyAsConfigOption:
@@ -149,7 +161,7 @@ class GitMixin:
             env['GIT_SSH'] = sshWrapperPath
 
 
-def getSshWrapperScriptContents(keyPath, knownHostsPath=None):
+def getSshWrapperScriptContents(keyPath: str, knownHostsPath: str | None = None) -> str:
     ssh_command = getSshCommand(keyPath, knownHostsPath)
 
     # note that this works on windows if using git with MINGW embedded.
@@ -176,8 +188,15 @@ def ensureSshKeyNewline(privateKey: str) -> str:
 
 class GitStepMixin(GitMixin):
     _git_auth: GitStepAuth
+    repourl: str
+    port: int
+    env: dict[str, Any] | None
+    config: Mapping[str, Any] | None
+    logEnviron: bool
+    timeout: int
+    stdio_log: Log
 
-    def setupGitStep(self):
+    def setupGitStep(self) -> None:
         self.setupGit()
 
         if not self.repourl:
@@ -186,15 +205,15 @@ class GitStepMixin(GitMixin):
         if not hasattr(self, '_git_auth'):
             self._git_auth = GitStepAuth(self)
 
-    def setup_repourl(self):
+    def setup_repourl(self) -> None:
         # Use standard URL syntax to enable the use of a dedicated SSH port
         self.repourl = scp_style_to_url_syntax(self.repourl, self.port)
 
     def setup_git_auth(
         self,
-        ssh_private_key: IRenderable | str | None,
-        ssh_host_key: IRenderable | str | None,
-        ssh_known_hosts: IRenderable | str | None,
+        ssh_private_key: IMaybeRenderableType[str] | None,
+        ssh_host_key: IMaybeRenderableType[str] | None,
+        ssh_known_hosts: IMaybeRenderableType[str] | None,
         git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self._git_auth = GitStepAuth(
@@ -209,7 +228,15 @@ class GitStepMixin(GitMixin):
         raise NotImplementedError()
 
     @defer.inlineCallbacks
-    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
+    def _dovccmd(
+        self,
+        command: list[str],
+        abandonOnFailure: str | bool = True,
+        collectStdout: bool = False,
+        initialStdin: str | None = None,
+    ) -> InlineCallbacksType[str | int | None]:
+        assert isinstance(self, buildstep.BuildStep)
+
         full_command = ['git']
         full_env = self.env.copy() if self.env else {}
 
@@ -275,7 +302,7 @@ class GitStepMixin(GitMixin):
         return cmd.rc
 
     @defer.inlineCallbacks
-    def checkFeatureSupport(self):
+    def checkFeatureSupport(self) -> InlineCallbacksType[bool]:
         stdout = yield self._dovccmd(['--version'], collectStdout=True)
 
         self.parseGitFeatures(stdout)
@@ -293,9 +320,9 @@ class AbstractGitAuth(ComparableMixin):
 
     def __init__(
         self,
-        ssh_private_key: IRenderable | str | None = None,
-        ssh_host_key: IRenderable | str | None = None,
-        ssh_known_hosts: IRenderable | str | None = None,
+        ssh_private_key: IMaybeRenderableType[str] | None = None,
+        ssh_host_key: IMaybeRenderableType[str] | None = None,
+        ssh_known_hosts: IMaybeRenderableType[str] | None = None,
         git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self.did_download_auth_files = False
@@ -333,11 +360,11 @@ class AbstractGitAuth(ComparableMixin):
         return False
 
     @property
-    def _path_module(self):
+    def _path_module(self) -> Any:
         raise NotImplementedError()
 
     @property
-    def _master(self):
+    def _master(self) -> BuildMaster:
         raise NotImplementedError()
 
     def _get_ssh_private_key_path(self, ssh_data_path: str) -> str:
@@ -349,7 +376,7 @@ class AbstractGitAuth(ComparableMixin):
     def _get_ssh_wrapper_script_path(self, ssh_data_path: str) -> str:
         return self._path_module.join(ssh_data_path, 'ssh-wrapper.sh')
 
-    def _get_credential_store_file_path(self, ssh_data_path):
+    def _get_credential_store_file_path(self, ssh_data_path: str) -> str:
         return self._path_module.join(ssh_data_path, '.git-credentials')
 
     def _adjust_command_params_for_ssh_private_key(
@@ -382,7 +409,7 @@ class AbstractGitAuth(ComparableMixin):
         full_command: list[str],
         workdir: str,
         git_mixin: GitMixin,
-    ):
+    ) -> None:
         if self.git_credential_options is None:
             return
 
@@ -560,9 +587,9 @@ class GitStepAuth(AbstractGitAuth):
         self,
         # step must implement all these types
         step: buildstep.BuildStep | GitStepMixin | CompositeStepMixin,
-        ssh_private_key: IRenderable | str | None = None,
-        ssh_host_key: IRenderable | str | None = None,
-        ssh_known_hosts: IRenderable | str | None = None,
+        ssh_private_key: IMaybeRenderableType[str] | None = None,
+        ssh_host_key: IMaybeRenderableType[str] | None = None,
+        ssh_known_hosts: IMaybeRenderableType[str] | None = None,
         git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self.step = step
@@ -617,7 +644,7 @@ class GitStepAuth(AbstractGitAuth):
         )
 
     @property
-    def _path_module(self):
+    def _path_module(self) -> Any:
         assert isinstance(self.step, buildstep.BuildStep) and self.step.build is not None
         return self.step.build.path_module
 
@@ -628,7 +655,7 @@ class GitStepAuth(AbstractGitAuth):
         return self.step.build.path_cls
 
     @property
-    def _master(self):
+    def _master(self) -> BuildMaster:
         assert isinstance(self.step, buildstep.BuildStep) and self.step.master is not None
         return self.step.master
 
@@ -696,9 +723,9 @@ class GitServiceAuth(AbstractGitAuth):
     def __init__(
         self,
         service: GitPoller,
-        ssh_private_key: IRenderable | str | None = None,
-        ssh_host_key: IRenderable | str | None = None,
-        ssh_known_hosts: IRenderable | str | None = None,
+        ssh_private_key: IMaybeRenderableType[str] | None = None,
+        ssh_host_key: IMaybeRenderableType[str] | None = None,
+        ssh_known_hosts: IMaybeRenderableType[str] | None = None,
         git_credential_options: GitCredentialOptions | None = None,
     ) -> None:
         self._service = service
@@ -706,11 +733,11 @@ class GitServiceAuth(AbstractGitAuth):
         super().__init__(ssh_private_key, ssh_host_key, ssh_known_hosts, git_credential_options)
 
     @property
-    def _path_module(self):
+    def _path_module(self) -> Any:
         return os.path
 
     @property
-    def _master(self):
+    def _master(self) -> BuildMaster:
         assert self._service.master is not None
         return self._service.master
 
