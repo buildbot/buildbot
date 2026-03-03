@@ -91,7 +91,7 @@ export default defineConfig({
     serveBuildbotPlugins(),
     nodePolyfills({
       include: ['util'],
-      globals: {process: true},
+      globals: {Buffer: false, global: false, process: 'build'},
     }),
     visualizer(),
   ],
