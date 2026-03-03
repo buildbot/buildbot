@@ -1,0 +1,1 @@
+Encode the username and password for use as credentials in `UsersClient` (:issue:`5211`)

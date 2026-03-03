@@ -21,6 +21,8 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.spread import pb
 
+from buildbot.util import unicode2bytes
+
 
 class UsersClient:
     """
@@ -31,8 +33,8 @@ class UsersClient:
 
     def __init__(self, master, username, password, port):
         self.host = master
-        self.username = username
-        self.password = password
+        self.username = unicode2bytes(username)
+        self.password = unicode2bytes(password)
         self.port = int(port)
 
     @defer.inlineCallbacks
