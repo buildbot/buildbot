@@ -12,9 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Callable
+from typing import overload
 
 from buildbot import config
+
+if TYPE_CHECKING:
+    import re
 
 
 class _AssertRaisesConfigErrorContext:
@@ -51,7 +58,23 @@ class ConfigErrorsMixin:
                 if not substr_or_re.search(curr_error):
                     self.fail(f"non-matching error: {curr_error}")
 
-    def assertRaisesConfigError(self, substr_or_re, fn=None):
+    @overload
+    def assertRaisesConfigError(
+        self,
+        substr_or_re: str | re.Pattern,
+        fn: None = None,
+    ) -> _AssertRaisesConfigErrorContext: ...
+
+    @overload
+    def assertRaisesConfigError(
+        self,
+        substr_or_re: str | re.Pattern,
+        fn: Callable[[], None],
+    ) -> None: ...
+
+    def assertRaisesConfigError(
+        self, substr_or_re: str | re.Pattern, fn: Callable[[], None] | None = None
+    ):
         context = _AssertRaisesConfigErrorContext(substr_or_re, self)
         if fn is None:
             return context
