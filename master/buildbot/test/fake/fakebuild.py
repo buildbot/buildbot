@@ -32,6 +32,11 @@ class FakeWorkerStatus(properties.PropertiesMixin):
         self.info.setProperty("test", "test", "Worker")
 
 
+class FakeBuildRequest:
+    def __init__(self):
+        self.priority = 0
+
+
 class FakeBuild(properties.PropertiesMixin):
     def __init__(self, props=None, master=None):
         self.builder = fakemaster.FakeBuilder(master)
@@ -57,6 +62,7 @@ class FakeBuild(properties.PropertiesMixin):
         self.properties = props
         self.master = None
         self.config_version = 0
+        self.requests = [FakeBuildRequest()]
         self.env = {}
 
     def getProperties(self):

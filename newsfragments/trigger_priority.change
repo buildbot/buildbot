@@ -1,0 +1,1 @@
+The priority of a build is now inherited through `Trigger` (:issue:`8804`)

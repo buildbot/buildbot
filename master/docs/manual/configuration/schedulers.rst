@@ -955,7 +955,8 @@ scheduler can be triggered from multiple builds. Second, the ability to wait for
 :bb:sched:`Triggerable`'s builds to complete provides a form of "subroutine call", where one or
 more builds can "call" a scheduler to perform some work for them, perhaps on other workers. The
 :bb:sched:`Triggerable` scheduler supports multiple codebases. The scheduler filters out all
-codebases from :bb:step:`Trigger` steps that are not configured in the scheduler.
+codebases from :bb:step:`Trigger` steps that are not configured in the scheduler. The triggered
+build will inherit the priority of the triggering build.
 
 The parameters are just the basics:
 
