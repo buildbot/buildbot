@@ -28,6 +28,7 @@ export default defineConfig({
       formats: ['es'],
       name: 'buildbotUi',
       fileName: 'buildbot-ui',
+      cssFileName: 'style',
     },
     rollupOptions: {
       external: [
