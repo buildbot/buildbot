@@ -1,0 +1,1 @@
+Fixed potential ReDoS, OOM, and main thread blocking in `WarningCountingShellCommand` when processing suppression files. (:issue:`8819`)

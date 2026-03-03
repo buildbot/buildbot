@@ -230,7 +230,9 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
     suppressionFile: str | None = None
 
     commentEmptyLineRe = re.compile(r"^\s*(#.*)?$")
-    suppressionLineRe = re.compile(r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
+    suppressionLineRe = re.compile(
+        r"^\s*([^:\s](?:[^:]*?[^:\s])?)\s*:\s*([^:\s].*?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$"
+    )
 
     class Sentinel:
         pass
