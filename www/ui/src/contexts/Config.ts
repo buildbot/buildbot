@@ -55,6 +55,7 @@ export type Config = {
   user_any_access_allowed: boolean;
   project_widgets: ProjectWidgetsConfig[];
   port: string;
+  default_page?: string;
   // Added by the frontend itself if it's running via a proxy.
   isProxy?: boolean;
 };
