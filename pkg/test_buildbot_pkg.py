@@ -19,8 +19,12 @@ import sys
 from subprocess import call
 from subprocess import check_call
 from textwrap import dedent
+from unittest import skip
 
 from twisted.trial import unittest
+
+# do this here because __file__ may be relative and cwd may be changed
+repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class BuildbotWWWPkg(unittest.TestCase):
@@ -55,7 +59,7 @@ class BuildbotWWWPkg(unittest.TestCase):
 
     @property
     def path(self):
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", *self.pkgPaths))
+        return os.path.join(repo_root, *self.pkgPaths)
 
     def rmtree(self, d):
         if os.path.isdir(d):
@@ -80,6 +84,7 @@ class BuildbotWWWPkg(unittest.TestCase):
         check_call("pip install build dist/*.whl", shell=True, cwd=self.path)
         self.check_correct_installation()
 
+    @skip("uses buildbot-pkg from pypi which still looks for yarn")
     def test_develop_via_pip(self):
         check_call("pip install build -e .", shell=True, cwd=self.path)
         self.check_correct_installation()
