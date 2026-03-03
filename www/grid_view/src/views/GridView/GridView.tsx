@@ -34,6 +34,7 @@ import {
   useDataApiQuery,
 } from 'buildbot-data-js';
 import {
+  getBuildLinkDisplayProperties,
   useTagFilterManager,
   BuildLinkWithSummaryTooltip,
   ChangeDetails,
@@ -241,6 +242,7 @@ export const GridView = observer(() => {
       query: {
         limit: buildFetchLimit,
         order: '-buildrequestid',
+        property: getBuildLinkDisplayProperties(),
       },
     }),
   );
