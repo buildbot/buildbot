@@ -17,7 +17,7 @@
 
 import {observer} from 'mobx-react';
 import {useState} from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useSearchParams} from 'react-router-dom';
 import {FaCubes} from 'react-icons/fa';
 import {Form} from 'react-bootstrap';
 import {
@@ -205,7 +205,17 @@ export const GridView = observer(() => {
   const leftToRight = settings.getBooleanSetting('Grid.leftToRight');
 
   const [resultsFilterText, setResultsFilterText] = useState(RESULT_FILTER_ALL_TEXT);
-  const [branchesFilterText, setBranchesFilterText] = useState(BRANCH_FILTER_ALL_TEXT);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const branchesFilterText = searchParams.get('branch') ?? BRANCH_FILTER_ALL_TEXT;
+  const setBranchesFilterText = (branch: string) => {
+    const newParams = new URLSearchParams([...searchParams.entries()]);
+    if (branch === BRANCH_FILTER_ALL_TEXT) {
+      newParams.delete('branch');
+    } else {
+      newParams.set('branch', branch);
+    }
+    setSearchParams(newParams);
+  };
   const resultsFilter = resultsOptions.get(resultsFilterText);
 
   const buildsetsQuery = useDataApiQuery(() =>
