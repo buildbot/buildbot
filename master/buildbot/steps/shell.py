@@ -19,6 +19,7 @@ import re
 import tempfile
 
 from twisted.internet import defer
+from twisted.internet import threads
 
 from buildbot import config
 from buildbot.process import buildstep
@@ -425,7 +426,9 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
                     abandonOnFailure=True,
                 )
 
-                suppressions = self._parse_suppression_file(tmpname)
+                # Parse the file in a background thread to prevent blocking the master's main event
+                # loop.
+                suppressions = yield threads.deferToThread(self._parse_suppression_file, tmpname)
                 self.addSuppression(suppressions)
             finally:
                 if os.path.exists(tmpname):
