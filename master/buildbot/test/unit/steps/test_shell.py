@@ -564,7 +564,7 @@ class WarningCountingShellCommand(
                     maxsize=None,
                     workersrc='supps',
                     workdir='wkdir',
-                    writer=ExpectRemoteRef(remotetransfer.StringFileWriter),
+                    writer=ExpectRemoteRef(remotetransfer.FileWriter),
                 )
                 .upload_string(supps_file)
                 .exit(0),

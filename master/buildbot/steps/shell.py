@@ -14,13 +14,17 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
+import os
 import re
+import tempfile
 
 from twisted.internet import defer
+from twisted.internet import threads
 
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
+from buildbot.process import remotetransfer
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
@@ -230,7 +234,9 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
     suppressionFile: str | None = None
 
     commentEmptyLineRe = re.compile(r"^\s*(#.*)?$")
-    suppressionLineRe = re.compile(r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
+    suppressionLineRe = re.compile(
+        r"^\s*([^:\s](?:[^:]*?[^:\s])?)\s*:\s*([^:\s].*?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$"
+    )
 
     class Sentinel:
         pass
@@ -397,11 +403,41 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
             self.addSuppression(self.suppressionList)
 
         if self.suppressionFile is not None:
-            data = yield self.getFileContentFromWorker(self.suppressionFile, abandonOnFailure=True)
-            lines = data.split("\n")
+            # Create a temporary file to avoid reading everything into memory at once.
+            fd, tmpname = tempfile.mkstemp(prefix='buildbot-suppressions-')
+            os.close(fd)
+            try:
+                # Use uploadFile directly with FileWriter to download to a temp file.
+                # This avoids loading the entire file into the master's memory.
+                upload_args = {
+                    'workdir': self.workdir,
+                    'writer': remotetransfer.FileWriter(tmpname, maxsize=None, mode=None),
+                    'maxsize': None,
+                    'blocksize': 32 * 1024,
+                }
+                if self.workerVersionIsOlderThan('uploadFile', '3.0'):
+                    upload_args['slavesrc'] = self.suppressionFile
+                else:
+                    upload_args['workersrc'] = self.suppressionFile
 
-            list = []
-            for line in lines:
+                yield self.runRemoteCommand(
+                    'uploadFile',
+                    upload_args,
+                    abandonOnFailure=True,
+                )
+
+                # Parse the file in a background thread to prevent blocking the master's main event
+                # loop.
+                suppressions = yield threads.deferToThread(self._parse_suppression_file, tmpname)
+                self.addSuppression(suppressions)
+            finally:
+                if os.path.exists(tmpname):
+                    os.unlink(tmpname)
+
+    def _parse_suppression_file(self, filename):
+        suppressions = []
+        with open(filename, encoding='utf-8', errors='replace') as f:
+            for line in f:
                 if self.commentEmptyLineRe.match(line):
                     continue
                 match = self.suppressionLineRe.match(line)
@@ -413,9 +449,8 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
                         start = int(start)
                         if end is None:
                             end = start
-                    list.append((file, test, start, end))
-
-            self.addSuppression(list)
+                    suppressions.append((file, test, start, end))
+        return suppressions
 
     @defer.inlineCallbacks
     def run(self):
