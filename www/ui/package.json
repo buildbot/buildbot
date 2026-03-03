@@ -61,7 +61,7 @@
     "react-test-renderer": "^18.2.0",
     "sass": "^1.56.0",
     "typescript": "^5.9.3",
-    "vite": "~5.4.12",
+    "vite": "~7.1.10",
     "vite-plugin-checker": "^0.9.0",
     "vite-plugin-dts": "^4.1.0",
     "vite-plugin-static-copy": "~2.3.2",
