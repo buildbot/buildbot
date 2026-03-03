@@ -24,6 +24,9 @@ export type LogViewerProps = {
 };
 
 export const LogViewer = ({log}: LogViewerProps) => {
+  if (log.type === 'd') {
+    return <p>This log has been deleted from the database.</p>;
+  }
   if (log.type === 'h') {
     return <LogViewerHtml log={log} />;
   } else {
