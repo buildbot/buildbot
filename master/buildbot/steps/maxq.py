@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 
@@ -22,13 +27,16 @@ from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class MaxQObserver(logobserver.LogLineObserver):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.failures = 0
 
-    def outLineReceived(self, line):
+    def outLineReceived(self, line: str) -> None:
         if line.startswith('TEST FAILURE:'):
             self.failures += 1
 
@@ -40,10 +48,10 @@ class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
 
     failures = 0
 
-    def __init__(self, testdir=None, **kwargs):
+    def __init__(self, testdir: str | None = None, **kwargs: Any) -> None:
         if not testdir:
             config.error("please pass testdir")
-        self.testdir = testdir
+        self.testdir: str = cast(str, testdir)
 
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
@@ -51,7 +59,7 @@ class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
         self.addLogObserver('stdio', self.observer)
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         command = [self.binary]
         command.append(self.testdir)
 
@@ -71,7 +79,7 @@ class MaxQ(buildstep.ShellMixin, buildstep.BuildStep):
             return FAILURE
         return SUCCESS
 
-    def getResultSummary(self):
+    def getResultSummary(self) -> dict[str, str]:
         if self.failures:
             return {'step': f"{self.failures} maxq failures"}
         return {'step': 'success'}
