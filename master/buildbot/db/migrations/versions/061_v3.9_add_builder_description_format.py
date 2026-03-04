@@ -30,7 +30,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("builders") as batch_op:
         batch_op.add_column(
             sa.Column('description_format', sa.Text, nullable=True),
@@ -40,6 +40,6 @@ def upgrade():
         )
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_column("builders", "description_format")
     op.drop_column("builders", "description_html")
