@@ -13,18 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import errno
 import os
 import signal
 import time
+from typing import Any
 
 from twisted.python.runtime import platformType
 
 from buildbot.scripts import base
 
 
-def stop(config, signame="TERM", wait=None):
+def stop(config: dict[str, Any], signame: str = "TERM", wait: bool | None = None) -> int:
     basedir = config['basedir']
     quiet = config['quiet']
 
