@@ -184,7 +184,7 @@ class BuildRequestsEndpoint(base.Endpoint):
             # 'claimed'=False with 'claimed_by_masterid' set, doesn't make sense)
             claimed = claimed_by_masterid
         else:
-            claimed = resultSpec.popBooleanFilter('claimed')
+            claimed = resultSpec.popBooleanFilter('claimed')  # type: ignore[assignment]
 
         bsid = resultSpec.popOneFilter('buildsetid', 'eq')
         resultSpec.fieldMapping = buildrequests_field_mapping

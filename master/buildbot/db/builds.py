@@ -216,7 +216,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(tbl.c.complete_at == NULL)
 
             if resultSpec is not None:
-                return resultSpec.thd_execute(conn, q, self._model_from_row)
+                return resultSpec.thd_execute(conn, q, self._model_from_row)  # type: ignore[return-value]
 
             res = conn.execute(q)
             return [self._model_from_row(row) for row in res.fetchall()]
@@ -327,7 +327,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             if resultSpec is not None:
                 data = resultSpec.thd_execute(conn, q, lambda x: x)
             else:
-                data = conn.execute(q)
+                data = conn.execute(q)  # type: ignore[assignment]
             for row in data:
                 prop = (json.loads(row.value), row.source)
                 props.append((row.name, prop))

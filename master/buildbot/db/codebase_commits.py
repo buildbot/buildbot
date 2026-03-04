@@ -219,7 +219,7 @@ class CodebaseCommitsConnectorComponent(base.DBConnectorComponent):
             q = tbl.select().where(tbl.c.codebaseid == codebaseid)
 
             if result_spec is not None:
-                return result_spec.thd_execute(conn, q, lambda row: self._model_from_row(row))
+                return result_spec.thd_execute(conn, q, lambda row: self._model_from_row(row))  # type: ignore[return-value]
 
             res = conn.execute(q)
             rv = [self._model_from_row(row) for row in res.fetchall()]

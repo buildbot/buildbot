@@ -165,7 +165,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.data.graphql",
       "buildbot.data.patches",
       "buildbot.data.projects",
-      "buildbot.data.resultspec",
       "buildbot.data.root",
       "buildbot.data.schedulers",
       "buildbot.data.sourcestamps",
