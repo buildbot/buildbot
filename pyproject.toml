@@ -255,7 +255,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.schedulers.timed",
       "buildbot.schedulers.triggerable",
       "buildbot.schedulers.trysched",
-      "buildbot.scripts.devproxy",
       "buildbot.scripts.gengraphql",
       "buildbot.scripts.logwatcher",
       "buildbot.scripts.reconfig",
