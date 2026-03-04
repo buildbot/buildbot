@@ -13,13 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 
 from buildbot.steps.source.git import Git
 
+if TYPE_CHECKING:
+    from twisted.internet import defer
+
 
 class GitHub(Git):
-    def run_vc(self, branch, revision, patch):
+    def run_vc(self, branch: str | None, revision: str | None, patch: Any) -> defer.Deferred[int]:
         # ignore the revision if the branch ends with /merge
-        if branch.endswith("/merge"):
+        if branch.endswith("/merge"):  # type: ignore[union-attr]
             revision = None
         return super().run_vc(branch, revision, patch)
