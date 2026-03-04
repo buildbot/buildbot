@@ -29,6 +29,8 @@ from buildbot.warnings import warn_deprecated
 if TYPE_CHECKING:
     from typing import Literal
 
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class SchedulerAlreadyClaimedError(Exception):
     pass
@@ -43,7 +45,7 @@ class SchedulerModel:
     masterid: int | None = None
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> object:
         warn_deprecated(
             '4.1.0',
             (
@@ -62,7 +64,7 @@ class SchedulerModel:
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
     def enable(self, schedulerid: int, v: bool) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.schedulers
             q = tbl.update().where(tbl.c.id == schedulerid)
             conn.execute(q.values(enabled=int(v)))
@@ -72,7 +74,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def classifyChanges(
         self, schedulerid: int, classifications: dict[int, bool]
     ) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.scheduler_changes
             for changeid, important in classifications.items():
                 # convert the 'important' value into an integer, since that
@@ -96,7 +98,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def flushChangeClassifications(
         self, schedulerid: int, less_than: int | None = None
     ) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             sch_ch_tbl = self.db.model.scheduler_changes
             wc = sch_ch_tbl.c.schedulerid == schedulerid
             if less_than is not None:
@@ -116,7 +118,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     ) -> defer.Deferred[dict[int, bool]]:
         # -1 here stands for "argument not given", since None has meaning
         # as a branch
-        def thd(conn) -> dict[int, bool]:
+        def thd(conn: sa.engine.Connection) -> dict[int, bool]:
             sch_ch_tbl = self.db.model.scheduler_changes
             ch_tbl = self.db.model.changes
 
@@ -155,7 +157,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         )
 
     def setSchedulerMaster(self, schedulerid: int, masterid: int | None) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             sch_mst_tbl = self.db.model.scheduler_masters
 
             # handle the masterid=None case to get it out of the way
@@ -188,15 +190,15 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 )
                 row = conn.execute(q_select).fetchone()
                 # ok, that was us, so we just do nothing
-                if row.masterid == masterid:
+                if row.masterid == masterid:  # type: ignore[union-attr]
                     return None
-                raise SchedulerAlreadyClaimedError(f"already claimed by {row.name}") from e
+                raise SchedulerAlreadyClaimedError(f"already claimed by {row.name}") from e  # type: ignore[union-attr]
             return None
 
         return self.db.pool.do(thd)
 
-    def get_scheduler_master(self, schedulerid):
-        def thd(conn):
+    def get_scheduler_master(self, schedulerid: int) -> defer.Deferred[int | None]:
+        def thd(conn: sa.engine.Connection) -> int | None:
             q = sa.select(self.db.model.scheduler_masters.c.masterid).where(
                 self.db.model.scheduler_masters.c.schedulerid == schedulerid
             )
@@ -210,7 +212,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getScheduler(self, schedulerid: int):
+    def getScheduler(self, schedulerid: int) -> InlineCallbacksType[SchedulerModel | None]:
         sch = yield self.getSchedulers(_schedulerid=schedulerid)
         if sch:
             return sch[0]
@@ -222,7 +224,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         masterid: int | None = None,
         _schedulerid: int | None = None,
     ) -> defer.Deferred[list[SchedulerModel]]:
-        def thd(conn) -> list[SchedulerModel]:
+        def thd(conn: sa.engine.Connection) -> list[SchedulerModel]:
             sch_tbl = self.db.model.schedulers
             sch_mst_tbl = self.db.model.scheduler_masters
 
@@ -258,7 +260,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _model_from_row(self, row):
+    def _model_from_row(self, row: sa.engine.Row) -> SchedulerModel:
         return SchedulerModel(
             id=row.id,
             name=row.name,
