@@ -285,4 +285,4 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         return mode
 
     def _matches_any_tag(self, tags):
-        return self.tags and any(tag for tag in self.tags if tag in tags)
+        return bool(self.tags and any(tag for tag in self.tags if tag in tags))
