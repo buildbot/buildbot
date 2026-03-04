@@ -63,9 +63,9 @@ class MasterShellCommand(BuildStep):
         super().__init__(**kwargs)
 
         self.command = command
-        self.process = None
+        self.process: runprocess.RunProcess | None = None
         self.masterWorkdir = self.workdir
-        self._deferwaiter = deferwaiter.DeferWaiter()
+        self._deferwaiter: deferwaiter.DeferWaiter[Any] = deferwaiter.DeferWaiter()
 
     @defer.inlineCallbacks
     def run(self) -> InlineCallbacksType[int]:
@@ -104,6 +104,7 @@ class MasterShellCommand(BuildStep):
         yield self.stdio_log.addHeader(f" argv: {argv}\n")
 
         os_env = os.environ
+        env: dict[Any, Any] | os._Environ[str]
         if self.env is None:
             env = os_env
         else:
@@ -131,7 +132,7 @@ class MasterShellCommand(BuildStep):
                         raise RuntimeError(
                             f"'env' values must be strings or lists; key '{key}' is incorrect"
                         )
-                    newenv[key] = p.sub(subst, v)
+                    newenv[key] = p.sub(subst, v)  # type: ignore[arg-type]
 
             # RunProcess will take environment values from os.environ in cases of env not having
             # the keys that are in os.environ. Prevent this by putting None into those keys.
@@ -166,11 +167,11 @@ class MasterShellCommand(BuildStep):
 
         if self.process.result_signal is not None:
             yield self.stdio_log.addHeader(f"signal {self.process.result_signal}\n")
-            self.descriptionDone = [f"killed ({self.process.result_signal})"]
+            self.descriptionDone = [f"killed ({self.process.result_signal})"]  # type: ignore[assignment]
             return FAILURE
         elif self.process.result_rc != 0:
             yield self.stdio_log.addHeader(f"exit status {self.process.result_signal}\n")
-            self.descriptionDone = [f"failed ({self.process.result_rc})"]
+            self.descriptionDone = [f"failed ({self.process.result_rc})"]  # type: ignore[assignment]
             return FAILURE
         else:
             return SUCCESS
@@ -194,6 +195,7 @@ class SetProperty(BuildStep):
         self.value = value
 
     def run(self) -> defer.Deferred[int]:
+        assert self.build is not None
         properties = self.build.getProperties()
         properties.setProperty(self.property, self.value, self.name, runtime=True)
         return defer.succeed(SUCCESS)
