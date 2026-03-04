@@ -247,7 +247,7 @@ class Trigger(BuildStep):
                             builderDict = yield self.master.data.get(("builders", builderid))  # type: ignore[union-attr]
                             builderNames[builderid] = builderDict["name"]
                         num = build.number
-                        url = getURLForBuild(self.master, builderid, num)
+                        url = getURLForBuild(self.master, builderid, num)  # type: ignore[arg-type]
                         yield self.addURL(
                             f'{statusToString(build.results)}: {builderNames[builderid]} #{num}',
                             url,
@@ -332,7 +332,7 @@ class Trigger(BuildStep):
             for brid in brids.values():
                 # put the url to the brids, so that we can have the status from
                 # the beginning
-                url = getURLForBuildrequest(self.master, brid)
+                url = getURLForBuildrequest(self.master, brid)  # type: ignore[arg-type]
                 yield self.addURL(f"{sch.name} #{brid}", url)
                 # No yield since we let this happen as the builds complete
                 self._add_results(brid)

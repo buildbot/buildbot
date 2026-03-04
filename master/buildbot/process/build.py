@@ -952,7 +952,7 @@ class Build(properties.PropertiesMixin):
     @defer.inlineCallbacks
     def getUrl(self) -> InlineCallbacksType[str]:
         builder_id = yield self.getBuilderId()
-        return getURLForBuild(self.master, builder_id, self.number)
+        return getURLForBuild(self.master, builder_id, self.number)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
     def get_buildid(self) -> InlineCallbacksType[int]:
