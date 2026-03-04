@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -29,6 +30,8 @@ from buildbot.reporters.message import MessageFormatterMissingWorker
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.util.twisted import InlineCallbacksType
+
 ENCODING = 'utf-8'
 
 
@@ -40,18 +43,20 @@ class WorkerMissingGenerator(util.ComparableMixin):
         ('workers', None, 'missing'),
     ]
 
-    def __init__(self, workers='all', message_formatter=None):
+    def __init__(self, workers: str | list[str] = 'all', message_formatter: Any = None) -> None:
         self.workers = workers
         self.formatter = message_formatter
         if self.formatter is None:
             self.formatter = MessageFormatterMissingWorker()
 
-    def check(self):
+    def check(self) -> None:
         if not (self.workers == 'all' or isinstance(self.workers, (list, tuple, set))):
             config.error("workers must be 'all', or list of worker names")
 
     @defer.inlineCallbacks
-    def generate(self, master, reporter, key, worker):
+    def generate(
+        self, master: Any, reporter: Any, key: Any, worker: Any
+    ) -> InlineCallbacksType[Any]:
         if not self._is_message_needed(worker):
             return None
 
@@ -78,11 +83,11 @@ class WorkerMissingGenerator(util.ComparableMixin):
             'worker': worker['name'],
         }
 
-    def generate_name(self):
+    def generate_name(self) -> str:
         name = self.__class__.__name__
         if self.workers is not None:
             name += "_workers_" + "+".join(self.workers)
         return name
 
-    def _is_message_needed(self, worker):
+    def _is_message_needed(self, worker: Any) -> bool:
         return (self.workers == 'all' or worker['name'] in self.workers) and worker['notify']
