@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -24,6 +25,9 @@ from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util.sautils import hash_columns
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class ChangeSourceAlreadyClaimedError(Exception):
@@ -38,7 +42,7 @@ class ChangeSourceModel:
     masterid: int | None = None
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> object:
         warn_deprecated(
             '4.1.0',
             (
@@ -56,7 +60,7 @@ class ChangeSourceModel:
 
 
 class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
-    def findChangeSourceId(self, name):
+    def findChangeSourceId(self, name: str) -> defer.Deferred[int]:
         tbl = self.db.model.changesources
         name_hash = hash_columns(name)
         return self.findSomethingId(
@@ -66,8 +70,10 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
         )
 
     # returns a Deferred that returns None
-    def setChangeSourceMaster(self, changesourceid, masterid):
-        def thd(conn):
+    def setChangeSourceMaster(
+        self, changesourceid: int, masterid: int | None
+    ) -> defer.Deferred[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             cs_mst_tbl = self.db.model.changesource_masters
 
             # handle the masterid=None case to get it out of the way
@@ -79,8 +85,8 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
 
             # try a blind insert..
             try:
-                q = cs_mst_tbl.insert()
-                conn.execute(q, {"changesourceid": changesourceid, "masterid": masterid})
+                q_insert = cs_mst_tbl.insert()
+                conn.execute(q_insert, {"changesourceid": changesourceid, "masterid": masterid})
                 conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 conn.rollback()
@@ -89,8 +95,8 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def get_change_source_master(self, changesourceid):
-        def thd(conn):
+    def get_change_source_master(self, changesourceid: int) -> defer.Deferred[int | None]:
+        def thd(conn: sa.engine.Connection) -> int | None:
             q = sa.select(self.db.model.changesource_masters.c.masterid).where(
                 self.db.model.changesource_masters.c.changesourceid == changesourceid
             )
@@ -104,15 +110,20 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getChangeSource(self, changesourceid):
+    def getChangeSource(self, changesourceid: int) -> InlineCallbacksType[ChangeSourceModel | None]:
         cs = yield self.getChangeSources(_changesourceid=changesourceid)
         if cs:
             return cs[0]
         return None
 
     # returns a Deferred that returns a value
-    def getChangeSources(self, active=None, masterid=None, _changesourceid=None):
-        def thd(conn):
+    def getChangeSources(
+        self,
+        active: bool | None = None,
+        masterid: int | None = None,
+        _changesourceid: int | None = None,
+    ) -> defer.Deferred[list[ChangeSourceModel]]:
+        def thd(conn: sa.engine.Connection) -> list[ChangeSourceModel]:
             cs_tbl = self.db.model.changesources
             cs_mst_tbl = self.db.model.changesource_masters
 
@@ -147,5 +158,5 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _model_from_row(self, row):
+    def _model_from_row(self, row: sa.engine.Row) -> ChangeSourceModel:
         return ChangeSourceModel(id=row.id, name=row.name, masterid=row.masterid)

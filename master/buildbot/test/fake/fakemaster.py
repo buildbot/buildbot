@@ -216,7 +216,7 @@ async def make_master(
         master.db.configured_db_config = MasterDBConfig(resolve_test_db_url(db_url, sqlite_memory))
         if not os.path.exists(master.basedir):
             os.makedirs(master.basedir)
-        await master.db.set_master(master)
+        await master.db.set_master(master)  # type: ignore[arg-type]
         await master.db.setup()
 
     if wantData:

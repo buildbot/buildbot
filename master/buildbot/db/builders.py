@@ -18,6 +18,8 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 from dataclasses import field
+from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -25,6 +27,9 @@ from twisted.internet import defer
 from buildbot.db import base
 from buildbot.util.sautils import hash_columns
 from buildbot.warnings import warn_deprecated
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @dataclass
@@ -39,7 +44,7 @@ class BuilderModel:
     masterids: list[int] = field(default_factory=list)
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -56,7 +61,7 @@ class BuilderModel:
 
 
 class BuildersConnectorComponent(base.DBConnectorComponent):
-    def findBuilderId(self, name, autoCreate=True):
+    def findBuilderId(self, name: str, autoCreate: bool = True) -> defer.Deferred[int | None]:
         tbl = self.db.model.builders
         name_hash = hash_columns(name)
         return self.findSomethingId(
@@ -68,10 +73,16 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
     @defer.inlineCallbacks
     def updateBuilderInfo(
-        self, builderid, description, description_format, description_html, projectid, tags
-    ):
+        self,
+        builderid: int,
+        description: str | None,
+        description_format: str | None,
+        description_html: str | None,
+        projectid: int | None,
+        tags: list[str | int],
+    ) -> InlineCallbacksType[None]:
         # convert to tag IDs first, as necessary
-        def toTagid(tag):
+        def toTagid(tag: str | int) -> defer.Deferred[int]:
             if isinstance(tag, int):
                 return defer.succeed(tag)
             ssConnector = self.master.db.tags
@@ -86,7 +97,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             )
         ]
 
-        def thd(conn):
+        def thd(conn: sa.engine.Connection) -> None:
             builders_tbl = self.db.model.builders
             builders_tags_tbl = self.db.model.builders_tags
             transaction = conn.begin()
@@ -117,15 +128,17 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         return (yield self.db.pool.do(thd))
 
     @defer.inlineCallbacks
-    def getBuilder(self, builderid: int):
+    def getBuilder(self, builderid: int) -> InlineCallbacksType[BuilderModel | None]:
         bldrs: list[BuilderModel] = yield self.getBuilders(_builderid=builderid)
         if bldrs:
             return bldrs[0]
         return None
 
     # returns a Deferred that returns None
-    def addBuilderMaster(self, builderid=None, masterid=None):
-        def thd(conn, no_recurse=False):
+    def addBuilderMaster(
+        self, builderid: int | None = None, masterid: int | None = None
+    ) -> defer.Deferred[None]:
+        def thd(conn: sa.engine.Connection, no_recurse: bool = False) -> None:
             try:
                 tbl = self.db.model.builder_masters
                 q = tbl.insert()
@@ -137,8 +150,10 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
-    def removeBuilderMaster(self, builderid=None, masterid=None):
-        def thd(conn, no_recurse=False):
+    def removeBuilderMaster(
+        self, builderid: int | None = None, masterid: int | None = None
+    ) -> defer.Deferred[None]:
+        def thd(conn: sa.engine.Connection, no_recurse: bool = False) -> None:
             tbl = self.db.model.builder_masters
             conn.execute(
                 tbl.delete().where(tbl.c.builderid == builderid, tbl.c.masterid == masterid)
@@ -153,7 +168,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         workerid: int | None = None,
         _builderid: int | None = None,
     ) -> defer.Deferred[list[BuilderModel]]:
-        def thd(conn) -> list[BuilderModel]:
+        def thd(conn: sa.engine.Connection) -> list[BuilderModel]:
             bldr_tbl = self.db.model.builders
             bm_tbl = self.db.model.builder_masters
             builders_tags_tbl = self.db.model.builders_tags

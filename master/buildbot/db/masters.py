@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import dataclasses
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.python import deprecate
@@ -41,7 +42,7 @@ class MasterModel:
     last_active: datetime.datetime
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -81,7 +82,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
         )
 
     def setMasterState(self, masterid: int, active: bool) -> defer.Deferred[bool]:
-        def thd(conn) -> bool:
+        def thd(conn: sa.engine.Connection) -> bool:
             tbl = self.db.model.masters
             whereclause = tbl.c.id == masterid
 
@@ -102,11 +103,11 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 conn.commit()
 
             # set the state (unconditionally, just to be safe)
-            q = tbl.update().where(whereclause)
-            q = q.values(active=1 if active else 0)
+            uq = tbl.update().where(whereclause)
+            uq = uq.values(active=1 if active else 0)
             if active:
-                q = q.values(last_active=int(self.master.reactor.seconds()))
-            conn.execute(q)
+                uq = uq.values(last_active=int(self.master.reactor.seconds()))
+            conn.execute(uq)
             conn.commit()
 
             # return True if there was a change in state
@@ -115,7 +116,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getMaster(self, masterid: int) -> defer.Deferred[MasterModel | None]:
-        def thd(conn) -> MasterModel | None:
+        def thd(conn: sa.engine.Connection) -> MasterModel | None:
             tbl = self.db.model.masters
             res = conn.execute(tbl.select().where(tbl.c.id == masterid))
             row = res.fetchone()
@@ -129,21 +130,21 @@ class MastersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getMasters(self) -> defer.Deferred[list[MasterModel]]:
-        def thd(conn) -> list[MasterModel]:
+        def thd(conn: sa.engine.Connection) -> list[MasterModel]:
             tbl = self.db.model.masters
             return [self._model_from_row(row) for row in conn.execute(tbl.select()).fetchall()]
 
         return self.db.pool.do(thd)
 
     def setAllMastersActiveLongTimeAgo(self) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.masters
             q = tbl.update().values(active=1, last_active=0)
             conn.execute(q)
 
         return self.db.pool.do(thd)
 
-    def _model_from_row(self, row):
+    def _model_from_row(self, row: Any) -> MasterModel:
         return MasterModel(
             id=row.id,
             name=row.name,

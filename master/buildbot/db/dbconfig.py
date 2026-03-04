@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import ProgrammingError
@@ -24,17 +28,23 @@ from buildbot.config.master import MasterConfig
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import state
+from buildbot.db.connector import DBConnector
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    import sqlalchemy as sa
 
 
 class FakeDBConnector:
-    def __init__(self, engine):
+    def __init__(self, engine: sa.Engine) -> None:
         self.pool = FakePool(engine)
         self.master = FakeMaster()
-        self.model = model.Model(self)
-        self.state = state.StateConnectorComponent(self)
+        self.model = model.Model(cast(DBConnector, self))
+        self.state = state.StateConnectorComponent(cast(DBConnector, self))
 
     @contextmanager
-    def connect(self):
+    def connect(self) -> Generator[sa.engine.Connection, None, None]:
         try:
             with self.pool.engine.connect() as conn:
                 yield conn
@@ -43,32 +53,36 @@ class FakeDBConnector:
 
 
 class FakeCacheManager:
-    def get_cache(self, cache_name, miss_fn):
+    def get_cache(self, cache_name: str, miss_fn: Any) -> None:
         return None
 
 
 class FakeMaster:
-    def __init__(self):
+    def __init__(self) -> None:
         self.caches = FakeCacheManager()
 
 
 class FakePool:
-    def __init__(self, engine):
+    def __init__(self, engine: sa.Engine) -> None:
         self.engine = engine
 
 
 class DbConfig:
     db_config: MasterDBConfig
 
-    def __init__(self, BuildmasterConfig, basedir, name="config"):
+    def __init__(
+        self, BuildmasterConfig: dict[str, Any], basedir: str, name: str = "config"
+    ) -> None:
         self.db_config = MasterConfig.get_dbconfig_from_config(BuildmasterConfig, throwErrors=False)
         self.basedir = basedir
         self.name = name
 
-    def getDb(self):
+    def getDb(self) -> FakeDBConnector | None:
         try:
             db = FakeDBConnector(
-                engine=enginestrategy.create_engine(self.db_config.db_url, basedir=self.basedir)
+                engine=enginestrategy.create_engine(
+                    cast(str, self.db_config.db_url), basedir=self.basedir
+                )
             )
         except Exception:
             # db_config.db_url is probably trash. Just ignore, config.py db part will
@@ -86,7 +100,7 @@ class DbConfig:
 
         return db
 
-    def get(self, name, default=state.StateConnectorComponent.Thunk):
+    def get(self, name: str, default: Any = state.StateConnectorComponent.Thunk) -> Any:
         db = self.getDb()
         if db is not None:
             with db.connect() as conn:
@@ -97,7 +111,7 @@ class DbConfig:
             raise KeyError("Db not yet initialized")
         return ret
 
-    def set(self, name, value):
+    def set(self, name: str, value: Any) -> None:
         db = self.getDb()
         if db is not None:
             with db.connect() as conn:

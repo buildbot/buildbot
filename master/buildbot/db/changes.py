@@ -41,6 +41,9 @@ if TYPE_CHECKING:
     from typing import Any
     from typing import Literal
 
+    from buildbot.data.resultspec import ResultSpec
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 @dataclass
 class ChangeModel:
@@ -63,7 +66,7 @@ class ChangeModel:
     properties: dict[str, tuple[Any, Literal["Change"]]] = field(default_factory=dict)
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -89,7 +92,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getParentChangeIds(
         self, branch: str | None, repository: str, project: str, codebase: str
     ) -> defer.Deferred[list[int]]:
-        def thd(conn) -> list[int]:
+        def thd(conn: sa.engine.Connection) -> list[int]:
             changes_tbl = self.db.model.changes
             q = (
                 sa
@@ -131,7 +134,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         project: str = '',
         uid: int | None = None,
         _test_changeid: int | None = None,
-    ):
+    ) -> InlineCallbacksType[int]:
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 
@@ -176,7 +179,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         # But for the moment, a Change can only have 1 parent
         parent_changeid = parent_changeids[0] if parent_changeids else None
 
-        def thd(conn) -> int:
+        def thd(conn: sa.engine.Connection) -> int:
             # note that in a read-uncommitted database like SQLite this
             # transaction does not buy atomicity - other database users may
             # still come across a change without its files, properties,
@@ -235,7 +238,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getChange(self, changeid: int) -> defer.Deferred[ChangeModel | None]:
         assert changeid >= 0
 
-        def thd(conn) -> ChangeModel | None:
+        def thd(conn: sa.engine.Connection) -> ChangeModel | None:
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
             q = changes_tbl.select().where(changes_tbl.c.changeid == changeid)
@@ -249,7 +252,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getChangesForBuild(self, buildid: int):
+    def getChangesForBuild(self, buildid: int) -> InlineCallbacksType[list[ChangeModel]]:
         assert buildid > 0
 
         gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
@@ -296,7 +299,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getChangeFromSSid(self, sourcestampid: int) -> defer.Deferred[ChangeModel | None]:
         assert sourcestampid >= 0
 
-        def thd(conn) -> ChangeModel | None:
+        def thd(conn: sa.engine.Connection) -> ChangeModel | None:
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
             q = changes_tbl.select().where(changes_tbl.c.sourcestampid == sourcestampid)
@@ -315,7 +318,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getChangeUids(self, changeid: int) -> defer.Deferred[list[int]]:
         assert changeid >= 0
 
-        def thd(conn) -> list[int]:
+        def thd(conn: sa.engine.Connection) -> list[int]:
             cu_tbl = self.db.model.change_users
             q = cu_tbl.select().where(cu_tbl.c.changeid == changeid)
             res = conn.execute(q)
@@ -325,12 +328,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _getDataFromRow(self, row):
+    def _getDataFromRow(self, row: Any) -> int:
         return row.changeid
 
     @defer.inlineCallbacks
-    def getChanges(self, resultSpec=None):
-        def thd(conn) -> Iterable[int]:
+    def getChanges(
+        self, resultSpec: ResultSpec | None = None
+    ) -> InlineCallbacksType[list[ChangeModel | None]]:
+        def thd(conn: sa.engine.Connection) -> Iterable[int]:
             # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
 
@@ -347,13 +352,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         changeids = yield self.db.pool.do(thd)
 
         changes = yield defer.gatherResults(
-            [self.getChange(changeid) for changeid in changeids], consumeErrors=True
+            [self.getChange(changeid) for changeid in changeids],
+            consumeErrors=True,
         )
 
         return changes
 
     def getChangesCount(self) -> defer.Deferred[int]:
-        def thd(conn) -> int:
+        def thd(conn: sa.engine.Connection) -> int:
             changes_tbl = self.db.model.changes
             q = sa.select(sa.func.count()).select_from(changes_tbl)
             rp = conn.execute(q)
@@ -366,7 +372,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getLatestChangeid(self) -> defer.Deferred[int | None]:
-        def thd(conn) -> int:
+        def thd(conn: sa.engine.Connection) -> int | None:
             changes_tbl = self.db.model.changes
             q = (
                 sa
@@ -385,7 +391,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     # utility methods
 
     @defer.inlineCallbacks
-    def pruneChanges(self, changeHorizon: int):
+    def pruneChanges(self, changeHorizon: int) -> InlineCallbacksType[None]:
         """
         Called periodically by DBConnector, this method deletes changes older
         than C{changeHorizon}.
@@ -394,7 +400,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         if not changeHorizon:
             return
 
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             changes_tbl = self.db.model.changes
 
             # First, get the list of changes to delete.  This could be written
@@ -432,7 +438,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do_with_transaction(thd)
 
-    def _thd_model_from_row(self, conn, ch_row) -> ChangeModel:
+    def _thd_model_from_row(self, conn: sa.engine.Connection, ch_row: Any) -> ChangeModel:
         # This method must be run in a db.pool thread
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
@@ -466,7 +472,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         # and properties must be given without a source, so strip that, but
         # be flexible in case users have used a development version where the
         # change properties were recorded incorrectly
-        def split_vs(vs) -> tuple[Any, Literal["Change"]]:
+        def split_vs(vs: Any) -> tuple[Any, Literal["Change"]]:
             try:
                 v, s = vs
                 if s != "Change":

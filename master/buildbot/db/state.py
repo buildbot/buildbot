@@ -13,14 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 import sqlalchemy.exc
 from twisted.internet import defer
 
 from buildbot.db import base
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class _IdNotFoundError(Exception):
@@ -33,30 +39,30 @@ class ObjDict(dict):
 
 class StateConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
-    def getObjectId(self, name, class_name):
+    def getObjectId(self, name: str, class_name: str) -> InlineCallbacksType[int]:
         # defer to a cached method that only takes one parameter (a tuple)
         objdict = yield self._getObjectId((name, class_name))
         return objdict['id']
 
     # returns a Deferred that returns a value
     @base.cached('objectids')
-    def _getObjectId(self, name_class_name_tuple):
+    def _getObjectId(self, name_class_name_tuple: tuple[str, str]) -> defer.Deferred[ObjDict]:
         name, class_name = name_class_name_tuple
 
-        def thd(conn):
+        def thd(conn: sa.engine.Connection) -> ObjDict:
             return self.thdGetObjectId(conn, name, class_name)
 
         return self.db.pool.do(thd)
 
-    def thdGetObjectId(self, conn, name, class_name):
+    def thdGetObjectId(self, conn: sa.engine.Connection, name: str, class_name: str) -> ObjDict:
         objects_tbl = self.db.model.objects
 
-        name = self.ensureLength(objects_tbl.c.name, name)
+        truncated_name = self.ensureLength(objects_tbl.c.name, name)
         self.checkLength(objects_tbl.c.class_name, class_name)
 
-        def select():
+        def select() -> int:
             q = sa.select(objects_tbl.c.id).where(
-                objects_tbl.c.name == name,
+                objects_tbl.c.name == truncated_name,
                 objects_tbl.c.class_name == class_name,
             )
             res = conn.execute(q)
@@ -66,8 +72,10 @@ class StateConnectorComponent(base.DBConnectorComponent):
                 raise _IdNotFoundError
             return row.id
 
-        def insert():
-            res = conn.execute(objects_tbl.insert().values(name=name, class_name=class_name))
+        def insert() -> int:
+            res = conn.execute(
+                objects_tbl.insert().values(name=truncated_name, class_name=class_name)
+            )
             conn.commit()
             return res.inserted_primary_key[0]
 
@@ -92,13 +100,15 @@ class StateConnectorComponent(base.DBConnectorComponent):
         pass
 
     # returns a Deferred that returns a value
-    def getState(self, objectid, name, default=Thunk):
-        def thd(conn):
+    def getState(self, objectid: int, name: str, default: Any = Thunk) -> defer.Deferred[Any]:
+        def thd(conn: sa.engine.Connection) -> Any:
             return self.thdGetState(conn, objectid, name, default=default)
 
         return self.db.pool.do(thd)
 
-    def thdGetState(self, conn, objectid, name, default=Thunk):
+    def thdGetState(
+        self, conn: sa.engine.Connection, objectid: int, name: str, default: Any = Thunk
+    ) -> Any:
         object_state_tbl = self.db.model.object_state
 
         q = sa.select(
@@ -121,13 +131,13 @@ class StateConnectorComponent(base.DBConnectorComponent):
             raise TypeError(f"JSON error loading state value '{name}' for {objectid}") from e
 
     # returns a Deferred that returns a value
-    def setState(self, objectid, name, value):
-        def thd(conn):
+    def setState(self, objectid: int, name: str, value: Any) -> defer.Deferred[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             return self.thdSetState(conn, objectid, name, value)
 
         return self.db.pool.do(thd)
 
-    def thdSetState(self, conn, objectid, name, value):
+    def thdSetState(self, conn: sa.engine.Connection, objectid: int, name: str, value: Any) -> None:
         object_state_tbl = self.db.model.object_state
 
         try:
@@ -135,11 +145,12 @@ class StateConnectorComponent(base.DBConnectorComponent):
         except (TypeError, ValueError) as e:
             raise TypeError(f"Error encoding JSON for {value!r}") from e
 
-        name = self.ensureLength(object_state_tbl.c.name, name)
+        truncated_name = self.ensureLength(object_state_tbl.c.name, name)
 
-        def update():
+        def update() -> bool:
             q = object_state_tbl.update().where(
-                object_state_tbl.c.objectid == objectid, object_state_tbl.c.name == name
+                object_state_tbl.c.objectid == objectid,
+                object_state_tbl.c.name == truncated_name,
             )
             res = conn.execute(q.values(value_json=value_json))
             conn.commit()
@@ -147,10 +158,10 @@ class StateConnectorComponent(base.DBConnectorComponent):
             # check whether that worked
             return res.rowcount > 0
 
-        def insert():
+        def insert() -> None:
             conn.execute(
                 object_state_tbl.insert().values(
-                    objectid=objectid, name=name, value_json=value_json
+                    objectid=objectid, name=truncated_name, value_json=value_json
                 )
             )
             conn.commit()
@@ -169,14 +180,16 @@ class StateConnectorComponent(base.DBConnectorComponent):
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
             conn.rollback()  # someone beat us to it - oh well
 
-    def _test_timing_hook(self, conn):
+    def _test_timing_hook(self, conn: sa.engine.Connection) -> None:
         # called so tests can simulate another process inserting a database row
         # at an inopportune moment
         pass
 
     # returns a Deferred that returns a value
-    def atomicCreateState(self, objectid, name, thd_create_callback):
-        def thd(conn):
+    def atomicCreateState(
+        self, objectid: int, name: str, thd_create_callback: Any
+    ) -> defer.Deferred[Any]:
+        def thd(conn: sa.engine.Connection) -> Any:
             object_state_tbl = self.db.model.object_state
             res = self.thdGetState(conn, objectid, name, default=None)
             if res is None:

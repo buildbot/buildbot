@@ -13,11 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 
 from sqlalchemy.types import Text
 from sqlalchemy.types import TypeDecorator
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine import Dialect
 
 
 class JsonObject(TypeDecorator):
@@ -26,13 +32,13 @@ class JsonObject(TypeDecorator):
     cache_ok = True
     impl = Text
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value: Any, dialect: Dialect) -> Any:
         if value is not None:
             value = json.dumps(value)
 
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: Any, dialect: Dialect) -> Any:
         if value is not None:
             value = json.loads(value)
         else:

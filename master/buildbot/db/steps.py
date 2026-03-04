@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -37,7 +38,7 @@ class UrlModel:
     url: str
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -69,7 +70,7 @@ class StepModel:
     hidden: bool = False
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -111,7 +112,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 raise RuntimeError('must supply either number or name')
             wc = wc & (tbl.c.buildid == buildid)
 
-        def thd(conn) -> StepModel | None:
+        def thd(conn: sa.engine.Connection) -> StepModel | None:
             q = self.db.model.steps.select().where(wc)
             res = conn.execute(q)
             row = res.fetchone()
@@ -125,7 +126,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         return await self.db.pool.do(thd)
 
     def getSteps(self, buildid: int) -> defer.Deferred[list[StepModel]]:
-        def thd(conn) -> list[StepModel]:
+        def thd(conn: sa.engine.Connection) -> list[StepModel]:
             tbl = self.db.model.steps
             q = tbl.select()
             q = q.where(tbl.c.buildid == buildid)
@@ -138,7 +139,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def addStep(
         self, buildid: int, name: str, state_string: str
     ) -> defer.Deferred[tuple[int, int, str]]:
-        def thd(conn) -> tuple[int, int, str]:
+        def thd(conn: sa.engine.Connection) -> tuple[int, int, str]:
             tbl = self.db.model.steps
             # get the highest current number
             r = conn.execute(sa.select(sa.func.max(tbl.c.number)).where(tbl.c.buildid == buildid))
@@ -190,7 +191,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def startStep(self, stepid: int, started_at: int, locks_acquired: bool) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
             if locks_acquired:
@@ -203,7 +204,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def set_step_locks_acquired_at(
         self, stepid: int, locks_acquired_at: int
     ) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
             conn.execute(q.values(locks_acquired_at=locks_acquired_at))
@@ -211,14 +212,16 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do_with_transaction(thd)
 
     def setStepStateString(self, stepid: int, state_string: str) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
             conn.execute(q.values(state_string=state_string))
 
         return self.db.pool.do_with_transaction(thd)
 
-    def addURL(self, stepid: int, name: str, url: str, _racehook=None) -> defer.Deferred[None]:
+    def addURL(
+        self, stepid: int, name: str, url: str, _racehook: Any = None
+    ) -> defer.Deferred[None]:
         # This methods adds an URL to the db
         # This is a read modify write and thus there is a possibility
         # that several urls are added at the same time (e.g with a deferredlist
@@ -230,7 +233,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # this runs in reactor thread, so no race here..
             self.url_lock = defer.DeferredLock()
 
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.steps
             wc = tbl.c.id == stepid
             q = sa.select(tbl.c.urls_json).where(wc)
@@ -238,7 +241,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if _racehook is not None:
                 _racehook()
-            urls = json.loads(row.urls_json)
+            urls = json.loads(row.urls_json)  # type: ignore[union-attr]
 
             url_item = {"name": name, "url": url}
 
@@ -251,7 +254,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         return self.url_lock.run(self.db.pool.do, thd)
 
     def finishStep(self, stepid: int, results: int, hidden: bool) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.steps
             q = tbl.update().where(tbl.c.id == stepid)
             conn.execute(
@@ -264,7 +267,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do_with_transaction(thd)
 
-    def _model_from_row(self, row):
+    def _model_from_row(self, row: Any) -> StepModel:
         return StepModel(
             id=row.id,
             number=row.number,

@@ -32,7 +32,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     op.add_column("builds", sa.Column("locks_duration_s", sa.Integer, nullable=True))
 
     metadata = sa.MetaData()
@@ -46,5 +46,5 @@ def upgrade():
         batch_op.alter_column("locks_duration_s", existing_type=sa.Integer, nullable=False)
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_column("builds", "locks_duration_s")

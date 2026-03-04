@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
 
     from buildbot.data.resultspec import ResultSpec
     from buildbot.db.sourcestamps import SourceStampModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @dataclass
@@ -51,7 +53,7 @@ class BuildModel:
     results: int | None
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -71,8 +73,10 @@ class BuildModel:
 
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
-    def _getBuild(self, whereclause) -> defer.Deferred[BuildModel | None]:
-        def thd(conn) -> BuildModel | None:
+    def _getBuild(
+        self, whereclause: sa.sql.elements.ColumnElement[bool] | None
+    ) -> defer.Deferred[BuildModel | None]:
+        def thd(conn: sa.engine.Connection) -> BuildModel | None:
             q = self.db.model.builds.select()
             if whereclause is not None:
                 q = q.where(whereclause)
@@ -96,8 +100,13 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             & (self.db.model.builds.c.number == number)
         )
 
-    def _getRecentBuilds(self, whereclause, offset=0, limit=1) -> defer.Deferred[list[BuildModel]]:
-        def thd(conn) -> list[BuildModel]:
+    def _getRecentBuilds(
+        self,
+        whereclause: sa.sql.elements.ColumnElement[bool] | None,
+        offset: int = 0,
+        limit: int = 1,
+    ) -> defer.Deferred[list[BuildModel]]:
+        def thd(conn: sa.engine.Connection) -> list[BuildModel]:
             tbl = self.db.model.builds
 
             q = tbl.select()
@@ -123,7 +132,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def getPrevSuccessfulBuild(
         self, builderid: int, number: int, ssBuild: Sequence[SourceStampModel]
-    ):
+    ) -> InlineCallbacksType[BuildModel | None]:
         gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
         rv = None
         tbl = self.db.model.builds
@@ -157,7 +166,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
     def getBuildsForChange(self, changeid: int) -> defer.Deferred[list[BuildModel]]:
         assert changeid > 0
 
-        def thd(conn) -> list[BuildModel]:
+        def thd(conn: sa.engine.Connection) -> list[BuildModel]:
             # Get builds for the change
             changes_tbl = self.db.model.changes
             bsets_tbl = self.db.model.buildsets
@@ -191,7 +200,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         complete: bool | None = None,
         resultSpec: ResultSpec | None = None,
     ) -> defer.Deferred[list[BuildModel]]:
-        def thd(conn) -> list[BuildModel]:
+        def thd(conn: sa.engine.Connection) -> list[BuildModel]:
             tbl = self.db.model.builds
             q = tbl.select()
             if builderid is not None:
@@ -216,9 +225,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
     @async_to_deferred
     async def get_triggered_builds(self, buildid: int) -> list[BuildModel]:
-        def thd(conn) -> list[BuildModel]:
-            j = self.db.model.buildsets
-            j = j.join(self.db.model.buildrequests)
+        def thd(conn: sa.engine.Connection) -> list[BuildModel]:
+            j = self.db.model.buildsets.join(self.db.model.buildrequests)
             j = j.join(self.db.model.builds)
 
             q = (
@@ -235,11 +243,17 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
     # returns a Deferred that returns a value
     def addBuild(
-        self, builderid, buildrequestid, workerid, masterid, state_string, _race_hook=None
-    ):
+        self,
+        builderid: int,
+        buildrequestid: int,
+        workerid: int,
+        masterid: int,
+        state_string: str,
+        _race_hook: Any = None,
+    ) -> defer.Deferred[tuple[int, int]]:
         started_at = int(self.master.reactor.seconds())
 
-        def thd(conn):
+        def thd(conn: sa.engine.Connection) -> tuple[int, int]:
             tbl = self.db.model.builds
             # get the highest current number
             r = conn.execute(
@@ -280,8 +294,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None
-    def setBuildStateString(self, buildid, state_string):
-        def thd(conn):
+    def setBuildStateString(self, buildid: int, state_string: str) -> defer.Deferred[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.builds
 
             q = tbl.update().where(tbl.c.id == buildid)
@@ -290,8 +304,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns None
-    def finishBuild(self, buildid, results):
-        def thd(conn):
+    def finishBuild(self, buildid: int, results: int) -> defer.Deferred[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.builds
             q = tbl.update().where(tbl.c.id == buildid)
             conn.execute(q.values(complete_at=int(self.master.reactor.seconds()), results=results))
@@ -299,15 +313,17 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns a value
-    def getBuildProperties(self, bid, resultSpec=None):
-        def thd(conn):
+    def getBuildProperties(
+        self, bid: int, resultSpec: ResultSpec | None = None
+    ) -> defer.Deferred[dict[str, tuple[Any, str]]]:
+        def thd(conn: sa.engine.Connection) -> dict[str, tuple[Any, str]]:
             bp_tbl = self.db.model.build_properties
             q = sa.select(
                 bp_tbl.c.name,
                 bp_tbl.c.value,
                 bp_tbl.c.source,
             ).where(bp_tbl.c.buildid == bid)
-            props = []
+            props: list[tuple[str, tuple[Any, str]]] = []
             if resultSpec is not None:
                 data = resultSpec.thd_execute(conn, q, lambda x: x)
             else:
@@ -320,11 +336,13 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def setBuildProperty(self, bid, name, value, source):
+    def setBuildProperty(
+        self, bid: int, name: str, value: Any, source: str
+    ) -> InlineCallbacksType[None]:
         """A kind of create_or_update, that's between one or two queries per
         call"""
 
-        def thd(conn):
+        def thd(conn: sa.engine.Connection) -> None:
             bp_tbl = self.db.model.build_properties
             self.checkLength(bp_tbl.c.name, name)
             self.checkLength(bp_tbl.c.source, source)
@@ -345,8 +363,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         yield self.db.pool.do_with_transaction(thd)
 
     @defer.inlineCallbacks
-    def add_build_locks_duration(self, buildid, duration_s):
-        def thd(conn):
+    def add_build_locks_duration(self, buildid: int, duration_s: int) -> InlineCallbacksType[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             builds_tbl = self.db.model.builds
             conn.execute(
                 builds_tbl
@@ -357,7 +375,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do_with_transaction(thd)
 
-    def _model_from_row(self, row):
+    def _model_from_row(self, row: Any) -> BuildModel:
         return BuildModel(
             id=row.id,
             number=row.number,

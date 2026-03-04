@@ -30,9 +30,9 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     op.add_column("workers", sa.Column("pause_reason", sa.Text, nullable=True))
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_column("workers", "pause_reason")
