@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import pprint
 import re
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -27,6 +31,11 @@ from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
 from buildbot.util import deferwaiter
 from buildbot.util import runprocess
+
+if TYPE_CHECKING:
+    from twisted.python.failure import Failure
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class MasterShellCommand(BuildStep):
@@ -44,7 +53,7 @@ class MasterShellCommand(BuildStep):
     haltOnFailure = True
     flunkOnFailure = True
 
-    def __init__(self, command, **kwargs):
+    def __init__(self, command: str | list[str], **kwargs: Any) -> None:
         self.env = kwargs.pop('env', None)
         self.usePTY = kwargs.pop('usePTY', 0)
         self.interruptSignal = kwargs.pop('interruptSignal', 'KILL')
@@ -54,12 +63,12 @@ class MasterShellCommand(BuildStep):
         super().__init__(**kwargs)
 
         self.command = command
-        self.process = None
+        self.process: runprocess.RunProcess | None = None
         self.masterWorkdir = self.workdir
-        self._deferwaiter = deferwaiter.DeferWaiter()
+        self._deferwaiter: deferwaiter.DeferWaiter[Any] = deferwaiter.DeferWaiter()
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         # render properties
         command = self.command
         # set up argv
@@ -95,6 +104,7 @@ class MasterShellCommand(BuildStep):
         yield self.stdio_log.addHeader(f" argv: {argv}\n")
 
         os_env = os.environ
+        env: dict[Any, Any] | os._Environ[str]
         if self.env is None:
             env = os_env
         else:
@@ -112,7 +122,7 @@ class MasterShellCommand(BuildStep):
             # do substitution on variable values matching pattern: ${name}
             p = re.compile(r'\${([0-9a-zA-Z_]*)}')
 
-            def subst(match):
+            def subst(match: re.Match[str]) -> str:
                 return os.environ.get(match.group(1), "")
 
             newenv = {}
@@ -122,7 +132,7 @@ class MasterShellCommand(BuildStep):
                         raise RuntimeError(
                             f"'env' values must be strings or lists; key '{key}' is incorrect"
                         )
-                    newenv[key] = p.sub(subst, v)
+                    newenv[key] = p.sub(subst, v)  # type: ignore[arg-type]
 
             # RunProcess will take environment values from os.environ in cases of env not having
             # the keys that are in os.environ. Prevent this by putting None into those keys.
@@ -157,17 +167,17 @@ class MasterShellCommand(BuildStep):
 
         if self.process.result_signal is not None:
             yield self.stdio_log.addHeader(f"signal {self.process.result_signal}\n")
-            self.descriptionDone = [f"killed ({self.process.result_signal})"]
+            self.descriptionDone = [f"killed ({self.process.result_signal})"]  # type: ignore[assignment]
             return FAILURE
         elif self.process.result_rc != 0:
             yield self.stdio_log.addHeader(f"exit status {self.process.result_signal}\n")
-            self.descriptionDone = [f"failed ({self.process.result_rc})"]
+            self.descriptionDone = [f"failed ({self.process.result_rc})"]  # type: ignore[assignment]
             return FAILURE
         else:
             return SUCCESS
 
     @defer.inlineCallbacks
-    def interrupt(self, reason):
+    def interrupt(self, reason: str | Failure) -> InlineCallbacksType[None]:
         yield super().interrupt(reason)
         if self.process is not None:
             self.process.send_signal(self.interruptSignal)
@@ -179,12 +189,13 @@ class SetProperty(BuildStep):
     descriptionDone = ['Set']
     renderables = ['property', 'value']
 
-    def __init__(self, property, value, **kwargs):
+    def __init__(self, property: str, value: Any, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.property = property
         self.value = value
 
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
+        assert self.build is not None
         properties = self.build.getProperties()
         properties.setProperty(self.property, self.value, self.name, runtime=True)
         return defer.succeed(SUCCESS)
@@ -196,11 +207,11 @@ class SetProperties(BuildStep):
     descriptionDone = ['Properties Set']
     renderables = ['properties']
 
-    def __init__(self, properties=None, **kwargs):
+    def __init__(self, properties: dict[str, Any] | None = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.properties = properties
 
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
         if self.properties is None:
             return defer.succeed(SUCCESS)
         for k, v in self.properties.items():
@@ -214,12 +225,12 @@ class Assert(BuildStep):
     descriptionDone = ["checked"]
     renderables = ['check']
 
-    def __init__(self, check, **kwargs):
+    def __init__(self, check: Any, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.check = check
         self.descriptionDone = [f"checked {self.check!r}"]
 
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
         if self.check:
             return defer.succeed(SUCCESS)
         return defer.succeed(FAILURE)
@@ -231,12 +242,12 @@ class LogRenderable(BuildStep):
     descriptionDone = ['Logged']
     renderables = ['content']
 
-    def __init__(self, content, **kwargs):
+    def __init__(self, content: Any, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.content = content
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         content = pprint.pformat(self.content)
         yield self.addCompleteLog(name='Output', text=content)
         return SUCCESS

@@ -17,6 +17,8 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -29,6 +31,9 @@ from buildbot.process import remotecommand
 from buildbot.process import results
 from buildbot.process.properties import Interpolate
 from buildbot.steps.source import Source
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 # Notes:
 #  see
@@ -61,27 +66,27 @@ class P4(Source):
 
     def __init__(
         self,
-        mode='incremental',
-        method=None,
-        p4base=None,
-        p4branch=None,
-        p4port=None,
-        p4user=None,
-        p4passwd=None,
-        p4extra_views=(),
-        p4line_end='local',
-        p4viewspec=None,
-        p4viewspec_suffix='...',
+        mode: str = 'incremental',
+        method: str | None = None,
+        p4base: str | None = None,
+        p4branch: str | None = None,
+        p4port: str | None = None,
+        p4user: str | None = None,
+        p4passwd: str | None = None,
+        p4extra_views: tuple[tuple[str, str], ...] = (),
+        p4line_end: str = 'local',
+        p4viewspec: list[tuple[str, str]] | None = None,
+        p4viewspec_suffix: str = '...',
         p4client: Interpolate | None = None,
-        p4client_spec_options='allwrite rmdir',
-        p4client_type=None,
-        p4extra_args=None,
-        p4bin='p4',
-        use_tickets=False,
-        stream=False,
-        debug=False,
-        **kwargs,
-    ):
+        p4client_spec_options: str | None = 'allwrite rmdir',
+        p4client_type: str | None = None,
+        p4extra_args: list[str] | None = None,
+        p4bin: str = 'p4',
+        use_tickets: bool = False,
+        stream: bool = False,
+        debug: bool = False,
+        **kwargs: Any,
+    ) -> None:
         self.method = method
         self.mode = mode
         self.p4branch = p4branch
@@ -138,9 +143,9 @@ class P4(Source):
                 config.error('You can\'t use p4extra_views not p4viewspec with stream')
             if not p4base or not p4branch:
                 config.error('You must specify both p4base and p4branch when using stream')
-            if not interfaces.IRenderable.providedBy(p4base) and " " in p4base:
+            if not interfaces.IRenderable.providedBy(p4base) and " " in p4base:  # type: ignore[operator]
                 config.error('p4base must not contain any whitespace')
-            if not interfaces.IRenderable.providedBy(p4branch) and " " in p4branch:
+            if not interfaces.IRenderable.providedBy(p4branch) and " " in p4branch:  # type: ignore[operator]
                 config.error('p4branch must not contain any whitespace')
 
         if self.p4client_spec_options is None:
@@ -156,7 +161,9 @@ class P4(Source):
             )
 
     @defer.inlineCallbacks
-    def run_vc(self, branch, revision, patch):
+    def run_vc(
+        self, branch: str | None, revision: str | None, patch: Any
+    ) -> InlineCallbacksType[int]:
         if self.debug:
             log.msg('in run_vc')
 
@@ -170,7 +177,7 @@ class P4(Source):
         # Try to obfuscate the password when used as an argument to commands.
         if self.p4passwd is not None:
             if not self.workerVersionIsOlderThan('shell', '2.16'):
-                self.p4passwd_arg = ('obfuscated', self.p4passwd, 'XXXXXX')
+                self.p4passwd_arg: Any = ('obfuscated', self.p4passwd, 'XXXXXX')
             else:
                 self.p4passwd_arg = self.p4passwd
                 log.msg("Worker does not understand obfuscation; p4 password will be logged")
@@ -189,7 +196,7 @@ class P4(Source):
         return results.SUCCESS
 
     @defer.inlineCallbacks
-    def mode_full(self):
+    def mode_full(self) -> InlineCallbacksType[None]:
         if self.debug:
             log.msg("P4:full()..")
 
@@ -219,7 +226,7 @@ class P4(Source):
             log.msg("P4: full() sync done.")
 
     @defer.inlineCallbacks
-    def mode_incremental(self):
+    def mode_incremental(self) -> InlineCallbacksType[None]:
         if self.debug:
             log.msg("P4:incremental()")
 
@@ -235,7 +242,7 @@ class P4(Source):
             log.msg("P4:incremental() command:%s revision:%s", command, self.revision)
         yield self._dovccmd(command)
 
-    def _buildVCCommand(self, doCommand):
+    def _buildVCCommand(self, doCommand: list[str]) -> list[Any]:
         assert doCommand, "No command specified"
 
         command = [
@@ -249,7 +256,7 @@ class P4(Source):
         if not self.use_tickets and self.p4passwd:
             command.extend(['-P', self.p4passwd_arg])
         if self.p4client:
-            command.extend(['-c', self.p4client])
+            command.extend(['-c', self.p4client])  # type: ignore[list-item]
 
         # Only add the extra arguments for the `sync` command.
         if doCommand[0] == 'sync' and self.p4extra_args:
@@ -259,8 +266,13 @@ class P4(Source):
         return command
 
     @defer.inlineCallbacks
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None):
-        command = self._buildVCCommand(command)
+    def _dovccmd(
+        self,
+        doCommand: list[str],
+        collectStdout: bool = False,
+        initialStdin: str | None = None,
+    ) -> InlineCallbacksType[str | int]:
+        command = self._buildVCCommand(doCommand)
 
         if self.debug:
             log.msg(f"P4:_dovccmd():workdir->{self.workdir}")
@@ -288,7 +300,7 @@ class P4(Source):
             return cmd.stdout
         return cmd.rc
 
-    def _getMethod(self):
+    def _getMethod(self) -> str | None:
         if self.method is not None and self.mode != 'incremental':
             return self.method
         elif self.mode == 'incremental':
@@ -298,17 +310,17 @@ class P4(Source):
         return None
 
     @defer.inlineCallbacks
-    def _createClientSpec(self):
+    def _createClientSpec(self) -> InlineCallbacksType[bool | None]:
         builddir = self.getProperty('builddir')
 
         if self.debug:
             log.msg(f"P4:_createClientSpec() builddir:{builddir}")
             log.msg(f"P4:_createClientSpec() SELF.workdir:{self.workdir}")
 
-        prop_dict = self.getProperties().asDict()
+        prop_dict = self.getProperties().asDict()  # type: ignore[attr-defined]
         prop_dict['p4client'] = self.p4client
 
-        root = self.build.path_module.normpath(self.build.path_module.join(builddir, self.workdir))
+        root = self.build.path_module.normpath(self.build.path_module.join(builddir, self.workdir))  # type: ignore[union-attr]
         client_spec = ''
         client_spec += f"Client: {self.p4client}\n\n"
         client_spec += f"Owner: {self.p4user}\n\n"
@@ -330,7 +342,7 @@ class P4(Source):
             # Setup a view
             client_spec += "View:\n"
 
-            def has_whitespace(*args):
+            def has_whitespace(*args: Any) -> bool:
                 return any(re.search(r'\s', i) for i in args if i is not None)
 
             if self.p4viewspec:
@@ -375,16 +387,16 @@ class P4(Source):
         return mo and (mo.group(2) == 'saved.' or mo.group(2) == 'not changed.')
 
     @defer.inlineCallbacks
-    def _acquireTicket(self):
+    def _acquireTicket(self) -> InlineCallbacksType[None]:
         if self.debug:
             log.msg("P4:acquireTicket()")
 
         # TODO: check first if the ticket is still valid?
-        initialStdin = self.p4passwd + "\n"
+        initialStdin = self.p4passwd + "\n"  # type: ignore[operator]
         yield self._dovccmd(['login'], initialStdin=initialStdin)
 
     @defer.inlineCallbacks
-    def get_sync_revision(self, revision=None):
+    def get_sync_revision(self, revision: str | None = None) -> InlineCallbacksType[str | None]:
         revision = f"@{revision}" if revision else "#head"
         if self.debug:
             log.msg("P4: get_sync_revision() retrieve client actual revision at %s", revision)
@@ -424,7 +436,7 @@ class P4(Source):
             None,
         )
         try:
-            int(revision)
+            int(revision)  # type: ignore[arg-type]
         except ValueError as error:
             log.msg(
                 "p4.get_sync_revision unable to parse output of %s: %s",
@@ -436,7 +448,7 @@ class P4(Source):
         return revision
 
     @defer.inlineCallbacks
-    def purge(self, ignore_ignores):
+    def purge(self, ignore_ignores: bool) -> InlineCallbacksType[None]:
         """Delete everything that shown up on status."""
         command = ['sync', '#none']
         if ignore_ignores:
@@ -447,7 +459,7 @@ class P4(Source):
         # then add defer to sync to revision
 
     @defer.inlineCallbacks
-    def checkP4(self):
+    def checkP4(self) -> InlineCallbacksType[bool]:
         cmd = remotecommand.RemoteShellCommand(
             self.workdir, [self.p4bin, '-V'], env=self.env, logEnviron=self.logEnviron
         )
@@ -455,7 +467,7 @@ class P4(Source):
         yield self.runCommand(cmd)
         return cmd.rc == 0
 
-    def computeSourceRevision(self, changes):
+    def computeSourceRevision(self, changes: Any) -> int | None:
         if not changes or None in [c.revision for c in changes]:
             return None
         lastChange = max(int(c.revision) for c in changes)

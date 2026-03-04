@@ -22,6 +22,9 @@ from __future__ import annotations
 import re
 import stat
 import time
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 from twisted.python import log
@@ -31,6 +34,11 @@ from buildbot.process import logobserver
 from buildbot.process import remotecommand
 from buildbot.process import results
 from buildbot.steps.shell import WarningCountingShellCommand
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class DebPbuilder(WarningCountingShellCommand):
@@ -72,16 +80,16 @@ class DebPbuilder(WarningCountingShellCommand):
 
     def __init__(
         self,
-        architecture=None,
-        distribution=None,
-        basetgz=None,
-        mirror=None,
-        othermirror=None,
-        extrapackages=None,
-        keyring=None,
-        components=None,
-        **kwargs,
-    ):
+        architecture: str | None = None,
+        distribution: str | None = None,
+        basetgz: str | None = None,
+        mirror: str | None = None,
+        othermirror: list[str] | None = None,
+        extrapackages: list[str] | None = None,
+        keyring: str | None = None,
+        components: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
 
         if architecture:
@@ -109,7 +117,7 @@ class DebPbuilder(WarningCountingShellCommand):
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         if self.basetgz is None:
             self.basetgz = self._default_basetgz
             kwargs = {}
@@ -117,7 +125,7 @@ class DebPbuilder(WarningCountingShellCommand):
                 kwargs['architecture'] = self.architecture
             else:
                 kwargs['architecture'] = 'local'
-            kwargs['distribution'] = self.distribution
+            kwargs['distribution'] = cast(str, self.distribution)
             self.basetgz = self.basetgz.format(**kwargs)
 
         self.command = ['pdebuild', '--buildresult', '.', '--pbuilder', self.pbuilder]
@@ -135,7 +143,7 @@ class DebPbuilder(WarningCountingShellCommand):
         return res
 
     @defer.inlineCallbacks
-    def checkBasetgz(self):
+    def checkBasetgz(self) -> InlineCallbacksType[int]:
         cmd = remotecommand.RemoteCommand('stat', {'file': self.basetgz})
         yield self.runCommand(cmd)
 
@@ -170,7 +178,7 @@ class DebPbuilder(WarningCountingShellCommand):
             cmd.useLog(stdio_log, True, "stdio")
 
             self.description = ["PBuilder", "create."]
-            yield self.updateSummary()
+            yield self.updateSummary()  # type: ignore[func-returns-value]
 
             yield self.runCommand(cmd)
             if cmd.rc != 0:
@@ -201,7 +209,7 @@ class DebPbuilder(WarningCountingShellCommand):
         log.msg(f"{self.basetgz} is not a file or a directory.")
         return results.FAILURE
 
-    def logConsumer(self):
+    def logConsumer(self) -> Generator[None, tuple[str, str], None]:
         r = re.compile(r"dpkg-genchanges  >\.\./(.+\.changes)")
         while True:
             _, line = yield

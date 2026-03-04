@@ -13,10 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.python import log
 
 from buildbot.steps.source.git import Git
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 
 class GitLab(Git):
@@ -25,11 +32,11 @@ class GitLab(Git):
     the GitLab change source
     """
 
-    def run_vc(self, branch, revision, patch):
+    def run_vc(self, branch: str | None, revision: str | None, patch: Any) -> defer.Deferred[int]:
         self.setup_repourl()
         # If this is a merge request:
-        if self.build.hasProperty("target_branch"):
-            target_repourl = self.build.getProperty("target_git_ssh_url", None)
+        if self.build.hasProperty("target_branch"):  # type: ignore[union-attr]
+            target_repourl = self.build.getProperty("target_git_ssh_url", None)  # type: ignore[union-attr]
 
             # repourl always includes ssh://
             if not target_repourl.startswith('ssh://'):
@@ -46,9 +53,9 @@ class GitLab(Git):
             # configure one builder for each of the infinite number of
             # possible source branches for merge requests).
             # Point instead to the source being proposed for merge.
-            branch = self.build.getProperty("source_branch", None)
+            branch = self.build.getProperty("source_branch", None)  # type: ignore[union-attr]
             # FIXME: layering violation, should not be modifying self here?
-            self.repourl = self.build.getProperty("source_git_ssh_url", None)
+            self.repourl = self.build.getProperty("source_git_ssh_url", None)  # type: ignore[union-attr]
             # The revision is unlikely to exist in the repo already,
             # so tell Git to not check.
             revision = None

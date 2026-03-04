@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -24,6 +27,11 @@ from buildbot.process.buildstep import ShellMixin
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Cppcheck(ShellMixin, BuildStep):
@@ -37,7 +45,13 @@ class Cppcheck(ShellMixin, BuildStep):
 
     renderables = ('binary', 'source', 'extra_args')
 
-    def __init__(self, *args, **kwargs):
+    binary: str
+    source: list[str]
+    enable: list[str]
+    inconclusive: bool
+    extra_args: list[str]
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         for name, default in [
             ('binary', 'cppcheck'),
             ('source', ['.']),
@@ -51,13 +65,14 @@ class Cppcheck(ShellMixin, BuildStep):
         super().__init__(*args, **kwargs)
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
 
-        self.counts = {}
-        summaries = self.summaries = {}
+        self.counts: dict[str, int] = {}
+        summaries: dict[str, list[str]] = {}
+        self.summaries = summaries
         for m in self.MESSAGES:
             self.counts[m] = 0
             summaries[m] = []
 
-    def _log_consumer(self):
+    def _log_consumer(self) -> Generator[None, tuple[str, str], None]:
         line_re = re.compile(rf"(?:\[.+\]: )?\((?P<severity>{'|'.join(self.MESSAGES)})\) .+")
 
         while True:
@@ -69,7 +84,7 @@ class Cppcheck(ShellMixin, BuildStep):
                 self.counts[msgsev] += 1
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         command = [self.binary]
         command.extend(self.source)
         if self.enable:
@@ -94,7 +109,7 @@ class Cppcheck(ShellMixin, BuildStep):
             yield self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
         self.setProperty('cppcheck-total', sum(self.counts.values()), 'Cppcheck')
 
-        yield self.updateSummary()
+        yield self.updateSummary()  # type: ignore[func-returns-value]
 
         if cmd.results() != SUCCESS:
             return cmd.results()

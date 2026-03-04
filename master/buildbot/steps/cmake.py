@@ -13,12 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 
 from buildbot import config
 from buildbot.interfaces import IRenderable
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import ShellMixin
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class CMake(ShellMixin, BuildStep):
@@ -34,13 +42,13 @@ class CMake(ShellMixin, BuildStep):
 
     def __init__(
         self,
-        path=None,
-        generator=None,
-        definitions=None,
-        options=None,
-        cmake=DEFAULT_CMAKE,
-        **kwargs,
-    ):
+        path: str | None = None,
+        generator: str | None = None,
+        definitions: dict[str, Any] | IRenderable | None = None,
+        options: list[str] | tuple[str, ...] | IRenderable | None = None,
+        cmake: str = DEFAULT_CMAKE,
+        **kwargs: Any,
+    ) -> None:
         self.path = path
         self.generator = generator
 
@@ -63,7 +71,7 @@ class CMake(ShellMixin, BuildStep):
         super().__init__(**kwargs)
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         """
         run CMake
         """
@@ -73,10 +81,12 @@ class CMake(ShellMixin, BuildStep):
             command.extend(['-G', self.generator])
 
         if self.definitions is not None:
+            assert isinstance(self.definitions, dict)
             for item in self.definitions.items():
                 command.append(f'-D{item[0]}={item[1]}')
 
         if self.options is not None:
+            assert isinstance(self.options, (list, tuple))
             command.extend(self.options)
 
         if self.path:
