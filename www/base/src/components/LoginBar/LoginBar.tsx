@@ -39,7 +39,7 @@ export const LoginBar = () => {
   if (user.anonymous) {
     return (
       <Nav className="bb-loginbar-dropdown-nav">
-        <NavDropdown title="Anonymous" id="bb-loginbar-dropdown">
+        <NavDropdown title="Anonymous" id="bb-loginbar-dropdown" align="end">
           <NavDropdown.Item
             href={getBaseUrl(window.location, 'auth/login?redirect=' + encodeURI(redirect))}
           >
