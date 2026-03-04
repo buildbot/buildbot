@@ -233,7 +233,7 @@ class MailNotifier(ReporterBase):
             for log in logs:
                 # Use distinct filenames for the e-mail summary
                 name = f"{log['stepname']}.{log['name']}"
-                if len(builds) > 1:
+                if builds is not None and len(builds) > 1:
                     filename = f"{log['buildername']}.{name}"
                 else:
                     filename = name
