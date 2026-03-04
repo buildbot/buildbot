@@ -40,13 +40,19 @@ from buildbot.util import service as util_service
 from buildbot.util.render_description import render_description
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from twisted.internet.defer import Deferred
 
     from buildbot.config.builder import BuilderConfig
     from buildbot.config.master import MasterConfig
     from buildbot.data.buildrequests import BuildRequestData
-    from buildbot.data.workers import Worker
     from buildbot.master import BuildMaster
+    from buildbot.process.botmaster import BotMaster
+    from buildbot.process.buildrequest import BuildRequest
+    from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.base import AbstractWorker as AbstractWorkerType
 
     CollapseRequestFn = Callable[
         [BuildMaster, "Builder", BuildRequestData, BuildRequestData],
@@ -54,20 +60,23 @@ if TYPE_CHECKING:
     ]
 
 
-def enforceChosenWorker(bldr, workerforbuilder, breq):
+def enforceChosenWorker(
+    bldr: Builder, workerforbuilder: AbstractWorkerForBuilder, breq: BuildRequest
+) -> bool:
     if 'workername' in breq.properties:
         workername = breq.properties['workername']
         if isinstance(workername, str):
-            return workername == workerforbuilder.worker.workername
+            return workername == workerforbuilder.worker.workername  # type: ignore[union-attr]
 
     return True
 
 
 class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
     master: BuildMaster | None = None
+    botmaster: BotMaster | None = None
 
     @property
-    def expectations(self):
+    def expectations(self) -> None:
         warnings.warn("'Builder.expectations' is deprecated.", stacklevel=2)
         return None
 
@@ -85,43 +94,45 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
 
         # workers which have connected but which are not yet available.
         # These are always in the ATTACHING state.
-        self.attaching_workers: list[Worker] = []
+        self.attaching_workers: list[AbstractWorkerForBuilder] = []
 
         # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
-        self.workers: list[Worker] = []
+        self.workers: list[AbstractWorkerForBuilder] = []
 
         self.config: BuilderConfig | None = None
 
         # Updated in reconfigServiceWithBuildbotConfig
-        self.project_name = None
-        self.project_id = None
+        self.project_name: str | None = None
+        self.project_id: int | None = None
 
         # Tracks config version for locks
         self.config_version = None
 
-    def _find_builder_config_by_name(self, new_config: MasterConfig) -> BuilderConfig | None:
+    def _find_builder_config_by_name(self, new_config: MasterConfig) -> BuilderConfig:
         for builder_config in new_config.builders:
             if builder_config.name == self.name:
                 return builder_config
         raise AssertionError(f"no config found for builder '{self.name}'")
 
     @defer.inlineCallbacks
-    def find_project_id(self, project):
+    def find_project_id(self, project: str | None) -> InlineCallbacksType[int | None]:
         if project is None:
             return project
-        projectid = yield self.master.data.updates.find_project_id(project)
+        projectid = yield self.master.data.updates.find_project_id(project)  # type: ignore[union-attr]
         if projectid is None:
             log.msg(f"{self} could not find project ID for project name {project}")
         return projectid
 
     @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(
+        self, new_config: MasterConfig
+    ) -> InlineCallbacksType[None]:
         builder_config = self._find_builder_config_by_name(new_config)
         old_config = self.config
         self.config = builder_config
-        self.config_version = self.master.config_version
+        self.config_version = self.master.config_version  # type: ignore[union-attr]
 
         # allocate  builderid now, so that the builder is visible in the web
         # UI; without this, the builder wouldn't appear until it preformed a
@@ -134,7 +145,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             self.project_name = builder_config.project
             self.project_id = projectid
 
-            yield self.master.data.updates.updateBuilderInfo(
+            yield self.master.data.updates.updateBuilderInfo(  # type: ignore[union-attr]
                 builderid,
                 builder_config.description,
                 builder_config.description_format,
@@ -146,9 +157,11 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         # if we have any workers attached which are no longer configured,
         # drop them.
         new_workernames = set(builder_config.workernames)
-        self.workers = [w for w in self.workers if w.worker.workername in new_workernames]
+        self.workers = [w for w in self.workers if w.worker.workername in new_workernames]  # type: ignore[union-attr, operator]
 
-    def _has_updated_config_info(self, old_config, new_config):
+    def _has_updated_config_info(
+        self, old_config: BuilderConfig | None, new_config: BuilderConfig
+    ) -> bool:
         if old_config is None:
             return True
         if old_config.description != new_config.description:
@@ -161,35 +174,35 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             return True
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Builder '{self.name!r}' at {id(self)}>"
 
-    def getBuilderIdForName(self, name):
+    def getBuilderIdForName(self, name: str) -> Deferred[int]:
         # buildbot.config should ensure this is already unicode, but it doesn't
         # hurt to check again
         name = bytes2unicode(name)
-        return self.master.data.updates.findBuilderId(name)
+        return self.master.data.updates.findBuilderId(name)  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
-    def getBuilderId(self):
+    def getBuilderId(self) -> InlineCallbacksType[int]:
         # since findBuilderId is idempotent, there's no reason to add
         # additional locking around this function.
         if self._builderid:
             return self._builderid
 
-        builderid = yield self.getBuilderIdForName(self.name)
+        builderid = yield self.getBuilderIdForName(self.name)  # type: ignore[arg-type]
         self._builderid = builderid
         return builderid
 
     @defer.inlineCallbacks
-    def getOldestRequestTime(self):
+    def getOldestRequestTime(self) -> InlineCallbacksType[datetime | None]:
         """Returns the submitted_at of the oldest unclaimed build request for
         this builder, or None if there are no build requests.
 
         @returns: datetime instance or None, via Deferred
         """
         bldrid = yield self.getBuilderId()
-        unclaimed = yield self.master.data.get(
+        unclaimed = yield self.master.data.get(  # type: ignore[union-attr]
             ('builders', bldrid, 'buildrequests'),
             [resultspec.Filter('claimed', 'eq', [False])],
             order=['submitted_at'],
@@ -200,14 +213,14 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         return None
 
     @defer.inlineCallbacks
-    def getNewestCompleteTime(self):
+    def getNewestCompleteTime(self) -> InlineCallbacksType[datetime | None]:
         """Returns the complete_at of the latest completed build request for
         this builder, or None if there are no such build requests.
 
         @returns: datetime instance or None, via Deferred
         """
         bldrid = yield self.getBuilderId()
-        completed = yield self.master.data.get(
+        completed = yield self.master.data.get(  # type: ignore[union-attr]
             ('builders', bldrid, 'buildrequests'),
             [resultspec.Filter('complete', 'eq', [True])],
             order=['-complete_at'],
@@ -219,14 +232,14 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             return None
 
     @defer.inlineCallbacks
-    def get_highest_priority(self):
+    def get_highest_priority(self) -> InlineCallbacksType[int | None]:
         """Returns the priority of the highest priority unclaimed build request
         for this builder, or None if there are no build requests.
 
         @returns: priority or None, via Deferred
         """
         bldrid = yield self.getBuilderId()
-        unclaimed = yield self.master.data.get(
+        unclaimed = yield self.master.data.get(  # type: ignore[union-attr]
             ('builders', bldrid, 'buildrequests'),
             [resultspec.Filter('claimed', 'eq', [False])],
             order=['-priority'],
@@ -236,7 +249,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             return unclaimed[0]['priority']
         return None
 
-    def getBuild(self, number):
+    def getBuild(self, number: int) -> Build | None:
         for b in self.building:
             if b.number == number:
                 return b
@@ -245,18 +258,20 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
                 return b
         return None
 
-    def addLatentWorker(self, worker):
+    def addLatentWorker(self, worker: AbstractWorkerType) -> None:
         assert interfaces.ILatentWorker.providedBy(worker)
         for w in self.workers:
             if w == worker:
                 break
         else:
-            wfb = workerforbuilder.LatentWorkerForBuilder(worker, self)
+            wfb = workerforbuilder.LatentWorkerForBuilder(worker, self)  # type: ignore[arg-type]
             self.workers.append(wfb)
-            self.botmaster.maybeStartBuildsForBuilder(self.name)
+            self.botmaster.maybeStartBuildsForBuilder(self.name)  # type: ignore[union-attr, arg-type]
 
     @defer.inlineCallbacks
-    def attached(self, worker, commands):
+    def attached(
+        self, worker: AbstractWorkerType, commands: dict[str, str] | None
+    ) -> InlineCallbacksType[Builder | None]:
         """This is invoked by the Worker when the self.workername bot
         registers their builder.
 
@@ -300,13 +315,13 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             log.err(e, 'worker failed to attach')
             return None
 
-    def _find_wfb_by_worker(self, worker):
+    def _find_wfb_by_worker(self, worker: AbstractWorkerType) -> AbstractWorkerForBuilder | None:
         for wfb in self.attaching_workers + self.workers:
             if wfb.worker == worker:
                 return wfb
         return None
 
-    def detached(self, worker):
+    def detached(self, worker: AbstractWorkerType) -> None:
         """This is called when the connection to the bot is lost."""
         wfb = self._find_wfb_by_worker(worker)
         if wfb is None:
@@ -325,36 +340,46 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         # inform the WorkerForBuilder that their worker went away
         wfb.detached()
 
-    def getAvailableWorkers(self):
+    def getAvailableWorkers(self) -> list[AbstractWorkerForBuilder]:
         return [wfb for wfb in self.workers if wfb.isAvailable()]
 
     @defer.inlineCallbacks
-    def _setup_props_if_needed(self, props, workerforbuilder, buildrequest):
+    def _setup_props_if_needed(
+        self,
+        props: Properties | None,
+        workerforbuilder: AbstractWorkerForBuilder,
+        buildrequest: BuildRequest,
+    ) -> InlineCallbacksType[Properties]:
         # don't unnecessarily setup properties for build
         if props is not None:
             return props
         props = Properties()
         yield Build.setup_properties_known_before_build_starts(
-            props, [buildrequest], self, workerforbuilder
+            props,
+            [buildrequest],
+            self,
+            workerforbuilder,  # type: ignore[arg-type]
         )
         return props
 
     @defer.inlineCallbacks
-    def canStartBuild(self, workerforbuilder, buildrequest):
+    def canStartBuild(
+        self, workerforbuilder: AbstractWorkerForBuilder, buildrequest: BuildRequest
+    ) -> InlineCallbacksType[bool]:
         can_start = True
 
         # check whether the locks that the build will acquire can actually be
         # acquired
-        locks = self.config.locks
+        locks = self.config.locks  # type: ignore[union-attr]
         worker = workerforbuilder.worker
         props = None
 
-        if worker.builds_may_be_incompatible:
+        if worker.builds_may_be_incompatible:  # type: ignore[union-attr]
             # Check if the latent worker is actually compatible with the build.
             # The instance type of the worker may depend on the properties of
             # the build that substantiated it.
             props = yield self._setup_props_if_needed(props, workerforbuilder, buildrequest)
-            can_start = yield worker.isCompatibleWithBuild(props)
+            can_start = yield worker.isCompatibleWithBuild(props)  # type: ignore[union-attr]
             if not can_start:
                 return False
 
@@ -374,19 +399,21 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             if not can_start:
                 return False
 
-        if callable(self.config.canStartBuild):
-            can_start = yield self.config.canStartBuild(self, workerforbuilder, buildrequest)
+        if callable(self.config.canStartBuild):  # type: ignore[union-attr]
+            can_start = yield self.config.canStartBuild(self, workerforbuilder, buildrequest)  # type: ignore[union-attr]
         return can_start
 
-    def _can_acquire_locks(self, lock_list):
+    def _can_acquire_locks(self, lock_list: list[Any]) -> bool:
         for lock, access in lock_list:
             if not lock.isAvailable(None, access):
                 return False
         return True
 
     @defer.inlineCallbacks
-    def _startBuildFor(self, workerforbuilder, buildrequests):
-        build = self.config.factory.newBuild(buildrequests, self)
+    def _startBuildFor(
+        self, workerforbuilder: AbstractWorkerForBuilder, buildrequests: list[BuildRequest]
+    ) -> InlineCallbacksType[bool]:
+        build = self.config.factory.newBuild(buildrequests, self)  # type: ignore[union-attr]
 
         props = build.getProperties()
 
@@ -394,15 +421,18 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         props.build = build
 
         yield Build.setup_properties_known_before_build_starts(
-            props, build.requests, build.builder, workerforbuilder
+            props,
+            build.requests,
+            build.builder,
+            workerforbuilder,  # type: ignore[arg-type]
         )
 
         log.msg(f"starting build {build} using worker {workerforbuilder}")
 
-        build.setLocks(self.config.locks)
+        build.setLocks(self.config.locks)  # type: ignore[union-attr]
 
-        if self.config.env:
-            build.setWorkerEnvironment(self.config.env)
+        if self.config.env:  # type: ignore[union-attr]
+            build.setWorkerEnvironment(self.config.env)  # type: ignore[union-attr]
 
         # append the build to self.building
         self.building.append(build)
@@ -430,7 +460,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         return True
 
     @defer.inlineCallbacks
-    def setup_properties(self, props):
+    def setup_properties(self, props: Properties) -> InlineCallbacksType[None]:
         builderid = yield self.getBuilderId()
 
         props.setProperty("buildername", self.name, "Builder")
@@ -441,17 +471,19 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         if self.project_id is not None:
             props.setProperty('projectid', self.project_id, 'Builder')
 
-        if self.config.properties:
-            for propertyname in self.config.properties:
-                props.setProperty(propertyname, self.config.properties[propertyname], "Builder")
-        if self.config.defaultProperties:
-            for propertyname in self.config.defaultProperties:
+        if self.config.properties:  # type: ignore[union-attr]
+            for propertyname in self.config.properties:  # type: ignore[union-attr]
+                props.setProperty(propertyname, self.config.properties[propertyname], "Builder")  # type: ignore[union-attr]
+        if self.config.defaultProperties:  # type: ignore[union-attr]
+            for propertyname in self.config.defaultProperties:  # type: ignore[union-attr]
                 if propertyname not in props:
                     props.setProperty(
-                        propertyname, self.config.defaultProperties[propertyname], "Builder"
+                        propertyname,
+                        self.config.defaultProperties[propertyname],  # type: ignore[union-attr]
+                        "Builder",
                     )
 
-    def buildFinished(self, build, wfb):
+    def buildFinished(self, build: Build, wfb: AbstractWorkerForBuilder) -> None:
         """This is called when the Build has finished (either success or
         failure). Any exceptions during the build are reported with
         results=FAILURE, not with an errback."""
@@ -467,11 +499,11 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             d = self._resubmit_buildreqs(build)
             d.addErrback(log.err, 'while resubmitting a build request')
         else:
-            complete_at_epoch = self.master.reactor.seconds()
+            complete_at_epoch = self.master.reactor.seconds()  # type: ignore[union-attr]
             complete_at = epoch2datetime(complete_at_epoch)
             brids = [br.id for br in build.requests]
 
-            d = self.master.data.updates.completeBuildRequests(
+            d = self.master.data.updates.completeBuildRequests(  # type: ignore[union-attr]
                 brids, results, complete_at=complete_at
             )
             # nothing in particular to do with this deferred, so just log it if
@@ -482,16 +514,18 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
             wfb.worker.releaseLocks()
 
     @defer.inlineCallbacks
-    def _resubmit_buildreqs(self, build):
+    def _resubmit_buildreqs(self, build: Build) -> InlineCallbacksType[None]:
         brids = [br.id for br in build.requests]
-        yield self.master.data.updates.unclaimBuildRequests(brids)
+        yield self.master.data.updates.unclaimBuildRequests(brids)  # type: ignore[union-attr]
 
         # XXX method does not exist
         # self._msg_buildrequests_unclaimed(build.requests)
 
     # Build Creation
 
-    def maybeStartBuild(self, workerforbuilder, breqs):
+    def maybeStartBuild(
+        self, workerforbuilder: AbstractWorkerForBuilder, breqs: list[BuildRequest]
+    ) -> Deferred[bool]:
         # This method is called by the botmaster whenever this builder should
         # start a set of buildrequests on a worker. Do not call this method
         # directly - use master.botmaster.maybeStartBuildsForBuilder, or one of

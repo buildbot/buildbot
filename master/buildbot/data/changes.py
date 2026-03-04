@@ -212,7 +212,7 @@ class Change(base.ResourceType):
         # get a user id
         if src:
             # create user object, returning a corresponding uid
-            uid = yield users.createUserObject(self.master, author, src)
+            uid = yield users.createUserObject(self.master, author, src)  # type: ignore[arg-type]
         else:
             uid = None
 

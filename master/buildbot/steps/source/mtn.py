@@ -313,7 +313,7 @@ class Monotone(Source):
             timeout=self.timeout,
             collectStdout=collectStdout,
             initialStdin=initialStdin,
-            decodeRC=decodeRC,
+            decodeRC=decodeRC,  # type: ignore[arg-type]
         )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import Callable
 from typing import ClassVar
 
@@ -39,14 +40,16 @@ from buildbot.steps.source.svn import SVN
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from collections.abc import Sequence
 
     from buildbot.process.builder import Builder
+    from buildbot.process.buildrequest import BuildRequest
 
 
 # deprecated, use BuildFactory.addStep
 @deprecate.deprecated(versions.Version("buildbot", 0, 8, 6))
-def s(steptype, **kwargs):
+def s(steptype: type[buildstep.BuildStep], **kwargs: Any) -> interfaces.IBuildStepFactory:
     # convenience function for master.cfg files, to create step
     # specification tuples
     return buildstep.get_factory_from_step_or_factory(steptype(**kwargs))
@@ -63,12 +66,14 @@ class BuildFactory(util.ComparableMixin):
     workdir = "build"
     compare_attrs: ClassVar[Sequence[str]] = ('buildClass', 'steps', 'useProgress', 'workdir')
 
-    def __init__(self, steps=None):
-        self.steps = []
+    def __init__(
+        self, steps: list[buildstep.BuildStep | interfaces.IBuildStepFactory] | None = None
+    ) -> None:
+        self.steps: list[interfaces.IBuildStepFactory] = []
         if steps:
             self.addSteps(steps)
 
-    def newBuild(self, requests, builder: Builder) -> Build:
+    def newBuild(self, requests: list[BuildRequest], builder: Builder) -> Build:
         """Create a new Build instance.
 
         @param requests: a list of buildrequest dictionaries describing what is
@@ -85,14 +90,18 @@ class BuildFactory(util.ComparableMixin):
         b.setStepFactories(self.steps)
         return b
 
-    def addStep(self, step):
+    def addStep(self, step: buildstep.BuildStep | interfaces.IBuildStepFactory) -> None:
         if not interfaces.IBuildStep.providedBy(
             step
         ) and not interfaces.IBuildStepFactory.providedBy(step):
             raise TypeError('step must be an instance of a BuildStep')
         self.steps.append(buildstep.get_factory_from_step_or_factory(step))
 
-    def addSteps(self, steps, withSecrets=None):
+    def addSteps(
+        self,
+        steps: list[buildstep.BuildStep | interfaces.IBuildStepFactory],
+        withSecrets: list[Any] | None = None,
+    ) -> None:
         if withSecrets is None:
             withSecrets = []
         if withSecrets:
@@ -102,11 +111,11 @@ class BuildFactory(util.ComparableMixin):
         if withSecrets:
             self.addStep(RemoveWorkerFileSecret(withSecrets))
 
-    def setSkipBuildIf(self, predicate: Callable[[Build], bool]):
+    def setSkipBuildIf(self, predicate: Callable[[Build], bool]) -> None:
         self.skipBuildIf = predicate
 
     @contextmanager
-    def withSecrets(self, secrets):
+    def withSecrets(self, secrets: list[Any]) -> Generator[BuildFactory, None, None]:
         self.addStep(DownloadSecretsToWorker(secrets))
         yield self
         self.addStep(RemoveWorkerFileSecret(secrets))
@@ -123,15 +132,15 @@ class _DefaultCommand:
 class GNUAutoconf(BuildFactory):
     def __init__(
         self,
-        source,
-        configure="./configure",
-        configureEnv=None,
-        configureFlags=None,
-        reconf=None,
-        compile=_DefaultCommand,
-        test=_DefaultCommand,
-        distcheck=_DefaultCommand,
-    ):
+        source: buildstep.BuildStep | interfaces.IBuildStepFactory,
+        configure: str | list[str] | None = "./configure",
+        configureEnv: dict[str, str] | None = None,
+        configureFlags: list[str] | None = None,
+        reconf: bool | list[str] | None = None,
+        compile: str | list[str] | type[_DefaultCommand] | None = _DefaultCommand,
+        test: str | list[str] | type[_DefaultCommand] | None = _DefaultCommand,
+        distcheck: str | list[str] | type[_DefaultCommand] | None = _DefaultCommand,
+    ) -> None:
         if configureEnv is None:
             configureEnv = {}
         if configureFlags is None:
@@ -154,6 +163,7 @@ class GNUAutoconf(BuildFactory):
             # we either need to wind up with a string (which will be
             # space-split), or with a list of strings (which will not). The
             # list of strings is the preferred form.
+            command: str | list[str]
             if isinstance(configure, str):
                 if configureFlags:
                     assert " " not in configure  # please use list instead
@@ -173,7 +183,9 @@ class GNUAutoconf(BuildFactory):
 
 
 class CPAN(BuildFactory):
-    def __init__(self, source, perl="perl"):
+    def __init__(
+        self, source: buildstep.BuildStep | interfaces.IBuildStepFactory, perl: str = "perl"
+    ) -> None:
         super().__init__([source])
         self.addStep(Configure(command=[perl, "Makefile.PL"]))
         self.addStep(Compile(command=["make"]))
@@ -183,7 +195,12 @@ class CPAN(BuildFactory):
 # deprecated, use Distutils
 @deprecate.deprecated(versions.Version("buildbot", 4, 0, 0))
 class Distutils(BuildFactory):
-    def __init__(self, source, python="python", test=None):
+    def __init__(
+        self,
+        source: buildstep.BuildStep | interfaces.IBuildStepFactory,
+        python: str = "python",
+        test: list[str] | None = None,
+    ) -> None:
         super().__init__([source])
         self.addStep(Compile(command=[python, "./setup.py", "build"]))
         if test is not None:
@@ -207,17 +224,17 @@ class Trial(BuildFactory):
 
     def __init__(
         self,
-        source,
-        buildpython=None,
-        trialpython=None,
-        trial=None,
-        testpath=".",
-        randomly=None,
-        recurse=None,
-        tests=None,
-        useTestCaseNames=False,
-        env=None,
-    ):
+        source: buildstep.BuildStep | interfaces.IBuildStepFactory,
+        buildpython: list[str] | None = None,
+        trialpython: list[str] | None = None,
+        trial: str | None = None,
+        testpath: str = ".",
+        randomly: bool | None = None,
+        recurse: bool | None = None,
+        tests: str | list[str] | None = None,
+        useTestCaseNames: bool = False,
+        env: dict[str, str] | None = None,
+    ) -> None:
         super().__init__([source])
         assert tests or useTestCaseNames, "must use one or the other"
         if buildpython is None:
@@ -261,14 +278,14 @@ class BasicBuildFactory(GNUAutoconf):
 
     def __init__(
         self,
-        cvsroot,
-        cvsmodule,
-        configure=None,
-        configureEnv=None,
-        compile="make all",
-        test="make check",
-        cvsCopy=False,
-    ):
+        cvsroot: str,
+        cvsmodule: str,
+        configure: str | list[str] | None = None,
+        configureEnv: dict[str, str] | None = None,
+        compile: str | list[str] = "make all",
+        test: str | list[str] = "make check",
+        cvsCopy: bool = False,
+    ) -> None:
         if configureEnv is None:
             configureEnv = {}
         mode = "full"
@@ -286,27 +303,36 @@ class QuickBuildFactory(BasicBuildFactory):
 
     def __init__(
         self,
-        cvsroot,
-        cvsmodule,
-        configure=None,
-        configureEnv=None,
-        compile="make all",
-        test="make check",
-        cvsCopy=False,
-    ):
+        cvsroot: str,
+        cvsmodule: str,
+        configure: str | list[str] | None = None,
+        configureEnv: dict[str, str] | None = None,
+        compile: str | list[str] = "make all",
+        test: str | list[str] = "make check",
+        cvsCopy: bool = False,
+    ) -> None:
         if configureEnv is None:
             configureEnv = {}
         mode = "incremental"
         source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
-        super().__init__(
-            source, configure=configure, configureEnv=configureEnv, compile=compile, test=test
+        super().__init__(  # type: ignore[call-arg]
+            source,  # type: ignore[arg-type]
+            configure=configure,
+            configureEnv=configureEnv,
+            compile=compile,
+            test=test,
         )
 
 
 class BasicSVN(GNUAutoconf):
     def __init__(
-        self, svnurl, configure=None, configureEnv=None, compile="make all", test="make check"
-    ):
+        self,
+        svnurl: str,
+        configure: str | list[str] | None = None,
+        configureEnv: dict[str, str] | None = None,
+        compile: str | list[str] = "make all",
+        test: str | list[str] = "make check",
+    ) -> None:
         if configureEnv is None:
             configureEnv = {}
         source = SVN(svnurl=svnurl, mode="incremental")

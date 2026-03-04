@@ -13,18 +13,27 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.process import metrics
 from buildbot.util.service import BuildbotServiceManager
 
+if TYPE_CHECKING:
+    from buildbot.config.master import MasterConfig
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class MeasuredBuildbotServiceManager(BuildbotServiceManager):
     managed_services_name = "services"
 
     @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(
+        self, new_config: MasterConfig
+    ) -> InlineCallbacksType[None]:
         timer = metrics.Timer(f"{self.name}.reconfigServiceWithBuildbotConfig")
         timer.start()
         yield super().reconfigServiceWithBuildbotConfig(new_config)

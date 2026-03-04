@@ -632,7 +632,7 @@ class BuildStep(
 
     @defer.inlineCallbacks
     def _setup_locks(self) -> InlineCallbacksType[None]:
-        self._locks_to_acquire = yield get_real_locks_from_accesses(self.locks, self.build)
+        self._locks_to_acquire = yield get_real_locks_from_accesses(self.locks, self.build)  # type: ignore[arg-type]
 
         assert self.build is not None
         if self.build._locks_to_acquire:

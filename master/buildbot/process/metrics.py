@@ -40,6 +40,8 @@ import sys
 from collections import defaultdict
 from collections import deque
 from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from twisted.application import service
 from twisted.internet import reactor
@@ -50,7 +52,12 @@ from buildbot import util
 from buildbot.util import service as util_service
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from twisted.internet.base import ReactorBase
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot.config.master import MasterConfig
 
 # Make use of the resource module if we can
 try:
@@ -63,19 +70,19 @@ except ImportError:
 
 class MetricEvent:
     @classmethod
-    def log(cls, *args, **kwargs):
+    def log(cls, *args: Any, **kwargs: Any) -> None:
         log.msg(metric=cls(*args, **kwargs))
 
 
 class MetricCountEvent(MetricEvent):
-    def __init__(self, counter, count=1, absolute=False):
+    def __init__(self, counter: str, count: int = 1, absolute: bool = False) -> None:
         self.counter = counter
         self.count = count
         self.absolute = absolute
 
 
 class MetricTimeEvent(MetricEvent):
-    def __init__(self, timer, elapsed):
+    def __init__(self, timer: str, elapsed: float) -> None:
         self.timer = timer
         self.elapsed = elapsed
 
@@ -85,15 +92,15 @@ ALARM_TEXT = ["OK", "WARN", "CRIT"]
 
 
 class MetricAlarmEvent(MetricEvent):
-    def __init__(self, alarm, msg=None, level=ALARM_OK):
+    def __init__(self, alarm: str, msg: str | None = None, level: int = ALARM_OK) -> None:
         self.alarm = alarm
         self.level = level
         self.msg = msg
 
 
-def countMethod(counter):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
+def countMethod(counter: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             MetricCountEvent.log(counter=counter)
             return func(*args, **kwargs)
 
@@ -106,19 +113,19 @@ class Timer:
     # For testing
     _reactor: ReactorBase | None = None
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         self.name = name
-        self.started = None
+        self.started: float | None = None
 
-    def startTimer(self, func):
-        def wrapper(*args, **kwargs):
+    def startTimer(self, func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             self.start()
             return func(*args, **kwargs)
 
         return wrapper
 
-    def stopTimer(self, func):
-        def wrapper(*args, **kwargs):
+    def stopTimer(self, func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
                 return func(*args, **kwargs)
             finally:
@@ -126,22 +133,24 @@ class Timer:
 
         return wrapper
 
-    def start(self):
+    def start(self) -> None:
         self.started = util.now(self._reactor)
 
-    def stop(self):
+    def stop(self) -> None:
         if self.started is not None:
             elapsed = util.now(self._reactor) - self.started
             MetricTimeEvent.log(timer=self.name, elapsed=elapsed)
             self.started = None
 
 
-def timeMethod(name, _reactor=None):
-    def decorator(func):
+def timeMethod(
+    name: str, _reactor: ReactorBase | None = None
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         t = Timer(name)
         t._reactor = _reactor
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             t.start()
             try:
                 return func(*args, **kwargs)
@@ -154,26 +163,26 @@ def timeMethod(name, _reactor=None):
 
 
 class FiniteList(deque):
-    def __init__(self, maxlen=10):
+    def __init__(self, maxlen: int = 10) -> None:
         self._maxlen = maxlen
         super().__init__()
 
-    def append(self, o):
+    def append(self, o: Any) -> None:
         deque.append(self, o)
         if len(self) > self._maxlen:
             self.popleft()
 
 
 class AveragingFiniteList(FiniteList):
-    def __init__(self, maxlen=10):
+    def __init__(self, maxlen: int = 10) -> None:
         super().__init__(maxlen)
-        self.average = 0
+        self.average: float = 0
 
-    def append(self, o):
+    def append(self, o: Any) -> None:
         super().append(o)
         self._calc()
 
-    def _calc(self):
+    def _calc(self) -> float:
         if not self:
             self.average = 0
         else:
@@ -183,107 +192,107 @@ class AveragingFiniteList(FiniteList):
 
 
 class MetricHandler:
-    def __init__(self, metrics):
+    def __init__(self, metrics: MetricLogObserver) -> None:
         self.metrics = metrics
-        self.watchers = []
+        self.watchers: list[Any] = []
 
         self.reset()
 
-    def addWatcher(self, watcher):
+    def addWatcher(self, watcher: Any) -> None:
         self.watchers.append(watcher)
 
-    def removeWatcher(self, watcher):
+    def removeWatcher(self, watcher: Any) -> None:
         self.watchers.remove(watcher)
 
     # For subclasses to define
-    def reset(self):
+    def reset(self) -> None:
         raise NotImplementedError
 
-    def handle(self, eventDict, metric):
+    def handle(self, eventDict: dict[str, Any], metric: MetricEvent) -> None:
         raise NotImplementedError
 
-    def get(self, metric):
+    def get(self, metric: str) -> Any:
         raise NotImplementedError
 
-    def keys(self):
+    def keys(self) -> list[str]:
         raise NotImplementedError
 
-    def report(self):
+    def report(self) -> str:
         raise NotImplementedError
 
-    def asDict(self):
+    def asDict(self) -> dict[str, Any]:
         raise NotImplementedError
 
 
 class MetricCountHandler(MetricHandler):
-    _counters: defaultdict[str, int] | None = None
+    _counters: defaultdict[str, int]
 
-    def reset(self):
+    def reset(self) -> None:
         self._counters = defaultdict(int)
 
-    def handle(self, eventDict, metric):
+    def handle(self, eventDict: dict[str, Any], metric: MetricCountEvent) -> None:  # type: ignore[override]
         if metric.absolute:
             self._counters[metric.counter] = metric.count
         else:
             self._counters[metric.counter] += metric.count
 
-    def keys(self):
+    def keys(self) -> list[str]:
         return list(self._counters)
 
-    def get(self, counter):
+    def get(self, counter: str) -> int:
         return self._counters[counter]
 
-    def report(self):
+    def report(self) -> str:
         retval = []
         for counter in sorted(self.keys()):
             retval.append(f"Counter {counter}: {self.get(counter)}")
         return "\n".join(retval)
 
-    def asDict(self):
-        retval = {}
+    def asDict(self) -> dict[str, Any]:
+        retval: dict[str, int] = {}
         for counter in sorted(self.keys()):
             retval[counter] = self.get(counter)
         return {"counters": retval}
 
 
 class MetricTimeHandler(MetricHandler):
-    _timers: defaultdict[str, AveragingFiniteList] | None = None
+    _timers: defaultdict[str, AveragingFiniteList]
 
-    def reset(self):
+    def reset(self) -> None:
         self._timers = defaultdict(AveragingFiniteList)
 
-    def handle(self, eventDict, metric):
+    def handle(self, eventDict: dict[str, Any], metric: MetricTimeEvent) -> None:  # type: ignore[override]
         self._timers[metric.timer].append(metric.elapsed)
 
-    def keys(self):
+    def keys(self) -> list[str]:
         return list(self._timers)
 
-    def get(self, timer):
+    def get(self, timer: str) -> float:
         return self._timers[timer].average
 
-    def report(self):
+    def report(self) -> str:
         retval = []
         for timer in sorted(self.keys()):
             retval.append(f"Timer {timer}: {self.get(timer):.3g}")
         return "\n".join(retval)
 
-    def asDict(self):
-        retval = {}
+    def asDict(self) -> dict[str, Any]:
+        retval: dict[str, float] = {}
         for timer in sorted(self.keys()):
             retval[timer] = self.get(timer)
         return {"timers": retval}
 
 
 class MetricAlarmHandler(MetricHandler):
-    _alarms: defaultdict[str, tuple[int, str]] | None
+    _alarms: defaultdict[str, tuple[int, str | None]]
 
-    def reset(self):
-        self._alarms = defaultdict(lambda x: ALARM_OK)
+    def reset(self) -> None:
+        self._alarms = defaultdict(lambda: (ALARM_OK, None))
 
-    def handle(self, eventDict, metric):
+    def handle(self, eventDict: dict[str, Any], metric: MetricAlarmEvent) -> None:  # type: ignore[override]
         self._alarms[metric.alarm] = (metric.level, metric.msg)
 
-    def report(self):
+    def report(self) -> str:
         retval = []
         for alarm, (level, msg) in sorted(self._alarms.items()):
             if msg:
@@ -292,18 +301,18 @@ class MetricAlarmHandler(MetricHandler):
                 retval.append(f"{ALARM_TEXT[level]} {alarm}")
         return "\n".join(retval)
 
-    def asDict(self):
-        retval = {}
+    def asDict(self) -> dict[str, Any]:
+        retval: dict[str, tuple[str, str | None]] = {}
         for alarm, (level, msg) in sorted(self._alarms.items()):
             retval[alarm] = (ALARM_TEXT[level], msg)
         return {"alarms": retval}
 
 
 class AttachedWorkersWatcher:
-    def __init__(self, metrics):
+    def __init__(self, metrics: MetricLogObserver) -> None:
         self.metrics = metrics
 
-    def run(self):
+    def run(self) -> None:
         # Check if 'BotMaster.attached_workers' equals
         # 'AbstractWorker.attached_workers'
         h = self.metrics.getHandler(MetricCountEvent)
@@ -330,7 +339,7 @@ class AttachedWorkersWatcher:
         )
 
 
-def _get_rss():
+def _get_rss() -> int:
     if sys.platform == 'linux':
         try:
             with open(f"/proc/{os.getpid()}/statm", encoding='utf-8') as f:
@@ -340,7 +349,7 @@ def _get_rss():
     return 0
 
 
-def periodicCheck(_reactor=reactor):
+def periodicCheck(_reactor: ReactorBase = reactor) -> None:  # type: ignore[assignment]
     try:
         # Measure how much garbage we have
         garbage_count = len(gc.garbage)
@@ -352,7 +361,8 @@ def periodicCheck(_reactor=reactor):
         MetricAlarmEvent.log('gc.garbage', level=level)
 
         if resource:
-            r = resource.getrusage(resource.RUSAGE_SELF)
+            resource_any: Any = resource
+            r = resource_any.getrusage(resource_any.RUSAGE_SELF)
             attrs = [
                 'ru_utime',
                 'ru_stime',
@@ -376,14 +386,14 @@ def periodicCheck(_reactor=reactor):
                 # can calculate it from /proc/<pid>/statm
                 v = r[i]
                 if a == 'ru_maxrss' and v == 0:
-                    v = _get_rss() * resource.getpagesize() / 1024
+                    v = _get_rss() * resource_any.getpagesize() / 1024
                 MetricCountEvent.log(f'resource.{a}', v, absolute=True)
-            MetricCountEvent.log('resource.pagesize', resource.getpagesize(), absolute=True)
+            MetricCountEvent.log('resource.pagesize', resource_any.getpagesize(), absolute=True)
         # Measure the reactor delay
         then = util.now(_reactor)
         dt = 0.1
 
-        def cb():
+        def cb() -> None:
             now = util.now(_reactor)
             delay = (now - then) - dt
             MetricTimeEvent.log("reactorDelay", delay)
@@ -394,29 +404,31 @@ def periodicCheck(_reactor=reactor):
 
 
 class MetricLogObserver(util_service.ReconfigurableServiceMixin, service.MultiService):
-    _reactor = reactor
+    _reactor: IReactorTime = cast("IReactorTime", reactor)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setName('metrics')
 
-        self.enabled = False
-        self.periodic_task = None
-        self.periodic_interval = None
-        self.log_task = None
-        self.log_interval = None
+        self.enabled: bool = False
+        self.periodic_task: LoopingCall | None = None
+        self.periodic_interval: int | None = None
+        self.log_task: LoopingCall | None = None
+        self.log_interval: int | None = None
 
         # Mapping of metric type to handlers for that type
-        self.handlers = {}
+        self.handlers: dict[type[MetricEvent], MetricHandler] = {}
 
         # Register our default handlers
         self.registerHandler(MetricCountEvent, MetricCountHandler(self))
         self.registerHandler(MetricTimeEvent, MetricTimeHandler(self))
         self.registerHandler(MetricAlarmEvent, MetricAlarmHandler(self))
 
-        self.getHandler(MetricCountEvent).addWatcher(AttachedWorkersWatcher(self))
+        count_handler = self.getHandler(MetricCountEvent)
+        assert count_handler is not None
+        count_handler.addWatcher(AttachedWorkersWatcher(self))
 
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config: MasterConfig) -> Any:
         # first, enable or disable
         if new_config.metrics is None:
             self.disable()
@@ -450,17 +462,17 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin, service.MultiSe
         # upcall
         return super().reconfigServiceWithBuildbotConfig(new_config)
 
-    def stopService(self):
+    def stopService(self) -> None:
         self.disable()
         super().stopService()
 
-    def enable(self):
+    def enable(self) -> None:
         if self.enabled:
             return
         log.addObserver(self.emit)
         self.enabled = True
 
-    def disable(self):
+    def disable(self) -> None:
         if not self.enabled:
             return
 
@@ -475,15 +487,17 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin, service.MultiSe
         log.removeObserver(self.emit)
         self.enabled = False
 
-    def registerHandler(self, interface, handler):
+    def registerHandler(
+        self, interface: type[MetricEvent], handler: MetricHandler
+    ) -> MetricHandler | None:
         old = self.getHandler(interface)
         self.handlers[interface] = handler
         return old
 
-    def getHandler(self, interface):
+    def getHandler(self, interface: type[MetricEvent]) -> MetricHandler | None:
         return self.handlers.get(interface)
 
-    def emit(self, eventDict):
+    def emit(self, eventDict: dict[str, Any]) -> None:
         # Ignore non-statistic events
         metric = eventDict.get('metric')
         if not metric or not isinstance(metric, MetricEvent):
@@ -497,13 +511,13 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin, service.MultiSe
         for w in h.watchers:
             w.run()
 
-    def asDict(self):
-        retval = {}
+    def asDict(self) -> dict[str, Any]:
+        retval: dict[str, Any] = {}
         for _, handler in self.handlers.items():
             retval.update(handler.asDict())
         return retval
 
-    def report(self):
+    def report(self) -> None:
         try:
             for handler in self.handlers.values():
                 report = handler.report()

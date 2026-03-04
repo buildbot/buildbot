@@ -28,6 +28,8 @@ from buildbot.util import unicode2bytes
 
 if TYPE_CHECKING:
     from buildbot.db.users import UserModel
+    from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
 
 # TODO: fossil comes from a plugin. We should have an API that plugins could use to
 # register allowed user types.
@@ -35,7 +37,7 @@ srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr', 'fossil']
 salt_len = 8
 
 
-def createUserObject(master, author, src=None):
+def createUserObject(master: BuildMaster, author: str, src: str | None = None) -> defer.Deferred:
     """
     Take a Change author and source and translate them into a User Object,
     storing the user in master.db, or returning None if the src is not
@@ -68,7 +70,7 @@ def createUserObject(master, author, src=None):
     )
 
 
-def _extractContact(user: UserModel | None, contact_types, uid):
+def _extractContact(user: UserModel | None, contact_types: list[str], uid: int) -> str | None:
     if user is not None and user.attributes is not None:
         for type in contact_types:
             contact = user.attributes.get(type)
@@ -86,7 +88,9 @@ def _extractContact(user: UserModel | None, contact_types, uid):
 
 
 @defer.inlineCallbacks
-def getUserContact(master, contact_types, uid):
+def getUserContact(
+    master: BuildMaster, contact_types: list[str], uid: int
+) -> InlineCallbacksType[str | None]:
     """
     This is a simple getter function that returns a user attribute
     that matches the contact_types argument, or returns None if no
@@ -109,7 +113,7 @@ def getUserContact(master, contact_types, uid):
     return contact
 
 
-def encrypt(passwd):
+def encrypt(passwd: str) -> str:
     """
     Encrypts the incoming password after adding some salt to store
     it in the database.
@@ -126,7 +130,7 @@ def encrypt(passwd):
     return crypted
 
 
-def check_passwd(guess, passwd):
+def check_passwd(guess: str, passwd: str) -> bool:
     """
     Tests to see if the guess, after salting and hashing, matches the
     passwd from the database.

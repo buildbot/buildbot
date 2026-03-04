@@ -114,7 +114,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
 
             cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName=arg.logname)  # type: ignore[arg-type]
             yield self.runCommand(cmd)
-            overall_result, terminate = results.computeResultAndTermination(
+            overall_result, terminate = results.computeResultAndTermination(  # type: ignore[assignment]
                 arg, cmd.results(), overall_result
             )
             if terminate:

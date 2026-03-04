@@ -249,7 +249,7 @@ class Build(properties.PropertiesMixin):
 
     def getWorkerCommandVersion(self, command: str, oldversion: str | None = None) -> str:
         assert self.workerforbuilder is not None
-        return self.workerforbuilder.getWorkerCommandVersion(command, oldversion)
+        return self.workerforbuilder.getWorkerCommandVersion(command, oldversion)  # type: ignore[return-value]
 
     def getWorkerName(self) -> str | None:
         return self.workername
