@@ -1,0 +1,1 @@
+On asymmetric multimaster configurations `collapseRequests` will work now when a given builder is not defined on the master running the collapse request, defaulting in that case to run the globally configured `collapseRequests` setting.

@@ -119,7 +119,6 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
             return d
 
         bldr.maybeStartBuild = maybeStartBuild
-        bldr.getCollapseRequestsFn = lambda: False
 
         bldr.workers = []
         bldr.getAvailableWorkers = lambda: [w for w in bldr.workers if w.isAvailable()]
@@ -129,6 +128,7 @@ class TestBRDBase(TestReactorMixin, unittest.TestCase):
             bldr.config.nextBuild = None
         else:
             bldr.config = builder_config
+        bldr.config.collapseRequests = False
 
         def canStartBuild(*args):
             can = bldr.config.canStartBuild

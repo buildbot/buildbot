@@ -28,7 +28,6 @@ from twisted.python import log
 from buildbot import interfaces
 from buildbot.data import resultspec
 from buildbot.interfaces import IRenderable
-from buildbot.process import buildrequest
 from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
 from buildbot.process.locks import get_real_locks_from_accesses_raw
@@ -508,36 +507,3 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
 
         return self._startBuildFor(workerforbuilder, breqs)
 
-    # a few utility functions to make the maybeStartBuild a bit shorter and
-    # easier to read
-
-    def getCollapseRequestsFn(
-        self,
-    ) -> CollapseRequestFn | None:
-        """Helper function to determine which collapseRequests function to use
-        from L{_collapseRequests}, or None for no merging"""
-        # first, seek through builder, global, and the default
-        assert self.config is not None
-        collapseRequests_fn: CollapseRequestFn | bool | None = self.config.collapseRequests
-        if collapseRequests_fn is None:
-            assert self.master is not None
-            collapseRequests_fn = self.master.config.collapseRequests
-        if collapseRequests_fn is None:
-            collapseRequests_fn = True
-
-        # then translate False and True properly
-        if collapseRequests_fn is False:
-            return None
-        elif collapseRequests_fn is True:
-            return self._defaultCollapseRequestFn
-
-        return collapseRequests_fn
-
-    @staticmethod
-    def _defaultCollapseRequestFn(
-        master: BuildMaster,
-        builder: Builder,
-        brdict1: BuildRequestData,
-        brdict2: BuildRequestData,
-    ) -> defer.Deferred[bool]:
-        return buildrequest.BuildRequest.canBeCollapsed(master, brdict1, brdict2)
