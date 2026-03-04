@@ -166,7 +166,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.data.patches",
       "buildbot.data.projects",
       "buildbot.data.schedulers",
-      "buildbot.data.steps",
       "buildbot.data.test_result_sets",
       "buildbot.data.test_results",
       "buildbot.data.types",
