@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
-def trycmd(config):
+from typing import Any
+
+
+def trycmd(config: dict[str, Any]) -> int:
     from buildbot.clients import tryclient  # noqa: PLC0415
 
     t = tryclient.Try(config)

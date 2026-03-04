@@ -13,10 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json
 import os
 import sys
+from typing import IO
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -24,13 +28,17 @@ from buildbot.data import connector
 from buildbot.test.fake import fakemaster
 from buildbot.util import in_reactor
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 @in_reactor
 @defer.inlineCallbacks
-def dataspec(config):
+def dataspec(config: dict[str, Any]) -> InlineCallbacksType[int]:
     master = yield fakemaster.make_master(None, wantRealReactor=True)
     data = connector.DataConnector()
     yield data.setServiceParent(master)
+    f: IO[str]
     if config['out'] != '--':
         dirs = os.path.dirname(config['out'])
         if dirs and not os.path.exists(dirs):

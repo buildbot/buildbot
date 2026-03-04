@@ -14,15 +14,18 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
 import sys
 import time
 from hashlib import md5
+from typing import Any
 
 from buildbot.util import unicode2bytes
 
 
-def tryserver(config):
+def tryserver(config: dict[str, Any]) -> int:
     jobdir = os.path.expanduser(config["jobdir"])
     job = sys.stdin.read()
     # now do a 'safecat'-style write to jobdir/tmp, then move atomically to

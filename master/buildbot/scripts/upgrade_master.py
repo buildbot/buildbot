@@ -13,11 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import os
 import signal
 import sys
 import traceback
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import util
@@ -29,8 +32,12 @@ from buildbot.scripts import base
 from buildbot.util import in_reactor
 from buildbot.util import stripUrlPassword
 
+if TYPE_CHECKING:
+    from buildbot.config.master import MasterConfig
+    from buildbot.util.twisted import InlineCallbacksType
 
-def installFile(config, target, source, overwrite=False):
+
+def installFile(config: dict[str, Any], target: str, source: str, overwrite: bool = False) -> None:
     with open(source, encoding='utf-8') as f:
         new_contents = f.read()
     if os.path.exists(target):
@@ -57,7 +64,7 @@ def installFile(config, target, source, overwrite=False):
             f.write(new_contents)
 
 
-def upgradeFiles(config):
+def upgradeFiles(config: dict[str, Any]) -> None:
     if not config['quiet']:
         print("upgrading basedir")
 
@@ -75,7 +82,7 @@ def upgradeFiles(config):
 
 
 @defer.inlineCallbacks
-def upgradeDatabase(config, master_cfg):
+def upgradeDatabase(config: dict[str, Any], master_cfg: MasterConfig) -> InlineCallbacksType[None]:
     if not config['quiet']:
         db_url_cfg = master_cfg.db.db_url
         if IRenderable.providedBy(db_url_cfg):
@@ -89,7 +96,7 @@ def upgradeDatabase(config, master_cfg):
         print(f"upgrading database ({db_url})")
         print("Warning: Stopping this process might cause data loss")
 
-    def sighandler(signum, frame):
+    def sighandler(signum: int, frame: Any) -> None:
         msg = " ".join(
             """
         WARNING: ignoring signal {}.
@@ -127,7 +134,7 @@ def upgradeDatabase(config, master_cfg):
 
 
 @in_reactor
-def upgradeMaster(config):
+def upgradeMaster(config: dict[str, Any]) -> defer.Deferred[int]:
     if not base.checkBasedir(config):
         return defer.succeed(1)
 
@@ -153,7 +160,7 @@ def upgradeMaster(config):
 
 
 @defer.inlineCallbacks
-def _upgradeMaster(config, master_cfg):
+def _upgradeMaster(config: dict[str, Any], master_cfg: MasterConfig) -> InlineCallbacksType[int]:
     try:
         upgradeFiles(config)
         yield upgradeDatabase(config, master_cfg)

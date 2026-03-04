@@ -14,8 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
 import sys
+from typing import Any
 
 from buildbot.config.errors import ConfigErrors
 from buildbot.config.master import FileLoader
@@ -23,7 +26,7 @@ from buildbot.scripts.base import getConfigFileFromTac
 from buildbot.util import in_reactor
 
 
-def _loadConfig(basedir, configFile, quiet):
+def _loadConfig(basedir: str, configFile: str, quiet: bool) -> int:
     try:
         FileLoader(basedir, configFile).loadConfig()
     except ConfigErrors as err:
@@ -39,8 +42,8 @@ def _loadConfig(basedir, configFile, quiet):
 
 
 @in_reactor
-def checkconfig(config):
-    quiet = config.get('quiet')
+def checkconfig(config: dict[str, Any]) -> int:
+    quiet: bool = config.get('quiet')  # type: ignore[assignment]
     configFile = config.get('configFile', os.getcwd())
 
     if os.path.isdir(configFile):
