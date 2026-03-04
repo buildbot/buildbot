@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 
 import jinja2
 from twisted.internet import defer
@@ -23,8 +27,11 @@ from buildbot.config import master as config_master
 from buildbot.master import BuildMaster
 from buildbot.util import in_reactor
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
-def makeBasedir(config):
+
+def makeBasedir(config: dict[str, Any]) -> None:
     if os.path.exists(config['basedir']):
         if not config['quiet']:
             print("updating existing installation")
@@ -34,7 +41,7 @@ def makeBasedir(config):
     os.mkdir(config['basedir'])
 
 
-def makeTAC(config):
+def makeTAC(config: dict[str, Any]) -> None:
     # render buildbot_tac.tmpl using the config
     loader = jinja2.FileSystemLoader(os.path.dirname(__file__))
     env = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
@@ -59,7 +66,7 @@ def makeTAC(config):
         f.write(contents)
 
 
-def makeSampleConfig(config):
+def makeSampleConfig(config: dict[str, Any]) -> None:
     source = util.sibpath(__file__, "sample.cfg")
     target = os.path.join(config['basedir'], "master.cfg.sample")
     if not config['quiet']:
@@ -74,7 +81,7 @@ def makeSampleConfig(config):
 
 
 @defer.inlineCallbacks
-def createDB(config):
+def createDB(config: dict[str, Any]) -> InlineCallbacksType[None]:
     # create a master with the default configuration, but with db_url
     # overridden
     master_cfg = config_master.MasterConfig()
@@ -90,7 +97,7 @@ def createDB(config):
 
 @in_reactor
 @defer.inlineCallbacks
-def createMaster(config):
+def createMaster(config: dict[str, Any]) -> InlineCallbacksType[int]:
     makeBasedir(config)
     makeTAC(config)
     makeSampleConfig(config)
