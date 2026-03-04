@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -28,8 +29,10 @@ from buildbot.util import in_reactor
 if TYPE_CHECKING:
     from sqlalchemy.engine import Connection
 
+    from buildbot.config.master import MasterConfig
 
-async def doCleanupDatabase(config, master_cfg) -> None:
+
+async def doCleanupDatabase(config: dict[str, Any], master_cfg: MasterConfig) -> None:
     if not config['quiet']:
         print(f"cleaning database ({master_cfg.db.db_url})")
 
@@ -77,13 +80,13 @@ async def doCleanupDatabase(config, master_cfg) -> None:
 
 
 @in_reactor
-def cleanupDatabase(config):  # pragma: no cover
+def cleanupDatabase(config: dict[str, Any]) -> defer.Deferred[int]:  # pragma: no cover
     # we separate the actual implementation to protect unit tests
     # from @in_reactor which stops the reactor
     return defer.Deferred.fromCoroutine(_cleanupDatabase(config))
 
 
-async def _cleanupDatabase(config) -> int:
+async def _cleanupDatabase(config: dict[str, Any]) -> int:
     if not base.checkBasedir(config):
         return 1
 
