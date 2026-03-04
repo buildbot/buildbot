@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import pprint
 import re
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -27,6 +31,11 @@ from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
 from buildbot.util import deferwaiter
 from buildbot.util import runprocess
+
+if TYPE_CHECKING:
+    from twisted.python.failure import Failure
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class MasterShellCommand(BuildStep):
@@ -44,7 +53,7 @@ class MasterShellCommand(BuildStep):
     haltOnFailure = True
     flunkOnFailure = True
 
-    def __init__(self, command, **kwargs):
+    def __init__(self, command: str | list[str], **kwargs: Any) -> None:
         self.env = kwargs.pop('env', None)
         self.usePTY = kwargs.pop('usePTY', 0)
         self.interruptSignal = kwargs.pop('interruptSignal', 'KILL')
@@ -59,7 +68,7 @@ class MasterShellCommand(BuildStep):
         self._deferwaiter = deferwaiter.DeferWaiter()
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         # render properties
         command = self.command
         # set up argv
@@ -112,7 +121,7 @@ class MasterShellCommand(BuildStep):
             # do substitution on variable values matching pattern: ${name}
             p = re.compile(r'\${([0-9a-zA-Z_]*)}')
 
-            def subst(match):
+            def subst(match: re.Match[str]) -> str:
                 return os.environ.get(match.group(1), "")
 
             newenv = {}
@@ -167,7 +176,7 @@ class MasterShellCommand(BuildStep):
             return SUCCESS
 
     @defer.inlineCallbacks
-    def interrupt(self, reason):
+    def interrupt(self, reason: str | Failure) -> InlineCallbacksType[None]:
         yield super().interrupt(reason)
         if self.process is not None:
             self.process.send_signal(self.interruptSignal)
@@ -179,12 +188,12 @@ class SetProperty(BuildStep):
     descriptionDone = ['Set']
     renderables = ['property', 'value']
 
-    def __init__(self, property, value, **kwargs):
+    def __init__(self, property: str, value: Any, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.property = property
         self.value = value
 
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
         properties = self.build.getProperties()
         properties.setProperty(self.property, self.value, self.name, runtime=True)
         return defer.succeed(SUCCESS)
@@ -196,11 +205,11 @@ class SetProperties(BuildStep):
     descriptionDone = ['Properties Set']
     renderables = ['properties']
 
-    def __init__(self, properties=None, **kwargs):
+    def __init__(self, properties: dict[str, Any] | None = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.properties = properties
 
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
         if self.properties is None:
             return defer.succeed(SUCCESS)
         for k, v in self.properties.items():
@@ -214,12 +223,12 @@ class Assert(BuildStep):
     descriptionDone = ["checked"]
     renderables = ['check']
 
-    def __init__(self, check, **kwargs):
+    def __init__(self, check: Any, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.check = check
         self.descriptionDone = [f"checked {self.check!r}"]
 
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
         if self.check:
             return defer.succeed(SUCCESS)
         return defer.succeed(FAILURE)
@@ -231,12 +240,12 @@ class LogRenderable(BuildStep):
     descriptionDone = ['Logged']
     renderables = ['content']
 
-    def __init__(self, content, **kwargs):
+    def __init__(self, content: Any, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.content = content
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         content = pprint.pformat(self.content)
         yield self.addCompleteLog(name='Output', text=content)
         return SUCCESS
