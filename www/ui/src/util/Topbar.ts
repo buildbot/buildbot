@@ -16,21 +16,35 @@
 */
 
 import {useContext, useEffect} from 'react';
+import {ConfigContext} from '../contexts/Config';
 import {TopbarContext} from '../contexts/Topbar';
 import {TopbarAction, TopbarItem} from '../stores/TopbarStore';
 
 export function useTopbarItems(items: TopbarItem[]) {
   const store = useContext(TopbarContext);
+  const config = useContext(ConfigContext);
 
   useEffect(() => {
     store.setItems(items);
-  }, [store, items]);
+    if (items.length > 0) {
+      const pageTitle = items
+        .map((item) => item.caption)
+        .filter(Boolean)
+        .join(' › ');
+      document.title = `${config.title}: ${pageTitle}`;
+    } else {
+      document.title = config.title;
+    }
+  }, [store, items, config.title]);
 
   // We only want to clear the items once, thus the useEffect hook is split into two parts, one
   // for updates, one for eventual cleanup when navigating out of view.
   useEffect(() => {
-    return () => store.setItems([]);
-  }, [store]);
+    return () => {
+      store.setItems([]);
+      document.title = config.title;
+    };
+  }, [store, config.title]);
 }
 
 export function useTopbarActions(actions: TopbarAction[]) {
