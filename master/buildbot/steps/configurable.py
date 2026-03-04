@@ -13,10 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import re
 import traceback
 import warnings
+from typing import TYPE_CHECKING
+from typing import Any
 
 import yaml
 from evalidate import Expr
@@ -34,6 +37,9 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.steps.trigger import Trigger
 from buildbot.steps.worker import CompositeStepMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class BuildbotCiYmlInvalid(Exception):
     pass
@@ -43,11 +49,11 @@ _env_string_key_re = re.compile(r'^\s*(\w+)=')
 _env_string_value_re = re.compile(r'''(?:"((?:\\.|[^"])*?)"|'([^']*?)'|(\S*))''')
 
 
-def parse_env_string(env_str, parent_env=None):
+def parse_env_string(env_str: str, parent_env: dict[str, str] | None = None) -> dict[str, str]:
     env_str = env_str.strip()
     orig_env_str = env_str
 
-    props = {}
+    props: dict[str, str] = {}
     if parent_env:
         props.update(parent_env)
     if not env_str:
@@ -73,7 +79,7 @@ def parse_env_string(env_str, parent_env=None):
     return props
 
 
-def interpolate_constructor(loader, node):
+def interpolate_constructor(loader: yaml.Loader, node: yaml.Node) -> Any:
     value = loader.construct_scalar(node)
     return util.Interpolate(value)
 
@@ -82,13 +88,13 @@ class BuildbotCiLoader(yaml.SafeLoader):
     constructors_loaded = False
 
     @classmethod
-    def ensure_constructors_loaded(cls):
+    def ensure_constructors_loaded(cls) -> None:
         if cls.constructors_loaded:
             return
         cls.load_constructors()
 
     @classmethod
-    def load_constructors(cls):
+    def load_constructors(cls) -> None:
         cls.add_constructor('!Interpolate', interpolate_constructor)
         cls.add_constructor('!i', interpolate_constructor)
 
@@ -103,15 +109,14 @@ class BuildbotCiLoader(yaml.SafeLoader):
             cls.register_step_class(step_name, step_class, step_warnings)
 
     @classmethod
-    def register_step_class(cls, name, step_class, step_warnings):
-        def step_constructor(loader, node):
+    def register_step_class(cls, name: str, step_class: Any, step_warnings: list[Any]) -> None:
+        def step_constructor(loader: yaml.Loader, node: yaml.Node) -> Any:
             try:
+                kwargs: dict[str, Any] = {}
                 if isinstance(node, yaml.ScalarNode):
                     args = [loader.construct_scalar(node)]
-                    kwargs = {}
                 elif isinstance(node, yaml.SequenceNode):
                     args = loader.construct_sequence(node)
-                    kwargs = {}
                 elif isinstance(node, yaml.MappingNode):
                     args = []
                     kwargs = loader.construct_mapping(node)
@@ -142,17 +147,17 @@ class BuildbotCiYml:
 
     steps_loaded = False
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config_dict = None
-        self.label_mapping = {}
-        self.global_env = {}
-        self.script_commands = {}
+        self.label_mapping: dict[str, Any] = {}
+        self.global_env: dict[str, str] = {}
+        self.script_commands: dict[str, list[Any]] = {}
         for script in self.SCRIPTS:
             self.script_commands[script] = []
-        self.matrix = []
+        self.matrix: list[Any] = []
 
     @classmethod
-    def load_from_str(cls, config_input):
+    def load_from_str(cls, config_input: str) -> BuildbotCiYml:
         BuildbotCiLoader.ensure_constructors_loaded()
 
         try:
@@ -163,12 +168,12 @@ class BuildbotCiYml:
         return cls.load_from_dict(config_dict)
 
     @classmethod
-    def load_from_dict(cls, config):
+    def load_from_dict(cls, config: Any) -> BuildbotCiYml:
         yml = cls()
         yml.load_from_dict_internal(config)
         return yml
 
-    def load_from_dict_internal(self, config):
+    def load_from_dict_internal(self, config: Any) -> None:
         self.config = config
         self.label_mapping = self.config.get('label_mapping', {})
         self.global_env = BuildbotCiYml.load_global_env(config)
@@ -176,7 +181,7 @@ class BuildbotCiYml:
         self.matrix = BuildbotCiYml.load_matrix(config, self.global_env)
 
     @classmethod
-    def load_global_env(cls, config):
+    def load_global_env(cls, config: Any) -> dict[str, str]:
         env = config.get("env", None)
 
         if env is None:
@@ -190,7 +195,7 @@ class BuildbotCiYml:
             if isinstance(env, str):
                 return parse_env_string(env)
             if isinstance(env, list):
-                global_env = {}
+                global_env: dict[str, str] = {}
                 for e in env:
                     global_env.update(parse_env_string(e))
                 return global_env
@@ -199,8 +204,8 @@ class BuildbotCiYml:
         raise BuildbotCiYmlInvalid("'env' parameter is invalid")
 
     @classmethod
-    def load_scripts(cls, config):
-        script_commands = {}
+    def load_scripts(cls, config: Any) -> dict[str, list[Any]]:
+        script_commands: dict[str, list[Any]] = {}
         for script in cls.SCRIPTS:
             commands = config.get(script, [])
             if isinstance(commands, str):
@@ -211,13 +216,13 @@ class BuildbotCiYml:
         return script_commands
 
     @staticmethod
-    def adjust_matrix_config(c, global_env):
+    def adjust_matrix_config(c: dict[str, Any], global_env: dict[str, str]) -> dict[str, Any]:
         c = c.copy()
         c['env'] = parse_env_string(c.get('env', ''), global_env)
         return c
 
     @classmethod
-    def load_matrix(cls, config, global_env):
+    def load_matrix(cls, config: Any, global_env: dict[str, str]) -> list[Any]:
         return [
             cls.adjust_matrix_config(matrix_config, global_env)
             for matrix_config in config.get('matrix', {}).get('include') or []
@@ -226,14 +231,15 @@ class BuildbotCiYml:
 
 class BuildbotTestCiReadConfigMixin:
     config_filenames = ['.bbtravis.yml', '.buildbot-ci.yml']
-    config = None
+    config: BuildbotCiYml | None = None
+    descriptionDone: str | list[str] | None
 
     @defer.inlineCallbacks
-    def get_config_yml_from_worker(self):
-        exceptions = []
+    def get_config_yml_from_worker(self) -> InlineCallbacksType[tuple[str | None, Any]]:
+        exceptions: list[Any] = []
         for filename in self.config_filenames:
             try:
-                config_yml = yield self.getFileContentFromWorker(filename, abandonOnFailure=True)
+                config_yml = yield self.getFileContentFromWorker(filename, abandonOnFailure=True)  # type: ignore[attr-defined]
                 return filename, config_yml
             except buildstep.BuildStepFailed as e:
                 exceptions.append(e)
@@ -241,14 +247,14 @@ class BuildbotTestCiReadConfigMixin:
         return None, exceptions
 
     @defer.inlineCallbacks
-    def get_ci_config(self):
+    def get_ci_config(self) -> InlineCallbacksType[BuildbotCiYml]:
         filename, result = yield self.get_config_yml_from_worker()
         if not filename:
             exceptions = result
             msg = ' '.join(str(exceptions))
 
             self.descriptionDone = "failed to read configuration"
-            self.addCompleteLog(
+            self.addCompleteLog(  # type: ignore[attr-defined]
                 'error',
                 f'Failed to read configuration from files {self.config_filenames}: got {msg}',
             )
@@ -256,20 +262,20 @@ class BuildbotTestCiReadConfigMixin:
 
         config_yml = result
 
-        self.addCompleteLog(filename, config_yml)
+        self.addCompleteLog(filename, config_yml)  # type: ignore[attr-defined]
 
         try:
             config = BuildbotCiYml.load_from_str(config_yml)
         except BuildbotCiYmlInvalid as e:
             self.descriptionDone = f'bad configuration file {filename}'
-            self.addCompleteLog('error', f'Bad configuration file:\n{e}')
+            self.addCompleteLog('error', f'Bad configuration file:\n{e}')  # type: ignore[attr-defined]
             raise buildstep.BuildStepFailed(f'bad configuration file {filename}') from e
 
         return config
 
 
 class BuildbotTestCiTrigger(BuildbotTestCiReadConfigMixin, CompositeStepMixin, Trigger):
-    def __init__(self, scheduler, **kwargs):
+    def __init__(self, scheduler: str, **kwargs: Any) -> None:
         super().__init__(
             name='buildbot-test-ci trigger',
             waitForFinish=True,
@@ -283,16 +289,18 @@ class BuildbotTestCiTrigger(BuildbotTestCiReadConfigMixin, CompositeStepMixin, T
         )
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         self.config = yield self.get_ci_config()
 
         rv = yield super().run()
         return rv
 
-    def _replace_label(self, v):
-        return str(self.config.label_mapping.get(v, v))
+    def _replace_label(self, v: str) -> str:
+        return str(self.config.label_mapping.get(v, v))  # type: ignore[union-attr]
 
-    def build_scheduler_for_env(self, scheduler_name, env):
+    def build_scheduler_for_env(
+        self, scheduler_name: str, env: dict[str, Any]
+    ) -> tuple[str, Properties]:
         new_build_props = Properties()
         new_build_props.setProperty(
             "BUILDBOT_PULL_REQUEST", self.getProperty("BUILDBOT_PULL_REQUEST"), "inherit"
@@ -307,10 +315,10 @@ class BuildbotTestCiTrigger(BuildbotTestCiReadConfigMixin, CompositeStepMixin, T
         tags_from_props = sorted(
             f'{self._replace_label(k)}:{self._replace_label(v)}'
             for k, (v, _) in new_build_props.asDict().items()
-            if k not in self.config.global_env.keys() and k != 'BUILDBOT_PULL_REQUEST'
+            if k not in self.config.global_env.keys() and k != 'BUILDBOT_PULL_REQUEST'  # type: ignore[union-attr]
         )
 
-        tags = [t for t in self.build.builder.config.tags if t not in ('try', 'spawner')]
+        tags = [t for t in self.build.builder.config.tags if t not in ('try', 'spawner')]  # type: ignore[union-attr]
 
         new_build_props.setProperty(
             "virtual_builder_name", " ".join(tags + tags_from_props), "BuildbotTestCiTrigger"
@@ -324,12 +332,12 @@ class BuildbotTestCiTrigger(BuildbotTestCiReadConfigMixin, CompositeStepMixin, T
 
         return (scheduler_name, new_build_props)
 
-    def createTriggerProperties(self, props):
+    def createTriggerProperties(self, props: Any) -> Any:
         return props
 
-    def getSchedulersAndProperties(self):
+    def getSchedulersAndProperties(self) -> list[Any]:
         scheduler_name = self.schedulerNames[0]
-        return [self.build_scheduler_for_env(scheduler_name, env) for env in self.config.matrix]
+        return [self.build_scheduler_for_env(scheduler_name, env) for env in self.config.matrix]  # type: ignore[union-attr]
 
 
 eval_model = base_eval_model.clone()
@@ -338,7 +346,7 @@ eval_model.nodes.append('Slice')
 eval_model.nodes.append('Tuple')
 
 
-def evaluate_condition(condition, local_dict):
+def evaluate_condition(condition: str, local_dict: dict[str, Any]) -> bool:
     expr = Expr(condition, eval_model)
     return bool(expr.eval(local_dict))
 
@@ -350,7 +358,7 @@ class BuildbotCiSetupSteps(BuildbotTestCiReadConfigMixin, CompositeStepMixin, bu
     MAX_NAME_LENGTH = 47
     disable = False
 
-    def _add_step(self, command):
+    def _add_step(self, command: Any) -> None:
         name = None
         condition = None
         step = None
@@ -366,7 +374,7 @@ class BuildbotCiSetupSteps(BuildbotTestCiReadConfigMixin, CompositeStepMixin, bu
 
         if condition is not None:
             try:
-                local_dict = {k: v for k, (v, s) in self.build.getProperties().properties.items()}
+                local_dict = {k: v for k, (v, s) in self.build.getProperties().properties.items()}  # type: ignore[union-attr]
                 if not evaluate_condition(condition, local_dict):
                     return
             except Exception:
@@ -385,7 +393,7 @@ class BuildbotCiSetupSteps(BuildbotTestCiReadConfigMixin, CompositeStepMixin, bu
                 name = self._name_from_command(command)
 
             @renderer
-            def render_env(props):
+            def render_env(props: Properties) -> dict[str, str]:
                 return {str(k): str(v[0]) for k, v in props.properties.items()}
 
             step = ShellCommand(
@@ -395,17 +403,17 @@ class BuildbotCiSetupSteps(BuildbotTestCiReadConfigMixin, CompositeStepMixin, bu
                 doStepIf=not self.disable,
                 env=render_env,
             )
-        self.build.addStepsAfterLastStep([step])
+        self.build.addStepsAfterLastStep([step])  # type: ignore[union-attr, list-item]
 
-    def _name_from_command(self, name):
+    def _name_from_command(self, name: str) -> str:
         name = name.lstrip("#").lstrip(" ").split("\n")[0]
-        max_length = Model.steps.c.name.type.length
+        max_length = Model.steps.c.name.type.length  # type: ignore[attr-defined]
         if len(name) > max_length:
             name = name[: max_length - 3] + "..."
         return name
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         config = yield self.get_ci_config()
         for k in BuildbotCiYml.SCRIPTS:
             for command in config.script_commands[k]:
