@@ -15,6 +15,9 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -23,41 +26,44 @@ from buildbot.reporters.generators.build import BuildStatusGenerator
 from buildbot.reporters.message import MessageFormatterFunction
 from buildbot.util import httpclientservice
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class HttpStatusPush(ReporterBase):
     name: str | None = "HttpStatusPush"
     secrets = ["auth"]
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        serverUrl,
-        auth=None,
-        headers=None,
-        debug=None,
-        verify=None,
-        cert=None,
-        skip_encoding=False,
-        generators=None,
-        **kwargs,
-    ):
+        serverUrl: str,
+        auth: Any = None,
+        headers: Any = None,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        cert: Any = None,
+        skip_encoding: bool = False,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         if generators is None:
             generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        serverUrl,
-        auth=None,
-        headers=None,
-        debug=None,
-        verify=None,
-        cert=None,
-        skip_encoding=False,
-        generators=None,
-        **kwargs,
-    ):
+        serverUrl: str,
+        auth: Any = None,
+        headers: Any = None,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        cert: Any = None,
+        skip_encoding: bool = False,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         self.debug = debug
         self.verify = verify
         self.cert = cert
@@ -78,15 +84,15 @@ class HttpStatusPush(ReporterBase):
             skip_encoding=skip_encoding,
         )
 
-    def _create_default_generators(self):
+    def _create_default_generators(self) -> list[Any]:
         formatter = MessageFormatterFunction(lambda context: context['build'], 'json')
-        return [BuildStatusGenerator(message_formatter=formatter, report_new=True)]
+        return [BuildStatusGenerator(message_formatter=formatter, report_new=True)]  # type: ignore[arg-type]
 
-    def is_status_2xx(self, code):
+    def is_status_2xx(self, code: int) -> bool:
         return code // 100 == 2
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         response = yield self._http.post("", json=reports[0]['body'])
         if not self.is_status_2xx(response.code):
             log.msg(f"{response.code}: unable to upload status: {response.content}")
