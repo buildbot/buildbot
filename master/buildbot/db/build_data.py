@@ -39,7 +39,7 @@ class BuildDataModel:
     value: bytes | None
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> int | str | bytes | None:
         warn_deprecated(
             '4.1.0',
             (
@@ -61,14 +61,14 @@ class BuildDataDict(BuildDataModel):
 
 
 class BuildDataConnectorComponent(base.DBConnectorComponent):
-    def _insert_race_hook(self, conn):
+    def _insert_race_hook(self, conn: sa.engine.Connection) -> None:
         # called so tests can simulate a race condition during insertion
         pass
 
     def setBuildData(
         self, buildid: int, name: str, value: bytes, source: str
     ) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             build_data_table = self.db.model.build_data
 
             retry = True
@@ -100,7 +100,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getBuildData(self, buildid: int, name: str) -> defer.Deferred[BuildDataModel | None]:
-        def thd(conn) -> BuildDataModel | None:
+        def thd(conn: sa.engine.Connection) -> BuildDataModel | None:
             build_data_table = self.db.model.build_data
 
             q = build_data_table.select().where(
@@ -115,7 +115,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getBuildDataNoValue(self, buildid: int, name: str) -> defer.Deferred[BuildDataModel | None]:
-        def thd(conn) -> BuildDataModel | None:
+        def thd(conn: sa.engine.Connection) -> BuildDataModel | None:
             build_data_table = self.db.model.build_data
 
             q = sa.select(
@@ -134,7 +134,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getAllBuildDataNoValues(self, buildid: int) -> defer.Deferred[list[BuildDataModel]]:
-        def thd(conn) -> list[BuildDataModel]:
+        def thd(conn: sa.engine.Connection) -> list[BuildDataModel]:
             build_data_table = self.db.model.build_data
 
             q = sa.select(
@@ -153,13 +153,14 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
         build_data = self.db.model.build_data
         builds = self.db.model.builds
 
-        def count_build_datum(conn) -> int:
+        def count_build_datum(conn: sa.engine.Connection) -> int:
             res = conn.execute(sa.select(sa.func.count(build_data.c.id)))
-            count = res.fetchone()[0]
+            row = res.fetchone()
+            count = row[0]  # type: ignore[index]
             res.close()
             return count
 
-        def thd(conn) -> int:
+        def thd(conn: sa.engine.Connection) -> int:
             count_before = count_build_datum(conn)
 
             if self.db._engine.dialect.name == 'sqlite':  # type: ignore[union-attr]
@@ -172,12 +173,12 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
                 )
                 # n.b.: in sqlite we need to filter on `>= older_than_timestamp` because of the following `NOT IN` clause...
 
-                q_delete = build_data.delete().where(build_data.c.buildid.notin_(q))
+                q = build_data.delete().where(build_data.c.buildid.notin_(q))  # type: ignore[assignment]
             else:
-                q_delete = build_data.delete()
-                q_delete = q_delete.where(builds.c.id == build_data.c.buildid)
-                q_delete = q_delete.where(builds.c.complete_at < older_than_timestamp)
-            res = conn.execute(q_delete)
+                q = build_data.delete()  # type: ignore[assignment]
+                q = q.where(builds.c.id == build_data.c.buildid)
+                q = q.where(builds.c.complete_at < older_than_timestamp)
+            res = conn.execute(q)
             conn.commit()
             res.close()
 
@@ -186,7 +187,7 @@ class BuildDataConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _model_from_row(self, row, value: bytes | None):
+    def _model_from_row(self, row: sa.Row, value: bytes | None) -> BuildDataModel:
         return BuildDataModel(
             buildid=row.buildid,
             name=row.name,
