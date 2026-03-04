@@ -53,7 +53,7 @@ class FakeService(service.AsyncMultiService):
 
 
 class TestedWampConnector(connector.WampConnector):
-    serviceClass = FakeService
+    serviceClass = FakeService  # type: ignore[assignment]
 
 
 class WampConnector(TestReactorMixin, unittest.TestCase):
