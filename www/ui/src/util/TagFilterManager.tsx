@@ -204,7 +204,7 @@ export class TagFilterManager {
       for (const tag of this.tags) {
         enabledTagsElements.push(
           <>
-            <Badge variant="success" onClick={() => this.toggleTag(tag)} className="clickable">
+            <Badge bg="success" onClick={() => this.toggleTag(tag)} className="clickable">
               {tag}
             </Badge>
             &nbsp;
@@ -212,11 +212,11 @@ export class TagFilterManager {
         );
       }
     } else {
-      enabledTagsElements.push(<Badge variant="success">{this.tags.length} tags</Badge>);
+      enabledTagsElements.push(<Badge bg="success">{this.tags.length} tags</Badge>);
     }
     if (this.tags.length > 0) {
       enabledTagsElements.push(
-        <Badge variant="danger" onClick={() => this.setTags([])} className="clickable">
+        <Badge bg="danger" onClick={() => this.setTags([])} className="clickable">
           x
         </Badge>,
       );
