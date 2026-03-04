@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -23,13 +26,18 @@ from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process import results
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
     name = 'GitDiffInfo'
     description = 'running GitDiffInfo'
     descriptionDone = 'GitDiffInfo'
 
-    def __init__(self, compareToRef='master', dataName='diffinfo-master', **kwargs):
+    def __init__(
+        self, compareToRef: str = 'master', dataName: str = 'diffinfo-master', **kwargs: Any
+    ) -> None:
         try:
             from unidiff import PatchSet  # noqa: PLC0415
 
@@ -43,7 +51,7 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
         self._data_name = dataName
         self._observer = logobserver.BufferLogObserver()
 
-    def _convert_hunk(self, hunk):
+    def _convert_hunk(self, hunk: Any) -> dict[str, int]:
         # TODO: build an intermediate class that would handle serialization. We want to output
         # as few data as possible, even if the json is not human-readable
         return {
@@ -53,7 +61,7 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
             'tl': hunk.target_length,
         }
 
-    def _convert_file(self, file):
+    def _convert_file(self, file: Any) -> dict[str, Any]:
         return {
             'source_file': file.source_file,
             'target_file': file.target_file,
@@ -62,11 +70,11 @@ class GitDiffInfo(buildstep.ShellMixin, buildstep.BuildStep):
             'hunks': [self._convert_hunk(hunk) for hunk in file],
         }
 
-    def _convert_patchset(self, patchset):
+    def _convert_patchset(self, patchset: Any) -> list[dict[str, Any]]:
         return [self._convert_file(file) for file in patchset]
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         command = ['git', 'merge-base', 'HEAD', self._compare_to_ref]
         cmd = yield self.makeRemoteShellCommand(
             command=command, stdioLogName='stdio-merge-base', collectStdout=True
