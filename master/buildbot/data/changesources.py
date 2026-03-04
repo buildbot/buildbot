@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -25,12 +26,14 @@ from buildbot.data import types
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 
 if TYPE_CHECKING:
+    from buildbot.data.resultspec import ResultSpec
     from buildbot.db.changesources import ChangeSourceModel
+    from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
 
 
 @defer.inlineCallbacks
-def _db2data(master, dbdict: ChangeSourceModel):
+def _db2data(master: BuildMaster, dbdict: ChangeSourceModel) -> InlineCallbacksType[dict[str, Any]]:
     dbmaster = None
     if dbdict.masterid is not None:
         dbmaster = yield master.data.get(('masters', dbdict.masterid))
@@ -49,7 +52,9 @@ class ChangeSourceEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         dbdict = yield self.master.db.changesources.getChangeSource(kwargs['changesourceid'])
         if 'masterid' in kwargs:
             if dbdict.masterid != kwargs['masterid']:
@@ -67,7 +72,9 @@ class ChangeSourcesEndpoint(base.Endpoint):
     rootLinkName = 'changesources'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]]]:
         changesources = yield self.master.db.changesources.getChangeSources(
             masterid=kwargs.get('masterid')
         )
@@ -110,7 +117,7 @@ class ChangeSource(base.ResourceType):
         return True
 
     @defer.inlineCallbacks
-    def _masterDeactivated(self, masterid):
+    def _masterDeactivated(self, masterid: int) -> InlineCallbacksType[None]:
         changesources = yield self.master.db.changesources.getChangeSources(masterid=masterid)
         for cs in changesources:
             yield self.master.db.changesources.setChangeSourceMaster(cs.id, None)
