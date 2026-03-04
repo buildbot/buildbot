@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import re
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -34,7 +35,12 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import shell
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from twisted.internet.base import ReactorBase
+
+    from buildbot.process import remotecommand
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class HLint(buildstep.ShellMixin, buildstep.BuildStep):
@@ -52,18 +58,18 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
     # TODO: track time, but not output
     warnings = 0
 
-    def __init__(self, python=None, **kwargs):
+    def __init__(self, python: str | None = None, **kwargs: Any) -> None:
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
         self.python = python
-        self.warningLines = []
+        self.warningLines: list[str] = []
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         # create the command
         html_files = set()
-        for f in self.build.allFiles():
+        for f in self.build.allFiles():  # type: ignore[union-attr]
             if f.endswith(".xhtml") and not f.startswith("sandbox/"):
                 html_files.add(f)
         # remove duplicates
@@ -96,7 +102,7 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
             return WARNINGS
         return SUCCESS
 
-    def logConsumer(self):
+    def logConsumer(self) -> Generator[Any, Any, None]:
         while True:
             _, line = yield
             if ':' in line:
@@ -107,11 +113,11 @@ class HLint(buildstep.ShellMixin, buildstep.BuildStep):
 class TrialTestCaseCounter(logobserver.LogLineObserver):
     _line_re = re.compile(r'^(?:Doctest: )?([\w\.]+) \.\.\. \[([^\]]+)\]$')
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.numTests = 0
         self.finished = False
-        self.counts = {
+        self.counts: dict[str, int | None] = {
             'total': None,
             'failures': 0,
             'errors': 0,
@@ -120,7 +126,7 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
             'unexpectedSuccesses': 0,
         }
 
-    def outLineReceived(self, line):
+    def outLineReceived(self, line: str) -> None:
         # different versions of Twisted emit different per-test lines with
         # the bwverbose reporter.
         #  2.0.0: testSlave (buildbot.test.test_runner.Create) ... [OK]
@@ -194,7 +200,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
     # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
     trialArgs: list[str] = []
     jobs: int | None = None
-    testpath = UNSPECIFIED  # required (but can be None)
+    testpath: str | None | tuple[()] = UNSPECIFIED  # required (but can be None)
     testChanges = False  # TODO: needs better name
     recurse = False
     reactor: ReactorBase | None = None
@@ -206,19 +212,19 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
 
     def __init__(
         self,
-        reactor=UNSPECIFIED,
-        python=None,
-        trial=None,
-        testpath=UNSPECIFIED,
-        tests=None,
-        testChanges=None,
-        recurse=None,
-        randomly=None,
-        trialMode=None,
-        trialArgs=None,
-        jobs=None,
-        **kwargs,
-    ):
+        reactor: Any = UNSPECIFIED,
+        python: list[str] | str | None = None,
+        trial: str | None = None,
+        testpath: str | None | tuple[()] = UNSPECIFIED,
+        tests: list[str] | str | None = None,
+        testChanges: bool | None = None,
+        recurse: bool | None = None,
+        randomly: bool | None = None,
+        trialMode: list[str] | None = None,
+        trialArgs: list[str] | None = None,
+        jobs: int | None = None,
+        **kwargs: Any,
+    ) -> None:
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
 
@@ -258,7 +264,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             self.reactor = reactor
 
         if tests is not None:
-            self.tests = tests
+            self.tests = tests  # type: ignore[assignment]
         if isinstance(self.tests, str):
             self.tests = [self.tests]
         if testChanges is not None:
@@ -277,38 +283,38 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             self.description = f"testing ({self.reactor})"
 
         # this counter will feed Progress along the 'test cases' metric
-        self.observer = TrialTestCaseCounter()
+        self.observer: TrialTestCaseCounter = TrialTestCaseCounter()
         self.addLogObserver('stdio', self.observer)
 
         # this observer consumes multiple lines in a go, so it can't be easily
         # handled in TrialTestCaseCounter.
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
-        self.problems = []
-        self.warnings = {}
+        self.problems: list[str] = []
+        self.warnings: dict[str, int] = {}
 
         # text used before commandComplete runs
         self.text = 'running'
 
-    def setup_python_path(self):
+    def setup_python_path(self) -> None:
         if self.testpath is None:
             return
 
         # this bit produces a list, which can be used by buildbot_worker.runprocess.RunProcess
         ppath = self.env.get('PYTHONPATH', self.testpath)
         if isinstance(ppath, str):
-            ppath = [ppath]
+            ppath = [ppath]  # type: ignore[assignment]
         if self.testpath not in ppath:
-            ppath.insert(0, self.testpath)
-        self.env['PYTHONPATH'] = ppath
+            ppath.insert(0, self.testpath)  # type: ignore[union-attr]
+        self.env['PYTHONPATH'] = ppath  # type: ignore[assignment]
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         # choose progressMetrics and logfiles based on whether trial is being
         # run with multiple workers or not.
         output_observer = logobserver.OutputProgressObserver('test.log')
 
         # build up most of the command, then stash it until start()
-        command = []
+        command: list[str] = []
         if self.python:
             command.extend(self.python)
         command.append(self.trial)
@@ -339,11 +345,11 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         # now that self.build.allFiles() is nailed down, finish building the
         # command
         if self.testChanges:
-            for f in self.build.allFiles():
+            for f in self.build.allFiles():  # type: ignore[union-attr]
                 if f.endswith(".py"):
                     command.append(f"--testmodule={f}")
         else:
-            command.extend(self.tests)
+            command.extend(self.tests)  # type: ignore[arg-type]
 
         self.setup_python_path()
 
@@ -368,14 +374,14 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
 
         return self.build_results(cmd)
 
-    def build_results(self, cmd):
+    def build_results(self, cmd: remotecommand.RemoteShellCommand) -> int:
         counts = self.observer.counts
         total = counts['total']
         failures = counts['failures']
         errors = counts['errors']
         parsed = total is not None
 
-        desc_parts = []
+        desc_parts: list[str | bytes] = []
 
         if not cmd.didFail():
             if parsed:
@@ -413,13 +419,13 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         self.descriptionDone = util.join_list(desc_parts)
         return results
 
-    def rtext(self, fmt='{}'):
+    def rtext(self, fmt: str = '{}') -> str:
         if self.reactor:
             rtext = fmt.format(self.reactor)
             return rtext.replace("reactor", "")
         return ""
 
-    def logConsumer(self):
+    def logConsumer(self) -> Generator[Any, Any, None]:
         while True:
             _, line = yield
             if line.find(" exceptions.DeprecationWarning: ") != -1:
