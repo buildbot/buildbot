@@ -332,7 +332,7 @@ export const GridView = observer(() => {
 
   return (
     <div className="container grid">
-      <Form inline className="mb-sm-2">
+      <Form className="mb-sm-2">
         <Form.Label className="mr-sm-2">Branch</Form.Label>
         <Form.Control
           className="mr-sm-2"
