@@ -41,7 +41,7 @@ _GET_TOKEN_DATA = {'grant_type': 'client_credentials'}
 
 
 class BitbucketStatusPush(ReporterBase):
-    name: str | None = "BitbucketStatusPush"  # type: ignore[assignment]
+    name: str | None = "BitbucketStatusPush"
 
     def checkConfig(
         self,

@@ -40,7 +40,7 @@ HOSTED_BASE_URL = 'https://gitlab.com'
 
 
 class GitLabStatusPush(ReporterBase):
-    name: str | None = "GitLabStatusPush"  # type: ignore[assignment]
+    name: str | None = "GitLabStatusPush"
 
     def checkConfig(
         self,

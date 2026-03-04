@@ -25,7 +25,7 @@ from buildbot.util import httpclientservice
 
 
 class HttpStatusPush(ReporterBase):
-    name: str | None = "HttpStatusPush"  # type: ignore[assignment]
+    name: str | None = "HttpStatusPush"
     secrets = ["auth"]
 
     def checkConfig(

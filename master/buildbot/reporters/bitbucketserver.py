@@ -51,7 +51,7 @@ HTTP_CREATED = 201
 
 
 class BitbucketServerStatusPush(ReporterBase):
-    name: str | None = "BitbucketServerStatusPush"  # type: ignore[assignment]
+    name: str | None = "BitbucketServerStatusPush"
 
     def checkConfig(
         self,
@@ -175,7 +175,7 @@ class BitbucketServerStatusPush(ReporterBase):
 
 
 class BitbucketServerCoreAPIStatusPush(ReporterBase):
-    name: str | None = "BitbucketServerCoreAPIStatusPush"  # type: ignore[assignment]
+    name: str | None = "BitbucketServerCoreAPIStatusPush"
     secrets = ["token", "auth"]
 
     def checkConfig(
@@ -439,7 +439,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
 
 
 class BitbucketServerPRCommentPush(ReporterBase):
-    name: str | None = "BitbucketServerPRCommentPush"  # type: ignore[assignment]
+    name: str | None = "BitbucketServerPRCommentPush"
 
     @defer.inlineCallbacks
     def reconfigService(

@@ -37,7 +37,7 @@ log = Logger()
 
 
 class GerritVerifyStatusPush(ReporterBase):
-    name: str | None = "GerritVerifyStatusPush"  # type: ignore[assignment]
+    name: str | None = "GerritVerifyStatusPush"
     # overridable constants
     RESULTS_TABLE = {
         SUCCESS: 1,

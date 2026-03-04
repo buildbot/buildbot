@@ -27,7 +27,7 @@ log = Logger()
 
 
 class ZulipStatusPush(ReporterBase):
-    name: str | None = "ZulipStatusPush"  # type: ignore[assignment]
+    name: str | None = "ZulipStatusPush"
 
     def checkConfig(self, endpoint, token, stream=None, debug=None, verify=None):
         if not isinstance(endpoint, str):

@@ -45,7 +45,7 @@ HOSTED_BASE_URL = 'https://api.github.com'
 
 
 class GitHubStatusPush(ReporterBase):
-    name: str | None = "GitHubStatusPush"  # type: ignore[assignment]
+    name: str | None = "GitHubStatusPush"
 
     def checkConfig(
         self,

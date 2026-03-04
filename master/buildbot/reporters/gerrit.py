@@ -319,7 +319,7 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
 class GerritStatusPush(ReporterBase):
     """Event streamer to a gerrit ssh server."""
 
-    name: str | None = "GerritStatusPush"  # type: ignore[assignment]
+    name: str | None = "GerritStatusPush"
     gerrit_server = None
     gerrit_username = None
     gerrit_port = None
