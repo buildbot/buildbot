@@ -256,6 +256,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
     def irc_AUTHENTICATE(self, prefix, params):
         nick = self.nickname.encode()
+        assert self.password is not None
         passwd = self.password.encode()
         code = base64.b64encode(nick + b'\0' + nick + b'\0' + passwd)
         self.sendLine("AUTHENTICATE " + code.decode())
