@@ -25,6 +25,7 @@ from buildbot.data import base
 from buildbot.data import types
 
 if TYPE_CHECKING:
+    from buildbot.data.resultspec import ResultSpec
     from buildbot.interfaces import IProperties
     from buildbot.util.twisted import InlineCallbacksType
 
@@ -35,7 +36,7 @@ class BuildsetPropertiesEndpoint(base.Endpoint):
         "/buildsets/n:bsid/properties",
     ]
 
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec: ResultSpec, kwargs: dict[str, Any]) -> defer.Deferred[Any]:
         return self.master.db.buildsets.getBuildsetProperties(kwargs['bsid'])
 
 
@@ -47,7 +48,9 @@ class BuildPropertiesEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any]]:
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
         buildid = yield retriever.get_build_id()
         build_properties = yield self.master.db.builds.getBuildProperties(buildid)
@@ -78,7 +81,9 @@ class PropertiesListEndpoint(base.Endpoint):
     }
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]]]:
         buildid = kwargs.get("buildid", None)
         bsid = kwargs.get("bsid", None)
         changeid = kwargs.get("changeid", None)
@@ -112,7 +117,7 @@ class Properties(base.ResourceType):
 
     entityType = types.SourcedProperties()
 
-    def generateUpdateEvent(self, buildid, newprops):
+    def generateUpdateEvent(self, buildid: int, newprops: dict[str, Any]) -> Any:
         # This event cannot use the produceEvent mechanism, as the properties resource type is a bit
         # specific (this is a dictionary collection)
         # We only send the new properties, and count on the client to merge the resulting properties
