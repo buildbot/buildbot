@@ -188,7 +188,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.data.test_results",
       "buildbot.data.types",
       "buildbot.data.workers",
-      "buildbot.db.enginestrategy",
       "buildbot.db.logs",
       "buildbot.db.masters",
       "buildbot.db.migrate_utils",

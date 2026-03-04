@@ -26,6 +26,7 @@ special cases that Buildbot needs.  Those include:
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 from typing import Any
 
 import sqlalchemy as sa
@@ -33,19 +34,22 @@ from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
 from twisted.python import log
 
+if TYPE_CHECKING:
+    from sqlalchemy.engine.url import URL
+
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 
 
 class ReconnectingListener:
-    def __init__(self):
+    def __init__(self) -> None:
         self.retried = False
 
 
 class Strategy:
-    def set_up(self, u, engine):
+    def set_up(self, u: URL, engine: sa.engine.base.Engine) -> None:
         pass
 
-    def should_retry(self, operational_error):
+    def should_retry(self, operational_error: Exception) -> bool:
         try:
             text = operational_error.args[0]
             return 'Lost connection' in text or 'database is locked' in text
@@ -54,10 +58,10 @@ class Strategy:
 
 
 class SqlLiteStrategy(Strategy):
-    def set_up(self, u, engine: sa.engine.base.Engine):
+    def set_up(self, u: URL, engine: sa.engine.base.Engine) -> None:
         """Special setup for sqlite engines"""
 
-        def connect_listener_enable_fk(connection, record):
+        def connect_listener_enable_fk(connection: Any, record: Any) -> None:
             # fk must be enabled for all connections
             if not getattr(engine, "fk_disabled", False):
                 return  # http://trac.buildbot.net/ticket/3490#ticket
@@ -67,7 +71,7 @@ class SqlLiteStrategy(Strategy):
         # try to enable WAL logging
         if u.database:
 
-            def connect_listener(connection, record):
+            def connect_listener(connection: Any, record: Any) -> None:
                 connection.execute("pragma checkpoint_fullfsync = off")
 
             sa.event.listen(engine.pool, 'connect', connect_listener)
@@ -84,18 +88,18 @@ class MySQLStrategy(Strategy):
     disconnect_error_codes = (2006, 2013, 2014, 2045, 2055)
     deadlock_error_codes = (1213,)
 
-    def in_error_codes(self, args, error_codes):
+    def in_error_codes(self, args: tuple[Any, ...], error_codes: tuple[int, ...]) -> bool:
         if args:
             return args[0] in error_codes
         return False
 
-    def is_disconnect(self, args):
+    def is_disconnect(self, args: tuple[Any, ...]) -> bool:
         return self.in_error_codes(args, self.disconnect_error_codes)
 
-    def is_deadlock(self, args):
+    def is_deadlock(self, args: tuple[Any, ...]) -> bool:
         return self.in_error_codes(args, self.deadlock_error_codes)
 
-    def set_up(self, u, engine):
+    def set_up(self, u: URL, engine: sa.engine.base.Engine) -> None:
         """Special setup for mysql engines"""
 
         # add the reconnecting PoolListener that will detect a
@@ -103,7 +107,7 @@ class MySQLStrategy(Strategy):
         # one.  This provides a measure of additional safety over
         # the pool_recycle parameter, and is useful when e.g., the
         # mysql server goes away
-        def checkout_listener(dbapi_con, con_record, con_proxy):
+        def checkout_listener(dbapi_con: Any, con_record: Any, con_proxy: Any) -> None:
             try:
                 cursor = dbapi_con.cursor()
                 cursor.execute("SELECT 1")
@@ -117,7 +121,7 @@ class MySQLStrategy(Strategy):
 
         sa.event.listen(engine.pool, 'checkout', checkout_listener)
 
-    def should_retry(self, ex):
+    def should_retry(self, ex: Any) -> bool:
         return any([
             self.is_disconnect(ex.orig.args),
             self.is_deadlock(ex.orig.args),
@@ -125,14 +129,14 @@ class MySQLStrategy(Strategy):
         ])
 
 
-def sa_url_set_attr(u, attr, value):
+def sa_url_set_attr(u: URL, attr: str, value: Any) -> URL:
     if hasattr(u, 'set'):
         return u.set(**{attr: value})
     setattr(u, attr, value)
     return u
 
 
-def special_case_sqlite(u, kwargs):
+def special_case_sqlite(u: URL, kwargs: dict[str, Any]) -> tuple[URL, dict[str, Any], int]:
     """For sqlite, percent-substitute %(basedir)s and use a full
     path to the basedir.  If using a memory database, force the
     pool size to be 1."""
@@ -173,14 +177,14 @@ def special_case_sqlite(u, kwargs):
     return u, kwargs, max_conns
 
 
-def special_case_mysql(u, kwargs):
+def special_case_mysql(u: URL, kwargs: dict[str, Any]) -> tuple[URL, dict[str, Any], None]:
     """For mysql, take max_idle out of the query arguments, and
     use its value for pool_recycle.  Also, force use_unicode and
     charset to be True and 'utf8', failing if they were set to
     anything else."""
     query = dict(u.query)
 
-    kwargs['pool_recycle'] = int(query.pop('max_idle', 3600))
+    kwargs['pool_recycle'] = int(query.pop('max_idle', 3600))  # type: ignore[arg-type]
 
     # default to the MyISAM storage engine
     storage_engine = query.pop('storage_engine', 'MyISAM')
@@ -204,7 +208,7 @@ def special_case_mysql(u, kwargs):
     return u, kwargs, None
 
 
-def get_drivers_strategy(drivername):
+def get_drivers_strategy(drivername: str) -> Strategy:
     if drivername.startswith('sqlite'):
         return SqlLiteStrategy()
     elif drivername.startswith('mysql'):
