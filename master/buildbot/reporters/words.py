@@ -13,11 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import random
 import re
 import shlex
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
 
-from twisted.application.service import Service
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -43,6 +47,11 @@ from buildbot.reporters import utils
 from buildbot.util import epoch2datetime
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+
+if TYPE_CHECKING:
+    from twisted.application.service import Service
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 # Used in command_HELLO and it's test. 'Hi' in 100 languages.
 
@@ -152,7 +161,7 @@ GREETINGS = [
 
 class UsageError(ValueError):
     # pylint: disable=useless-super-delegation
-    def __init__(self, string="Invalid usage", *more):
+    def __init__(self, string: str = "Invalid usage", *more: Any) -> None:
         # This is not useless as we change the default value of an argument.
         # This bug is reported as "fixed" but apparently, it is not.
         # https://github.com/PyCQA/pylint/issues/1085
@@ -178,22 +187,22 @@ class ForceOptions(usage.Options):
         ],
     ]
 
-    def parseArgs(self, *args):
-        args = list(args)
-        if args:
+    def parseArgs(self, *args: Any) -> None:
+        args_list = list(args)
+        if args_list:
             if self['builder'] is not None:
                 raise UsageError("--builder provided in two ways")
-            self['builder'] = args.pop(0)
-        if args:  # args might be modified above
+            self['builder'] = args_list.pop(0)
+        if args_list:  # args might be modified above
             if self['reason'] is not None:
                 raise UsageError("--reason provided in two ways")
-            self['reason'] = " ".join(args)
+            self['reason'] = " ".join(args_list)
 
 
 dangerous_commands = []
 
 
-def dangerousCommand(method):
+def dangerousCommand(method: Callable[..., Any]) -> Callable[..., Any]:
     command = method.__name__
     if not command.startswith('command_'):
         raise ValueError('@dangerousCommand can be used only for commands')
@@ -208,26 +217,26 @@ class Channel(service.AsyncService):
     send notifications.
     """
 
-    def __init__(self, bot, channel):
+    def __init__(self, bot: Any, channel: Any) -> None:
         self.name = f"Channel({channel})"
         self.id = channel
         self.bot = bot
-        self.notify_events = set()
-        self.subscribed = []
-        self.build_subscriptions = []
-        self.reported_builds = []  # tuples (when, buildername, buildnum)
-        self.missing_workers = set()
+        self.notify_events: set[str] = set()
+        self.subscribed: list[Any] = []
+        self.build_subscriptions: list[Any] = []
+        self.reported_builds: list[Any] = []  # tuples (when, buildername, buildnum)
+        self.missing_workers: set[Any] = set()
         self.useRevisions = bot.useRevisions
 
-    def send(self, message, **kwargs):
+    def send(self, message: str, **kwargs: Any) -> Any:
         return self.bot.send_message(self.id, message, **kwargs)
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         if self.subscribed:
             yield self.unsubscribe_from_build_events()
 
-    def validate_notification_event(self, event):
+    def validate_notification_event(self, event: str) -> None:
         if not re.compile(
             "^(started|finished|success|warnings|failure|exception|"
             "cancelled|problem|recovery|worse|better|worker|"
@@ -238,7 +247,7 @@ class Channel(service.AsyncService):
             raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off _EVENT_'.")
 
     @defer.inlineCallbacks
-    def list_notified_events(self):
+    def list_notified_events(self) -> InlineCallbacksType[None]:
         if self.notify_events:
             yield self.send(
                 f'The following events are being notified: {", ".join(sorted(self.notify_events))}.'
@@ -246,23 +255,23 @@ class Channel(service.AsyncService):
         else:
             yield self.send("No events are being notified.")
 
-    def notify_for(self, *events):
+    def notify_for(self, *events: str) -> bool:
         for event in events:
             if event in self.notify_events:
                 return True
         return False
 
     @defer.inlineCallbacks
-    def subscribe_to_build_events(self):
+    def subscribe_to_build_events(self) -> InlineCallbacksType[None]:
         startConsuming = self.master.mq.startConsuming
 
-        def buildStarted(key, msg):
+        def buildStarted(key: Any, msg: Any) -> Any:
             return self.buildStarted(msg)
 
-        def buildFinished(key, msg):
+        def buildFinished(key: Any, msg: Any) -> Any:
             return self.buildFinished(msg)
 
-        def workerEvent(key, msg):
+        def workerEvent(key: Any, msg: Any) -> Any:
             if key[2] == 'missing':
                 return self.workerMissing(msg)
             if key[2] == 'connected':
@@ -280,14 +289,14 @@ class Channel(service.AsyncService):
         self.subscribed.append(handle)
 
     @defer.inlineCallbacks
-    def unsubscribe_from_build_events(self):
+    def unsubscribe_from_build_events(self) -> InlineCallbacksType[None]:
         # Cancel all the subscriptions we have
         old_list = self.subscribed
         self.subscribed = []
         for handle in old_list:
             yield handle.stopConsuming()
 
-    def add_notification_events(self, events):
+    def add_notification_events(self, events: Any) -> None:
         for event in events:
             self.validate_notification_event(event)
             self.notify_events.add(event)
@@ -296,7 +305,7 @@ class Channel(service.AsyncService):
             self.subscribe_to_build_events()
 
     @defer.inlineCallbacks
-    def remove_notification_events(self, events):
+    def remove_notification_events(self, events: Any) -> InlineCallbacksType[None]:
         for event in events:
             self.validate_notification_event(event)
             self.notify_events.remove(event)
@@ -305,13 +314,13 @@ class Channel(service.AsyncService):
                 yield self.unsubscribe_from_build_events()
 
     @defer.inlineCallbacks
-    def remove_all_notification_events(self):
+    def remove_all_notification_events(self) -> InlineCallbacksType[None]:
         self.notify_events = set()
 
         if self.subscribed:
             yield self.unsubscribe_from_build_events()
 
-    def shouldReportBuild(self, builder, buildnum):
+    def shouldReportBuild(self, builder: Any, buildnum: Any) -> bool:
         """Returns True if this build should be reported for this contact
         (eliminating duplicates), and also records the report for later"""
 
@@ -329,14 +338,14 @@ class Channel(service.AsyncService):
         return True
 
     @defer.inlineCallbacks
-    def buildStarted(self, build):
+    def buildStarted(self, build: Any) -> InlineCallbacksType[None]:
         builder = yield self.bot.getBuilder(builderid=build['builderid'])
         builderName = builder['name']
         buildNumber = build['number']
         log.msg(f"[Contact] Builder {builder['name']} started")
 
         # only notify about builders we are interested in
-        if self.bot.tags is not None and not self.builderMatchesAnyTag(builder.get('tags', [])):
+        if self.bot.tags is not None and not self.builderMatchesAnyTag(builder.get('tags', [])):  # type: ignore[attr-defined]
             log.msg('Not notifying for a build that does not match any tags')
             return
 
@@ -344,7 +353,7 @@ class Channel(service.AsyncService):
             return
 
         if self.useRevisions:
-            revisions = yield self.getRevisionsForBuild(build)
+            revisions = yield self.getRevisionsForBuild(build)  # type: ignore[attr-defined]
             r = f"Build containing revision(s) {','.join(revisions)} on {builderName} started"
         else:
             # Abbreviate long lists of changes to simply two
@@ -361,7 +370,7 @@ class Channel(service.AsyncService):
         self.send(r + ".")
 
     @defer.inlineCallbacks
-    def buildFinished(self, build, watched=False):
+    def buildFinished(self, build: Any, watched: bool = False) -> InlineCallbacksType[None]:
         builder = yield self.bot.getBuilder(builderid=build['builderid'])
         builderName = builder['name']
         buildNumber = build['number']
@@ -380,7 +389,7 @@ class Channel(service.AsyncService):
         url = utils.getURLForBuild(self.master, builder['builderid'], buildNumber)
 
         if self.useRevisions:
-            revisions = yield self.getRevisionsForBuild(build)
+            revisions = yield self.getRevisionsForBuild(build)  # type: ignore[attr-defined]
             r = (
                 f"Build on `{builderName}` containing revision(s) {','.join(revisions)} "
                 f"{self.bot.format_build_status(build)}"
@@ -402,7 +411,7 @@ class Channel(service.AsyncService):
         self.send(r)
 
     @defer.inlineCallbacks
-    def notify_for_finished(self, build):
+    def notify_for_finished(self, build: Any) -> InlineCallbacksType[bool]:
         if self.notify_for('finished'):
             return True
 
@@ -458,7 +467,7 @@ class Channel(service.AsyncService):
         return False
 
     @defer.inlineCallbacks
-    def workerMissing(self, worker):
+    def workerMissing(self, worker: Any) -> InlineCallbacksType[None]:
         self.missing_workers.add(worker['workerid'])
         if self.notify_for('worker'):
             self.send(
@@ -468,7 +477,7 @@ class Channel(service.AsyncService):
         yield self.bot.saveMissingWorkers()
 
     @defer.inlineCallbacks
-    def workerConnected(self, worker):
+    def workerConnected(self, worker: Any) -> InlineCallbacksType[None]:
         workerid = worker['workerid']
         if workerid in self.missing_workers:
             self.missing_workers.remove(workerid)
@@ -485,7 +494,7 @@ class Contact:
     'broadcast contact' (chat rooms, IRC channels as a whole).
     """
 
-    def __init__(self, user, channel):
+    def __init__(self, user: Any, channel: Any) -> None:
         """
         :param StatusBot bot: StatusBot this Contact belongs to
         :param user: User ID representing this contact
@@ -495,19 +504,19 @@ class Contact:
         self.channel = channel
 
     @property
-    def bot(self):
+    def bot(self) -> Any:
         return self.channel.bot
 
     @property
-    def master(self):
+    def master(self) -> Any:
         return self.channel.bot.master
 
     @property
-    def is_private_chat(self):
+    def is_private_chat(self) -> bool:
         return self.user_id == self.channel.id
 
     @staticmethod
-    def overrideCommand(meth):
+    def overrideCommand(meth: Any) -> Any:
         try:
             base_meth = getattr(Contact, meth.__name__)
         except AttributeError:
@@ -525,15 +534,15 @@ class Contact:
 
     # Communication with the user
 
-    def send(self, message, **kwargs):
+    def send(self, message: str, **kwargs: Any) -> Any:
         return self.channel.send(message, **kwargs)
 
-    def access_denied(self, *args, **kwargs):
+    def access_denied(self, *args: Any, **kwargs: Any) -> Any:
         return self.send(f"Thou shall not pass, {self.user_id}!!!")
 
     # Main dispatchers for incoming messages
 
-    def getCommandMethod(self, command):
+    def getCommandMethod(self, command: str) -> Any:
         command = command.upper()
         try:
             method = getattr(self, 'command_' + command)
@@ -556,7 +565,7 @@ class Contact:
         return method
 
     @defer.inlineCallbacks
-    def handleMessage(self, message, **kwargs):
+    def handleMessage(self, message: str, **kwargs: Any) -> InlineCallbacksType[Any]:
         message = message.lstrip()
         parts = message.split(' ', 1)
         if len(parts) == 1:
@@ -597,26 +606,26 @@ class Contact:
             return None
         return result
 
-    def splitArgs(self, args):
+    def splitArgs(self, args: str) -> list[str]:
         """Returns list of arguments parsed by shlex.split() or
         raise UsageError if failed"""
         try:
             return shlex.split(args)
         except ValueError as e:
-            raise UsageError(e) from e
+            raise UsageError(e) from e  # type: ignore[arg-type]
 
-    def command_HELLO(self, args, **kwargs):
+    def command_HELLO(self, args: str, **kwargs: Any) -> None:
         """say hello"""
         self.send(random.choice(GREETINGS))
 
-    def command_VERSION(self, args, **kwargs):
+    def command_VERSION(self, args: str, **kwargs: Any) -> None:
         """show buildbot version"""
         self.send(f"This is buildbot-{version} at your service")
 
     @defer.inlineCallbacks
-    def command_LIST(self, args, **kwargs):
+    def command_LIST(self, raw_args: str, **kwargs: Any) -> InlineCallbacksType[None]:
         """list configured builders or workers"""
-        args = self.splitArgs(args)
+        args = self.splitArgs(raw_args)
 
         all = False
         num = 10
@@ -693,9 +702,9 @@ class Contact:
     )
 
     @defer.inlineCallbacks
-    def command_STATUS(self, args, **kwargs):
+    def command_STATUS(self, raw_args: str, **kwargs: Any) -> InlineCallbacksType[None]:
         """list status of a builder (or all builders)"""
-        args = self.splitArgs(args)
+        args = self.splitArgs(raw_args)
         if not args:
             which = ""
         elif len(args) == 1:
@@ -724,14 +733,14 @@ class Contact:
     command_STATUS.usage = "status [_which_] - list status of a builder (or all builders)"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def command_NOTIFY(self, args, **kwargs):
+    def command_NOTIFY(self, raw_args: str, **kwargs: Any) -> InlineCallbacksType[None]:
         """notify me about build events"""
-        args = self.splitArgs(args)
+        args = self.splitArgs(raw_args)
 
         if not args:
             raise UsageError("Try '" + self.bot.commandPrefix + "notify on|off|list [_EVENT_]'.")
         action = args.pop(0)
-        events = args
+        events: list[str] | tuple[str, ...] = args
 
         if action in ("on", "on-quiet"):
             if not events:
@@ -765,9 +774,9 @@ class Contact:
     )
 
     @defer.inlineCallbacks
-    def command_WATCH(self, args, **kwargs):
+    def command_WATCH(self, raw_args: str, **kwargs: Any) -> InlineCallbacksType[None]:
         """announce the completion of an active build"""
-        args = self.splitArgs(args)
+        args = self.splitArgs(raw_args)
         if len(args) != 1:
             raise UsageError("Try '" + self.bot.commandPrefix + "watch _builder_'.")
 
@@ -780,7 +789,7 @@ class Contact:
             self.send("There are no currently running builds.")
             return
 
-        def watchForCompleteEvent(key, msg):
+        def watchForCompleteEvent(key: Any, msg: Any) -> Any:
             if key[-1] in ('finished', 'complete'):
                 return self.channel.buildFinished(msg, watched=True)
             return None
@@ -809,12 +818,12 @@ class Contact:
 
     @defer.inlineCallbacks
     @dangerousCommand
-    def command_FORCE(self, args, **kwargs):
+    def command_FORCE(self, raw_args: str, **kwargs: Any) -> InlineCallbacksType[None]:
         """force a build"""
 
         # FIXME: NEED TO THINK ABOUT!
-        errReply = f"Try '{self.bot.commandPrefix}{self.command_FORCE.usage}'"
-        args = self.splitArgs(args)
+        errReply = f"Try '{self.bot.commandPrefix}{self.command_FORCE.usage}'"  # type: ignore[attr-defined]
+        args = self.splitArgs(raw_args)
         if not args:
             raise UsageError(errReply)
         what = args.pop(0)
@@ -904,9 +913,9 @@ class Contact:
 
     @defer.inlineCallbacks
     @dangerousCommand
-    def command_STOP(self, args, **kwargs):
+    def command_STOP(self, raw_args: str, **kwargs: Any) -> InlineCallbacksType[None]:
         """stop a running build"""
-        args = self.splitArgs(args)
+        args = self.splitArgs(raw_args)
         if len(args) < 3 or args[0] != 'build':
             raise UsageError("Try '" + self.bot.commandPrefix + "stop build _which_ _reason_'.")
         which = args[1]
@@ -940,10 +949,10 @@ class Contact:
     command_STOP.usage = "stop build _which_ _reason_ - Stop a running build"  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def command_LAST(self, args, **kwargs):
+    def command_LAST(self, raw_args: str, **kwargs: Any) -> InlineCallbacksType[None]:
         """list last build status for a builder"""
         # FIXME: NEED TO THINK ABOUT!
-        args = self.splitArgs(args)
+        args = self.splitArgs(raw_args)
 
         if not args:
             builders = yield self.bot.getAllBuilders()
@@ -971,7 +980,7 @@ class Contact:
                 complete_at = lastBuild['complete_at']
                 if complete_at:
                     complete_at = util.datetime2epoch(complete_at)
-                    ago = util.fuzzyInterval(int(reactor.seconds() - complete_at))
+                    ago = util.fuzzyInterval(int(reactor.seconds() - complete_at))  # type: ignore[attr-defined]
                 else:
                     ago = "??"
                 status = self.bot.format_build_status(lastBuild)
@@ -985,7 +994,7 @@ class Contact:
     command_LAST.usage = "last [_which_] - list last build status for builder _which_"  # type: ignore[attr-defined]
 
     @classmethod
-    def build_commands(cls):
+    def build_commands(cls) -> list[str]:
         commands = []
         for k in dir(cls):
             if k.startswith('command_'):
@@ -993,16 +1002,16 @@ class Contact:
         commands.sort()
         return commands
 
-    def describeUser(self):
+    def describeUser(self) -> Any:
         if self.is_private_chat:
             return self.user_id
         return f"{self.user_id} on {self.channel.id}"
 
     # commands
 
-    def command_HELP(self, args, **kwargs):
+    def command_HELP(self, raw_args: str, **kwargs: Any) -> None:
         """give help for a command or one of it's arguments"""
-        args = self.splitArgs(args)
+        args = self.splitArgs(raw_args)
         if not args:
             commands = self.build_commands()
             response = []
@@ -1022,6 +1031,7 @@ class Contact:
             raise UsageError(f"There is no such command '{args[0]}'.")
         doc = getattr(meth, 'usage', None)
         if isinstance(doc, dict):
+            k: str | tuple[str, ...] | None
             if len(args) == 1:
                 k = None  # command
             elif len(args) == 2:
@@ -1043,13 +1053,13 @@ class Contact:
         "help [_command_ _arg_ [_subarg_ ...]] - Give help for _command_ or one of it's arguments"
     )
 
-    def command_SOURCE(self, args, **kwargs):
+    def command_SOURCE(self, args: str, **kwargs: Any) -> None:
         "the source code for buildbot"
         self.send("My source can be found at https://github.com/buildbot/buildbot")
 
     command_SOURCE.usage = "source - the source code for Buildbot"  # type: ignore[attr-defined]
 
-    def command_COMMANDS(self, args, **kwargs):
+    def command_COMMANDS(self, args: str, **kwargs: Any) -> None:
         """list available commands"""
         commands = self.build_commands()
         str = "Buildbot commands: " + ", ".join(self.bot.commandPrefix + c for c in commands)
@@ -1058,7 +1068,7 @@ class Contact:
     command_COMMANDS.usage = "commands - List available commands"  # type: ignore[attr-defined]
 
     @dangerousCommand
-    def command_SHUTDOWN(self, args, **kwargs):
+    def command_SHUTDOWN(self, args: str, **kwargs: Any) -> None:
         """shutdown the buildbot master"""
         # FIXME: NEED TO THINK ABOUT!
         if args not in ('check', 'start', 'stop', 'now'):
@@ -1086,9 +1096,9 @@ class Contact:
                 botmaster.cancelCleanShutdown()
         elif args == 'now':
             self.send("Stopping buildbot.")
-            reactor.stop()
+            reactor.stop()  # type: ignore[attr-defined]
 
-    command_SHUTDOWN.usage = {
+    command_SHUTDOWN.usage = {  # type: ignore[attr-defined]
         None: "shutdown check|start|stop|now - shutdown the buildbot master",
         "check": "shutdown check - check if the buildbot master is running or shutting down",
         "start": "shutdown start - start a clean shutdown",
@@ -1113,8 +1123,13 @@ class StatusBot(service.AsyncMultiService):
     parent: Service  # type: ignore[assignment]
 
     def __init__(
-        self, authz=None, tags=None, notify_events=None, useRevisions=False, showBlameList=False
-    ):
+        self,
+        authz: Any = None,
+        tags: Any = None,
+        notify_events: Any = None,
+        useRevisions: bool = False,
+        showBlameList: bool = False,
+    ) -> None:
         super().__init__()
         self.tags = tags
         if notify_events is None:
@@ -1123,14 +1138,14 @@ class StatusBot(service.AsyncMultiService):
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
         self.authz = self.expand_authz(authz)
-        self.contacts = {}
-        self.channels = {}
+        self.contacts: dict[tuple[Any, Any], Any] = {}
+        self.channels: dict[Any, Any] = {}
 
     @staticmethod
-    def expand_authz(authz):
+    def expand_authz(authz: Any) -> dict[str, Any]:
         if authz is None:
             authz = {}
-        expanded_authz = {}
+        expanded_authz: dict[str, Any] = {}
         for cmds, val in authz.items():
             if not isinstance(cmds, (tuple, list)):
                 cmds = (cmds,)
@@ -1138,14 +1153,14 @@ class StatusBot(service.AsyncMultiService):
                 expanded_authz[cmd.upper()] = val
         return expanded_authz
 
-    def isValidUser(self, user):
+    def isValidUser(self, user: Any) -> bool:
         for auth in self.authz.values():
             if auth is True or (isinstance(auth, (list, tuple)) and user in auth) or user == auth:
                 return True
         # If user is in '', we have already returned; otherwise check if defaults apply
         return '' not in self.authz
 
-    def getContact(self, user, channel):
+    def getContact(self, user: Any, channel: Any) -> Any:
         """get a Contact instance for ``user`` on ``channel``"""
         try:
             return self.contacts[(channel, user)]
@@ -1156,7 +1171,7 @@ class StatusBot(service.AsyncMultiService):
                 self.contacts[(channel, user)] = new_contact
             return new_contact
 
-    def getChannel(self, channel, valid=True):
+    def getChannel(self, channel: Any, valid: bool = True) -> Any:
         try:
             return self.channels[channel]
         except KeyError:
@@ -1166,13 +1181,13 @@ class StatusBot(service.AsyncMultiService):
                 new_channel.setServiceParent(self)
             return new_channel
 
-    def _get_object_id(self):
+    def _get_object_id(self) -> Any:
         return self.master.db.state.getObjectId(
             self.nickname, f'{self.__class__.__module__}.{self.__class__.__name__}'
         )
 
     @defer.inlineCallbacks
-    def _save_channels_state(self, attr, json_type=None):
+    def _save_channels_state(self, attr: str, json_type: Any = None) -> InlineCallbacksType[None]:
         if json_type is None:
             json_type = lambda x: x
         data = [
@@ -1190,7 +1205,9 @@ class StatusBot(service.AsyncMultiService):
             self.log_err(err, f"saveState '{attr}'")
 
     @defer.inlineCallbacks
-    def _load_channels_state(self, attr, setter):
+    def _load_channels_state(
+        self, attr: str, setter: Callable[..., Any]
+    ) -> InlineCallbacksType[None]:
         try:
             objectid = yield self._get_object_id()
             data = yield self.master.db.state.getState(objectid, attr, ())
@@ -1205,22 +1222,22 @@ class StatusBot(service.AsyncMultiService):
                         self.log_err(err, f"loadState '{attr}' ({c})")
 
     @defer.inlineCallbacks
-    def loadState(self):
+    def loadState(self) -> InlineCallbacksType[None]:
         yield self._load_channels_state('notify_events', lambda c, e: c.add_notification_events(e))
         yield self._load_channels_state('missing_workers', lambda c, w: c.missing_workers.update(w))
 
     @defer.inlineCallbacks
-    def saveNotifyEvents(self):
+    def saveNotifyEvents(self) -> InlineCallbacksType[None]:
         yield self._save_channels_state('notify_events', list)
 
     @defer.inlineCallbacks
-    def saveMissingWorkers(self):
+    def saveMissingWorkers(self) -> InlineCallbacksType[None]:
         yield self._save_channels_state('missing_workers', list)
 
-    def send_message(self, chat, message, **kwargs):
+    def send_message(self, chat: Any, message: str, **kwargs: Any) -> Any:
         raise NotImplementedError()
 
-    def _get_log_system(self, source):
+    def _get_log_system(self, source: Any) -> str:
         if source is None:
             source = self.__class__.__name__
         try:
@@ -1230,16 +1247,16 @@ class StatusBot(service.AsyncMultiService):
         name = f"{parent},{source}"
         return name
 
-    def log(self, msg, source=None):
+    def log(self, msg: str, source: Any = None) -> None:
         log.callWithContext({"system": self._get_log_system(source)}, log.msg, msg)
 
-    def log_err(self, error=None, why=None, source=None):
+    def log_err(self, error: Any = None, why: Any = None, source: Any = None) -> None:
         log.callWithContext({"system": (self._get_log_system(source))}, log.err, error, why)
 
-    def builderMatchesAnyTag(self, builder_tags):
+    def builderMatchesAnyTag(self, builder_tags: list[Any]) -> bool:
         return any(tag for tag in builder_tags if tag in self.tags)
 
-    def getRunningBuilds(self, builderid):
+    def getRunningBuilds(self, builderid: Any) -> Any:
         d = self.master.data.get(
             ('builds',),
             filters=[
@@ -1250,7 +1267,7 @@ class StatusBot(service.AsyncMultiService):
         return d
 
     @defer.inlineCallbacks
-    def getLastCompletedBuild(self, builderid):
+    def getLastCompletedBuild(self, builderid: Any) -> InlineCallbacksType[Any]:
         res = yield self.master.data.get(
             ('builds',),
             filters=[
@@ -1265,7 +1282,7 @@ class StatusBot(service.AsyncMultiService):
             return res[0]
         return None
 
-    def getCurrentBuildstep(self, build):
+    def getCurrentBuildstep(self, build: Any) -> Any:
         d = self.master.data.get(
             ('builds', build['buildid'], 'steps'),
             filters=[resultspec.Filter('complete', 'eq', [False])],
@@ -1275,7 +1292,7 @@ class StatusBot(service.AsyncMultiService):
         return d
 
     @defer.inlineCallbacks
-    def getBuildStatus(self, which, short=False):
+    def getBuildStatus(self, which: str, short: bool = False) -> InlineCallbacksType[str]:
         response = f'`{which}`: '
 
         builder = yield self.getBuilder(buildername=which)
@@ -1292,7 +1309,7 @@ class StatusBot(service.AsyncMultiService):
                     complete_at = lastBuild['complete_at']
                     if complete_at:
                         complete_at = util.datetime2epoch(complete_at)
-                        ago = util.fuzzyInterval(int(reactor.seconds() - complete_at))
+                        ago = util.fuzzyInterval(int(reactor.seconds() - complete_at))  # type: ignore[attr-defined]
                     else:
                         ago = "??"
                     status = self.format_build_status(lastBuild, short=short)
@@ -1323,7 +1340,9 @@ class StatusBot(service.AsyncMultiService):
         return response
 
     @defer.inlineCallbacks
-    def getBuilder(self, buildername=None, builderid=None):
+    def getBuilder(
+        self, buildername: Any = None, builderid: Any = None
+    ) -> InlineCallbacksType[Any]:
         if buildername:
             bdicts = yield self.master.data.get(
                 ('builders',), filters=[resultspec.Filter('name', 'eq', [buildername])]
@@ -1346,12 +1365,12 @@ class StatusBot(service.AsyncMultiService):
             raise UsageError(f"no such builder '{which}'")
         return bdict
 
-    def getAllBuilders(self):
+    def getAllBuilders(self) -> Any:
         d = self.master.data.get(('builders',))
         return d
 
     @defer.inlineCallbacks
-    def getOnlineBuilders(self):
+    def getOnlineBuilders(self) -> InlineCallbacksType[list[Any]]:
         all_workers = yield self.master.data.get(('workers',))
         online_builderids = set()
         for worker in all_workers:
@@ -1364,10 +1383,10 @@ class StatusBot(service.AsyncMultiService):
         return list(online_builderids)
 
     @defer.inlineCallbacks
-    def getRevisionsForBuild(self, bdict):
+    def getRevisionsForBuild(self, bdict: Any) -> InlineCallbacksType[list[str]]:
         # FIXME: Need to get revision info! (build -> buildreq -> buildset ->
         # sourcestamps)
-        return ["TODO"]
+        return ["TODO"]  # type: ignore[return-value]
 
     results_descriptions = {
         SKIPPED: "was skipped",
@@ -1381,7 +1400,7 @@ class StatusBot(service.AsyncMultiService):
 
     results_severity = (SKIPPED, SUCCESS, WARNINGS, FAILURE, CANCELLED, EXCEPTION)
 
-    def format_build_status(self, build, short=False):
+    def format_build_status(self, build: Any, short: bool = False) -> str:
         """Optionally add color to the message"""
         return self.results_descriptions[build['results']]
 
@@ -1390,17 +1409,17 @@ class ThrottledClientFactory(protocol.ClientFactory):
     lostDelay = random.randint(1, 5)
     failedDelay = random.randint(45, 60)
 
-    def __init__(self, lostDelay=None, failedDelay=None):
+    def __init__(self, lostDelay: int | None = None, failedDelay: int | None = None) -> None:
         if lostDelay is not None:
             self.lostDelay = lostDelay
         if failedDelay is not None:
             self.failedDelay = failedDelay
 
-    def clientConnectionLost(self, connector, reason):
-        reactor.callLater(self.lostDelay, connector.connect)
+    def clientConnectionLost(self, connector: Any, reason: Any) -> None:
+        reactor.callLater(self.lostDelay, connector.connect)  # type: ignore[attr-defined]
 
-    def clientConnectionFailed(self, connector, reason):
-        reactor.callLater(self.failedDelay, connector.connect)
+    def clientConnectionFailed(self, connector: Any, reason: Any) -> None:
+        reactor.callLater(self.failedDelay, connector.connect)  # type: ignore[attr-defined]
 
 
 class WebhookResource(resource.Resource, service.AsyncService):
@@ -1410,7 +1429,7 @@ class WebhookResource(resource.Resource, service.AsyncService):
     method of its parent.
     """
 
-    def __init__(self, path):
+    def __init__(self, path: str) -> None:
         resource.Resource.__init__(self)
         www = get_plugins('www', None, load_now=True)
         if 'base' not in www:
@@ -1418,36 +1437,36 @@ class WebhookResource(resource.Resource, service.AsyncService):
         self._root = www.get('base').resource
         self.path = path
 
-    def startService(self):
+    def startService(self) -> None:
         self._root.putChild(unicode2bytes(self.path), self)
         try:
             super().startService()
         except AttributeError:
             pass
 
-    def stopService(self):
+    def stopService(self) -> None:
         try:
             super().stopService()
         except AttributeError:
             pass
         self._root.delEntity(unicode2bytes(self.path))
 
-    def render_GET(self, request):
+    def render_GET(self, request: Any) -> Any:
         return self.render_POST(request)
 
-    def render_POST(self, request):
+    def render_POST(self, request: Any) -> Any:
         try:
-            d = self.parent.process_webhook(request)
+            d = self.parent.process_webhook(request)  # type: ignore[attr-defined]
         except Exception:
             d = defer.fail()
 
-        def ok(_):
+        def ok(_: Any) -> None:
             request.setResponseCode(202)
             request.finish()
 
-        def err(error):
+        def err(error: Any) -> None:
             try:
-                self.parent.log_err(error, "processing telegram request", self.__class__.__name__)
+                self.parent.log_err(error, "processing telegram request", self.__class__.__name__)  # type: ignore[attr-defined]
             except AttributeError:
                 log.err(error, "processing telegram request")
             request.setResponseCode(500)

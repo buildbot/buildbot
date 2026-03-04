@@ -25,6 +25,7 @@ from email.utils import formatdate
 from email.utils import parseaddr
 from io import BytesIO
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -50,6 +51,8 @@ from .utils import merge_reports_prop_take_first
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
 # although it has no effect before python-2.7.
@@ -82,11 +85,11 @@ VALID_EMAIL_ADDR = re.compile(_VALID_EMAIL_ADDR)
 class Domain(util.ComparableMixin):
     compare_attrs: ClassVar[Sequence[str]] = ("domain",)
 
-    def __init__(self, domain):
+    def __init__(self, domain: str) -> None:
         assert "@" not in domain
         self.domain = domain
 
-    def getAddress(self, name):
+    def getAddress(self, name: str) -> str:  # type: ignore[override]
         """If name is already an email address, pass it through."""
         if '@' in name:
             return name
@@ -97,22 +100,22 @@ class Domain(util.ComparableMixin):
 class MailNotifier(ReporterBase):
     secrets = ["smtpUser", "smtpPassword"]
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        fromaddr,
-        relayhost="localhost",
-        lookup=None,
-        extraRecipients=None,
-        sendToInterestedUsers=True,
-        extraHeaders=None,
-        useTls=False,
-        useSmtps=False,
-        smtpUser=None,
-        smtpPassword=None,
-        smtpPort=25,
-        dumpMailsToLog=False,
-        generators=None,
-    ):
+        fromaddr: str,
+        relayhost: str = "localhost",
+        lookup: str | interfaces.IEmailLookup | None = None,
+        extraRecipients: list[str] | None = None,
+        sendToInterestedUsers: bool = True,
+        extraHeaders: dict[str, str] | None = None,
+        useTls: bool = False,
+        useSmtps: bool = False,
+        smtpUser: str | None = None,
+        smtpPassword: str | None = None,
+        smtpPort: int = 25,
+        dumpMailsToLog: bool = False,
+        generators: list[Any] | None = None,
+    ) -> None:
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot send mail")
 
@@ -143,22 +146,22 @@ class MailNotifier(ReporterBase):
             ssl.ensureHasSSL(self.__class__.__name__)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        fromaddr,
-        relayhost="localhost",
-        lookup=None,
-        extraRecipients=None,
-        sendToInterestedUsers=True,
-        extraHeaders=None,
-        useTls=False,
-        useSmtps=False,
-        smtpUser=None,
-        smtpPassword=None,
-        smtpPort=25,
-        dumpMailsToLog=False,
-        generators=None,
-    ):
+        fromaddr: str,
+        relayhost: str = "localhost",
+        lookup: str | interfaces.IEmailLookup | None = None,
+        extraRecipients: list[str] | None = None,
+        sendToInterestedUsers: bool = True,
+        extraHeaders: dict[str, str] | None = None,
+        useTls: bool = False,
+        useSmtps: bool = False,
+        smtpUser: str | None = None,
+        smtpPassword: str | None = None,
+        smtpPort: int = 25,
+        dumpMailsToLog: bool = False,
+        generators: list[Any] | None = None,
+    ) -> InlineCallbacksType[None]:
         if generators is None:
             generators = self._create_default_generators()
 
@@ -182,7 +185,7 @@ class MailNotifier(ReporterBase):
         self.smtpPort = smtpPort
         self.dumpMailsToLog = dumpMailsToLog
 
-    def _create_default_generators(self):
+    def _create_default_generators(self) -> list[Any]:
         return [
             BuildStatusGenerator(
                 add_patch=True, message_formatter=MessageFormatter(template_type='html')
@@ -192,7 +195,7 @@ class MailNotifier(ReporterBase):
             ),
         ]
 
-    def patch_to_attachment(self, patch, index):
+    def patch_to_attachment(self, patch: dict[str, Any], index: int) -> MIMEText:
         # patches are specifically converted to unicode before entering the db
         a = MIMEText(patch['body'].encode(ENCODING), _charset=ENCODING)
         # convert to base64 to conform with RFC 5322 2.1.1
@@ -202,7 +205,15 @@ class MailNotifier(ReporterBase):
         return a
 
     @defer.inlineCallbacks
-    def createEmail(self, msgdict, title, results, builds=None, patches=None, logs=None):
+    def createEmail(
+        self,
+        msgdict: dict[str, Any],
+        title: str,
+        results: Any,
+        builds: list[Any] | None = None,
+        patches: list[Any] | None = None,
+        logs: list[Any] | None = None,
+    ) -> InlineCallbacksType[Message]:
         text = msgdict['body']
         type = msgdict['type']
         subject = msgdict['subject']
@@ -211,6 +222,7 @@ class MailNotifier(ReporterBase):
 
         assert type in ('plain', 'html'), f"'{type}' message type must be 'plain' or 'html'."
 
+        m: Message
         if patches or logs:
             m = MIMEMultipart()
             txt = MIMEText(text, type, ENCODING)
@@ -233,7 +245,7 @@ class MailNotifier(ReporterBase):
             for log in logs:
                 # Use distinct filenames for the e-mail summary
                 name = f"{log['stepname']}.{log['name']}"
-                if len(builds) > 1:
+                if builds is not None and len(builds) > 1:
                     filename = f"{log['buildername']}.{name}"
                 else:
                     filename = name
@@ -267,7 +279,7 @@ class MailNotifier(ReporterBase):
         return m
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         body = merge_reports_prop(reports, 'body')
         subject = merge_reports_prop_take_first(reports, 'subject')
         type = merge_reports_prop_take_first(reports, 'type')
@@ -298,7 +310,7 @@ class MailNotifier(ReporterBase):
         yield self.sendMail(m, all_recipients)
 
     @defer.inlineCallbacks
-    def findInterrestedUsersEmails(self, users):
+    def findInterrestedUsersEmails(self, users: list[str]) -> InlineCallbacksType[set[str]]:
         recipients = set()
         if self.sendToInterestedUsers:
             if self.lookup:
@@ -323,13 +335,13 @@ class MailNotifier(ReporterBase):
 
         return recipients
 
-    def formatAddress(self, addr):
+    def formatAddress(self, addr: str) -> str:
         r = parseaddr(addr)
         if not r[0]:
             return r[1]
         return f"\"{Header(r[0], 'utf-8').encode()}\" <{r[1]}>"
 
-    def processRecipients(self, blamelist, m):
+    def processRecipients(self, blamelist: set[str], m: Message) -> list[str]:
         to_recipients = set(blamelist)
         cc_recipients = set()
 
@@ -347,25 +359,25 @@ class MailNotifier(ReporterBase):
 
         return list(to_recipients | cc_recipients)
 
-    def sendMail(self, m, recipients):
+    def sendMail(self, m: Message, recipients: list[str]) -> defer.Deferred[None]:
         s = m.as_string()
         twlog.msg(f"sending mail ({len(s)} bytes) to", recipients)
         if self.dumpMailsToLog:  # pragma: no cover
             twlog.msg(f"mail data:\n{s}")
 
-        result = defer.Deferred()
+        result: defer.Deferred[None] = defer.Deferred()
 
         useAuth = self.smtpUser and self.smtpPassword
 
-        s = unicode2bytes(s)
+        s_bytes = unicode2bytes(s)
         recipients = [parseaddr(r)[1] for r in recipients]
         hostname = self.relayhost if self.useTls or useAuth else None
-        sender_factory = ESMTPSenderFactory(
+        sender_factory = ESMTPSenderFactory(  # type: ignore[misc]
             unicode2bytes(self.smtpUser),
             unicode2bytes(self.smtpPassword),
             parseaddr(self.fromaddr)[1],
             recipients,
-            BytesIO(s),
+            BytesIO(s_bytes),
             result,
             requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth,
@@ -373,10 +385,10 @@ class MailNotifier(ReporterBase):
         )
 
         if self.useSmtps:
-            reactor.connectSSL(
+            reactor.connectSSL(  # type: ignore[attr-defined]
                 self.relayhost, self.smtpPort, sender_factory, ssl.ClientContextFactory()
             )
         else:
-            reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
+            reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)  # type: ignore[attr-defined]
 
         return result
