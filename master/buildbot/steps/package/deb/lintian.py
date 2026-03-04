@@ -19,6 +19,10 @@ Steps and objects related to lintian
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
+
 from twisted.internet import defer
 
 from buildbot import config
@@ -29,13 +33,16 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps.package import util as pkgutil
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class MaxQObserver(logobserver.LogLineObserver):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.failures = 0
 
-    def outLineReceived(self, line):
+    def outLineReceived(self, line: str) -> None:
         if line.startswith('TEST FAILURE:'):
             self.failures += 1
 
@@ -51,7 +58,9 @@ class DebLintian(buildstep.ShellMixin, buildstep.BuildStep):
     flunkOnFailure = False
     warnOnFailure = True
 
-    def __init__(self, fileloc=None, suppressTags=None, **kwargs):
+    def __init__(
+        self, fileloc: str | None = None, suppressTags: list[str] | None = None, **kwargs: Any
+    ) -> None:
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(**kwargs)
         if fileloc:
@@ -62,7 +71,7 @@ class DebLintian(buildstep.ShellMixin, buildstep.BuildStep):
         if not self.fileloc:
             config.error("You must specify a fileloc")
 
-        self.command = ["lintian", "-v", self.fileloc]
+        self.command = ["lintian", "-v", cast(str, self.fileloc)]
 
         if self.suppressTags:
             for tag in self.suppressTags:
@@ -72,7 +81,7 @@ class DebLintian(buildstep.ShellMixin, buildstep.BuildStep):
         self.addLogObserver('stdio', self.obs)
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
 
