@@ -56,18 +56,21 @@ class CommonCommitInfo:
 
 class CodebaseCommitCache:
     def __init__(self) -> None:
-        self._parents: dict[int, int] = {}
+        self._parents: dict[int, int | None] = {}
 
-    def add_parent(self, id: int, parent_id: int) -> None:
+    def add_parent(self, id: int, parent_id: int | None) -> None:
         self._parents[id] = parent_id
 
-    def get_parent(self, id: int) -> int:
+    def get_parent(self, id: int) -> int | None:
         return self._parents.get(id, UNKNOWN_COMMIT_ID)
 
     async def get_parent_with_fallback(
-        self, id: int, get_parent_fallback: Callable[[int], Awaitable[int]], default: int | None
+        self,
+        id: int,
+        get_parent_fallback: Callable[[int], Awaitable[int | None]],
+        default: int | None,
     ) -> int | None:
-        parent_id: int | None = self.get_parent(id)
+        parent_id = self.get_parent(id)
         if parent_id == UNKNOWN_COMMIT_ID:
             parent_id = await get_parent_fallback(id)
             if parent_id == UNKNOWN_COMMIT_ID:
@@ -80,7 +83,7 @@ class CodebaseCommitCache:
         self,
         id1: int,
         id2: int,
-        get_parent_fallback: Callable[[int], Awaitable[int]],
+        get_parent_fallback: Callable[[int], Awaitable[int | None]],
         depth: int = 100,
     ) -> CommonCommitInfo | None:
         """
@@ -156,7 +159,7 @@ class CodebaseCommitsConnectorComponent(base.DBConnectorComponent):
         return commit
 
     @async_to_deferred
-    async def _get_commit_parent_commitid(self, id: int) -> int:
+    async def _get_commit_parent_commitid(self, id: int) -> int | None:
         def thd(conn: sa.engine.Connection) -> int | None:
             q = self.db.model.codebase_commits.select().where(
                 self.db.model.codebase_commits.c.id == id,
