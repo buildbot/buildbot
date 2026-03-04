@@ -167,8 +167,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
             # try a blind insert..
             try:
-                q = sch_mst_tbl.insert()
-                conn.execute(q, {"schedulerid": schedulerid, "masterid": masterid}).close()
+                q_insert = sch_mst_tbl.insert()
+                conn.execute(q_insert, {"schedulerid": schedulerid, "masterid": masterid}).close()
                 conn.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 conn.rollback()
@@ -177,7 +177,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     sch_mst_tbl, (self.db.model.masters.c.id == sch_mst_tbl.c.masterid)
                 )
 
-                q = (
+                q_select = (
                     sa
                     .select(
                         self.db.model.masters.c.name,
@@ -186,7 +186,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     .select_from(join)
                     .where(sch_mst_tbl.c.schedulerid == schedulerid)
                 )
-                row = conn.execute(q).fetchone()
+                row = conn.execute(q_select).fetchone()
                 # ok, that was us, so we just do nothing
                 if row.masterid == masterid:
                     return None

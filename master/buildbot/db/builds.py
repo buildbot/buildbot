@@ -217,8 +217,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
     @async_to_deferred
     async def get_triggered_builds(self, buildid: int) -> list[BuildModel]:
         def thd(conn) -> list[BuildModel]:
-            j = self.db.model.buildsets
-            j = j.join(self.db.model.buildrequests)
+            j = self.db.model.buildsets.join(self.db.model.buildrequests)
             j = j.join(self.db.model.builds)
 
             q = (

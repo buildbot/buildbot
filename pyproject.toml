@@ -198,7 +198,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.db.changesources",
       "buildbot.db.compression.brotli",
       "buildbot.db.compression.lz4",
-      "buildbot.db.connector",
       "buildbot.db.dbconfig",
       "buildbot.db.enginestrategy",
       "buildbot.db.logs",

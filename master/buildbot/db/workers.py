@@ -205,8 +205,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             bm_tbl = self.db.model.builder_masters
 
             # first, get the worker itself and the configured_on info
-            j = workers_tbl
-            j = j.outerjoin(cfg_tbl)
+            j = workers_tbl.outerjoin(cfg_tbl)
             j = j.outerjoin(bm_tbl)
             q = (
                 sa
@@ -255,18 +254,18 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             # now go back and get the connection info for the same set of
             # workers
-            j = conn_tbl
+            j_conn = conn_tbl
             if _name is not None:
                 # note this is not an outer join; if there are unconnected
                 # workers, they were captured in rv above
-                j = j.join(workers_tbl)
+                j_conn = j_conn.join(workers_tbl)  # type: ignore[assignment]
             q = (
                 sa
                 .select(
                     conn_tbl.c.workerid,
                     conn_tbl.c.masterid,
                 )
-                .select_from(j)
+                .select_from(j_conn)
                 .order_by(conn_tbl.c.workerid)
                 .where(conn_tbl.c.workerid.in_(rv.keys()))
             )

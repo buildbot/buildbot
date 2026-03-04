@@ -749,7 +749,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 res.close()
 
             # query all logs with type 'd' and delete their chunks.
-            if self.db._engine.dialect.name == 'sqlite':
+            if self.db._engine.dialect.name == 'sqlite':  # type: ignore[union-attr]
                 # sqlite does not support delete with a join, so for this case we use a subquery,
                 # which is much slower
                 q = sa.select(model.logs.c.id)
@@ -757,13 +757,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(model.logs.c.type == 'd')
 
                 # delete their logchunks
-                q = model.logchunks.delete().where(model.logchunks.c.logid.in_(q))
+                q_delete = model.logchunks.delete().where(model.logchunks.c.logid.in_(q))
             else:
-                q = model.logchunks.delete()
-                q = q.where(model.logs.c.id == model.logchunks.c.logid)
-                q = q.where(model.logs.c.type == 'd')
+                q_delete = model.logchunks.delete()
+                q_delete = q_delete.where(model.logs.c.id == model.logchunks.c.logid)
+                q_delete = q_delete.where(model.logs.c.type == 'd')
 
-            res = conn.execute(q)
+            res = conn.execute(q_delete)
             conn.commit()
             res.close()
             res = conn.execute(sa.select(sa.func.count(model.logchunks.c.logid)))

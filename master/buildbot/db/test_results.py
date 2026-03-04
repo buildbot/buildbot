@@ -92,19 +92,19 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                             {'builderid': builderid, 'path': path} for path in path_batch
                         ]
 
-                        q = paths_table.insert().values(insert_values)
+                        q_insert = paths_table.insert().values(insert_values)
 
                         if self.db.pool.engine.dialect.name in ['postgresql', 'mssql']:
                             # Use RETURNING, this way we won't need an additional select query
-                            q = q.returning(paths_table.c.id, paths_table.c.path)
+                            q_insert = q_insert.returning(paths_table.c.id, paths_table.c.path)
 
-                            res = conn.execute(q)
+                            res = conn.execute(q_insert)
                             conn.commit()
                             for row in res.fetchall():
                                 paths_to_ids[row.path] = row.id
                                 path_batch.remove(row.path)
                         else:
-                            conn.execute(q)
+                            conn.execute(q_insert)
                             conn.commit()
 
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
@@ -162,19 +162,19 @@ class TestResultsConnectorComponent(base.DBConnectorComponent):
                             {'builderid': builderid, 'name': name} for name in name_batch
                         ]
 
-                        q = names_table.insert().values(insert_values)
+                        q_insert = names_table.insert().values(insert_values)
 
                         if self.db.pool.engine.dialect.name in ['postgresql', 'mssql']:
                             # Use RETURNING, this way we won't need an additional select query
-                            q = q.returning(names_table.c.id, names_table.c.name)
+                            q_insert = q_insert.returning(names_table.c.id, names_table.c.name)
 
-                            res = conn.execute(q)
+                            res = conn.execute(q_insert)
                             conn.commit()
                             for row in res.fetchall():
                                 names_to_ids[row.name] = row.id
                                 name_batch.remove(row.name)
                         else:
-                            conn.execute(q)
+                            conn.execute(q_insert)
                             conn.commit()
 
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):

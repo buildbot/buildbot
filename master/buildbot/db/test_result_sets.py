@@ -143,8 +143,7 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             # database. At least the following would be needed to resolve the ambiguities
             #  - attach sourcestamp to a codebase through a codebase ID
             #  - attach sourcestamp to a commit through a commit ID
-            j = self.db.model.codebase_commits
-            j = j.join(
+            j = self.db.model.codebase_commits.join(
                 self.db.model.sourcestamps,
                 self.db.model.codebase_commits.c.revision == self.db.model.sourcestamps.c.revision,
             )

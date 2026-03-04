@@ -102,11 +102,11 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 conn.commit()
 
             # set the state (unconditionally, just to be safe)
-            q = tbl.update().where(whereclause)
-            q = q.values(active=1 if active else 0)
+            q_update = tbl.update().where(whereclause)
+            q_update = q_update.values(active=1 if active else 0)
             if active:
-                q = q.values(last_active=int(self.master.reactor.seconds()))
-            conn.execute(q)
+                q_update = q_update.values(last_active=int(self.master.reactor.seconds()))
+            conn.execute(q_update)
             conn.commit()
 
             # return True if there was a change in state

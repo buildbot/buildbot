@@ -257,8 +257,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         def thd(conn) -> list[BuildSetModel]:
             bs_tbl = self.db.model.buildsets
             ss_tbl = self.db.model.sourcestamps
-            j = self.db.model.buildsets
-            j = j.join(self.db.model.buildset_sourcestamps)
+            j = self.db.model.buildsets.join(self.db.model.buildset_sourcestamps)
             j = j.join(self.db.model.sourcestamps)
             q = sa.select(bs_tbl).select_from(j).distinct()
             q = q.order_by(sa.desc(bs_tbl.c.submitted_at))
