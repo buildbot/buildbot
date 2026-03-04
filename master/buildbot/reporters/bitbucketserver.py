@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import datetime
 import re
+from typing import TYPE_CHECKING
+from typing import Any
 from urllib.parse import urlparse
 
 from twisted.internet import defer
@@ -39,6 +41,9 @@ from buildbot.util import unicode2bytes
 
 from .utils import merge_reports_prop
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 # Magic words understood by Bitbucket Server REST API
 INPROGRESS = 'INPROGRESS'
 SUCCESSFUL = 'SUCCESSFUL'
@@ -53,38 +58,38 @@ HTTP_CREATED = 201
 class BitbucketServerStatusPush(ReporterBase):
     name: str | None = "BitbucketServerStatusPush"
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        base_url,
-        user,
-        password,
-        key=None,
-        statusName=None,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        base_url: str,
+        user: str,
+        password: str,
+        key: Any = None,
+        statusName: Any = None,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         if generators is None:
             generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        base_url,
-        user,
-        password,
-        key=None,
-        statusName=None,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        base_url: str,
+        user: str,
+        password: str,
+        key: Any = None,
+        statusName: Any = None,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         user, password = yield self.renderSecrets(user, password)
         self.debug = debug
         self.verify = verify
@@ -105,7 +110,7 @@ class BitbucketServerStatusPush(ReporterBase):
             verify=self.verify,
         )
 
-    def _create_default_generators(self):
+    def _create_default_generators(self) -> list[Any]:
         start_formatter = MessageFormatterRenderable('Build started.')
         end_formatter = MessageFormatterRenderable('Build done.')
 
@@ -115,8 +120,16 @@ class BitbucketServerStatusPush(ReporterBase):
             )
         ]
 
-    def createStatus(self, sha, state, url, key, description=None, context=None):
-        payload = {
+    def createStatus(
+        self,
+        sha: str,
+        state: str,
+        url: str,
+        key: str,
+        description: str | None = None,
+        context: str | None = None,
+    ) -> Any:
+        payload: dict[str, Any] = {
             'state': state,
             'url': url,
             'key': key,
@@ -130,7 +143,7 @@ class BitbucketServerStatusPush(ReporterBase):
         return self._http.post(STATUS_API_URL.format(sha=sha), json=payload)
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         report = reports[0]
         build = reports[0]['builds'][0]
 
@@ -178,25 +191,25 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
     name: str | None = "BitbucketServerCoreAPIStatusPush"
     secrets = ["token", "auth"]
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        base_url,
-        token=None,
-        auth=None,
-        statusName=None,
-        statusSuffix=None,
-        key=None,
-        parentName=None,
-        buildNumber=None,
-        ref=None,
-        duration=None,
-        testResults=None,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        base_url: str,
+        token: str | None = None,
+        auth: Any = None,
+        statusName: Any = None,
+        statusSuffix: Any = None,
+        key: Any = None,
+        parentName: Any = None,
+        buildNumber: Any = None,
+        ref: Any = None,
+        duration: Any = None,
+        testResults: Any = None,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         if generators is None:
             generators = self._create_default_generators()
 
@@ -208,25 +221,25 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             config.error("Only one authentication method can be given (token or auth)")
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        base_url,
-        token=None,
-        auth=None,
-        statusName=None,
-        statusSuffix=None,
-        key=None,
-        parentName=None,
-        buildNumber=None,
-        ref=None,
-        duration=None,
-        testResults=None,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        base_url: str,
+        token: str | None = None,
+        auth: Any = None,
+        statusName: Any = None,
+        statusSuffix: Any = None,
+        key: Any = None,
+        parentName: Any = None,
+        buildNumber: Any = None,
+        ref: Any = None,
+        duration: Any = None,
+        testResults: Any = None,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         self.status_name = statusName
         self.status_suffix = statusSuffix
         self.key = key or Interpolate('%(prop:buildername)s')
@@ -249,7 +262,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         else:
 
             @util.renderer
-            def r_testresults(props):
+            def r_testresults(props: Any) -> Any:
                 failed = props.getProperty("tests_failed", 0)
                 skipped = props.getProperty("tests_skipped", 0)
                 successful = props.getProperty("tests_successful", 0)
@@ -259,7 +272,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
 
             self.test_results = r_testresults
 
-        headers = {}
+        headers: dict[str, str] = {}
         if token:
             headers["Authorization"] = f"Bearer {token}"
         self._http = yield httpclientservice.HTTPSession(
@@ -271,7 +284,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             verify=verify,
         )
 
-    def _create_default_generators(self):
+    def _create_default_generators(self) -> list[Any]:
         start_formatter = MessageFormatterRenderable('Build started.')
         end_formatter = MessageFormatterRenderable('Build done.')
         pending_formatter = MessageFormatterRenderable('Build pending.')
@@ -285,21 +298,21 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
 
     def createStatus(
         self,
-        proj_key,
-        repo_slug,
-        sha,
-        state,
-        url,
-        key,
-        parent,
-        build_number,
-        ref,
-        description,
-        name,
-        duration,
-        test_results,
-    ):
-        payload = {
+        proj_key: str,
+        repo_slug: str,
+        sha: str,
+        state: str,
+        url: str,
+        key: str,
+        parent: str,
+        build_number: str,
+        ref: str | None,
+        description: str | None,
+        name: str,
+        duration: int | None,
+        test_results: Any,
+    ) -> Any:
+        payload: dict[str, Any] = {
             'state': state,
             'url': url,
             'key': key,
@@ -319,7 +332,7 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         return self._http.post(_url, json=payload)
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         report = reports[0]
         build = reports[0]['builds'][0]
 
@@ -442,17 +455,17 @@ class BitbucketServerPRCommentPush(ReporterBase):
     name: str | None = "BitbucketServerPRCommentPush"
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        base_url,
-        user,
-        password,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        base_url: str,
+        user: str,
+        password: str,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         user, password = yield self.renderSecrets(user, password)
         self.verbose = verbose
 
@@ -464,32 +477,32 @@ class BitbucketServerPRCommentPush(ReporterBase):
             self.master.httpservice, base_url, auth=(user, password), debug=debug, verify=verify
         )
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        base_url,
-        user,
-        password,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        base_url: str,
+        user: str,
+        password: str,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         if generators is None:
             generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
 
-    def _create_default_generators(self):
+    def _create_default_generators(self) -> list[Any]:
         return [BuildStatusGenerator()]
 
-    def sendComment(self, pr_url, text):
+    def sendComment(self, pr_url: str, text: str) -> Any:
         path = urlparse(unicode2bytes(pr_url)).path
         payload = {'text': text}
         return self._http.post(COMMENT_API_URL.format(path=bytes2unicode(path)), json=payload)
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         body = merge_reports_prop(reports, 'body')
         builds = merge_reports_prop(reports, 'builds')
 
