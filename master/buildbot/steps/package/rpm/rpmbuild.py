@@ -15,13 +15,23 @@
 # Portions Copyright Dan Radez <dradez+buildbot@redhat.com>
 # Portions Copyright Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
@@ -38,19 +48,19 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
 
     def __init__(
         self,
-        specfile=None,
-        topdir='`pwd`',
-        builddir='`pwd`',
-        rpmdir='`pwd`',
-        sourcedir='`pwd`',
-        specdir='`pwd`',
-        srcrpmdir='`pwd`',
-        dist='.el6',
-        define=None,
-        autoRelease=False,
-        vcsRevision=False,
-        **kwargs,
-    ):
+        specfile: str | None = None,
+        topdir: str = '`pwd`',
+        builddir: str = '`pwd`',
+        rpmdir: str = '`pwd`',
+        sourcedir: str = '`pwd`',
+        specdir: str = '`pwd`',
+        srcrpmdir: str = '`pwd`',
+        dist: str = '.el6',
+        define: dict[str, str] | None = None,
+        autoRelease: bool = False,
+        vcsRevision: bool = False,
+        **kwargs: Any,
+    ) -> None:
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
 
@@ -77,12 +87,12 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     @defer.inlineCallbacks
-    def run(self):
-        rpm_extras_dict = {}
+    def run(self) -> InlineCallbacksType[int]:
+        rpm_extras_dict: dict[str, Any] = {}
         rpm_extras_dict['dist'] = self.dist
 
         if self.autoRelease:
-            relfile = f"{os.path.basename(self.specfile).split('.')[0]}.release"
+            relfile = f"{os.path.basename(cast(str, self.specfile)).split('.')[0]}.release"
             try:
                 with open(relfile, encoding='utf-8') as rfile:
                     rel = int(rfile.readline().strip())
@@ -120,7 +130,7 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
 
         return cmd.results()
 
-    def logConsumer(self):
+    def logConsumer(self) -> Generator[None, tuple[str, str], None]:
         rpm_prefixes = [
             'Provides:',
             'Requires(',
