@@ -188,7 +188,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.data.test_results",
       "buildbot.data.types",
       "buildbot.data.workers",
-      "buildbot.db.migrate_utils",
       "buildbot.db.migrations.env",
       "buildbot.db.migrations.versions.059_v3.4_alembic_initial",
       "buildbot.db.migrations.versions.060_v3.9_add_builder_projects",
