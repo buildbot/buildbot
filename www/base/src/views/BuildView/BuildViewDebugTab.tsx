@@ -25,7 +25,7 @@ import {
   useDataAccessor,
   useDataApiDynamicQuery,
 } from 'buildbot-data-js';
-import {BuildLinkWithSummaryTooltip} from 'buildbot-ui';
+import {getBuildLinkDisplayProperties, BuildLinkWithSummaryTooltip} from 'buildbot-ui';
 import {LoadingDiv} from '../../components/LoadingDiv/LoadingDiv';
 import {
   RawData,
@@ -53,6 +53,7 @@ export const BuildViewDebugTab = observer(
               number__lt: build.number,
               order: '-number',
               limit: 5,
+              property: getBuildLinkDisplayProperties(),
             },
           }),
     );

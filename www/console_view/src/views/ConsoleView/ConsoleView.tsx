@@ -33,6 +33,7 @@ import {
   IDataAccessor,
 } from 'buildbot-data-js';
 import {
+  getBuildLinkDisplayProperties,
   BuildLinkWithSummaryTooltip,
   ChangeDetails,
   LoadingIndicator,
@@ -320,7 +321,7 @@ export const ConsoleView = observer(() => {
       query: {
         limit: buildFetchLimit,
         order: '-started_at',
-        property: ['got_revision'],
+        property: ['got_revision', ...getBuildLinkDisplayProperties()],
       },
     }),
   );
