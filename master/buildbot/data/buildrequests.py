@@ -29,10 +29,14 @@ from buildbot.process.results import RETRY
 
 if TYPE_CHECKING:
     import datetime
+    from collections.abc import Callable
     from collections.abc import Sequence
+
+    from twisted.internet.defer import Deferred
 
     from buildbot.data.resultspec import ResultSpec
     from buildbot.db.buildrequests import BuildRequestModel
+    from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -106,7 +110,9 @@ buildrequests_field_mapping = {
 
 
 @defer.inlineCallbacks
-def _get_buildset_properties_filtered(master, buildsetid: int, filters: Sequence):
+def _get_buildset_properties_filtered(
+    master: BuildMaster, buildsetid: int, filters: Sequence
+) -> InlineCallbacksType[dict | None]:
     if not filters:
         return None
 
@@ -121,7 +127,9 @@ class BuildRequestEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec: ResultSpec, kwargs) -> InlineCallbacksType[BuildRequestData | None]:
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[BuildRequestData | None]:
         buildrequest = yield self.master.db.buildrequests.getBuildRequest(kwargs['buildrequestid'])
         if not buildrequest:
             return None
@@ -133,14 +141,16 @@ class BuildRequestEndpoint(base.Endpoint):
         return _db2data(buildrequest, properties)
 
     @defer.inlineCallbacks
-    def set_request_priority(self, brid, args, kwargs):
+    def set_request_priority(
+        self, brid: int, args: dict[str, Any], kwargs: Any
+    ) -> InlineCallbacksType[None]:
         priority = args['priority']
         yield self.master.db.buildrequests.set_build_requests_priority(
             brids=[brid], priority=priority
         )
 
     @defer.inlineCallbacks
-    def control(self, action, args, kwargs):
+    def control(self, action: str, args: dict[str, Any], kwargs: Any) -> InlineCallbacksType[None]:
         brid = kwargs['buildrequestid']
         if action == "cancel":
             self.master.mq.produce(
@@ -162,7 +172,9 @@ class BuildRequestsEndpoint(base.Endpoint):
     rootLinkName = 'buildrequests'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs) -> InlineCallbacksType[list[BuildRequestData]]:
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[BuildRequestData]]:
         builderid = kwargs.get("builderid", None)
         complete = resultSpec.popBooleanFilter('complete')
         claimed_by_masterid = resultSpec.popBooleanFilter('claimed_by_masterid')
@@ -221,7 +233,7 @@ class BuildRequest(base.ResourceType):
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
-    def generateEvent(self, brids, event):
+    def generateEvent(self, brids: list[int], event: str) -> InlineCallbacksType[None]:
         events = []
         for brid in brids:
             # get the build and munge the result for the notification
@@ -231,7 +243,9 @@ class BuildRequest(base.ResourceType):
             self.produceEvent(br, event)
 
     @defer.inlineCallbacks
-    def callDbBuildRequests(self, brids, db_callable, event, **kw):
+    def callDbBuildRequests(
+        self, brids: list[int], db_callable: Callable[..., Any], event: str, **kw: Any
+    ) -> InlineCallbacksType[bool]:
         if not brids:
             # empty buildrequest list. No need to call db API
             return True
@@ -246,7 +260,9 @@ class BuildRequest(base.ResourceType):
         return True
 
     @base.updateMethod
-    def claimBuildRequests(self, brids: list[int], claimed_at: datetime.datetime | None = None):
+    def claimBuildRequests(
+        self, brids: list[int], claimed_at: datetime.datetime | None = None
+    ) -> Deferred[bool]:
         return self.callDbBuildRequests(
             brids,
             self.master.db.buildrequests.claimBuildRequests,
@@ -256,7 +272,7 @@ class BuildRequest(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def unclaimBuildRequests(self, brids: list[int]):
+    def unclaimBuildRequests(self, brids: list[int]) -> InlineCallbacksType[None]:
         if brids:
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
             yield self.generateEvent(brids, "unclaimed")
@@ -265,7 +281,7 @@ class BuildRequest(base.ResourceType):
     @defer.inlineCallbacks
     def completeBuildRequests(
         self, brids: list[int], results: int, complete_at: datetime.datetime | None = None
-    ):
+    ) -> InlineCallbacksType[bool | None]:
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if not brids:
             # empty buildrequest list. No need to call db API
@@ -298,7 +314,7 @@ class BuildRequest(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def rebuildBuildrequest(self, buildrequest: dict[str, Any]):
+    def rebuildBuildrequest(self, buildrequest: dict[str, Any]) -> InlineCallbacksType[Any]:
         # goal is to make a copy of the original buildset
         buildset = yield self.master.data.get(('buildsets', buildrequest['buildsetid']))
         properties = yield self.master.data.get((
