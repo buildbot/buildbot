@@ -15,6 +15,9 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.logger import Logger
 
@@ -23,13 +26,23 @@ from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.util import httpclientservice
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 log = Logger()
 
 
 class ZulipStatusPush(ReporterBase):
     name: str | None = "ZulipStatusPush"
 
-    def checkConfig(self, endpoint, token, stream=None, debug=None, verify=None):
+    def checkConfig(  # type: ignore[override]
+        self,
+        endpoint: str,
+        token: str,
+        stream: str | None = None,
+        debug: bool | None = None,
+        verify: bool | None = None,
+    ) -> None:
         if not isinstance(endpoint, str):
             config.error("Endpoint must be a string")
         if not isinstance(token, str):
@@ -38,7 +51,14 @@ class ZulipStatusPush(ReporterBase):
         super().checkConfig(generators=[BuildStartEndStatusGenerator()])
 
     @defer.inlineCallbacks
-    def reconfigService(self, endpoint, token, stream=None, debug=None, verify=None):
+    def reconfigService(  # type: ignore[override]
+        self,
+        endpoint: str,
+        token: str,
+        stream: str | None = None,
+        debug: bool | None = None,
+        verify: bool | None = None,
+    ) -> InlineCallbacksType[None]:
         self.debug = debug
         self.verify = verify
         yield super().reconfigService(generators=[BuildStartEndStatusGenerator()])
@@ -49,7 +69,7 @@ class ZulipStatusPush(ReporterBase):
         self.stream = stream
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         build = reports[0]['builds'][0]
         event = ("new", "finished")[0 if build["complete"] is False else 1]
         jsondata = {
