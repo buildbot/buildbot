@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
 from urllib.parse import quote_plus as urlquote_plus
 
 from twisted.internet import defer
@@ -36,40 +38,43 @@ from buildbot.reporters.message import MessageFormatterRenderable
 from buildbot.util import giturlparse
 from buildbot.util import httpclientservice
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 HOSTED_BASE_URL = 'https://gitlab.com'
 
 
 class GitLabStatusPush(ReporterBase):
     name: str | None = "GitLabStatusPush"
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        token,
-        context=None,
-        baseURL=None,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        token: Any,
+        context: Any = None,
+        baseURL: str | None = None,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         if generators is None:
             generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        token,
-        context=None,
-        baseURL=None,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        token: Any,
+        context: Any = None,
+        baseURL: str | None = None,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         token = yield self.renderSecrets(token)
         self.debug = debug
         self.verify = verify
@@ -93,9 +98,9 @@ class GitLabStatusPush(ReporterBase):
             debug=self.debug,
             verify=self.verify,
         )
-        self.project_ids = {}
+        self.project_ids: dict[str, Any] = {}
 
-    def _create_default_generators(self):
+    def _create_default_generators(self) -> list[Any]:
         start_formatter = MessageFormatterRenderable('Build started.')
         end_formatter = MessageFormatterRenderable('Build done.')
         pending_formatter = MessageFormatterRenderable('Build pending.')
@@ -108,8 +113,15 @@ class GitLabStatusPush(ReporterBase):
         ]
 
     def createStatus(
-        self, project_id, branch, sha, state, target_url=None, description=None, context=None
-    ):
+        self,
+        project_id: Any,
+        branch: str,
+        sha: str,
+        state: str,
+        target_url: str | None = None,
+        description: str | None = None,
+        context: str | None = None,
+    ) -> Any:
         """
         :param project_id: Project ID from GitLab
         :param branch: Branch name to create the status for.
@@ -122,7 +134,7 @@ class GitLabStatusPush(ReporterBase):
         :return: A deferred with the result from GitLab.
 
         """
-        payload = {'state': state, 'ref': branch}
+        payload: dict[str, Any] = {'state': state, 'ref': branch}
 
         if description is not None:
             payload['description'] = description
@@ -136,7 +148,7 @@ class GitLabStatusPush(ReporterBase):
         return self._http.post(f'/api/v4/projects/{project_id}/statuses/{sha}', json=payload)
 
     @defer.inlineCallbacks
-    def getProjectId(self, sourcestamp):
+    def getProjectId(self, sourcestamp: dict[str, Any]) -> InlineCallbacksType[Any]:
         # retrieve project id via cache
         url = giturlparse(sourcestamp['repository'])
         if url is None:
@@ -158,7 +170,7 @@ class GitLabStatusPush(ReporterBase):
         return self.project_ids[project_full_name]
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         report = reports[0]
         build = reports[0]['builds'][0]
 
