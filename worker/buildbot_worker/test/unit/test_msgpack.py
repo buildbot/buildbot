@@ -108,14 +108,14 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     def setUp(self) -> None:
         self.protocol = BuildbotWebSocketClientProtocol()
-        self.protocol.sendMessage = mock.Mock()
+        self.protocol.sendMessage = mock.Mock()  # type: ignore[method-assign]
         self.protocol.factory = mock.Mock()
         self.protocol.factory.password = b'test_password'
         self.protocol.factory.name = b'test_username'
 
         self.protocol.factory.buildbot_bot.builders = {'test_builder': mock.Mock()}
-        self.protocol.dict_def = {}
-        self.protocol.sendClose = mock.Mock()
+        self.protocol.dict_def = {}  # type: ignore[attr-defined]
+        self.protocol.sendClose = mock.Mock()  # type: ignore[method-assign]
 
         def mock_util_now(_reactor: Any = None) -> float:
             return 0
@@ -129,7 +129,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             msg = msgpack.unpackb(payload, raw=False)
             self.list_send_message_args.append(msg)
 
-        self.protocol.sendMessage = send_message_test
+        self.protocol.sendMessage = send_message_test  # type: ignore[method-assign, assignment]
 
     def assert_sent_messages(self, msgs_expected: list[Any]) -> None:
         # checks, what messages has been called in sendMessage
@@ -143,12 +143,12 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         self.protocol.factory.buildbot_bot = BotMsgpack('test/dir')
         service.MultiService.startService(self.protocol.factory.buildbot_bot)
 
-        self.protocol.factory.buildbot_bot.builder_protocol_command = {'test_builder': None}
-        self.protocol.factory.buildbot_bot.builder_basedirs = {'test_builder': 'basedir'}
+        self.protocol.factory.buildbot_bot.builder_protocol_command = {'test_builder': None}  # type: ignore[attr-defined]
+        self.protocol.factory.buildbot_bot.builder_basedirs = {'test_builder': 'basedir'}  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     def test_call_get_worker_info_success(self) -> InlineCallbacksType[None]:
-        self.protocol.factory.buildbot_bot.remote_getWorkerInfo = mock.Mock()
+        self.protocol.factory.buildbot_bot.remote_getWorkerInfo = mock.Mock()  # type: ignore[method-assign]
         self.protocol.factory.buildbot_bot.remote_getWorkerInfo.return_value = {
             'test': 'data_about_worker'
         }
@@ -276,7 +276,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
         ])
 
     def test_authorization_header(self) -> None:
-        result = self.protocol.onConnecting('test')
+        result = self.protocol.onConnecting('test')  # type: ignore[arg-type]
 
         self.assertEqual(
             result.headers,
@@ -480,7 +480,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_call_shutdown_success(self) -> InlineCallbacksType[None]:
         # shutdown stops reactor, we can not test it so we just mock
-        self.protocol.factory.buildbot_bot.remote_shutdown = mock.Mock()
+        self.protocol.factory.buildbot_bot.remote_shutdown = mock.Mock()  # type: ignore[method-assign]
 
         yield self.send_message({'op': 'shutdown', 'seq_number': 0})
 
@@ -489,7 +489,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_call_interrupt_command_no_command_to_interrupt(self) -> InlineCallbacksType[None]:
         self.setup_with_worker_for_builder()
-        self.protocol.factory.command.doInterrupt = mock.Mock()
+        self.protocol.factory.command.doInterrupt = mock.Mock()  # type: ignore[attr-defined]
 
         with mock.patch('twisted.python.log.msg') as mock_log:
             yield self.send_message({
@@ -501,13 +501,13 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
             mock_log.assert_any_call('asked to interrupt current command: {}'.format('test_reason'))
             mock_log.assert_any_call(' .. but none was running')
 
-        self.protocol.factory.command.doInterrupt.assert_not_called()
+        self.protocol.factory.command.doInterrupt.assert_not_called()  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     def test_call_interrupt_command_success(self) -> InlineCallbacksType[None]:
         self.patch(time, 'time', lambda: 123.0)
         self.setup_with_worker_for_builder()
-        self.protocol.factory.command.doInterrupt = mock.Mock()
+        self.protocol.factory.command.doInterrupt = mock.Mock()  # type: ignore[attr-defined]
 
         # patch runprocess to pretend to sleep (it will really just hang forever,
         # except that we interrupt it)

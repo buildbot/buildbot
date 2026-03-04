@@ -90,7 +90,7 @@ class TestException(Exception):
 class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
     def setUp(self) -> None:
         self.protocol = BuildbotWebSocketServerProtocol()
-        self.protocol.sendMessage = mock.Mock()
+        self.protocol.sendMessage = mock.Mock()  # type: ignore[method-assign]
         self.seq_number = 1
 
     @defer.inlineCallbacks
@@ -109,7 +109,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         protocol.onMessage(msgpack.packb(msg), True)
         yield protocol._deferwaiter.wait()
-        args_tuple, _ = protocol.sendMessage.call_args
+        args_tuple, _ = protocol.sendMessage.call_args  # type: ignore[attr-defined]
         result = msgpack.unpackb(args_tuple[0], raw=False)
         self.assertEqual(result, expected)
 
@@ -120,7 +120,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
 
         self.protocol.onMessage(msgpack.packb(msg), True)
 
-        args_tuple, _ = self.protocol.sendMessage.call_args
+        args_tuple, _ = self.protocol.sendMessage.call_args  # type: ignore[attr-defined]
         return msgpack.unpackb(args_tuple[0], raw=False)['result']
 
     @defer.inlineCallbacks
@@ -178,7 +178,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self.assertTrue(str(captured[1]["log_legacy"]).startswith("Unable to format event "))
 
         # if msg does not have 'sep_number' or 'op', response sendMessage should not be called
-        self.protocol.sendMessage.assert_not_called()
+        self.protocol.sendMessage.assert_not_called()  # type: ignore[attr-defined]
 
     @parameterized.expand([
         ('update', {'op': 'update', 'args': 'args'}),
@@ -547,7 +547,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         msg: dict[str, Any] = {}
         self.protocol.onMessage(msgpack.packb(msg), False)
         self.seq_number += 1
-        self.protocol.sendMessage.assert_not_called()
+        self.protocol.sendMessage.assert_not_called()  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
     def test_onMessage_worker_not_authenticated(self) -> InlineCallbacksType[None]:
@@ -578,7 +578,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         seq_num = msg['seq_number']
         self.assertEqual(d.called, False)
 
-        self.protocol.sendMessage.assert_called()
+        self.protocol.sendMessage.assert_called()  # type: ignore[attr-defined]
 
         # master got an answer from worker through onMessage
         msg = {'seq_number': seq_num, 'op': 'response', 'result': 'test_result'}

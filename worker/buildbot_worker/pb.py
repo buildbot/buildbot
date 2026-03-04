@@ -802,7 +802,7 @@ class Worker(WorkerBase):
                     ws_conn_string += '/'
                 ws_conn_string += path
 
-            bf = self.bf = BuildbotWebSocketClientFactory(
+            bf = self.bf = BuildbotWebSocketClientFactory(  # type: ignore[assignment]
                 ws_conn_string,
                 buildbot_bot=self.bot,
                 name=name_b,
@@ -900,13 +900,13 @@ class Worker(WorkerBase):
 
     def gracefulShutdown(self) -> Deferred[Any] | None:
         """Start shutting down"""
-        if not self.bf.perspective:
+        if not self.bf.perspective:  # type: ignore[union-attr]
             log.msg("No active connection, shutting down NOW")
             cast("IReactorCore", reactor).stop()
             return None
 
         log.msg("Telling the master we want to shutdown after any running builds are finished")
-        d = self.bf.perspective.callRemote("shutdown")
+        d = self.bf.perspective.callRemote("shutdown")  # type: ignore[union-attr]
 
         def _shutdownfailed(err: Failure) -> None:
             if err.check(AttributeError):

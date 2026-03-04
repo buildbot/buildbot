@@ -124,13 +124,13 @@ ruff:
 	ruff format .
 
 mypy-master-linux:
-	$(MYPY) --cache-dir ".mypy_cache/master/linux" --platform linux --config-file ./pyproject.toml master/buildbot
+	$(MYPY) --cache-dir ".mypy_cache/master/linux" --platform linux --config-file ./pyproject.toml $(MYPY_EXTRA_FLAGS) master/buildbot
 mypy-master-win32:
-	$(MYPY) --cache-dir ".mypy_cache/master/win32" --platform win32 --config-file ./pyproject.toml master/buildbot
+	$(MYPY) --cache-dir ".mypy_cache/master/win32" --platform win32 --config-file ./pyproject.toml $(MYPY_EXTRA_FLAGS) master/buildbot
 mypy-worker-linux:
-	$(MYPY) --cache-dir ".mypy_cache/worker/linux" --platform linux --config-file ./worker/.mypy.ini worker/buildbot_worker
+	$(MYPY) --cache-dir ".mypy_cache/worker/linux" --platform linux --config-file ./worker/.mypy.ini $(MYPY_EXTRA_FLAGS) worker/buildbot_worker
 mypy-worker-win32:
-	$(MYPY) --cache-dir ".mypy_cache/worker/win32" --platform win32 --config-file ./worker/.mypy.ini worker/buildbot_worker
+	$(MYPY) --cache-dir ".mypy_cache/worker/win32" --platform win32 --config-file ./worker/.mypy.ini $(MYPY_EXTRA_FLAGS) worker/buildbot_worker
 
 mypy: mypy-master-linux mypy-master-win32 mypy-worker-linux mypy-worker-win32
 
