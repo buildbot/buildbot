@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -25,11 +26,14 @@ from buildbot import interfaces
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter
+from buildbot.reporters.message import MessageFormatterBase
 
 from .utils import BuildStatusGeneratorMixin
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @implementer(interfaces.IReportGenerator)
@@ -42,24 +46,26 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
 
     def __init__(
         self,
-        mode=("failing", "passing", "warnings"),
-        tags=None,
-        builders=None,
-        schedulers=None,
-        branches=None,
-        subject=None,
-        add_logs=None,
-        add_patch=False,
-        message_formatter=None,
-    ):
+        mode: str | tuple[str, ...] = ("failing", "passing", "warnings"),
+        tags: list[str] | None = None,
+        builders: list[str] | None = None,
+        schedulers: list[str] | None = None,
+        branches: list[str] | None = None,
+        subject: str | None = None,
+        add_logs: Any = None,
+        add_patch: bool = False,
+        message_formatter: MessageFormatter | None = None,
+    ) -> None:
         subject = "Buildbot %(result)s in %(title)s on %(builder)s"
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch)
-        self.formatter = message_formatter
+        self.formatter: MessageFormatter = message_formatter  # type: ignore[assignment]
         if self.formatter is None:
             self.formatter = MessageFormatter()
 
     @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    def generate(
+        self, master: Any, reporter: Any, key: Any, message: Any
+    ) -> InlineCallbacksType[Any]:
         bsid = message['bsid']
         res = yield utils.getDetailsForBuildset(
             master,
@@ -87,7 +93,14 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         return report
 
     @defer.inlineCallbacks
-    def buildset_message(self, formatter, master, reporter, builds, buildset):
+    def buildset_message(
+        self,
+        formatter: MessageFormatter,
+        master: Any,
+        reporter: Any,
+        builds: Any,
+        buildset: Any,
+    ) -> InlineCallbacksType[Any]:
         # The given builds must refer to builds from a single buildset
         patches = []
         logs = []
@@ -145,7 +158,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
             "extra_info": extra_info,
         }
 
-    def _want_previous_build(self):
+    def _want_previous_build(self) -> bool:
         return "change" in self.mode or "problem" in self.mode
 
 
@@ -157,11 +170,13 @@ class BuildSetCombinedStatusGenerator:
 
     compare_attrs: ClassVar[Sequence[str]] = ["formatter"]
 
-    def __init__(self, message_formatter):
+    def __init__(self, message_formatter: MessageFormatterBase) -> None:
         self.formatter = message_formatter
 
     @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    def generate(
+        self, master: Any, reporter: Any, key: Any, message: Any
+    ) -> InlineCallbacksType[Any]:
         bsid = message["bsid"]
 
         res = yield utils.getDetailsForBuildset(
@@ -180,11 +195,18 @@ class BuildSetCombinedStatusGenerator:
 
         return report
 
-    def check(self):
+    def check(self) -> None:
         pass
 
     @defer.inlineCallbacks
-    def buildset_message(self, formatter, master, reporter, buildset, builds):
+    def buildset_message(
+        self,
+        formatter: MessageFormatterBase,
+        master: Any,
+        reporter: Any,
+        buildset: Any,
+        builds: Any,
+    ) -> InlineCallbacksType[Any]:
         buildmsg = yield formatter.format_message_for_buildset(
             master, buildset, builds, is_buildset=True, mode=("passing",), users=[]
         )
