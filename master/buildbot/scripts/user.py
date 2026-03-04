@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 
@@ -20,20 +25,23 @@ from buildbot.clients import usersclient
 from buildbot.process.users import users
 from buildbot.util import in_reactor
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 @in_reactor
 @defer.inlineCallbacks
-def user(config):
-    master = config.get('master')
+def user(config: dict[str, Any]) -> InlineCallbacksType[int]:
+    master = cast(str, config.get('master'))
     op = config.get('op')
     username = config.get('username')
     passwd = config.get('passwd')
-    master, port = master.split(":")
-    port = int(port)
+    master, port_str = master.split(":")
+    port = int(port_str)
     bb_username = config.get('bb_username')
     bb_password = config.get('bb_password')
     if bb_username or bb_password:
-        bb_password = users.encrypt(bb_password)
+        bb_password = users.encrypt(bb_password)  # type: ignore[arg-type]
     info = config.get('info')
     ids = config.get('ids')
 
