@@ -163,7 +163,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.configurators.janitor",
       "buildbot.configurators",
       "buildbot.data.graphql",
-      "buildbot.data.logchunks",
       "buildbot.data.logs",
       "buildbot.data.masters",
       "buildbot.data.patches",
