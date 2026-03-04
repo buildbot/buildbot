@@ -322,7 +322,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.statistics.storage_backends.base",
       "buildbot.statistics.storage_backends.influxdb_client",
       "buildbot.steps.python_twisted",
-      "buildbot.steps.python",
       "buildbot.steps.shell",
       "buildbot.steps.shellsequence",
       "buildbot.steps.source.base",
