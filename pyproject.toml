@@ -188,7 +188,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.data.test_results",
       "buildbot.data.types",
       "buildbot.data.workers",
-      "buildbot.db.migrations.versions.060_v3.9_add_builder_projects",
       "buildbot.db.migrations.versions.061_v3.9_add_builder_description_format",
       "buildbot.db.migrations.versions.062_v3.9_add_project_description_format",
       "buildbot.db.migrations.versions.063_v3.10_add_steps_locks_acquired_at",
