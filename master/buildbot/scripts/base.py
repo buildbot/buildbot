@@ -22,16 +22,24 @@ import stat
 import sys
 import traceback
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.python import runtime
 from twisted.python import usage
 
 from buildbot.config.errors import ConfigErrors
 from buildbot.config.master import FileLoader
+from buildbot.config.master import MasterConfig
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 @contextmanager
-def captureErrors(errors, msg):
+def captureErrors(
+    errors: type[BaseException] | tuple[type[BaseException], ...], msg: str
+) -> Generator[None, None, int | None]:
     try:
         yield
     except errors as e:
@@ -45,7 +53,7 @@ class BusyError(RuntimeError):
     pass
 
 
-def checkPidFile(pidfile):
+def checkPidFile(pidfile: str) -> None:
     """mostly comes from _twistd_unix.py which is not twisted public API :-/
 
     except it returns an exception instead of exiting
@@ -71,7 +79,7 @@ def checkPidFile(pidfile):
             raise BusyError(f"'{pidfile}' exists - is this master still running?")
 
 
-def checkBasedir(config):
+def checkBasedir(config: dict[str, Any]) -> bool:
     if not config['quiet']:
         print("checking basedir")
 
@@ -105,7 +113,7 @@ def checkBasedir(config):
     return True
 
 
-def loadConfig(config, configFileName='master.cfg'):
+def loadConfig(config: dict[str, Any], configFileName: str = 'master.cfg') -> MasterConfig | None:
     if not config['quiet']:
         print(f"checking {configFileName}")
 
@@ -125,8 +133,8 @@ def loadConfig(config, configFileName='master.cfg'):
     return master_cfg
 
 
-def isBuildmasterDir(dir):
-    def print_error(error_message):
+def isBuildmasterDir(dir: str) -> bool:
+    def print_error(error_message: str) -> None:
         print(f"{error_message}\ninvalid buildmaster directory '{dir}'")
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
@@ -144,7 +152,7 @@ def isBuildmasterDir(dir):
     return True
 
 
-def getConfigFromTac(basedir, quiet=False):
+def getConfigFromTac(basedir: str, quiet: bool = False) -> dict[str, Any] | None:
     tacFile = os.path.join(basedir, 'buildbot.tac')
     if os.path.exists(tacFile):
         # don't mess with the global namespace, but set __file__ for
@@ -161,7 +169,7 @@ def getConfigFromTac(basedir, quiet=False):
     return None
 
 
-def getConfigFileFromTac(basedir, quiet=False):
+def getConfigFileFromTac(basedir: str, quiet: bool = False) -> str:
     # execute the .tac file to see if its configfile location exists
     config = getConfigFromTac(basedir, quiet=quiet)
     if config:
@@ -179,7 +187,7 @@ class SubcommandOptions(usage.Options):
     # set this to options that must have non-None values
     requiredOptions: list[str] = []
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         # for options in self.buildbotOptions, optParameters, and the options
         # file, change the default in optParameters to the value in the options
         # file, call through to the constructor, and then change it back.
@@ -202,7 +210,7 @@ class SubcommandOptions(usage.Options):
         if hasattr(cls, 'optParameters'):
             cls.optParameters = old_optParameters
 
-    def loadOptionsFile(self, _here=None):
+    def loadOptionsFile(self, _here: str | None = None) -> dict[str, Any]:
         """Find the .buildbot/options file. Crawl from the current directory
         up towards the root, and also look in ~/.buildbot . The first directory
         that's owned by the user and has the file we're looking for wins.
@@ -240,12 +248,12 @@ class SubcommandOptions(usage.Options):
 
         searchpath.append(home)
 
-        localDict = {}
+        localDict: dict[str, Any] = {}
 
         for d in searchpath:
             if os.path.isdir(d):
                 if runtime.platformType != 'win32':
-                    if os.stat(d)[stat.ST_UID] != os.getuid():
+                    if os.stat(d)[stat.ST_UID] != os.getuid():  # type: ignore[attr-defined]
                         print(f"skipping {d} because you don't own it")
                         continue  # security, skip other people's directories
                 optfile = os.path.join(d, "options")
@@ -264,7 +272,7 @@ class SubcommandOptions(usage.Options):
                 del localDict[k]
         return localDict
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         missing = [k for k in self.requiredOptions if self[k] is None]
         if missing:
             if len(missing) > 1:
@@ -286,16 +294,16 @@ class BasedirMixin:
             extraActions=[usage.CompleteDirs(descr="buildbot base directory")]
         )
 
-    def parseArgs(self, *args):
+    def parseArgs(self, *args: Any) -> None:
         if args:
-            self['basedir'] = args[0]
+            self['basedir'] = args[0]  # type: ignore[index]
         else:
             # Use the current directory if no basedir was specified.
-            self['basedir'] = os.getcwd()
+            self['basedir'] = os.getcwd()  # type: ignore[index]
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         # get an unambiguous, expanded basedir, including expanding '~', which
         # may be useful in a .buildbot/config file
-        self['basedir'] = os.path.abspath(os.path.expanduser(self['basedir']))
+        self['basedir'] = os.path.abspath(os.path.expanduser(self['basedir']))  # type: ignore[index]

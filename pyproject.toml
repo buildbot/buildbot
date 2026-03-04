@@ -150,6 +150,12 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
+      "buildbot.scripts.base",
+    ]
+    warn_unused_ignores = false
+
+    [[tool.mypy.overrides]]
+    module = [
       "buildbot.asyncio",
       "buildbot.clients.sendchange",
       "buildbot.clients.tryclient",
@@ -249,7 +255,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.schedulers.timed",
       "buildbot.schedulers.triggerable",
       "buildbot.schedulers.trysched",
-      "buildbot.scripts.base",
       "buildbot.scripts.checkconfig",
       "buildbot.scripts.cleanupdb",
       "buildbot.scripts.create_master",
