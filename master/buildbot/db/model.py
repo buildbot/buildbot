@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING
 
 import alembic
 import alembic.config
+import alembic.runtime.migration
+import alembic.script
 import sqlalchemy as sa
 from twisted.internet import defer
 from twisted.python import log
@@ -31,12 +33,14 @@ from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
 
 if TYPE_CHECKING:
-    from sqlalchemy.engine import Connection as SQLAConnection
+    from alembic.script import ScriptDirectory
     from sqlalchemy.engine.reflection import Inspector
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class UpgradeFromBefore0p9Error(Exception):
-    def __init__(self):
+    def __init__(self) -> None:
         message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x or newer.
         This is not supported. Please start from a clean database
         https://docs.buildbot.net/latest/manual/upgrading/0.9-upgrade.html"""
@@ -45,7 +49,7 @@ class UpgradeFromBefore0p9Error(Exception):
 
 
 class UpgradeFromBefore3p0Error(Exception):
-    def __init__(self):
+    def __init__(self) -> None:
         message = """You are trying to upgrade to Buildbot 3.0 or newer from Buildbot 2.x or older.
         This is only supported via an intermediate upgrade to newest Buildbot 2.10.x that is
         available. Please first upgrade to 2.10.x and then try to upgrade to this version.
@@ -1229,28 +1233,30 @@ class Model(base.DBConnectorComponent):
 
     config_path = util.sibpath(__file__, "migrations/alembic.ini")
 
-    def table_exists(self, conn: SQLAConnection, table: str):
+    def table_exists(self, conn: sa.engine.Connection, table: str) -> bool:
         inspector: Inspector = sa.inspect(conn.engine)
         return inspector.has_table(table)
 
-    def migrate_get_version(self, conn):
+    def migrate_get_version(self, conn: sa.engine.Connection) -> int | None:
         r = conn.execute(sa.text("select version from migrate_version limit 1"))
         version = r.scalar()
         r.close()
         return version
 
-    def alembic_get_scripts(self):
+    def alembic_get_scripts(self) -> ScriptDirectory:
         alembic_config = alembic.config.Config(self.config_path)
         return alembic.script.ScriptDirectory.from_config(alembic_config)
 
-    def alembic_stamp(self, conn, alembic_scripts, revision):
+    def alembic_stamp(
+        self, conn: sa.engine.Connection, alembic_scripts: ScriptDirectory, revision: str
+    ) -> None:
         context = alembic.runtime.migration.MigrationContext.configure(conn)
         context.stamp(alembic_scripts, revision)
         conn.commit()
 
     @defer.inlineCallbacks
-    def is_current(self):
-        def thd(conn):
+    def is_current(self) -> InlineCallbacksType[bool]:
+        def thd(conn: sa.engine.Connection) -> bool:
             if not self.table_exists(conn, 'alembic_version'):
                 return False
 
@@ -1266,17 +1272,17 @@ class Model(base.DBConnectorComponent):
         return ret
 
     # returns a Deferred that returns None
-    def create(self):
+    def create(self) -> defer.Deferred[None]:
         # this is nice and simple, but used only for tests
-        def thd(engine):
+        def thd(engine: sa.engine.Engine) -> None:
             self.metadata.create_all(bind=engine)
 
         return self.db.pool.do_with_engine(thd)
 
     @defer.inlineCallbacks
-    def upgrade(self):
+    def upgrade(self) -> InlineCallbacksType[None]:
         # the upgrade process must run in a db thread
-        def thd(conn):
+        def thd(conn: sa.engine.Connection) -> None:
             alembic_scripts = self.alembic_get_scripts()
             current_script_rev_head = alembic_scripts.get_current_head()
 
@@ -1286,14 +1292,14 @@ class Model(base.DBConnectorComponent):
             if self.table_exists(conn, 'migrate_version'):
                 version = self.migrate_get_version(conn)
 
-                if version < 40:
+                if version < 40:  # type: ignore[operator]
                     raise UpgradeFromBefore0p9Error()
 
                 last_sqlalchemy_migrate_version = 58
                 if version != last_sqlalchemy_migrate_version:
                     raise UpgradeFromBefore3p0Error()
 
-                self.alembic_stamp(conn, alembic_scripts, alembic_scripts.get_base())
+                self.alembic_stamp(conn, alembic_scripts, alembic_scripts.get_base())  # type: ignore[arg-type]
                 conn.execute(sa.text('drop table migrate_version'))
                 conn.commit()
 
@@ -1305,12 +1311,14 @@ class Model(base.DBConnectorComponent):
 
                 Model.metadata.create_all(conn)
                 conn.commit()
-                self.alembic_stamp(conn, alembic_scripts, current_script_rev_head)
+                self.alembic_stamp(conn, alembic_scripts, current_script_rev_head)  # type: ignore[arg-type]
                 return
 
-            def upgrade(rev, context):
+            def upgrade(
+                rev: str | None, context: alembic.runtime.migration.MigrationContext
+            ) -> list[alembic.script.base.RevisionStep]:
                 log.msg(f'Upgrading from {rev} to {current_script_rev_head}')
-                return alembic_scripts._upgrade_revs(current_script_rev_head, rev)
+                return alembic_scripts._upgrade_revs(current_script_rev_head, rev)  # type: ignore[arg-type]
 
             context = alembic.runtime.migration.MigrationContext.configure(
                 conn, opts={'fn': upgrade}
