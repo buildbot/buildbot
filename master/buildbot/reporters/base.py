@@ -114,6 +114,7 @@ class ReporterBase(service.BuildbotService):
 
         try:
             reports = []
+            assert self.generators is not None
             for g in self.generators:
                 if self._does_generator_want_key(g, key):
                     try:
