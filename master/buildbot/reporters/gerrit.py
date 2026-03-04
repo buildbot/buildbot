@@ -20,7 +20,11 @@ from __future__ import annotations
 
 import time
 import warnings
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
 
+from packaging.version import Version
 from packaging.version import parse as parse_version
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -39,6 +43,9 @@ from buildbot.reporters import utils
 from buildbot.reporters.base import ReporterBase
 from buildbot.util import bytes2unicode
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600
 
@@ -46,14 +53,14 @@ GERRIT_LABEL_VERIFIED = 'Verified'
 GERRIT_LABEL_REVIEWED = 'Code-Review'
 
 
-def makeReviewResult(message, *labels):
+def makeReviewResult(message: Any, *labels: Any) -> dict[str, Any]:
     """
     helper to produce a review result
     """
     return {"message": message, "labels": dict(labels)}
 
 
-def _old_add_label(label, value):
+def _old_add_label(label: str, value: Any) -> list[str]:
     if label == GERRIT_LABEL_VERIFIED:
         return [f"--verified {int(value)}"]
     elif label == GERRIT_LABEL_REVIEWED:
@@ -65,11 +72,13 @@ def _old_add_label(label, value):
     return []
 
 
-def _new_add_label(label, value):
+def _new_add_label(label: str, value: Any) -> list[str]:
     return [f"--label {label}={int(value)}"]
 
 
-def defaultReviewCB(builderName, build, result, master, arg):
+def defaultReviewCB(
+    builderName: str, build: Any, result: Any, master: Any, arg: Any
+) -> dict[str, Any]:
     if result == RETRY:
         return makeReviewResult(None)
 
@@ -80,7 +89,7 @@ def defaultReviewCB(builderName, build, result, master, arg):
     return makeReviewResult(message, (GERRIT_LABEL_VERIFIED, result == SUCCESS or -1))
 
 
-def defaultSummaryCB(buildInfoList, results, master, arg):
+def defaultSummaryCB(buildInfoList: Any, results: Any, master: Any, arg: Any) -> dict[str, Any]:
     success = False
     failure = False
 
@@ -118,7 +127,7 @@ class DEFAULT_SUMMARY:
 
 
 @defer.inlineCallbacks
-def extract_project_revision(master, report):
+def extract_project_revision(master: Any, report: Any) -> InlineCallbacksType[tuple[Any, Any]]:
     props = None
     if report["builds"]:
         props = report["builds"][0].get("properties", None)
@@ -126,7 +135,7 @@ def extract_project_revision(master, report):
     if props is None:
         props = yield master.data.get(("buildsets", report["buildset"]["bsid"], "properties"))
 
-    def get_property(props, name):
+    def get_property(props: Any, name: str) -> Any:
         if props is None:
             return None
         return props.get(name, [None])[0]
@@ -175,18 +184,25 @@ def extract_project_revision(master, report):
 
 
 class GerritStatusGeneratorBase:
-    def __init__(self, callback, callback_arg, builders, want_steps, want_logs):
+    def __init__(
+        self,
+        callback: Callable[..., Any],
+        callback_arg: Any,
+        builders: list[str] | None,
+        want_steps: bool,
+        want_logs: bool,
+    ) -> None:
         self.callback = callback
         self.callback_arg = callback_arg
         self.builders = builders
         self.want_steps = want_steps
         self.want_logs = want_logs
 
-    def is_build_reported(self, build):
+    def is_build_reported(self, build: Any) -> bool:
         return self.builders is None or build["builder"]["name"] in self.builders
 
     @defer.inlineCallbacks
-    def get_build_details(self, master, build):
+    def get_build_details(self, master: Any, build: Any) -> InlineCallbacksType[None]:
         br = yield master.data.get(("buildrequests", build["buildrequestid"]))
         buildset = yield master.data.get(("buildsets", br["buildsetid"]))
         yield utils.getDetailsForBuilds(
@@ -200,11 +216,13 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
         ("buildsets", None, "complete"),
     ]
 
-    def check(self):
+    def check(self) -> None:
         pass
 
     @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    def generate(
+        self, master: Any, reporter: Any, key: Any, message: Any
+    ) -> InlineCallbacksType[Any]:
         bsid = message["bsid"]
         res = yield utils.getDetailsForBuildset(
             master,
@@ -222,7 +240,7 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
         if not builds:
             return None
 
-        def get_build_info(build):
+        def get_build_info(build: Any) -> dict[str, Any]:
             result = build["results"]
             resultText = {
                 SUCCESS: "succeeded",
@@ -264,11 +282,13 @@ class GerritBuildStartStatusGenerator(GerritStatusGeneratorBase):
         ("builds", None, "new"),
     ]
 
-    def check(self):
+    def check(self) -> None:
         pass
 
     @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    def generate(
+        self, master: Any, reporter: Any, key: Any, message: Any
+    ) -> InlineCallbacksType[Any]:
         build = message
         yield self.get_build_details(master, build)
         if not self.is_build_reported(build):
@@ -292,11 +312,13 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
         ('builds', None, 'finished'),
     ]
 
-    def check(self):
+    def check(self) -> None:
         pass
 
     @defer.inlineCallbacks
-    def generate(self, master, reporter, key, message):
+    def generate(
+        self, master: Any, reporter: Any, key: Any, message: Any
+    ) -> InlineCallbacksType[Any]:
         build = message
         yield self.get_build_details(master, build)
         if not self.is_build_reported(build):
@@ -320,24 +342,24 @@ class GerritStatusPush(ReporterBase):
     """Event streamer to a gerrit ssh server."""
 
     name: str | None = "GerritStatusPush"
-    gerrit_server = None
-    gerrit_username = None
-    gerrit_port = None
-    gerrit_version_time = None
-    gerrit_version = None
-    gerrit_identity_file = None
-    _gerrit_notify = None
+    gerrit_server: str | None = None
+    gerrit_username: str | None = None
+    gerrit_port: int | None = None
+    gerrit_version_time: float | None = None
+    gerrit_version: Version | None = None
+    gerrit_identity_file: str | None = None
+    _gerrit_notify: Any = None
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        server,
-        username,
-        port=29418,
-        identity_file=None,
-        notify=None,
-        generators=None,
-        **kwargs,
-    ):
+        server: str,
+        username: str,
+        port: int = 29418,
+        identity_file: str | None = None,
+        notify: Any = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         if generators is None:
             generators = []
             generators.append(
@@ -352,16 +374,16 @@ class GerritStatusPush(ReporterBase):
 
         super().checkConfig(generators=generators, **kwargs)
 
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        server,
-        username,
-        port=29418,
-        identity_file=None,
-        notify=None,
-        generators=None,
-        **kwargs,
-    ):
+        server: str,
+        username: str,
+        port: int = 29418,
+        identity_file: str | None = None,
+        notify: Any = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
         self.gerrit_server = server
         self.gerrit_username = username
         self.gerrit_port = port
@@ -384,7 +406,7 @@ class GerritStatusPush(ReporterBase):
 
         super().reconfigService(generators=generators, **kwargs)
 
-    def _gerritCmd(self, *args):
+    def _gerritCmd(self, *args: str) -> list[str]:
         """Construct a command as a list of strings suitable for
         :func:`subprocess.call`.
         """
@@ -397,7 +419,7 @@ class GerritStatusPush(ReporterBase):
             '-o',
             'BatchMode=yes',
             *options,
-            '@'.join((self.gerrit_username, self.gerrit_server)),
+            '@'.join((self.gerrit_username, self.gerrit_server)),  # type: ignore[arg-type]
             '-p',
             str(self.gerrit_port),
             'gerrit',
@@ -405,11 +427,11 @@ class GerritStatusPush(ReporterBase):
         ]
 
     class VersionPP(ProcessProtocol):
-        def __init__(self, func):
+        def __init__(self, func: Callable[[Version], None]) -> None:
             self.func = func
-            self.gerrit_version = None
+            self.gerrit_version: Version | None = None
 
-        def outReceived(self, data):
+        def outReceived(self, data: bytes) -> None:
             vstr = b"gerrit version "
             if not data.startswith(vstr):
                 log.msg(b"Error: Cannot interpret gerrit version info: " + data)
@@ -418,55 +440,55 @@ class GerritStatusPush(ReporterBase):
             log.msg(b"gerrit version: " + vers)
             self.gerrit_version = parse_version(bytes2unicode(vers))
 
-        def errReceived(self, data):
+        def errReceived(self, data: bytes) -> None:
             log.msg(b"gerriterr: " + data)
 
-        def processEnded(self, reason):
+        def processEnded(self, reason: Any) -> None:
             if reason.value.exitCode:
                 log.msg("gerrit version status: ERROR:", reason)
                 return
             if self.gerrit_version:
                 self.func(self.gerrit_version)
 
-    def getCachedVersion(self):
+    def getCachedVersion(self) -> Version | None:
         if self.gerrit_version is None:
             return None
-        if time.time() - self.gerrit_version_time > GERRIT_VERSION_CACHE_TIMEOUT:
+        if time.time() - self.gerrit_version_time > GERRIT_VERSION_CACHE_TIMEOUT:  # type: ignore[operator]
             # cached version has expired
             self.gerrit_version = None
         return self.gerrit_version
 
-    def processVersion(self, gerrit_version, func):
+    def processVersion(self, gerrit_version: Version, func: Callable[[], None]) -> None:
         self.gerrit_version = gerrit_version
         self.gerrit_version_time = time.time()
         func()
 
-    def callWithVersion(self, func):
+    def callWithVersion(self, func: Callable[[], None]) -> None:
         command = self._gerritCmd("version")
 
-        def callback(gerrit_version):
+        def callback(gerrit_version: Version) -> None:
             return self.processVersion(gerrit_version, func)
 
         self.spawnProcess(self.VersionPP(callback), command[0], command, env=None)
 
     class LocalPP(ProcessProtocol):
-        def __init__(self, status):
+        def __init__(self, status: Any) -> None:
             self.status = status
 
-        def outReceived(self, data):
+        def outReceived(self, data: bytes) -> None:
             log.msg("gerritout:", data)
 
-        def errReceived(self, data):
+        def errReceived(self, data: bytes) -> None:
             log.msg("gerriterr:", data)
 
-        def processEnded(self, reason):
+        def processEnded(self, reason: Any) -> None:
             if reason.value.exitCode:
                 log.msg("gerrit status: ERROR:", reason)
             else:
                 log.msg("gerrit status: OK")
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         report = reports[0]
 
         project, revision = yield extract_project_revision(self.master, report)
@@ -507,7 +529,7 @@ class GerritStatusPush(ReporterBase):
         self.send_code_review(project, revision, report["body"], labels)
         return None
 
-    def send_code_review(self, project, revision, message, labels):
+    def send_code_review(self, project: str, revision: str, message: Any, labels: Any) -> None:
         gerrit_version = self.getCachedVersion()
         if gerrit_version is None:
             self.callWithVersion(lambda: self.send_code_review(project, revision, message, labels))
@@ -539,5 +561,5 @@ class GerritStatusPush(ReporterBase):
         command = [str(s) for s in command]
         self.spawnProcess(self.LocalPP(self), command[0], command, env=None)
 
-    def spawnProcess(self, *arg, **kw):
-        reactor.spawnProcess(*arg, **kw)
+    def spawnProcess(self, *arg: Any, **kw: Any) -> None:
+        reactor.spawnProcess(*arg, **kw)  # type: ignore[attr-defined]
