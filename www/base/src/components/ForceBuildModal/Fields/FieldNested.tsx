@@ -64,14 +64,26 @@ export const FieldNested = observer(({field, fieldsState}: FieldNestedProps) => 
   const columnClass = `col-sm-${(12 / columns).toString()}`;
 
   if (field.layout === 'tabs') {
+    const firstVisibleIndex = field.fields.findIndex((f) => !shouldHideField(f));
+    const firstField = firstVisibleIndex >= 0 ? field.fields[firstVisibleIndex] : null;
+    const defaultKey =
+      firstField !== null
+        ? firstField.name === ''
+          ? firstVisibleIndex
+          : firstField.name
+        : undefined;
+
     return (
       <div>
-        <Tabs>
-          {filteredMap(field.fields, (f, index) => (
-            <Tab key={f.name === '' ? index : f.name} title={f.tablabel} className={columnClass}>
-              <FieldAny field={f} fieldsState={fieldsState}></FieldAny>
-            </Tab>
-          ))}
+        <Tabs defaultActiveKey={defaultKey}>
+          {filteredMap(field.fields, (f, index) => {
+            const eventKey = f.name === '' ? index : f.name;
+            return (
+              <Tab key={eventKey} eventKey={eventKey} title={f.tablabel} className={columnClass}>
+                <FieldAny field={f} fieldsState={fieldsState}></FieldAny>
+              </Tab>
+            );
+          })}
         </Tabs>
       </div>
     );
