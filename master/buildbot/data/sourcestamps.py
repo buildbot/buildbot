@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import TypedDict
 
 from twisted.internet import defer
@@ -27,6 +28,7 @@ from buildbot.data import types
 if TYPE_CHECKING:
     import datetime
 
+    from buildbot.data.resultspec import ResultSpec
     from buildbot.db.sourcestamps import SourceStampModel
     from buildbot.util.twisted import InlineCallbacksType
 
@@ -81,7 +83,9 @@ class SourceStampEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs) -> InlineCallbacksType[SourceStampData | None]:
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[SourceStampData | None]:
         ssdict = yield self.master.db.sourcestamps.getSourceStamp(kwargs['ssid'])
         return _db2data(ssdict) if ssdict else None
 
@@ -95,7 +99,9 @@ class SourceStampsEndpoint(base.Endpoint):
     rootLinkName = 'sourcestamps'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs) -> InlineCallbacksType[list[SourceStampData]]:
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[SourceStampData]]:
         buildsetid = kwargs.get("buildsetid")
         if buildsetid is not None:
             sourcestamps = yield self.master.db.sourcestamps.get_sourcestamps_for_buildset(
