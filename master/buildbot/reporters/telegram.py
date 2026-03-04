@@ -152,7 +152,7 @@ class TelegramContact(Contact):
             '/setChatMenuButton',
             json={'chat_id': self.channel.id, 'menu_button': {'type': 'commands'}},
         )
-        yield self.command_HELLO(args)
+        yield self.command_HELLO(args)  # type: ignore[func-returns-value]
         cast("IReactorTime", reactor).callLater(0.2, self.command_HELP, '')
 
     def command_NAY(self, args: Any, tmessage: dict[str, Any], **kwargs: Any) -> None:
@@ -613,7 +613,7 @@ class TelegramContact(Contact):
             self.send(msg, reply_markup={'inline_keyboard': keyboard})
 
         elif task == 'ask':
-            prompt = "enter the new value for the " + what.replace('_', ' ').lower()
+            prompt = "enter the new value for the " + what.replace('_', ' ').lower()  # type: ignore[union-attr]
             args = ' '.join(shlex.quote(f"{p[0]}={p[1]}") for p in params.items() if p[0] != what)
             self.template = f'/force {sched} config {bldr} {args} {what}={{}}'
             self.ask_for_reply(prompt, '')
