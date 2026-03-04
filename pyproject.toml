@@ -162,7 +162,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.clients.usersclient",
       "buildbot.configurators.janitor",
       "buildbot.configurators",
-      "buildbot.data.builders",
       "buildbot.data.buildrequests",
       "buildbot.data.builds",
       "buildbot.data.buildsets",
