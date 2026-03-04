@@ -95,7 +95,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
         # set up components
         self._engine = None  # set up in reconfigService
-        self.pool = None  # set up in reconfigService
+        self.pool: pool.DBThreadPool = None  # type: ignore[assignment,unused-ignore]  # set up in reconfigService
         self.upsert = get_upsert_method(None)  # set up in reconfigService
         self.has_native_upsert = False
 
