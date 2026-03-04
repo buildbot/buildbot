@@ -79,7 +79,21 @@ export const FieldChoiceString = observer(({field, fieldsState}: FieldChoiceStri
         <Tooltip id="my-tooltip" clickable />
       </Form.Label>
       <div className="col-sm-10" data-bb-test-id={`force-field-${field.fullName}`}>
-        {field.strict ? (
+        {!field.strict && !field.multiple ? (
+          <>
+            <Form.Control
+              type="text"
+              list={`choices-${field.fullName}`}
+              value={(state.value as string) ?? ''}
+              onChange={(e) => fieldsState.setValue(field.fullName, e.target.value)}
+            />
+            <datalist id={`choices-${field.fullName}`}>
+              {field.choices.map((choice) => (
+                <option key={choice} value={choice} />
+              ))}
+            </datalist>
+          </>
+        ) : field.strict ? (
           <Select<SelectOption, boolean> {...props} />
         ) : (
           <CreatableSelect<SelectOption, boolean> {...props} />

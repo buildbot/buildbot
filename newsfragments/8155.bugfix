@@ -1,0 +1,1 @@
+Fixed ``ChoiceStringParameter`` with ``strict=False`` not supporting paste or edit of custom values in the force build modal (:issue:`8155`).
