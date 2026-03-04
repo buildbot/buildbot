@@ -51,7 +51,7 @@ class Reconfigurator:
         with open(os.path.join(basedir, "twistd.pid"), encoding='utf-8') as f:
             self.pid = int(f.read().strip())
         if quiet:
-            os.kill(self.pid, signal.SIGHUP)
+            os.kill(self.pid, cast(Any, signal).SIGHUP)
             return None
 
         # keep reading twistd.log. Display all messages between "loading
@@ -90,7 +90,7 @@ class Reconfigurator:
             return
         print(f"sending SIGHUP to process {self.pid}")
         self.sent_signal = True
-        os.kill(self.pid, signal.SIGHUP)
+        os.kill(self.pid, cast(Any, signal).SIGHUP)
 
 
 @in_reactor
