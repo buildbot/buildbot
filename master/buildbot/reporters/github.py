@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -41,40 +42,42 @@ from buildbot.util.giturlparse import giturlparse
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from buildbot.util.twisted import InlineCallbacksType
+
 HOSTED_BASE_URL = 'https://api.github.com'
 
 
 class GitHubStatusPush(ReporterBase):
     name: str | None = "GitHubStatusPush"
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        token,
-        context=None,
-        baseURL=None,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        token: Any,
+        context: Any = None,
+        baseURL: str | None = None,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         if generators is None:
             generators = self._create_default_generators()
 
         super().checkConfig(generators=generators, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        token,
-        context=None,
-        baseURL=None,
-        verbose=False,
-        debug=None,
-        verify=None,
-        generators=None,
-        **kwargs,
-    ):
+        token: Any,
+        context: Any = None,
+        baseURL: str | None = None,
+        verbose: bool = False,
+        debug: bool | None = None,
+        verify: bool | None = None,
+        generators: list[Any] | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         self.token = token
         self.debug = debug
         self.verify = verify
@@ -99,10 +102,10 @@ class GitHubStatusPush(ReporterBase):
             verify=self.verify,
         )
 
-    def setup_context(self, context):
+    def setup_context(self, context: Any) -> Any:
         return context or Interpolate('buildbot/%(prop:buildername)s')
 
-    def _create_default_generators(self):
+    def _create_default_generators(self) -> list[Any]:
         start_formatter = MessageFormatterRenderable('Build started.')
         end_formatter = MessageFormatterRenderable('Build done.')
         pending_formatter = MessageFormatterRenderable('Build pending.')
@@ -124,16 +127,16 @@ class GitHubStatusPush(ReporterBase):
     @defer.inlineCallbacks
     def createStatus(
         self,
-        repo_user,
-        repo_name,
-        sha,
-        state,
-        props,
-        target_url=None,
-        context=None,
-        issue=None,
-        description=None,
-    ):
+        repo_user: str,
+        repo_name: str,
+        sha: str,
+        state: str,
+        props: Properties,
+        target_url: str | None = None,
+        context: str | None = None,
+        issue: str | None = None,
+        description: str | None = None,
+    ) -> InlineCallbacksType[Any]:
         """
         :param repo_user: GitHub user or organization
         :param repo_name: Name of the repository
@@ -151,7 +154,7 @@ class GitHubStatusPush(ReporterBase):
         txgithub is based on twisted's webclient agent, which is much less reliable and featureful
         as txrequest (support for proxy, connection pool, keep alive, retry, etc)
         """
-        payload = {'state': state}
+        payload: dict[str, Any] = {'state': state}
 
         if description is not None:
             payload['description'] = description
@@ -170,10 +173,10 @@ class GitHubStatusPush(ReporterBase):
         )
         return ret
 
-    def is_status_2xx(self, code):
+    def is_status_2xx(self, code: int) -> bool:
         return code // 100 == 2
 
-    def _extract_issue(self, props):
+    def _extract_issue(self, props: Properties) -> str | None:
         branch = props.getProperty('branch')
         if branch:
             m = re.search(r"refs/pull/([0-9]*)/(head|merge)", branch)
@@ -181,7 +184,7 @@ class GitHubStatusPush(ReporterBase):
                 return m.group(1)
         return None
 
-    def _extract_github_info(self, sourcestamp):
+    def _extract_github_info(self, sourcestamp: dict[str, Any]) -> tuple[str | None, str | None]:
         repo_owner = None
         repo_name = None
         project = sourcestamp['project']
@@ -197,7 +200,7 @@ class GitHubStatusPush(ReporterBase):
         return repo_owner, repo_name
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         report = reports[0]
         build = reports[0]['builds'][0]
 
@@ -295,10 +298,10 @@ class GitHubStatusPush(ReporterBase):
 class GitHubCommentPush(GitHubStatusPush):
     name = "GitHubCommentPush"
 
-    def setup_context(self, context):
+    def setup_context(self, context: Any) -> Any:
         return ''
 
-    def _create_default_generators(self):
+    def _create_default_generators(self) -> list[Any]:
         start_formatter = MessageFormatterRenderable(None)
         end_formatter = MessageFormatterRenderable('Build done.')
 
@@ -309,7 +312,7 @@ class GitHubCommentPush(GitHubStatusPush):
         ]
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
         report = reports[0]
         if 'body' not in report or report['body'] is None:
             return
@@ -318,16 +321,16 @@ class GitHubCommentPush(GitHubStatusPush):
     @defer.inlineCallbacks
     def createStatus(
         self,
-        repo_user,
-        repo_name,
-        sha,
-        state,
-        props,
-        target_url=None,
-        context=None,
-        issue=None,
-        description=None,
-    ):
+        repo_user: str,
+        repo_name: str,
+        sha: str,
+        state: str,
+        props: Properties,
+        target_url: str | None = None,
+        context: str | None = None,
+        issue: str | None = None,
+        description: str | None = None,
+    ) -> InlineCallbacksType[Any]:
         """
         :param repo_user: GitHub user or organization
         :param repo_name: Name of the repository
