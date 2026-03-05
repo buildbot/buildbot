@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import Any
+
 from twisted.internet import defer
 
 from buildbot.util.twisted import async_to_deferred
@@ -23,18 +27,20 @@ class FakeConnection:
 
     _waiting_for_interrupt = False
 
-    def __init__(self, testcase, name, step, commands_numbers_to_interrupt):
+    def __init__(
+        self, testcase: Any, name: str, step: Any, commands_numbers_to_interrupt: set[int]
+    ) -> None:
         self.testcase = testcase
         self.name = name
         self.step = step
         self._commands_numbers_to_interrupt = commands_numbers_to_interrupt
         self._block_on_interrupt = False
         self._next_command_number = 0
-        self._blocked_deferreds = []
+        self._blocked_deferreds: list[defer.Deferred[None]] = []
 
     @async_to_deferred
     async def remoteStartCommand(
-        self, remote_command, builder_name, command_id, command_name, args
+        self, remote_command: Any, builder_name: str, command_id: str, command_name: str, args: Any
     ) -> None:
         self._waiting_for_interrupt = False
         if self._next_command_number in self._commands_numbers_to_interrupt:
@@ -52,27 +58,29 @@ class FakeConnection:
         if self._waiting_for_interrupt:
             raise RuntimeError("Interrupted step, but command was not interrupted")
 
-    def remoteInterruptCommand(self, builder_name, command_id, why):
+    def remoteInterruptCommand(
+        self, builder_name: str, command_id: str, why: str
+    ) -> defer.Deferred[None]:
         if not self._waiting_for_interrupt:
             raise RuntimeError("Got interrupt, but FakeConnection was not expecting it")
         self._waiting_for_interrupt = False
 
         if self._block_on_interrupt:
-            d = defer.Deferred()
+            d: defer.Deferred[None] = defer.Deferred()
             self._blocked_deferreds.append(d)
             return d
         else:
             return defer.succeed(None)
 
-    def set_expect_interrupt(self):
+    def set_expect_interrupt(self) -> None:
         if self._waiting_for_interrupt:
             raise RuntimeError("Already expecting interrupt but got additional request")
         self._waiting_for_interrupt = True
 
-    def set_block_on_interrupt(self):
+    def set_block_on_interrupt(self) -> None:
         self._block_on_interrupt = True
 
-    def unblock_waiters(self):
+    def unblock_waiters(self) -> None:
         for d in self._blocked_deferreds:
             d.callback(None)
 

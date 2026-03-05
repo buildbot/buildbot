@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import enum
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python.filepath import FilePath
@@ -55,18 +56,18 @@ class LatentController(SeverWorkerConnectionMixin):
 
     def __init__(
         self,
-        case,
-        name,
-        kind=None,
-        build_wait_timeout=600,
-        starts_without_substantiate=None,
-        **kwargs,
-    ):
+        case: Any,
+        name: str,
+        kind: Any = None,
+        build_wait_timeout: int = 600,
+        starts_without_substantiate: bool | None = None,
+        **kwargs: Any,
+    ) -> None:
         self.case = case
         self.build_wait_timeout = build_wait_timeout
         self.has_crashed = False
         self.worker = ControllableLatentWorker(name, self, **kwargs)
-        self.remote_worker = None
+        self.remote_worker: Any = None
 
         if starts_without_substantiate is not None:
             self.worker.starts_without_substantiate = starts_without_substantiate
@@ -77,63 +78,63 @@ class LatentController(SeverWorkerConnectionMixin):
         self.auto_connect_worker = True
         self.auto_disconnect_worker = True
 
-        self._start_deferred = None
-        self._stop_deferred = None
+        self._start_deferred: defer.Deferred[Any] | None = None
+        self._stop_deferred: defer.Deferred[Any] | None = None
 
         self.kind = kind
-        self._started_kind = None
-        self._started_kind_deferred = None
+        self._started_kind: Any = None
+        self._started_kind_deferred: Any = None
 
     @property
-    def starting(self):
+    def starting(self) -> bool:
         return self.state == States.STARTING
 
     @property
-    def started(self):
+    def started(self) -> bool:
         return self.state == States.STARTED
 
     @property
-    def stopping(self):
+    def stopping(self) -> bool:
         return self.state == States.STOPPING
 
     @property
-    def stopped(self):
+    def stopped(self) -> bool:
         return self.state == States.STOPPED
 
-    def auto_start(self, result):
+    def auto_start(self, result: bool) -> None:
         self.auto_start_flag = result
         if self.auto_start_flag and self.state == States.STARTING:
             self.start_instance(True)
 
     @async_to_deferred
-    async def start_instance(self, result) -> None:
+    async def start_instance(self, result: Any) -> None:
         await self.do_start_instance(result)
         d = self._start_deferred
         self._start_deferred = None
-        d.callback(result)
+        d.callback(result)  # type: ignore[union-attr]
 
     @async_to_deferred
-    async def do_start_instance(self, result) -> None:
+    async def do_start_instance(self, result: Any) -> None:
         assert self.state == States.STARTING
         self.state = States.STARTED
         if self.auto_connect_worker and result is True:
             await self.connect_worker()
 
     @async_to_deferred
-    async def auto_stop(self, result) -> None:
+    async def auto_stop(self, result: bool) -> None:
         self.auto_stop_flag = result
         if self.auto_stop_flag and self.state == States.STOPPING:
             await self.stop_instance(True)
 
     @async_to_deferred
-    async def stop_instance(self, result):
+    async def stop_instance(self, result: Any) -> None:
         await self.do_stop_instance()
         d = self._stop_deferred
         self._stop_deferred = None
-        d.callback(result)
+        d.callback(result)  # type: ignore[union-attr]
 
     @async_to_deferred
-    async def do_stop_instance(self):
+    async def do_stop_instance(self) -> None:
         assert self.state == States.STOPPING
         self.state = States.STOPPED
         self._started_kind = None
@@ -141,7 +142,7 @@ class LatentController(SeverWorkerConnectionMixin):
             await self.disconnect_worker()
 
     @async_to_deferred
-    async def connect_worker(self):
+    async def connect_worker(self) -> None:
         if self.remote_worker is not None:
             return
         if RemoteWorker is None:
@@ -163,20 +164,20 @@ class LatentController(SeverWorkerConnectionMixin):
 
         await worker.disownServiceParent()
 
-    def setup_kind(self, build):
+    def setup_kind(self, build: Any) -> None:
         if build:
             self._started_kind_deferred = build.render(self.kind)
         else:
             self._started_kind_deferred = self.kind
 
     @async_to_deferred
-    async def get_started_kind(self):
+    async def get_started_kind(self) -> Any:
         if self._started_kind_deferred:
             self._started_kind = await self._started_kind_deferred
             self._started_kind_deferred = None
         return self._started_kind
 
-    def patchBot(self, case, remoteMethod, patch):
+    def patchBot(self, case: Any, remoteMethod: str, patch: Any) -> None:
         case.patch(BotPbLike, remoteMethod, patch)
 
 
@@ -187,17 +188,17 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     builds_may_be_incompatible = True
 
-    def __init__(self, name, controller, **kwargs):
+    def __init__(self, name: str, controller: LatentController, **kwargs: Any) -> None:
         self._controller = controller
         self._random_password_id = 0
         AbstractLatentWorker.__init__(self, name, None, **kwargs)
 
-    def checkConfig(self, name, _, **kwargs):
+    def checkConfig(self, name: str, _: Any, **kwargs: Any) -> None:  # type: ignore[override]
         AbstractLatentWorker.checkConfig(
             self, name, None, build_wait_timeout=self._controller.build_wait_timeout, **kwargs
         )
 
-    def reconfigService(self, name, _, **kwargs):
+    def reconfigService(self, name: str, _: Any, **kwargs: Any) -> Any:  # type: ignore[override]
         return super().reconfigService(
             name,
             self.getRandomPass(),
@@ -205,12 +206,12 @@ class ControllableLatentWorker(AbstractLatentWorker):
             **kwargs,
         )
 
-    def _generate_random_password(self):
+    def _generate_random_password(self) -> str:
         self._random_password_id += 1
         return f'password_{self._random_password_id}'
 
     @async_to_deferred
-    async def isCompatibleWithBuild(self, build_props) -> bool:
+    async def isCompatibleWithBuild(self, build_props: Any) -> bool:
         if self._controller.state == States.STOPPED:
             return True
 
@@ -218,7 +219,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
         curr_kind = await self._controller.get_started_kind()
         return requested_kind == curr_kind
 
-    def start_instance(self, build):
+    def start_instance(self, build: Any) -> defer.Deferred[bool]:
         self._controller.setup_kind(build)
 
         assert self._controller.state == States.STOPPED
@@ -242,5 +243,5 @@ class ControllableLatentWorker(AbstractLatentWorker):
         self._controller._stop_deferred = defer.Deferred()
         return await self._controller._stop_deferred
 
-    def check_instance(self):
+    def check_instance(self) -> tuple[bool, str]:
         return (not self._controller.has_crashed, "")

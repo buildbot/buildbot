@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import Any
+from typing import Callable
 
 from twisted.internet import defer
 
@@ -32,12 +36,12 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
     # is set to false:
     verifyMessages = True
 
-    def __init__(self, testcase):
+    def __init__(self, testcase: Any) -> None:
         super().__init__()
         self.testcase = testcase
         self.setup_called = False
-        self.productions = []
-        self.qrefs = []
+        self.productions: list[tuple[tuple[str, ...], Any]] = []
+        self.qrefs: list[FakeQueueRef] = []
         self._deferwaiter = deferwaiter.DeferWaiter()
 
     @async_to_deferred
@@ -45,11 +49,11 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         await self._deferwaiter.wait()
         await super().stopService()
 
-    def setup(self):
+    def setup(self) -> defer.Deferred[None]:
         self.setup_called = True
         return defer.succeed(None)
 
-    def produce(self, routingKey, data):
+    def produce(self, routingKey: tuple[str, ...], data: Any) -> None:
         self.testcase.assertIsInstance(routingKey, tuple)
 
         # XXX this is incompatible with the new scheme of sending multiple messages,
@@ -63,7 +67,7 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         self.productions.append((routingKey, data))
         # note - no consumers are called: IT'S A FAKE
 
-    def callConsumer(self, routingKey, msg):
+    def callConsumer(self, routingKey: tuple[str, ...], msg: Any) -> None:
         if self.verifyMessages:
             validation.verifyMessage(self.testcase, routingKey, msg)
         matched = False
@@ -74,7 +78,12 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         if not matched:
             raise AssertionError("no consumer found")
 
-    def startConsuming(self, callback, filter, persistent_name=None):
+    def startConsuming(
+        self,
+        callback: Callable,
+        filter: tuple[str | None, ...],
+        persistent_name: str | None = None,
+    ) -> defer.Deferred[FakeQueueRef]:
         if any(not isinstance(k, str) and k is not None for k in filter):
             raise AssertionError(f"{filter} is not a filter")
         qref = FakeQueueRef()
@@ -85,11 +94,13 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         self.qrefs.append(qref)
         return defer.succeed(qref)
 
-    def clearProductions(self):
+    def clearProductions(self) -> None:
         "Clear out the cached productions"
         self.productions = []
 
-    def assertProductions(self, exp, orderMatters=True):
+    def assertProductions(
+        self, exp: list[tuple[tuple[str, ...], Any]], orderMatters: bool = True
+    ) -> None:
         """Assert that the given messages have been produced, then flush the
         list of produced messages.
 
@@ -110,6 +121,11 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
 
 
 class FakeQueueRef:
-    def stopConsuming(self):
+    qrefs: list[FakeQueueRef]
+    callback: Callable
+    filter: tuple[str | None, ...]
+    persistent_name: str | None
+
+    def stopConsuming(self) -> None:
         if self in self.qrefs:
             self.qrefs.remove(self)

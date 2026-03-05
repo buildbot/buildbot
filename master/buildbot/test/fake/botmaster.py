@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import Any
 
 from twisted.internet import defer
 
@@ -21,39 +24,41 @@ from buildbot.util import service
 
 
 class FakeBotMaster(service.AsyncMultiService, botmaster.LockRetrieverMixin):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setName("fake-botmaster")
-        self.builders = {}  # dictionary mapping worker names to builders
-        self.buildsStartedForWorkers = []
+        self.builders: dict[str, list[Any]] = {}
+        self.buildsStartedForWorkers: list[str] = []
         self.delayShutdown = False
-        self._starting_brid_to_cancel = {}
+        self._starting_brid_to_cancel: dict[int, bool | str] = {}
 
-    def getBuildersForWorker(self, workername):
+    def getBuildersForWorker(self, workername: str) -> list[Any]:
         return self.builders.get(workername, [])
 
-    def maybeStartBuildsForWorker(self, workername):
+    def maybeStartBuildsForWorker(self, workername: str) -> None:
         self.buildsStartedForWorkers.append(workername)
 
-    def maybeStartBuildsForAllBuilders(self):
+    def maybeStartBuildsForAllBuilders(self) -> None:
         self.buildsStartedForWorkers += self.builders.keys()
 
-    def workerLost(self, bot):
+    def workerLost(self, bot: Any) -> None:
         pass
 
-    def cleanShutdown(self, quickMode=False, stopReactor=True):
+    def cleanShutdown(
+        self, quickMode: bool = False, stopReactor: bool = True
+    ) -> defer.Deferred[None] | None:
         self.shuttingDown = True
         if self.delayShutdown:
-            self.shutdownDeferred = defer.Deferred()
+            self.shutdownDeferred: defer.Deferred[None] = defer.Deferred()
             return self.shutdownDeferred
         return None
 
-    def add_in_progress_buildrequest(self, brid):
+    def add_in_progress_buildrequest(self, brid: int) -> None:
         self._starting_brid_to_cancel[brid] = False
 
-    def remove_in_progress_buildrequest(self, brid):
+    def remove_in_progress_buildrequest(self, brid: int) -> bool | str | None:
         return self._starting_brid_to_cancel.pop(brid, None)
 
-    def maybe_cancel_in_progress_buildrequest(self, brid, reason):
+    def maybe_cancel_in_progress_buildrequest(self, brid: int, reason: str) -> None:
         if brid in self._starting_brid_to_cancel:
             self._starting_brid_to_cancel[brid] = reason
