@@ -77,6 +77,7 @@ if TYPE_CHECKING:
     from buildbot.interfaces import IBuildStep
     from buildbot.interfaces import IProperties
     from buildbot.locks import BaseLock
+    from buildbot.locks import LockAccess
     from buildbot.master import BuildMaster
     from buildbot.process.build import Build
     from buildbot.process.log import StreamLog
@@ -305,7 +306,7 @@ class BuildStep(
                 "a list of result ids or boolean but it is "
                 f"{self.updateBuildSummaryPolicy!r}"
             )
-        self._acquiringLocks: list[tuple[BaseLock, str, defer.Deferred]] = []
+        self._acquiringLocks: list[tuple[BaseLock, LockAccess, defer.Deferred[Any]]] = []
         self.stopped = False
         self.timed_out = False
         self.max_lines_reached = False

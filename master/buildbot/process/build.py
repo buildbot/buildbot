@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from buildbot.interfaces import IProperties
     from buildbot.locks import BaseLock
     from buildbot.locks import BaseLockId
+    from buildbot.locks import LockAccess
     from buildbot.process.builder import Builder
     from buildbot.process.buildrequest import BuildRequest
     from buildbot.process.buildrequest import TempChange
@@ -120,7 +121,7 @@ class Build(properties.PropertiesMixin):
         self.locks: IMaybeRenderableType[Iterable[BaseLockId]] = []  # list of lock accesses
 
         # list of (real_lock, access) tuples
-        self._locks_to_acquire: list[tuple[BaseLock, str]] = []
+        self._locks_to_acquire: list[tuple[BaseLock, LockAccess]] = []
         # build a source stamp
         self.sources: list[TempSourceStamp] = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
@@ -141,7 +142,7 @@ class Build(properties.PropertiesMixin):
 
         self.terminate = False
 
-        self._acquiringLock: tuple[BaseLock, str, Deferred[None]] | None = None
+        self._acquiringLock: tuple[BaseLock, LockAccess, Deferred[None]] | None = None
         self._builderid: int | None = None
         # overall results, may downgrade after each step
         self.results = SUCCESS
