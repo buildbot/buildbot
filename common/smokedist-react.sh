@@ -11,12 +11,12 @@ do
     VE=sandbox.$suffix
     rm -rf $VE
     if [ -z "$python" ]; then
-        virtualenv --python python3 $VE
+        python3 -m venv $VE
     else
-        virtualenv --python python$python $VE
+        python$python -m venv $VE
     fi
     . $VE/bin/activate
-    pip install pip==24.1.2
+    pip install -r requirements-pip.txt
     pip install requests==2.32.3 flask==3.0.3
     pip install dist/buildbot-[0-9]*.$suffix
     pip install dist/buildbot?pkg*.$suffix
