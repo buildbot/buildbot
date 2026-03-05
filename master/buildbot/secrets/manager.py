@@ -18,11 +18,17 @@ manage providers and handle secrets
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 
 from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.secrets.secret import SecretDetails
 from buildbot.util import service
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class SecretManager(service.BuildbotServiceManager):
@@ -34,7 +40,7 @@ class SecretManager(service.BuildbotServiceManager):
     config_attr = "secretsProviders"
 
     @defer.inlineCallbacks
-    def setup(self):
+    def setup(self) -> InlineCallbacksType[None]:
         configuredProviders = self.get_service_config(self.master.config)
 
         for child in configuredProviders.values():
@@ -43,7 +49,9 @@ class SecretManager(service.BuildbotServiceManager):
             yield child.configureService()
 
     @defer.inlineCallbacks
-    def get(self, secret, *args, **kwargs):
+    def get(
+        self, secret: str, *args: Any, **kwargs: Any
+    ) -> InlineCallbacksType[SecretDetails | None]:
         """
         get secrets from the provider defined in the secret using args and
         kwargs
