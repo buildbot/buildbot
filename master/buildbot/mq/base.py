@@ -48,6 +48,12 @@ class MQBase(service.AsyncService):
         yield buildCompleteConsumer.stopConsuming()
         return res
 
+    def produce(self, routingKey, data):
+        raise NotImplementedError
+
+    def startConsuming(self, callback, filter, persistent_name=None):
+        raise NotImplementedError
+
     def invokeQref(self, qref, routingKey, data):
         self._deferwaiter.add(qref.invoke(routingKey, data))
 
