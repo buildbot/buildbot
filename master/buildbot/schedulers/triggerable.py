@@ -31,6 +31,8 @@ from buildbot.util import debounce
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 @implementer(ITriggerableScheduler)
 class Triggerable(base.ReconfigurableBaseScheduler):
@@ -39,33 +41,35 @@ class Triggerable(base.ReconfigurableBaseScheduler):
         'reason',
     )
 
-    def __init__(self, name, builderNames, *args, **kwargs):
+    def __init__(self, name: str, builderNames: Any, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, name=name, builderNames=builderNames, **kwargs)
-        self._waiters = {}
+        self._waiters: dict[int, tuple[defer.Deferred[Any], dict[int, int]]] = {}
         self._buildset_complete_consumer = None
 
-    def checkConfig(self, builderNames, reason=None, **kwargs: Any):  # type: ignore[override]
+    def checkConfig(  # type: ignore[override]
+        self, builderNames: Any, reason: str | None = None, **kwargs: Any
+    ) -> None:
         super().checkConfig(builderNames=builderNames, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(  # type: ignore[override]
         self,
-        builderNames,
-        reason=None,
+        builderNames: Any,
+        reason: str | None = None,
         **kwargs: Any,
-    ):
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(builderNames=builderNames, **kwargs)
         self.reason = reason
 
     def trigger(
         self,
-        waited_for,
-        sourcestamps=None,
-        set_props=None,
-        parent_buildid=None,
-        parent_relationship=None,
-        priority=None,
-    ):
+        waited_for: bool,
+        sourcestamps: list[dict[str, Any]] | None = None,
+        set_props: Properties | None = None,
+        parent_buildid: int | None = None,
+        parent_relationship: str | None = None,
+        priority: int | None = None,
+    ) -> tuple[defer.Deferred[tuple[int, dict[int, int]]], defer.Deferred[Any]]:
         """Trigger this scheduler with the optional given list of sourcestamps and the optional
         priority.
         Returns two deferreds:
@@ -86,7 +90,7 @@ class Triggerable(base.ReconfigurableBaseScheduler):
             reason = f"The Triggerable scheduler named '{self.name}' triggered this build"
 
         if priority is None:
-            priority = self.priority
+            priority = self.priority  # type: ignore[assignment]
 
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
@@ -101,10 +105,10 @@ class Triggerable(base.ReconfigurableBaseScheduler):
             parent_relationship=parent_relationship,
         )
 
-        resultsDeferred = defer.Deferred()
+        resultsDeferred: defer.Deferred[Any] = defer.Deferred()
 
         @idsDeferred.addCallback
-        def setup_waiter(ids):
+        def setup_waiter(ids: tuple[int, dict[int, int]]) -> tuple[int, dict[int, int]]:
             bsid, brids = ids
             self._waiters[bsid] = (resultsDeferred, brids)
             self._updateWaiters()
@@ -113,12 +117,12 @@ class Triggerable(base.ReconfigurableBaseScheduler):
         return idsDeferred, resultsDeferred
 
     @defer.inlineCallbacks
-    def startService(self):
+    def startService(self) -> InlineCallbacksType[None]:
         yield super().startService()
         self._updateWaiters.start()
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         # finish any _updateWaiters calls
         yield self._updateWaiters.stop()
 
@@ -138,7 +142,7 @@ class Triggerable(base.ReconfigurableBaseScheduler):
 
     @debounce.method(wait=0)
     @defer.inlineCallbacks
-    def _updateWaiters(self):
+    def _updateWaiters(self) -> InlineCallbacksType[None]:
         if self._waiters and not self._buildset_complete_consumer:
             startConsuming = self.master.mq.startConsuming
             self._buildset_complete_consumer = yield startConsuming(
@@ -148,7 +152,7 @@ class Triggerable(base.ReconfigurableBaseScheduler):
             self._buildset_complete_consumer.stopConsuming()
             self._buildset_complete_consumer = None
 
-    def _buildset_complete_cb(self, key, msg):
+    def _buildset_complete_cb(self, key: tuple[str, ...], msg: dict[str, Any]) -> None:
         if msg['bsid'] not in self._waiters:
             return
 

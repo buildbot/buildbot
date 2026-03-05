@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -28,20 +29,23 @@ from buildbot.util.ssfilter import SourceStampFilter
 from buildbot.util.ssfilter import extract_filter_values
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from collections.abc import Sequence
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class _OldBuildFilterSet:
-    def __init__(self):
-        self._by_builder = {}
+    def __init__(self) -> None:
+        self._by_builder: dict[str, list[SourceStampFilter]] = {}
 
-    def add_filter(self, builders, filter):
+    def add_filter(self, builders: list[str], filter: SourceStampFilter) -> None:
         assert builders is not None
 
         for builder in builders:
             self._by_builder.setdefault(builder, []).append(filter)
 
-    def is_matched(self, builder_name, props):
+    def is_matched(self, builder_name: str, props: dict[str, Any]) -> bool:
         assert builder_name is not None
 
         filters = self._by_builder.get(builder_name, [])
@@ -52,13 +56,19 @@ class _OldBuildFilterSet:
 
 
 class _TrackedBuildRequest:
-    def __init__(self, brid, builder_name, start_time, ss_tuples):
+    def __init__(
+        self,
+        brid: int,
+        builder_name: str,
+        start_time: float,
+        ss_tuples: list[tuple[str, str, str, str | None]],
+    ) -> None:
         self.start_time = start_time
         self.builder_name = builder_name
         self.brid = brid
         self.ss_tuples = ss_tuples
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f'_TrackedBuildRequest({self.brid}, {self.builder_name} '
             f'{self.start_time}, {self.ss_tuples})'
@@ -68,7 +78,13 @@ class _TrackedBuildRequest:
 
 
 class _OldBuildrequestTracker:
-    def __init__(self, reactor, filter, branch_key, on_cancel):
+    def __init__(
+        self,
+        reactor: Any,
+        filter: _OldBuildFilterSet,
+        branch_key: Callable[[dict[str, Any]], str | None],
+        on_cancel: Callable[[int], None],
+    ) -> None:
         self.reactor = reactor
         self.filter = filter
         self.branch_key = branch_key
@@ -84,23 +100,29 @@ class _OldBuildrequestTracker:
         # user scheduler configuration. In such case it makes sense to let the build finish.
 
         # (is_build, id) -> _TrackedBuildRequest
-        self.br_by_id = {}
-        self.br_by_ss = {}
-        self.change_time_by_ss = {}
+        self.br_by_id: dict[int, _TrackedBuildRequest] = {}
+        self.br_by_ss: dict[tuple[str, str, str, str | None], dict[int, _TrackedBuildRequest]] = {}
+        self.change_time_by_ss: dict[tuple[str, str, str, str | None], float] = {}
         self._change_count_since_clean = 0
 
-    def reconfig(self, filter, branch_key):
+    def reconfig(
+        self, filter: _OldBuildFilterSet, branch_key: Callable[[dict[str, Any]], str | None]
+    ) -> None:
         self.filter = filter
         self.branch_key = branch_key
 
-    def is_buildrequest_tracked(self, br_id):
+    def is_buildrequest_tracked(self, br_id: int) -> bool:
         return br_id in self.br_by_id
 
-    def on_new_buildrequest(self, brid, builder_name, sourcestamps):
+    def on_new_buildrequest(
+        self, brid: int, builder_name: str, sourcestamps: list[dict[str, Any]]
+    ) -> None:
         self._maybe_cancel_new_obsoleted_buildrequest(builder_name, sourcestamps)
         self._add_new_buildrequest(brid, builder_name, sourcestamps)
 
-    def _add_new_buildrequest(self, brid, builder_name, sourcestamps):
+    def _add_new_buildrequest(
+        self, brid: int, builder_name: str, sourcestamps: list[dict[str, Any]]
+    ) -> None:
         now = self.reactor.seconds()
 
         matched_ss = []
@@ -128,7 +150,9 @@ class _OldBuildrequestTracker:
             br_dict = self.br_by_ss.setdefault(ss_tuple, {})
             br_dict[tracked_br.brid] = tracked_br
 
-    def _maybe_cancel_new_obsoleted_buildrequest(self, builder_name, sourcestamps):
+    def _maybe_cancel_new_obsoleted_buildrequest(
+        self, builder_name: str, sourcestamps: list[dict[str, Any]]
+    ) -> None:
         for sourcestamp in sourcestamps:
             ss_tuple = (
                 sourcestamp['project'],
@@ -177,7 +201,7 @@ class _OldBuildrequestTracker:
             for brid in brids_to_cancel:
                 self.on_cancel(brid)
 
-    def on_complete_buildrequest(self, brid):
+    def on_complete_buildrequest(self, brid: int) -> None:
         tracked_br = self.br_by_id.pop(brid, None)
         if tracked_br is None:
             return
@@ -193,7 +217,7 @@ class _OldBuildrequestTracker:
             if not br_dict:
                 del self.br_by_ss[ss_tuple]
 
-    def on_change(self, change):
+    def on_change(self, change: dict[str, Any]) -> None:
         now = self.reactor.seconds()
 
         ss_tuple = (
@@ -219,20 +243,32 @@ class _OldBuildrequestTracker:
 class OldBuildCanceller(BuildbotService):
     compare_attrs: ClassVar[Sequence[str]] = (*BuildbotService.compare_attrs, 'filters')
 
-    def checkConfig(self, name, filters, branch_key=None):
+    def checkConfig(
+        self,
+        name: str,
+        filters: list[tuple[list[str], SourceStampFilter]],
+        branch_key: Callable[[dict[str, Any]], str | None] | None = None,
+        **kwargs: Any,
+    ) -> None:
         OldBuildCanceller.check_filters(filters)
 
         self.name = name
 
-        self._buildrequest_new_consumer = None
-        self._buildrequest_complete_consumer = None
+        self._buildrequest_new_consumer: Any = None
+        self._buildrequest_complete_consumer: Any = None
 
-        self._build_tracker = None
+        self._build_tracker: _OldBuildrequestTracker | None = None
         self._reconfiguring = False
-        self._completed_buildrequests_while_reconfiguring = []
+        self._completed_buildrequests_while_reconfiguring: list[dict[str, Any]] = []
 
     @defer.inlineCallbacks
-    def reconfigService(self, name, filters, branch_key=None):
+    def reconfigService(  # type: ignore[override]
+        self,
+        name: str,
+        filters: list[tuple[list[str], SourceStampFilter]],
+        branch_key: Callable[[dict[str, Any]], str | None] | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         # While reconfiguring we acquire a list of currently pending build
         # requests and seed the build tracker with these. We need to ensure that even if some
         # builds or build requests finish during this process, the tracker gets to know about
@@ -255,6 +291,7 @@ class OldBuildCanceller(BuildbotService):
         else:
             self._build_tracker.reconfig(filter_set_object, branch_key)
 
+        assert self._build_tracker is not None
         all_running_buildrequests = yield self.master.data.get(
             ('buildrequests',), filters=[resultspec.Filter('complete', 'eq', [False])]
         )
@@ -273,7 +310,7 @@ class OldBuildCanceller(BuildbotService):
             self._build_tracker.on_complete_buildrequest(breq['buildrequestid'])
 
     @defer.inlineCallbacks
-    def startService(self):
+    def startService(self) -> InlineCallbacksType[None]:
         yield super().startService()
         self._change_consumer = yield self.master.mq.startConsuming(
             self._on_change, ('changes', None, 'new')
@@ -286,13 +323,13 @@ class OldBuildCanceller(BuildbotService):
         )
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         yield self._change_consumer.stopConsuming()
         yield self._buildrequest_new_consumer.stopConsuming()
         yield self._buildrequest_complete_consumer.stopConsuming()
 
     @classmethod
-    def check_filters(cls, filters):
+    def check_filters(cls, filters: list[tuple[list[str], SourceStampFilter]]) -> None:
         if not isinstance(filters, list):
             config.error(f'{cls.__name__}: The filters argument must be a list of tuples')
 
@@ -318,7 +355,9 @@ class OldBuildCanceller(BuildbotService):
                 config.error(f'{cls.__name__}: When processing filter builders: {e!s}')
 
     @classmethod
-    def filter_tuples_to_filter_set_object(cls, filters):
+    def filter_tuples_to_filter_set_object(
+        cls, filters: list[tuple[list[str], SourceStampFilter]]
+    ) -> _OldBuildFilterSet:
         filter_set = _OldBuildFilterSet()
 
         for filter in filters:
@@ -327,7 +366,7 @@ class OldBuildCanceller(BuildbotService):
 
         return filter_set
 
-    def _default_branch_key(self, ss_or_change):
+    def _default_branch_key(self, ss_or_change: dict[str, Any]) -> str | None:
         branch = ss_or_change['branch']
         if branch is None:
             return None
@@ -341,11 +380,15 @@ class OldBuildCanceller(BuildbotService):
 
         return branch
 
-    def _on_change(self, key, change):
+    def _on_change(self, key: str, change: dict[str, Any]) -> None:
+        assert self._build_tracker is not None
         self._build_tracker.on_change(change)
 
     @defer.inlineCallbacks
-    def _on_buildrequest_new(self, key, breq):
+    def _on_buildrequest_new(
+        self, key: str | None, breq: dict[str, Any]
+    ) -> InlineCallbacksType[None]:
+        assert self._build_tracker is not None
         builder = yield self.master.data.get(("builders", breq['builderid']))
         buildset = yield self.master.data.get(('buildsets', breq['buildsetid']))
 
@@ -353,13 +396,14 @@ class OldBuildCanceller(BuildbotService):
             breq['buildrequestid'], builder['name'], buildset['sourcestamps']
         )
 
-    def _on_buildrequest_complete(self, key, breq):
+    def _on_buildrequest_complete(self, key: str, breq: dict[str, Any]) -> None:
         if self._reconfiguring:
             self._completed_buildrequests_while_reconfiguring.append(breq)
             return
+        assert self._build_tracker is not None
         self._build_tracker.on_complete_buildrequest(breq['buildrequestid'])
 
-    def _cancel_buildrequest(self, brid):
+    def _cancel_buildrequest(self, brid: int) -> None:
         self.master.data.control(
             'cancel',
             {'reason': 'Build request has been obsoleted by a newer commit'},
