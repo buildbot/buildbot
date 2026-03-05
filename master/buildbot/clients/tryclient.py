@@ -55,6 +55,12 @@ def output(*msg):
 
 
 class SourceStampExtractor:
+    def getBaseRevision(self):
+        raise NotImplementedError
+
+    def getPatch(self):
+        raise NotImplementedError
+
     def __init__(self, treetop, branch, repository):
         self.treetop = treetop
         self.repository = repository
