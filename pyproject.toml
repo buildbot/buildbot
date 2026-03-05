@@ -187,7 +187,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.revlinks",
       "buildbot.schedulers.forcesched",
       "buildbot.schedulers.timed",
-      "buildbot.schedulers.triggerable",
       "buildbot.schedulers.trysched",
       "buildbot.secrets.manager",
       "buildbot.secrets.providers.base",
