@@ -20,6 +20,7 @@ import platform
 import signal
 import socket
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.application import internet
 from twisted.internet import defer
@@ -57,11 +58,13 @@ from buildbot.worker.protocols.manager.pb import PBManager
 from buildbot.www import service as wwwservice
 
 if TYPE_CHECKING:
+    from types import FrameType
+
     from buildbot.util.twisted import InlineCallbacksType
 
 
 class LogRotation:
-    def __init__(self):
+    def __init__(self) -> None:
         self.rotateLength = 1 * 1000 * 1000
         self.maxRotatedFiles = 10
 
@@ -71,7 +74,14 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     # unclaimed; this should be at least 2 to avoid false positives
     UNCLAIMED_BUILD_FACTOR = 6
 
-    def __init__(self, basedir, configFileName=None, umask=None, reactor=None, config_loader=None):
+    def __init__(
+        self,
+        basedir: str | None,
+        configFileName: str | None = None,
+        umask: int | None = None,
+        reactor: Any = None,
+        config_loader: Any = None,
+    ) -> None:
         super().__init__()
 
         if reactor is None:
@@ -84,7 +94,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.basedir = basedir
         if basedir is not None:  # None is used in tests
-            assert os.path.isdir(self.basedir)
+            assert os.path.isdir(basedir)
 
         if config_loader is not None and configFileName is not None:
             raise config.ConfigErrors([
@@ -93,7 +103,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         if config_loader is None:
             if configFileName is None:
                 configFileName = 'master.cfg'
-            config_loader = FileLoader(self.basedir, configFileName)
+            config_loader = FileLoader(self.basedir, configFileName)  # type: ignore[arg-type]
         self.config_loader = config_loader
         self.configFileName = configFileName
 
@@ -102,21 +112,21 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.initLock = defer.DeferredLock()
 
         # set up child services
-        self._services_d = self.create_child_services()
+        self._services_d: defer.Deferred[None] | None = self.create_child_services()
 
         # configuration / reconfiguration handling
         self.config = MasterConfig()
         self.config_version = 0  # increased by one on each reconfig
-        self.reconfig_active = False
+        self.reconfig_active: bool | float = False
         self.reconfig_requested = False
-        self.reconfig_notifier = None
+        self.reconfig_notifier: task.LoopingCall | None = None
 
         # this stores parameters used in the tac file, and is accessed by the
         # WebStatus to duplicate those values.
         self.log_rotation = LogRotation()
 
         # local cache for this master's object ID
-        self._object_id = None
+        self._object_id: int | None = None
 
         self._got_sigterm = False
 
@@ -132,7 +142,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.name = f"{self.hostname}:{os.path.abspath(self.basedir or '.')}"
         if isinstance(self.name, bytes):
             self.name = self.name.decode('ascii', 'replace')
-        self.masterid = None
+        self.masterid: int | None = None
 
     @defer.inlineCallbacks
     def create_child_services(self) -> InlineCallbacksType[None]:
@@ -174,7 +184,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.user_manager = UserManagerManager(self)
         yield self.user_manager.setServiceParent(self)
 
-        self.db = dbconnector.DBConnector(self.basedir)
+        self.db = dbconnector.DBConnector(self.basedir)  # type: ignore[arg-type]
         yield self.db.set_master(self)
 
         self.wamp = wampconnector.WampConnector()
@@ -203,7 +213,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.masterHouskeepingTimer = 0
 
         @defer.inlineCallbacks
-        def heartbeat():
+        def heartbeat() -> InlineCallbacksType[None]:
             if self.masterid is not None:
                 yield self.data.updates.masterActive(name=self.name, masterid=self.masterid)
             yield self.data.updates.expireMasters()
@@ -214,7 +224,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         # master should advertise itself only at that time
 
     # setup and reconfig handling
-    def acquire_lock(self) -> defer.Deferred[None]:
+    def acquire_lock(self) -> defer.Deferred[Any]:
         return self.initLock.acquire()
 
     def release_lock(self) -> None:
@@ -229,7 +239,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     _already_started = False
 
     @defer.inlineCallbacks
-    def startService(self):
+    def startService(self) -> InlineCallbacksType[None]:
         assert not self._already_started, "can only start the master once"
         self._already_started = True
 
@@ -250,7 +260,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         # we want to wait until the reactor is running, so we can call
         # reactor.stop() for fatal errors
-        d = defer.Deferred()
+        d: defer.Deferred[None] = defer.Deferred()
         self.reactor.callWhenRunning(d.callback, None)
         yield d
 
@@ -294,7 +304,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             # the buildbot scripts send the SIGHUP signal to reconfig master
             if hasattr(signal, "SIGHUP"):
 
-                def sighup(*args):
+                def sighup(signum: int, frame: FrameType | None) -> None:
                     eventually(self.reconfig)
 
                 signal.signal(signal.SIGHUP, sighup)
@@ -302,7 +312,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             # the buildbot scripts send the SIGUSR1 signal to stop master
             if hasattr(signal, "SIGUSR1"):
 
-                def sigusr1(*args):
+                def sigusr1(signum: int, frame: FrameType | None) -> None:
                     eventually(self.botmaster.cleanShutdown)
 
                 signal.signal(signal.SIGUSR1, sigusr1)
@@ -311,7 +321,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             # startup/reconfig.  This goes directly to the DB since the data
             # API isn't initialized yet, and anyway, this method is aware of
             # the DB API since it just called its setup function
-            self.masterid = yield self.db.masters.findMasterId(name=self.name)
+            self.masterid = yield self.db.masters.findMasterId(name=self.name)  # type: ignore[arg-type]
 
             # mark this master as stopped, in case it crashed before
             yield self.data.updates.masterStopped(name=self.name, masterid=self.masterid)
@@ -344,7 +354,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         finally:
 
             @defer.inlineCallbacks
-            def call_after_signal(sig_num, stack):
+            def call_after_signal(
+                sig_num: int, stack: FrameType | None
+            ) -> InlineCallbacksType[None]:
                 if not self._got_sigterm:
                     self._got_sigterm = True
                     yield self.disownServiceParent()
@@ -361,13 +373,13 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             self.release_lock_sync()
             self._master_initialized = True
 
-    def sendBuildbotNetUsageData(self):
+    def sendBuildbotNetUsageData(self) -> None:
         if "TRIAL_PYTHONPATH" in os.environ and self.config.buildbotNetUsageData is not None:
             raise RuntimeError("Should not enable buildbotNetUsageData in trial tests!")
         sendBuildbotNetUsageData(self)
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         try:
             yield self.acquire_lock()
 
@@ -392,7 +404,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 yield self.db.stopService()
 
     @defer.inlineCallbacks
-    def reconfig(self):
+    def reconfig(self) -> InlineCallbacksType[None]:
         # this method wraps doConfig, ensuring it is only ever called once at
         # a time, and alerting the user if the reconfig takes too long
         if self.reconfig_active:
@@ -429,7 +441,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 self.reconfig()
 
     @defer.inlineCallbacks
-    def doReconfig(self):
+    def doReconfig(self) -> InlineCallbacksType[None]:
         log.msg("beginning configuration update")
         time_started = self.reactor.seconds()
         changes_made = False
@@ -469,7 +481,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         log.msg(f"{msg} (took {(self.reactor.seconds() - time_started):.3f} seconds)")
 
     @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(
+        self, new_config: MasterConfig
+    ) -> InlineCallbacksType[None]:
         if self.config.mq['type'] != new_config.mq['type']:
             raise config.ConfigErrors([
                 "Cannot change c['mq']['type'] after the master has started",
@@ -480,12 +494,12 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         yield self.db.reconfigServiceWithBuildbotConfig(new_config)
 
     # informational methods
-    def allSchedulers(self):
+    def allSchedulers(self) -> list[Any]:
         return list(self.scheduler_manager)
 
     # state maintenance (private)
     @defer.inlineCallbacks
-    def getObjectId(self):
+    def getObjectId(self) -> InlineCallbacksType[int]:
         """
         Return the object id for this master, for associating state with the
         master.
@@ -499,19 +513,19 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         # failing that, get it from the DB; multiple calls to this function
         # at the same time will not hurt
 
-        id = yield self.db.state.getObjectId(self.name, "buildbot.master.BuildMaster")
+        id = yield self.db.state.getObjectId(self.name, "buildbot.master.BuildMaster")  # type: ignore[arg-type]
         self._object_id = id
         return id
 
     @defer.inlineCallbacks
-    def _getState(self, name, default=None):
+    def _getState(self, name: str, default: Any = None) -> InlineCallbacksType[Any]:
         "private wrapper around C{self.db.state.getState}"
         objectid = self.getObjectId()
-        state = yield self.db.state.getState(objectid, name, default)
+        state = yield self.db.state.getState(objectid, name, default)  # type: ignore[arg-type]
         return state
 
     @defer.inlineCallbacks
-    def _setState(self, name, value):
+    def _setState(self, name: str, value: Any) -> InlineCallbacksType[bool]:
         "private wrapper around C{self.db.state.setState}"
         objectid = yield self.getObjectId()
         success = yield self.db.state.setState(objectid, name, value)

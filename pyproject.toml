@@ -156,7 +156,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot.master",
       "buildbot.monkeypatches.decorators",
       "buildbot.monkeypatches.servicechecks",
       "buildbot.monkeypatches",
