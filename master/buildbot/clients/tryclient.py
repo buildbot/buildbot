@@ -182,7 +182,7 @@ class BzrExtractor(SourceStampExtractor):
 
     def get_revision_number(self, out):
         _, revid = out.split()
-        self.baserev = 'revid:' + revid
+        self.baserev = b'revid:' + revid
 
     @defer.inlineCallbacks
     def getPatch(self):
@@ -348,7 +348,7 @@ class GitExtractor(SourceStampExtractor):
             if l.strip():
                 parts = l.strip().split(b"=", 2)
                 if len(parts) < 2:
-                    parts.append('true')
+                    parts.append(b'true')
                 self.config[parts[0]] = parts[1]
         return self.config
 
