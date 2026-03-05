@@ -19,6 +19,8 @@ HVAC based providers
 from __future__ import annotations
 
 import importlib.metadata
+from typing import TYPE_CHECKING
+from typing import Any
 
 from packaging.version import parse as parse_version
 from twisted.internet import defer
@@ -27,13 +29,16 @@ from twisted.internet import threads
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class VaultAuthenticator:
     """
     base HVAC authenticator class
     """
 
-    def authenticate(self, client):
+    def authenticate(self, client: Any) -> None:
         pass
 
 
@@ -42,10 +47,10 @@ class VaultAuthenticatorToken(VaultAuthenticator):
     HVAC authenticator for static token
     """
 
-    def __init__(self, token):
+    def __init__(self, token: str) -> None:
         self.token = token
 
-    def authenticate(self, client):
+    def authenticate(self, client: Any) -> None:
         client.token = self.token
 
 
@@ -54,11 +59,11 @@ class VaultAuthenticatorApprole(VaultAuthenticator):
     HVAC authenticator for Approle login method
     """
 
-    def __init__(self, roleId, secretId):
+    def __init__(self, roleId: str, secretId: str) -> None:
         self.roleId = roleId
         self.secretId = secretId
 
-    def authenticate(self, client):
+    def authenticate(self, client: Any) -> None:
         client.auth.approle.login(role_id=self.roleId, secret_id=self.secretId)
 
 
@@ -72,13 +77,13 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
 
     def checkConfig(
         self,
-        vault_server=None,
-        authenticator=None,
-        secrets_mount=None,
-        api_version=2,
-        path_delimiter='|',
-        path_escape='\\',
-    ):
+        vault_server: str | None = None,
+        authenticator: VaultAuthenticator | None = None,
+        secrets_mount: str | None = None,
+        api_version: int = 2,
+        path_delimiter: str = '|',
+        path_escape: str = '\\',
+    ) -> None:
         try:
             import hvac  # noqa: PLC0415
 
@@ -106,13 +111,13 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
 
     def reconfigService(
         self,
-        vault_server=None,
-        authenticator=None,
-        secrets_mount=None,
-        api_version=2,
-        path_delimiter='|',
-        path_escape='\\',
-    ):
+        vault_server: str | None = None,
+        authenticator: VaultAuthenticator | None = None,
+        secrets_mount: str | None = None,
+        api_version: int = 2,
+        path_delimiter: str = '|',
+        path_escape: str = '\\',
+    ) -> Any:
         try:
             import hvac  # noqa: PLC0415
         except ImportError:  # pragma: no cover
@@ -128,6 +133,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         self.path_escape = path_escape
         self.authenticator = authenticator
         self.api_version = api_version
+        assert vault_server is not None
         if vault_server.endswith('/'):  # pragma: no cover
             vault_server = vault_server[:-1]
         self.client = hvac.Client(vault_server)
@@ -135,7 +141,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         self.client.secrets.kv.default_kv_version = api_version
         return self
 
-    def escaped_split(self, s):
+    def escaped_split(self, s: str) -> list[str]:
         """
         parse and split string, respecting escape characters
         """
@@ -163,7 +169,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         ret.append(''.join(current))
         return ret
 
-    def thd_hvac_wrap_read(self, path):
+    def thd_hvac_wrap_read(self, path: str) -> Any:
         if self.api_version == 1:
             return self.client.secrets.kv.v1.read_secret(path=path, mount_point=self.secrets_mount)
         else:
@@ -175,12 +181,13 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
                 path=path, mount_point=self.secrets_mount
             )
 
-    def thd_hvac_get(self, path):
+    def thd_hvac_get(self, path: str) -> Any:
         """
         query secret from Vault and re-authenticate if not authenticated
         """
 
         if not self.client.is_authenticated():
+            assert self.authenticator is not None
             self.authenticator.authenticate(self.client)
 
         response = self.thd_hvac_wrap_read(path=path)
@@ -188,7 +195,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
         return response
 
     @defer.inlineCallbacks
-    def get(self, entry):
+    def get(self, entry: str) -> InlineCallbacksType[str]:
         """
         get the value from vault secret backend
         """
