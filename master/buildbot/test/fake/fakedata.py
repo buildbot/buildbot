@@ -642,7 +642,7 @@ class FakeDataConnector(service.AsyncMultiService):
         if not isinstance(path, tuple):
             raise TypeError('path must be a tuple')
         return self.realConnector.get(
-            path,  # type: ignore[arg-type]
+            path,
             filters=filters,
             fields=fields,
             order=order,
