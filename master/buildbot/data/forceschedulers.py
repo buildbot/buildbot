@@ -78,7 +78,7 @@ class ForceSchedulerEndpoint(base.Endpoint):
                 res = yield sched.force(**args)
                 return res
             except forcesched.CollectedValidationError as e:
-                raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"]) from e
+                raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"]) from e  # type: ignore[arg-type]
         return None
 
 

@@ -556,7 +556,9 @@ class TelegramContact(Contact):
                         raise ValueError(f"There is no force scheduler '{sched}'")
                     try:
                         yield scheduler.force(
-                            builderid=builder['builderid'], owner=self.describeUser(), **params
+                            builderid=builder['builderid'],
+                            owner=self.describeUser(),
+                            **params,  # type: ignore[arg-type]
                         )
                     except CollectedValidationError as e:
                         raise ValueError(e.errors) from e
