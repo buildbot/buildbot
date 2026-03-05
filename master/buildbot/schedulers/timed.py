@@ -78,7 +78,7 @@ if TYPE_CHECKING:
 # Thus upgrading the version does not start unnecessary builds.
 
 
-class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
+class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):  # type: ignore[misc]
     """
     Parent class for timed schedulers.  This takes care of the (surprisingly
     subtle) mechanics of ensuring that each timed actuation runs to completion

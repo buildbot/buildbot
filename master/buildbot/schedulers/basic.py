@@ -254,7 +254,7 @@ class BaseBasicScheduler(base.ReconfigurableBaseScheduler):
         )
 
 
-class SingleBranchScheduler(AbsoluteSourceStampsMixin, BaseBasicScheduler):
+class SingleBranchScheduler(AbsoluteSourceStampsMixin, BaseBasicScheduler):  # type: ignore[misc]
     createAbsoluteSourceStamps = None
 
     def checkConfig(self, createAbsoluteSourceStamps=False, **kwargs):

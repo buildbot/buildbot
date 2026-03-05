@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -30,7 +31,12 @@ from buildbot.util.state import StateMixin
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from collections.abc import Sequence
+
+    from buildbot.changes.changes import Change
+    from buildbot.changes.filter import ChangeFilter
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @implementer(interfaces.IScheduler)
@@ -44,7 +50,14 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         'codebases',
     )
 
-    def __init__(self, name, builderNames, properties=None, codebases=None, priority=None):
+    def __init__(
+        self,
+        name: str,
+        builderNames: Any,
+        properties: dict[str, Any] | None = None,
+        codebases: dict[str, dict[str, str]] | list[str] | None = None,
+        priority: int | Callable[..., int] | None = None,
+    ) -> None:
         warn_deprecated(
             '4.3.0',
             'BaseScheduler has been deprecated, use ReconfigurableBaseScheduler',
@@ -115,20 +128,17 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             )
         self.priority = priority
 
-    def __repr__(self):
-        """
-        Provide a meaningful string representation of scheduler.
-        """
+    def __repr__(self) -> str:
         return (
             f'<{self.__class__.__name__}({self.name}, {self.builderNames}, enabled={self.enabled})>'
         )
 
-    def reconfigService(self, *args, **kwargs):
+    def reconfigService(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError()
 
     # activity handling
     @defer.inlineCallbacks
-    def activate(self):
+    def activate(self) -> InlineCallbacksType[None]:
         if not self.enabled:
             return None
 
@@ -148,7 +158,9 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         return None
 
     @defer.inlineCallbacks
-    def _enabledCallback(self, key, msg):
+    def _enabledCallback(
+        self, key: tuple[str, ...], msg: dict[str, Any]
+    ) -> InlineCallbacksType[None]:
         if msg['enabled']:
             self.enabled = True
             yield self.activate()
@@ -157,7 +169,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             self.enabled = False
 
     @defer.inlineCallbacks
-    def deactivate(self):
+    def deactivate(self) -> InlineCallbacksType[None]:
         if not self.enabled:
             return None
         yield self._stopConsumingChanges()
@@ -165,29 +177,34 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
     # service handling
 
-    def _getServiceId(self):
+    def _getServiceId(self) -> defer.Deferred[int]:
         return self.master.data.updates.findSchedulerId(self.name)
 
-    def _getScheduler(self, sid):
+    def _getScheduler(self, sid: int) -> defer.Deferred[Any]:
         return self.master.db.schedulers.getScheduler(sid)
 
-    def _claimService(self):
+    def _claimService(self) -> defer.Deferred[bool]:
         return self.master.data.updates.trySetSchedulerMaster(self.serviceid, self.master.masterid)
 
-    def _unclaimService(self):
+    def _unclaimService(self) -> defer.Deferred[bool]:
         return self.master.data.updates.trySetSchedulerMaster(self.serviceid, None)
 
     # status queries
 
     # deprecated: these aren't compatible with distributed schedulers
 
-    def listBuilderNames(self):
+    def listBuilderNames(self) -> Any:
         return self.builderNames
 
     # change handling
 
     @defer.inlineCallbacks
-    def startConsumingChanges(self, fileIsImportant=None, change_filter=None, onlyImportant=False):
+    def startConsumingChanges(
+        self,
+        fileIsImportant: Callable[[Change], bool] | None = None,
+        change_filter: ChangeFilter | None = None,
+        onlyImportant: bool = False,
+    ) -> InlineCallbacksType[None]:
         assert fileIsImportant is None or callable(fileIsImportant)
 
         # register for changes with the data API
@@ -198,14 +215,21 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         )
 
     @defer.inlineCallbacks
-    def startConsumingEnableEvents(self):
+    def startConsumingEnableEvents(self) -> InlineCallbacksType[None]:
         assert not self._enable_consumer
         self._enable_consumer = yield self.master.mq.startConsuming(
             self._enabledCallback, ('schedulers', str(self.serviceid), 'updated')
         )
 
     @defer.inlineCallbacks
-    def _changeCallback(self, key, msg, fileIsImportant, change_filter, onlyImportant):
+    def _changeCallback(
+        self,
+        key: tuple[str, ...],
+        msg: dict[str, Any],
+        fileIsImportant: Callable[[Change], bool] | None,
+        change_filter: ChangeFilter | None,
+        onlyImportant: bool,
+    ) -> InlineCallbacksType[None]:
         # ignore changes delivered while we're not running
         if not self._change_consumer:
             return
@@ -243,19 +267,19 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         d = self._change_consumption_lock.run(self.gotChange, change, important)
         d.addErrback(log.err, 'while processing change')
 
-    def _stopConsumingChanges(self):
+    def _stopConsumingChanges(self) -> defer.Deferred[None]:
         # (note: called automatically in deactivate)
 
         # acquire the lock change consumption lock to ensure that any change
         # consumption is complete before we are done stopping consumption
-        def stop():
+        def stop() -> None:
             if self._change_consumer:
                 self._change_consumer.stopConsuming()
                 self._change_consumer = None
 
         return self._change_consumption_lock.run(stop)
 
-    def gotChange(self, change, important):
+    def gotChange(self, change: Change, important: bool) -> None:
         raise NotImplementedError
 
     # starting builds
@@ -263,14 +287,14 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForSourceStampsWithDefaults(
         self,
-        reason,
-        sourcestamps=None,
-        waited_for=False,
-        properties=None,
-        builderNames=None,
-        priority=None,
-        **kw,
-    ):
+        reason: str,
+        sourcestamps: list[dict[str, Any]] | None = None,
+        waited_for: bool = False,
+        properties: Properties | None = None,
+        builderNames: Any = None,
+        priority: int | None = None,
+        **kw: Any,
+    ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
         if sourcestamps is None:
             sourcestamps = []
 
@@ -323,7 +347,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         )
         return rv
 
-    def getCodebaseDict(self, codebase):
+    def getCodebaseDict(self, codebase: str) -> defer.Deferred[dict[str, str]]:
         # Hook for subclasses to change codebase parameters when a codebase does
         # not have a change associated with it.
         try:
@@ -334,20 +358,20 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForChanges(
         self,
-        waited_for=False,
-        reason='',
-        external_idstring=None,
-        changeids=None,
-        builderNames=None,
-        properties=None,
-        priority=None,
-        **kw,
-    ):
+        waited_for: bool = False,
+        reason: str = '',
+        external_idstring: str | None = None,
+        changeids: list[int] | None = None,
+        builderNames: Any = None,
+        properties: Properties | None = None,
+        priority: int | Callable[..., int] | None = None,
+        **kw: Any,
+    ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
         if changeids is None:
             changeids = []
-        changesByCodebase = {}
+        changesByCodebase: dict[str, list[Any]] = {}
 
-        def get_last_change_for_codebase(codebase):
+        def get_last_change_for_codebase(codebase: str) -> Any:
             return max(changesByCodebase[codebase], key=lambda change: change.changeid)
 
         # Changes are retrieved from database and grouped by their codebase
@@ -355,14 +379,14 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             chdict = yield self.master.db.changes.getChange(changeid)
             changesByCodebase.setdefault(chdict.codebase, []).append(chdict)
 
-        sourcestamps = []
+        sourcestamps: list[Any] = []
         for codebase in sorted(self.codebases):
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes
                 cb = yield self.getCodebaseDict(codebase)
 
-                ss = {
+                ss: Any = {
                     'codebase': codebase,
                     'repository': cb.get('repository', ''),
                     'branch': cb.get('branch', None),
@@ -399,15 +423,15 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForSourceStamps(
         self,
-        waited_for=False,
-        sourcestamps=None,
-        reason='',
-        external_idstring=None,
-        properties=None,
-        builderNames=None,
-        priority=None,
-        **kw,
-    ):
+        waited_for: bool = False,
+        sourcestamps: list[Any] | None = None,
+        reason: str = '',
+        external_idstring: str | None = None,
+        properties: Properties | None = None,
+        builderNames: Any = None,
+        priority: int | None = None,
+        **kw: Any,
+    ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
         if sourcestamps is None:
             sourcestamps = []
         # combine properties
@@ -486,14 +510,20 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
         'codebases',
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.enabled = True
         self._enable_consumer = None
         self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
 
-    def checkConfig(self, builderNames, properties=None, codebases=None, priority=None):
+    def checkConfig(
+        self,
+        builderNames: Any,
+        properties: dict[str, Any] | None = None,
+        codebases: dict[str, dict[str, str]] | list[str] | None = None,
+        priority: int | Callable[..., int] | None = None,
+    ) -> None:
         ok = True
         if interfaces.IRenderable.providedBy(builderNames):
             pass
@@ -544,7 +574,13 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
             )
 
     @defer.inlineCallbacks
-    def reconfigService(self, builderNames, properties=None, codebases=None, priority=None):
+    def reconfigService(  # type: ignore[override]
+        self,
+        builderNames: Any,
+        properties: dict[str, Any] | None = None,
+        codebases: dict[str, dict[str, str]] | list[str] | None = None,
+        priority: int | Callable[..., int] | None = None,
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService()
 
         if codebases is None:
@@ -564,17 +600,14 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
 
         self.priority = priority
 
-    def __repr__(self):
-        """
-        Provide a meaningful string representation of scheduler.
-        """
+    def __repr__(self) -> str:
         return (
             f'<{self.__class__.__name__}({self.name}, {self.builderNames}, enabled={self.enabled})>'
         )
 
     # activity handling
     @defer.inlineCallbacks
-    def activate(self):
+    def activate(self) -> InlineCallbacksType[None]:
         if not self.enabled:
             return None
 
@@ -593,21 +626,21 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
             yield self.startConsumingEnableEvents()
         return None
 
-    def _enabledCallback(self, key, msg):
+    def _enabledCallback(self, key: tuple[str, ...], msg: dict[str, Any]) -> defer.Deferred[None]:
         if msg['enabled']:
             self.enabled = True
             d = self.activate()
         else:
             d = self.deactivate()
 
-            def fn(x):
+            def fn(x: Any) -> None:
                 self.enabled = False
 
             d.addCallback(fn)
         return d
 
     @defer.inlineCallbacks
-    def deactivate(self):
+    def deactivate(self) -> InlineCallbacksType[None]:
         if not self.enabled:
             return None
         yield self._stopConsumingChanges()
@@ -615,29 +648,34 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
 
     # service handling
 
-    def _getServiceId(self):
+    def _getServiceId(self) -> defer.Deferred[int]:
         return self.master.data.updates.findSchedulerId(self.name)
 
-    def _getScheduler(self, sid):
+    def _getScheduler(self, sid: int) -> defer.Deferred[Any]:
         return self.master.db.schedulers.getScheduler(sid)
 
-    def _claimService(self):
+    def _claimService(self) -> defer.Deferred[bool]:
         return self.master.data.updates.trySetSchedulerMaster(self.serviceid, self.master.masterid)
 
-    def _unclaimService(self):
+    def _unclaimService(self) -> defer.Deferred[bool]:
         return self.master.data.updates.trySetSchedulerMaster(self.serviceid, None)
 
     # status queries
 
     # deprecated: these aren't compatible with distributed schedulers
 
-    def listBuilderNames(self):
+    def listBuilderNames(self) -> Any:
         return self.builderNames
 
     # change handling
 
     @defer.inlineCallbacks
-    def startConsumingChanges(self, fileIsImportant=None, change_filter=None, onlyImportant=False):
+    def startConsumingChanges(
+        self,
+        fileIsImportant: Callable[[Change], bool] | None = None,
+        change_filter: ChangeFilter | None = None,
+        onlyImportant: bool = False,
+    ) -> InlineCallbacksType[None]:
         assert fileIsImportant is None or callable(fileIsImportant)
 
         # register for changes with the data API
@@ -648,14 +686,21 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
         )
 
     @defer.inlineCallbacks
-    def startConsumingEnableEvents(self):
+    def startConsumingEnableEvents(self) -> InlineCallbacksType[None]:
         assert not self._enable_consumer
         self._enable_consumer = yield self.master.mq.startConsuming(
             self._enabledCallback, ('schedulers', str(self.serviceid), 'updated')
         )
 
     @defer.inlineCallbacks
-    def _changeCallback(self, key, msg, fileIsImportant, change_filter, onlyImportant):
+    def _changeCallback(
+        self,
+        key: tuple[str, ...],
+        msg: dict[str, Any],
+        fileIsImportant: Callable[[Change], bool] | None,
+        change_filter: ChangeFilter | None,
+        onlyImportant: bool,
+    ) -> InlineCallbacksType[None]:
         # ignore changes delivered while we're not running
         if not self._change_consumer:
             return
@@ -693,19 +738,19 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
         d = self._change_consumption_lock.run(self.gotChange, change, important)
         d.addErrback(log.err, 'while processing change')
 
-    def _stopConsumingChanges(self):
+    def _stopConsumingChanges(self) -> defer.Deferred[None]:
         # (note: called automatically in deactivate)
 
         # acquire the lock change consumption lock to ensure that any change
         # consumption is complete before we are done stopping consumption
-        def stop():
+        def stop() -> None:
             if self._change_consumer:
                 self._change_consumer.stopConsuming()
                 self._change_consumer = None
 
         return self._change_consumption_lock.run(stop)
 
-    def gotChange(self, change, important):
+    def gotChange(self, change: Change, important: bool) -> None:
         raise NotImplementedError
 
     # starting builds
@@ -713,14 +758,14 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForSourceStampsWithDefaults(
         self,
-        reason,
-        sourcestamps=None,
-        waited_for=False,
-        properties=None,
-        builderNames=None,
-        priority=None,
-        **kw,
-    ):
+        reason: str,
+        sourcestamps: list[dict[str, Any]] | None = None,
+        waited_for: bool = False,
+        properties: Properties | None = None,
+        builderNames: Any = None,
+        priority: int | None = None,
+        **kw: Any,
+    ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
         if sourcestamps is None:
             sourcestamps = []
 
@@ -773,7 +818,7 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
         )
         return rv
 
-    def getCodebaseDict(self, codebase):
+    def getCodebaseDict(self, codebase: str) -> defer.Deferred[dict[str, str]]:
         # Hook for subclasses to change codebase parameters when a codebase does
         # not have a change associated with it.
         try:
@@ -784,20 +829,20 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForChanges(
         self,
-        waited_for=False,
-        reason='',
-        external_idstring=None,
-        changeids=None,
-        builderNames=None,
-        properties=None,
-        priority=None,
-        **kw,
-    ):
+        waited_for: bool = False,
+        reason: str = '',
+        external_idstring: str | None = None,
+        changeids: list[int] | None = None,
+        builderNames: Any = None,
+        properties: Properties | None = None,
+        priority: int | Callable[..., int] | None = None,
+        **kw: Any,
+    ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
         if changeids is None:
             changeids = []
-        changesByCodebase = {}
+        changesByCodebase: dict[str, list[Any]] = {}
 
-        def get_last_change_for_codebase(codebase):
+        def get_last_change_for_codebase(codebase: str) -> Any:
             return max(changesByCodebase[codebase], key=lambda change: change.changeid)
 
         # Changes are retrieved from database and grouped by their codebase
@@ -805,14 +850,14 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
             chdict = yield self.master.db.changes.getChange(changeid)
             changesByCodebase.setdefault(chdict.codebase, []).append(chdict)
 
-        sourcestamps = []
+        sourcestamps: list[Any] = []
         for codebase in sorted(self.codebases):
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes
                 cb = yield self.getCodebaseDict(codebase)
 
-                ss = {
+                ss: Any = {
                     'codebase': codebase,
                     'repository': cb.get('repository', ''),
                     'branch': cb.get('branch', None),
@@ -849,15 +894,15 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForSourceStamps(
         self,
-        waited_for=False,
-        sourcestamps=None,
-        reason='',
-        external_idstring=None,
-        properties=None,
-        builderNames=None,
-        priority=None,
-        **kw,
-    ):
+        waited_for: bool = False,
+        sourcestamps: list[Any] | None = None,
+        reason: str = '',
+        external_idstring: str | None = None,
+        properties: Properties | None = None,
+        builderNames: Any = None,
+        priority: int | None = None,
+        **kw: Any,
+    ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
         if sourcestamps is None:
             sourcestamps = []
         # combine properties
