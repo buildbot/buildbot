@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -24,9 +25,10 @@ from buildbot.data import types
 
 if TYPE_CHECKING:
     from buildbot.db.projects import ProjectModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
-def project_db_to_data(model: ProjectModel, active=None):
+def project_db_to_data(model: ProjectModel, active: bool | None = None) -> dict[str, Any]:
     return {
         "projectid": model.id,
         "name": model.name,
@@ -46,7 +48,9 @@ class ProjectEndpoint(base.BuildNestingMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, result_spec, kwargs):
+    def get(
+        self, result_spec: base.ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         projectid = yield self.get_project_id(kwargs)
         if projectid is None:
             return None
@@ -65,7 +69,9 @@ class ProjectsEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, result_spec, kwargs):
+    def get(
+        self, result_spec: base.ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]]]:
         active = result_spec.popBooleanFilter("active")
         if active is None:
             dbdicts = yield self.master.db.projects.get_projects()
@@ -101,12 +107,12 @@ class Project(base.ResourceType):
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
-    def generate_event(self, _id, event):
+    def generate_event(self, _id: int, event: str) -> InlineCallbacksType[None]:
         project = yield self.master.data.get(('projects', str(_id)))
         self.produceEvent(project, event)
 
     @base.updateMethod
-    def find_project_id(self, name: str, auto_create: bool = True):
+    def find_project_id(self, name: str, auto_create: bool = True) -> defer.Deferred[int | None]:
         return self.master.db.projects.find_project_id(name, auto_create)
 
     @base.updateMethod
@@ -118,7 +124,7 @@ class Project(base.ResourceType):
         description: str | None,
         description_format: str | None,
         description_html: str | None,
-    ):
+    ) -> InlineCallbacksType[None]:
         yield self.master.db.projects.update_project_info(
             projectid, slug, description, description_format, description_html
         )
