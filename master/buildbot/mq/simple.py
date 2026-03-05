@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import pprint
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
 
 from twisted.internet import defer
 from twisted.python import log
@@ -23,36 +27,47 @@ from buildbot.mq import base
 from buildbot.util import service
 from buildbot.util import tuplematch
 
+if TYPE_CHECKING:
+    from buildbot.config.master import MasterConfig
+
 
 class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.qrefs = []
-        self.persistent_qrefs = {}
+        self.qrefs: list[QueueRef] = []
+        self.persistent_qrefs: dict[str, PersistentQueueRef] = {}
         self.debug = False
 
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        self.debug = new_config.mq.get('debug', False)
+    def reconfigServiceWithBuildbotConfig(self, new_config: MasterConfig) -> Any:
+        self.debug = new_config.mq.get('debug', False)  # type: ignore[assignment]
         return super().reconfigServiceWithBuildbotConfig(new_config)
 
-    def produce(self, routingKey, data):
+    def produce(self, routingKey: tuple[str, ...], data: dict[str, Any]) -> None:
         if self.debug:
             log.msg(f"MSG: {routingKey}\n{pprint.pformat(data)}")
         for qref in self.qrefs:
             if tuplematch.matchTuple(routingKey, qref.filter):
                 self.invokeQref(qref, routingKey, data)
 
-    def startConsuming(self, callback, filter, persistent_name=None):
+    def startConsuming(  # type: ignore[override]
+        self,
+        callback: Callable[..., Any],
+        filter: tuple[str | None, ...],
+        persistent_name: str | None = None,
+    ) -> defer.Deferred[QueueRef]:
         if any(not isinstance(k, str) and k is not None for k in filter):
             raise AssertionError(f"{filter} is not a filter")
+        qref: QueueRef
         if persistent_name:
             if persistent_name in self.persistent_qrefs:
-                qref = self.persistent_qrefs[persistent_name]
-                qref.startConsuming(callback)
+                pqref = self.persistent_qrefs[persistent_name]
+                pqref.startConsuming(callback)
+                qref = pqref
             else:
-                qref = PersistentQueueRef(self, callback, filter)
-                self.qrefs.append(qref)
-                self.persistent_qrefs[persistent_name] = qref
+                new_pqref = PersistentQueueRef(self, callback, filter)
+                self.qrefs.append(new_pqref)
+                self.persistent_qrefs[persistent_name] = new_pqref
+                qref = new_pqref
         else:
             qref = QueueRef(self, callback, filter)
             self.qrefs.append(qref)
@@ -62,12 +77,17 @@ class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
 class QueueRef(base.QueueRef):
     __slots__ = ['filter', 'mq']
 
-    def __init__(self, mq, callback, filter):
+    def __init__(
+        self,
+        mq: SimpleMQ,
+        callback: Callable[..., Any] | None,
+        filter: tuple[str | None, ...],
+    ) -> None:
         super().__init__(callback)
         self.mq = mq
         self.filter = filter
 
-    def stopConsuming(self):
+    def stopConsuming(self) -> None:
         self.callback = None
         try:
             self.mq.qrefs.remove(self)
@@ -78,11 +98,16 @@ class QueueRef(base.QueueRef):
 class PersistentQueueRef(QueueRef):
     __slots__ = ['active', 'queue']
 
-    def __init__(self, mq, callback, filter):
+    def __init__(
+        self,
+        mq: SimpleMQ,
+        callback: Callable[..., Any] | None,
+        filter: tuple[str | None, ...],
+    ) -> None:
         super().__init__(mq, callback, filter)
-        self.queue = []
+        self.queue: list[tuple[tuple[str, ...], dict[str, Any]]] = []
 
-    def startConsuming(self, callback):
+    def startConsuming(self, callback: Callable[..., Any]) -> None:
         self.callback = callback
         self.active = True
 
@@ -92,9 +117,9 @@ class PersistentQueueRef(QueueRef):
         for routingKey, data in queue:
             self.invoke(routingKey, data)
 
-    def stopConsuming(self):
+    def stopConsuming(self) -> None:
         self.callback = self.addToQueue
         self.active = False
 
-    def addToQueue(self, routingKey, data):
+    def addToQueue(self, routingKey: tuple[str, ...], data: dict[str, Any]) -> None:
         self.queue.append((routingKey, data))

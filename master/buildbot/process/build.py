@@ -966,7 +966,8 @@ class Build(properties.PropertiesMixin):
     def waitUntilFinished(self) -> InlineCallbacksType[None]:
         buildid = yield self.get_buildid()
         yield self.master.mq.waitUntilEvent(
-            ('builds', str(buildid), 'finished'), lambda: self.finished
+            ('builds', str(buildid), 'finished'),
+            lambda: self.finished,  # type: ignore[arg-type,return-value]
         )
 
     def getWorkerInfo(self) -> Properties:

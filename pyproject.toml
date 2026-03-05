@@ -156,10 +156,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot.mq.base",
-      "buildbot.mq.connector",
-      "buildbot.mq.simple",
-      "buildbot.mq.wamp",
       "buildbot.pbutil",
       "buildbot.plugins.db",
       "buildbot.plugins",
