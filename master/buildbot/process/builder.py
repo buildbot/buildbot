@@ -108,7 +108,7 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
         self.project_id: int | None = None
 
         # Tracks config version for locks
-        self.config_version = None
+        self.config_version: int | None = None
 
     def _find_builder_config_by_name(self, new_config: MasterConfig) -> BuilderConfig:
         for builder_config in new_config.builders:
