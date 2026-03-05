@@ -13,17 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
 
 
 class RevlinkMatch:
-    def __init__(self, repo_urls, revlink):
+    def __init__(self, repo_urls: list[str] | str, revlink: str) -> None:
         if isinstance(repo_urls, str):
             repo_urls = [repo_urls]
         self.repo_urls = [re.compile(url) for url in repo_urls]
         self.revlink = revlink
 
-    def __call__(self, rev, repo):
+    def __call__(self, rev: str, repo: str) -> str | None:
         for url in self.repo_urls:
             m = url.match(repo)
             if m:
@@ -52,7 +54,7 @@ BitbucketRevlink = RevlinkMatch(
 
 
 class GitwebMatch(RevlinkMatch):
-    def __init__(self, repo_urls, revlink):
+    def __init__(self, repo_urls: list[str] | str, revlink: str) -> None:
         super().__init__(repo_urls=repo_urls, revlink=revlink + r'?p=\g<repo>;a=commit;h=%s')
 
 
@@ -81,10 +83,10 @@ SourceforgeGitRevlink_AlluraPlatform = RevlinkMatch(
 
 
 class RevlinkMultiplexer:
-    def __init__(self, *revlinks):
+    def __init__(self, *revlinks: RevlinkMatch) -> None:
         self.revlinks = revlinks
 
-    def __call__(self, rev, repo):
+    def __call__(self, rev: str, repo: str) -> str | None:
         for revlink in self.revlinks:
             url = revlink(rev, repo)
             if url:
