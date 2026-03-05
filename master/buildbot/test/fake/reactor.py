@@ -41,6 +41,10 @@ from buildbot.util.twisted import async_to_deferred
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from twisted.internet.interfaces import IDelayedCall
+    from twisted.internet.interfaces import IProcessTransport
+    from twisted.internet.interfaces import IProtocol
+
 # The code here is based on the implementations in
 # https://twistedmatrix.com/trac/ticket/8295
 # https://twistedmatrix.com/trac/ticket/8296
@@ -52,27 +56,27 @@ class CoreReactor:
     Partial implementation of ``IReactorCore``.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._triggers = {}
+        self._triggers: dict[str, _ThreePhaseEvent] = {}
 
     def addSystemEventTrigger(
-        self, phase: str, eventType: str, callable: Callable[..., Any], *args, **kw
-    ):
+        self, phase: str, eventType: str, callable: Callable[..., Any], *args: Any, **kw: Any
+    ) -> tuple[str, Any]:
         event = self._triggers.setdefault(eventType, _ThreePhaseEvent())
         return eventType, event.addTrigger(phase, callable, *args, **kw)
 
-    def removeSystemEventTrigger(self, triggerID):
+    def removeSystemEventTrigger(self, triggerID: tuple[str, Any]) -> None:
         eventType, handle = triggerID
         event = self._triggers.setdefault(eventType, _ThreePhaseEvent())
         event.removeTrigger(handle)
 
-    def fireSystemEvent(self, eventType):
+    def fireSystemEvent(self, eventType: str) -> None:
         event = self._triggers.get(eventType)
         if event is not None:
             event.fireEvent()
 
-    def callWhenRunning(self, callable: Callable[..., Any], *args, **kwargs):
+    def callWhenRunning(self, callable: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
         callable(*args, **kwargs)
 
     def resolve(self, name: str, timeout: Sequence[int]) -> defer.Deferred[str]:  # type: ignore
@@ -86,16 +90,16 @@ class CoreReactor:
     def running(self) -> bool:
         raise NotImplementedError("running() is not implemented in this reactor")
 
-    def crash(self):
+    def crash(self) -> None:
         raise NotImplementedError("crash() is not implemented in this reactor")
 
-    def iterate(self, delay=None):
+    def iterate(self, delay: float | None = None) -> None:
         raise NotImplementedError("iterate() is not implemented in this reactor")
 
-    def run(self):
+    def run(self) -> None:
         raise NotImplementedError("run() is not implemented in this reactor")
 
-    def runUntilCurrent(self):
+    def runUntilCurrent(self) -> None:
         raise NotImplementedError("runUntilCurrent() is not implemented in this reactor")
 
 
@@ -113,10 +117,16 @@ class NonThreadPool:
 
     calls = 0
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         pass
 
-    def callInThreadWithCallback(self, onResult, func, *args, **kw):
+    def callInThreadWithCallback(
+        self,
+        onResult: Callable[[bool, Any], None],
+        func: Callable[..., Any],
+        *args: Any,
+        **kw: Any,
+    ) -> None:
         self.calls += 1
         try:
             result = func(*args, **kw)
@@ -128,10 +138,10 @@ class NonThreadPool:
         else:
             onResult(True, result)
 
-    def start(self):
+    def start(self) -> None:
         pass
 
-    def stop(self):
+    def stop(self) -> None:
         pass
 
 
@@ -145,36 +155,38 @@ class NonReactor:
     def suggestThreadPoolSize(self, size: int) -> None:
         pass
 
-    def callInThread(self, callable: Callable[..., Any], *args, **kwargs: object) -> None:
+    def callInThread(self, callable: Callable[..., Any], *args: Any, **kwargs: object) -> None:
         callable(*args, **kwargs)
 
     def callFromThread(self, callable: Callable[..., Any], *args: object, **kwargs: object) -> None:
         callable(*args, **kwargs)
 
-    def getThreadPool(self):
+    def getThreadPool(self) -> NonThreadPool:  # type: ignore[override]
         return NonThreadPool()
 
 
 class ProcessTransport:
-    def __init__(self, pid, reactor):
+    def __init__(self, pid: int, reactor: ProcessReactor) -> None:
         self.pid = pid
         self.reactor = reactor
 
-    def signalProcess(self, signal):
+    def signalProcess(self, signal: str) -> None:
         self.reactor.process_signalProcess(self.pid, signal)
 
-    def closeChildFD(self, descriptor):
+    def closeChildFD(self, descriptor: int) -> None:
         self.reactor.process_closeChildFD(self.pid, descriptor)
 
 
 class ProcessReactor:
-    def __init__(self):
+    testcase: Any
+
+    def __init__(self) -> None:
         super().__init__()
-        self._expected_calls = []
-        self._processes = {}
+        self._expected_calls: list[dict[str, Any]] = []
+        self._processes: dict[int, Any] = {}
         self._next_pid = 0
 
-    def _check_call(self, call):
+    def _check_call(self, call: dict[str, Any]) -> None:
         function = call["call"]
         if not self._expected_calls:
             raise AssertionError(f"Unexpected call to {function}(): {call!r}")
@@ -183,16 +195,16 @@ class ProcessReactor:
 
     def spawnProcess(
         self,
-        processProtocol,
-        executable,
-        args,
-        env=None,
-        path=None,
-        uid=None,
-        gid=None,
-        usePTY=False,
-        childFDs=None,
-    ):
+        processProtocol: IProtocol,
+        executable: str,
+        args: tuple[Any, ...],
+        env: dict[str, str] | None = None,
+        path: str | None = None,
+        uid: int | None = None,
+        gid: int | None = None,
+        usePTY: bool = False,
+        childFDs: dict[int, int | str] | None = None,
+    ) -> IProcessTransport:
         call = {
             "call": "spawnProcess",
             "executable": executable,
@@ -210,9 +222,9 @@ class ProcessReactor:
         self._next_pid += 1
 
         self._processes[pid] = processProtocol
-        return ProcessTransport(pid, self)
+        return ProcessTransport(pid, self)  # type: ignore[return-value]
 
-    def process_signalProcess(self, pid, signal):
+    def process_signalProcess(self, pid: int, signal: str) -> None:
         call = {
             "call": "signalProcess",
             "pid": pid,
@@ -220,7 +232,7 @@ class ProcessReactor:
         }
         self._check_call(call)
 
-    def process_closeChildFD(self, pid, descriptor):
+    def process_closeChildFD(self, pid: int, descriptor: int) -> None:
         call = {
             "call": "closeChildFD",
             "pid": pid,
@@ -228,18 +240,18 @@ class ProcessReactor:
         }
         self._check_call(call)
 
-    def process_done(self, pid, status):
+    def process_done(self, pid: int, status: int) -> None:
         reason = ProcessDone(status)
         self._processes[pid].processEnded(reason)
         self._processes[pid].processExited(reason)
 
-    def process_send_stdout(self, pid, data):
+    def process_send_stdout(self, pid: int, data: bytes) -> None:
         self._processes[pid].outReceived(data)
 
-    def process_send_stderr(self, pid, data):
+    def process_send_stderr(self, pid: int, data: bytes) -> None:
         self._processes[pid].errReceived(data)
 
-    def assert_no_remaining_calls(self):
+    def assert_no_remaining_calls(self) -> None:
         if self._expected_calls:
             msg = "The following expected calls are missing: "
             for call in self._expected_calls:
@@ -249,8 +261,16 @@ class ProcessReactor:
             raise AssertionError(msg)
 
     def expect_spawn(
-        self, executable, args, env=None, path=None, uid=None, gid=None, usePTY=False, childFDs=None
-    ):
+        self,
+        executable: str,
+        args: tuple[Any, ...],
+        env: dict[str, str] | None = None,
+        path: str | None = None,
+        uid: int | None = None,
+        gid: int | None = None,
+        usePTY: bool = False,
+        childFDs: dict[int, int | str] | None = None,
+    ) -> None:
         self._expected_calls.append({
             "call": "spawnProcess",
             "executable": executable,
@@ -263,14 +283,14 @@ class ProcessReactor:
             "childFDs": childFDs,
         })
 
-    def expect_process_signalProcess(self, pid, signal):
+    def expect_process_signalProcess(self, pid: int, signal: str) -> None:
         self._expected_calls.append({
             "call": "signalProcess",
             "pid": pid,
             "signal": signal,
         })
 
-    def expect_process_closeChildFD(self, pid, descriptor):
+    def expect_process_closeChildFD(self, pid: int, descriptor: int) -> None:
         self._expected_calls.append({
             "call": "closeChildFD",
             "pid": pid,
@@ -279,17 +299,17 @@ class ProcessReactor:
 
 
 class TestReactor(ProcessReactor, NonReactor, CoreReactor, Clock):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # whether there are calls that should run right now
         self._pendingCurrentCalls = False
         self.stop_called = False
 
-    def set_test_case(self, testcase):
+    def set_test_case(self, testcase: Any) -> None:
         self.testcase = testcase
 
-    def _executeCurrentDelayedCalls(self):
+    def _executeCurrentDelayedCalls(self) -> None:
         while self.getDelayedCalls():
             first = sorted(self.getDelayedCalls(), key=lambda a: a.getTime())[0]
             if first.getTime() > self.seconds():
@@ -299,14 +319,14 @@ class TestReactor(ProcessReactor, NonReactor, CoreReactor, Clock):
         self._pendingCurrentCalls = False
 
     @async_to_deferred
-    async def _catchPrintExceptions(self, what, *a, **kw) -> None:
+    async def _catchPrintExceptions(self, what: Callable[..., Any], *a: Any, **kw: Any) -> None:
         try:
             await defer.maybeDeferred(what, *a, **kw)
         except Exception as e:
             log.msg('Unhandled exception from deferred when doing TestReactor.advance()', e)
             raise
 
-    def callLater(self, when, what, *a, **kw):
+    def callLater(self, when: float, what: Callable[..., Any], *a: Any, **kw: Any) -> IDelayedCall:  # type: ignore[override]
         # Buildbot often uses callLater(0, ...) to defer execution of certain
         # code to the next iteration of the reactor. This means that often
         # there are pending callbacks registered to the reactor that might
@@ -319,11 +339,11 @@ class TestReactor(ProcessReactor, NonReactor, CoreReactor, Clock):
         # Additionally, we wrap all calls with a function that prints any
         # unhandled exceptions
         if when <= 0 and not self._pendingCurrentCalls:
-            reactor.callLater(0, self._executeCurrentDelayedCalls)
+            reactor.callLater(0, self._executeCurrentDelayedCalls)  # type: ignore[attr-defined]
 
         return super().callLater(when, self._catchPrintExceptions, what, *a, **kw)
 
-    def stop(self):
+    def stop(self) -> None:
         # first fire pending calls until the current time. Note that the real
         # reactor only advances until the current time in the case of shutdown.
         self.advance(0)
