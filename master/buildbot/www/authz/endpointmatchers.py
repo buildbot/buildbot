@@ -39,7 +39,7 @@ class EndpointMatcherBase:
         self.master = authz.master
 
     def match(
-        self, ep: str, action: str = "get", options: dict[str, Any] | None = None
+        self, ep: tuple[str, ...], action: str = "get", options: dict[str, Any] | None = None
     ) -> defer.Deferred[Match | None]:
         if options is None:
             options = {}
@@ -112,14 +112,14 @@ class Match:
 
 class AnyEndpointMatcher(EndpointMatcherBase):
     def match(
-        self, ep: str, action: str = "get", options: dict[str, Any] | None = None
+        self, ep: tuple[str, ...], action: str = "get", options: dict[str, Any] | None = None
     ) -> defer.Deferred[Match | None]:
         return defer.succeed(Match(self.master))
 
 
 class AnyControlEndpointMatcher(EndpointMatcherBase):
     def match(
-        self, ep: str, action: str = "", options: dict[str, Any] | None = None
+        self, ep: tuple[str, ...], action: str = "", options: dict[str, Any] | None = None
     ) -> defer.Deferred[Match | None]:
         if bytes2unicode(action).lower() != "get":
             return defer.succeed(Match(self.master))
