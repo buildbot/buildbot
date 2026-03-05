@@ -32,7 +32,7 @@ class SecretInAFile(SecretProviderBase):
 
     name: str | None = "SecretInAFile"  # type: ignore[assignment]
 
-    def checkFileIsReadOnly(self, dirname, secretfile):
+    def checkFileIsReadOnly(self, dirname: str, secretfile: str) -> None:
         filepath = os.path.join(dirname, secretfile)
         obs_stat = stat.S_IMODE(os.stat(filepath).st_mode)
         if (obs_stat & 0o7) != 0 and os.name == "posix":
@@ -42,7 +42,7 @@ class SecretInAFile(SecretProviderBase):
                 " accessible by others!"
             )
 
-    def checkSecretDirectoryIsAvailableAndReadable(self, dirname, suffixes):
+    def checkSecretDirectoryIsAvailableAndReadable(self, dirname: str, suffixes: list[str]) -> None:
         if not os.access(dirname, os.F_OK):
             config.error(f"directory {dirname} does not exists")
         for secretfile in os.listdir(dirname):
@@ -50,8 +50,8 @@ class SecretInAFile(SecretProviderBase):
                 if secretfile.endswith(suffix):
                     self.checkFileIsReadOnly(dirname, secretfile)
 
-    def loadSecrets(self, dirname, suffixes, strip):
-        secrets = {}
+    def loadSecrets(self, dirname: str, suffixes: list[str], strip: bool) -> dict[str, str]:
+        secrets: dict[str, str] = {}
         for secretfile in os.listdir(dirname):
             secretvalue = None
             for suffix in suffixes:
@@ -65,20 +65,24 @@ class SecretInAFile(SecretProviderBase):
                     secrets[secretfile] = secretvalue
         return secrets
 
-    def checkConfig(self, dirname, suffixes=None, strip=True):
+    def checkConfig(
+        self, dirname: str, suffixes: list[str] | None = None, strip: bool = True
+    ) -> None:
         self._dirname = dirname
         if suffixes is None:
             suffixes = [""]
         self.checkSecretDirectoryIsAvailableAndReadable(dirname, suffixes=suffixes)
 
-    def reconfigService(self, dirname, suffixes=None, strip=True):
+    def reconfigService(  # type: ignore[override]
+        self, dirname: str, suffixes: list[str] | None = None, strip: bool = True
+    ) -> None:
         self._dirname = dirname
-        self.secrets = {}
+        self.secrets: dict[str, str] = {}
         if suffixes is None:
             suffixes = [""]
         self.secrets = self.loadSecrets(self._dirname, suffixes=suffixes, strip=strip)
 
-    def get(self, entry):
+    def get(self, entry: str) -> str | None:
         """
         get the value from the file identified by 'entry'
         """
