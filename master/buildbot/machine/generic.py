@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import stat
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -30,9 +34,16 @@ from buildbot.util import runprocess
 from buildbot.util.git import getSshArgsForKeys
 from buildbot.util.git import getSshKnownHostsContents
 
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IReactorCore
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class GenericLatentMachine(AbstractLatentMachine):
-    def checkConfig(self, name, start_action, stop_action, **kwargs):
+    def checkConfig(  # type: ignore[override]
+        self, name: str, start_action: IMachineAction, stop_action: IMachineAction, **kwargs: Any
+    ) -> None:
         super().checkConfig(name, **kwargs)
 
         for action, arg_name in [(start_action, 'start_action'), (stop_action, 'stop_action')]:
@@ -41,20 +52,24 @@ class GenericLatentMachine(AbstractLatentMachine):
                 raise RuntimeError(msg)
 
     @defer.inlineCallbacks
-    def reconfigService(self, name, start_action, stop_action, **kwargs):
+    def reconfigService(  # type: ignore[override]
+        self, name: str, start_action: IMachineAction, stop_action: IMachineAction, **kwargs: Any
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(name, **kwargs)
         self.start_action = start_action
         self.stop_action = stop_action
 
-    def start_machine(self):
+    def start_machine(self) -> defer.Deferred[bool]:
         return self.start_action.perform(self)
 
-    def stop_machine(self):
+    def stop_machine(self) -> defer.Deferred[None]:
         return self.stop_action.perform(self)
 
 
 @defer.inlineCallbacks
-def runProcessLogFailures(reactor, args, expectedCode=0):
+def runProcessLogFailures(
+    reactor: IReactorCore, args: list[str], expectedCode: int = 0
+) -> InlineCallbacksType[bool]:
     code, stdout, stderr = yield runprocess.run_process(reactor, args)
     if code != expectedCode:
         log.err(
@@ -66,19 +81,26 @@ def runProcessLogFailures(reactor, args, expectedCode=0):
 
 
 class _LocalMachineActionMixin:
-    def setupLocal(self, command):
+    def setupLocal(self, command: list[str]) -> None:
         if not isinstance(command, list):
             config.error('command parameter must be a list')
         self._command = command
 
     @defer.inlineCallbacks
-    def perform(self, manager):
+    def perform(self, manager: Any) -> InlineCallbacksType[bool]:
         args = yield manager.renderSecrets(self._command)
         return (yield runProcessLogFailures(manager.master.reactor, args))
 
 
 class _SshActionMixin:
-    def setupSsh(self, sshBin, host, remoteCommand, sshKey=None, sshHostKey=None):
+    def setupSsh(
+        self,
+        sshBin: str,
+        host: str,
+        remoteCommand: list[str],
+        sshKey: str | None = None,
+        sshHostKey: str | None = None,
+    ) -> None:
         if not isinstance(sshBin, str):
             config.error('sshBin parameter must be a string')
         if not isinstance(host, str):
@@ -93,14 +115,18 @@ class _SshActionMixin:
         self._sshHostKey = sshHostKey
 
     @defer.inlineCallbacks
-    def _performImpl(self, manager, key_path, known_hosts_path):
+    def _performImpl(
+        self, manager: Any, key_path: str | None, known_hosts_path: str | None
+    ) -> InlineCallbacksType[bool]:
         args = getSshArgsForKeys(key_path, known_hosts_path)
         args.append((yield manager.renderSecrets(self._host)))
         args.extend((yield manager.renderSecrets(self._remoteCommand)))
         return (yield runProcessLogFailures(manager.master.reactor, [self._sshBin, *args]))
 
     @defer.inlineCallbacks
-    def _prepareSshKeys(self, manager, temp_dir_path):
+    def _prepareSshKeys(
+        self, manager: Any, temp_dir_path: str
+    ) -> InlineCallbacksType[tuple[str | None, str | None]]:
         key_path = None
         if self._sshKey is not None:
             ssh_key_data = yield manager.renderSecrets(self._sshKey)
@@ -119,7 +145,7 @@ class _SshActionMixin:
         return (key_path, known_hosts_path)
 
     @defer.inlineCallbacks
-    def perform(self, manager):
+    def perform(self, manager: Any) -> InlineCallbacksType[bool]:
         if self._sshKey is not None or self._sshHostKey is not None:
             with private_tempdir.PrivateTemporaryDirectory(
                 prefix='ssh-', dir=manager.master.basedir
@@ -134,25 +160,38 @@ class _SshActionMixin:
 
 @implementer(IMachineAction)
 class LocalWakeAction(_LocalMachineActionMixin):
-    def __init__(self, command):
+    def __init__(self, command: list[str]) -> None:
         self.setupLocal(command)
 
 
 class LocalWOLAction(LocalWakeAction):
-    def __init__(self, wakeMac, wolBin='wakeonlan'):
+    def __init__(self, wakeMac: str, wolBin: str = 'wakeonlan') -> None:
         LocalWakeAction.__init__(self, [wolBin, wakeMac])
 
 
 @implementer(IMachineAction)
 class RemoteSshWakeAction(_SshActionMixin):
-    def __init__(self, host, remoteCommand, sshBin='ssh', sshKey=None, sshHostKey=None):
+    def __init__(
+        self,
+        host: str,
+        remoteCommand: list[str],
+        sshBin: str = 'ssh',
+        sshKey: str | None = None,
+        sshHostKey: str | None = None,
+    ) -> None:
         self.setupSsh(sshBin, host, remoteCommand, sshKey=sshKey, sshHostKey=sshHostKey)
 
 
 class RemoteSshWOLAction(RemoteSshWakeAction):
     def __init__(
-        self, host, wakeMac, wolBin='wakeonlan', sshBin='ssh', sshKey=None, sshHostKey=None
-    ):
+        self,
+        host: str,
+        wakeMac: str,
+        wolBin: str = 'wakeonlan',
+        sshBin: str = 'ssh',
+        sshKey: str | None = None,
+        sshHostKey: str | None = None,
+    ) -> None:
         RemoteSshWakeAction.__init__(
             self, host, [wolBin, wakeMac], sshBin=sshBin, sshKey=sshKey, sshHostKey=sshHostKey
         )
@@ -160,7 +199,14 @@ class RemoteSshWOLAction(RemoteSshWakeAction):
 
 @implementer(IMachineAction)
 class RemoteSshSuspendAction(_SshActionMixin):
-    def __init__(self, host, remoteCommand=None, sshBin='ssh', sshKey=None, sshHostKey=None):
+    def __init__(
+        self,
+        host: str,
+        remoteCommand: list[str] | None = None,
+        sshBin: str = 'ssh',
+        sshKey: str | None = None,
+        sshHostKey: str | None = None,
+    ) -> None:
         if remoteCommand is None:
             remoteCommand = ['systemctl', 'suspend']
         self.setupSsh(sshBin, host, remoteCommand, sshKey=sshKey, sshHostKey=sshHostKey)
@@ -170,19 +216,19 @@ class RemoteSshSuspendAction(_SshActionMixin):
 class HttpAction:
     def __init__(
         self,
-        url,
-        method,
-        params=None,
-        data=None,
-        json=None,
-        headers=None,
-        cookies=None,
-        files=None,
-        auth=None,
-        timeout=None,
-        allow_redirects=None,
-        proxies=None,
-    ):
+        url: str,
+        method: str,
+        params: Any = None,
+        data: Any = None,
+        json: Any = None,
+        headers: Any = None,
+        cookies: Any = None,
+        files: Any = None,
+        auth: Any = None,
+        timeout: Any = None,
+        allow_redirects: Any = None,
+        proxies: Any = None,
+    ) -> None:
         self.url = url
         self.method = method
         self.params = params
@@ -197,7 +243,7 @@ class HttpAction:
         self.proxies = proxies
 
     @defer.inlineCallbacks
-    def perform(self, manager):
+    def perform(self, manager: Any) -> InlineCallbacksType[None]:
         (
             url,
             method,
