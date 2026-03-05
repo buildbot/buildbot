@@ -341,8 +341,12 @@ class ITriggerableScheduler(Interface):
     """
 
     def trigger(
-        waited_for, sourcestamps=None, set_props=None, parent_buildid=None, parent_relationship=None
-    ):
+        waited_for: bool,
+        sourcestamps: Any = None,
+        set_props: Any = None,
+        parent_buildid: Any = None,
+        parent_relationship: Any = None,
+    ) -> Any:
         """Trigger a build with the given source stamp and properties."""
 
 
