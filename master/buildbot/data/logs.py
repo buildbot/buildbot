@@ -71,7 +71,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         if step_dict is None:
             return None
 
-        dbdict = yield self.master.db.logs.getLogBySlug(step_dict.id, kwargs.get('log_slug'))
+        dbdict = yield self.master.db.logs.getLogBySlug(step_dict.id, kwargs['log_slug'])
         return (yield self.db2data(dbdict)) if dbdict else None
 
 
@@ -130,12 +130,15 @@ class Log(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addLog(self, stepid: int, name: str, type: int) -> InlineCallbacksType[int]:
+    def addLog(self, stepid: int, name: str, type: str) -> InlineCallbacksType[int]:
         slug = identifiers.forceIdentifier(50, name)
         while True:
             try:
                 logid = yield self.master.db.logs.addLog(
-                    stepid=stepid, name=name, slug=slug, type=type
+                    stepid=stepid,
+                    name=name,
+                    slug=slug,
+                    type=type,
                 )
             except LogSlugExistsError:
                 slug = identifiers.incrementIdentifier(50, slug)

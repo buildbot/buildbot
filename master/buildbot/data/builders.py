@@ -127,7 +127,7 @@ class Builder(base.ResourceType):
         self.produceEvent(builder, event)
 
     @base.updateMethod
-    def findBuilderId(self, name: str) -> defer.Deferred[int]:
+    def findBuilderId(self, name: str) -> defer.Deferred[int | None]:
         return self.master.db.builders.findBuilderId(name)
 
     @base.updateMethod
