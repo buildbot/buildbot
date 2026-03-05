@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+from typing import overload
+
 ALL_RESULTS = list(range(7))
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = ALL_RESULTS
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
@@ -37,6 +39,18 @@ def statusToString(status: int | None, count: int = 1) -> str:
     if count > 1:
         return MultipleResults[status]
     return Results[status]
+
+
+@overload
+def worst_status(a: int, b: int | None) -> int: ...
+
+
+@overload
+def worst_status(a: int | None, b: int) -> int: ...
+
+
+@overload
+def worst_status(a: int | None, b: int | None) -> int | None: ...
 
 
 def worst_status(a: int | None, b: int | None) -> int | None:

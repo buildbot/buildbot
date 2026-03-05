@@ -48,7 +48,7 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
             res = yield self.downloadFileContentToWorker(
                 path, self.secret_to_be_interpolated, mode=stat.S_IRUSR | stat.S_IWUSR
             )
-            result = worst_status(result, res)  # type: ignore[assignment]
+            result = worst_status(result, res)
         return result
 
     @defer.inlineCallbacks
