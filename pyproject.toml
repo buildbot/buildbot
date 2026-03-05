@@ -177,7 +177,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.plugins.db",
       "buildbot.plugins",
       "buildbot.revlinks",
-      "buildbot.spec.indent",
       "buildbot.test.fuzz.test_lru",
       "buildbot.test.integration.interop.test_commandmixin",
       "buildbot.test.integration.interop.test_compositestepmixin",
