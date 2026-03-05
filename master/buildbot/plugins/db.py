@@ -74,6 +74,8 @@ class _PluginEntry:
         return self._info
 
     def __eq__(self, other):
+        if not isinstance(other, _PluginEntry):
+            return NotImplemented
         return self.info == other.info
 
     def __hash__(self) -> int:
