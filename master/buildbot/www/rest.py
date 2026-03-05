@@ -259,6 +259,7 @@ class V2RootResource(resource.Resource):
             jsonRpcReply['id'] = id
             ep, kwargs = yield self.getEndpoint(request, method, params)
             userinfos = self.master.www.getUserInfos(request)
+            owner: str | None = None
             if userinfos.get('anonymous'):
                 owner = "anonymous"
             else:
@@ -284,7 +285,9 @@ class V2RootResource(resource.Resource):
         args = request.args
         entityType = endpoint.rtype.entityType
         return self.master.data.resultspec_from_jsonapi(
-            args, entityType, endpoint.kind == EndpointKind.COLLECTION
+            args,  # type: ignore[arg-type]
+            entityType,
+            endpoint.kind == EndpointKind.COLLECTION,
         )
 
     def _write_rest_error(

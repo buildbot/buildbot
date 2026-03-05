@@ -251,6 +251,7 @@ class Build(base.ResourceType):
     def addBuild(
         self, builderid: int, buildrequestid: int, workerid: int
     ) -> InlineCallbacksType[tuple[int, int]]:
+        assert self.master.masterid is not None
         res = yield self.master.db.builds.addBuild(
             builderid=builderid,
             buildrequestid=buildrequestid,

@@ -138,7 +138,7 @@ class Log(base.ResourceType):
                     stepid=stepid,
                     name=name,
                     slug=slug,
-                    type=type,
+                    type=type,  # type: ignore[arg-type]
                 )
             except LogSlugExistsError:
                 slug = identifiers.incrementIdentifier(50, slug)

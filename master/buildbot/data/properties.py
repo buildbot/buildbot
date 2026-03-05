@@ -98,7 +98,7 @@ class PropertiesListEndpoint(base.Endpoint):
         elif changeid is not None:
             if resultSpec is not None:
                 resultSpec.fieldMapping = self.buildsetFieldMapping
-            props = yield self.master.db.changes.getChangeProperties(changeid)
+            props = yield self.master.db.changes.getChangeProperties(changeid)  # type: ignore[attr-defined]
         return [{'name': k, 'source': v[1], 'value': json.dumps(v[0])} for k, v in props.items()]
 
 

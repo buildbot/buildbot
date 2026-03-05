@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import os
 import platform
 import signal
 import socket
+from typing import TYPE_CHECKING
 
 from twisted.application import internet
 from twisted.internet import defer
@@ -53,6 +55,9 @@ from buildbot.worker import manager as workermanager
 from buildbot.worker.protocols.manager.msgpack import MsgManager
 from buildbot.worker.protocols.manager.pb import PBManager
 from buildbot.www import service as wwwservice
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class LogRotation:
@@ -130,7 +135,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.masterid = None
 
     @defer.inlineCallbacks
-    def create_child_services(self):
+    def create_child_services(self) -> InlineCallbacksType[None]:
         # note that these are order-dependent.  If you get the order wrong,
         # you'll know it, as the master will fail to start.
         self.httpservice = yield httpclientservice.HTTPClientService.getService(self, '')

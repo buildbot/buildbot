@@ -205,6 +205,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         else:
             claimed_at_epoch = int(self.master.reactor.seconds())
 
+        assert self.db.master.masterid is not None  # type: ignore[union-attr]
         yield self._claim_buildrequests_for_master(brids, claimed_at_epoch, self.db.master.masterid)  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
@@ -231,6 +232,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @defer.inlineCallbacks
     def unclaimBuildRequests(self, brids: list[int]) -> InlineCallbacksType[None]:
+        assert self.db.master.masterid is not None  # type: ignore[union-attr]
         yield self._unclaim_buildrequests_for_master(brids, self.db.master.masterid)  # type: ignore[union-attr]
 
     @defer.inlineCallbacks

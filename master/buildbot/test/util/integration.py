@@ -333,10 +333,10 @@ class TestedRealMaster(TestedMaster):
                 dispatcher = next(iter(self.master.pbmanager.dispatchers.values()))
             else:
                 protocol = 'msgpack_experimental_v7'
-                dispatcher = next(iter(self.master.msgmanager.dispatchers.values()))
+                dispatcher = next(iter(self.master.msgmanager.dispatchers.values()))  # type: ignore[assignment]
 
                 # We currently don't handle connection closing cleanly.
-                dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)
+                dispatcher.serverFactory.setProtocolOptions(closeHandshakeTimeout=0)  # type: ignore[attr-defined]
 
             assert dispatcher.bound_port is not None
             worker_port = dispatcher.bound_port
