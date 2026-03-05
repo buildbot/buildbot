@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 #
+from __future__ import annotations
+
 import datetime
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -27,10 +31,14 @@ from buildbot.schedulers.timed import Nightly
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
 
+if TYPE_CHECKING:
+    from buildbot.interfaces import IBuildStepFactory
+    from buildbot.util.twisted import InlineCallbacksType
+
 JANITOR_NAME = "__Janitor"  # If you read this code, you may want to patch this name.
 
 
-def now():
+def now() -> datetime.datetime:
     """patchable now (datetime is not patchable as builtin)"""
     return datetime.datetime.now(datetime.timezone.utc)
 
@@ -39,14 +47,14 @@ class LogChunksJanitor(BuildStep):
     name = 'LogChunksJanitor'
     renderables = ["logHorizon"]
 
-    def __init__(self, logHorizon):
+    def __init__(self, logHorizon: datetime.timedelta) -> None:
         super().__init__()
         self.logHorizon = logHorizon
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         older_than_timestamp = datetime2epoch(now() - self.logHorizon)
-        deleted = yield self.master.db.logs.deleteOldLogChunks(older_than_timestamp)
+        deleted = yield self.master.db.logs.deleteOldLogChunks(older_than_timestamp)  # type: ignore[union-attr]
         self.descriptionDone = ["deleted", str(deleted), "logchunks"]
         return SUCCESS
 
@@ -55,14 +63,14 @@ class BuildDataJanitor(BuildStep):
     name = 'BuildDataJanitor'
     renderables = ["build_data_horizon"]
 
-    def __init__(self, build_data_horizon):
+    def __init__(self, build_data_horizon: datetime.timedelta) -> None:
         super().__init__()
         self.build_data_horizon = build_data_horizon
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         older_than_timestamp = datetime2epoch(now() - self.build_data_horizon)
-        deleted = yield self.master.db.build_data.deleteOldBuildData(older_than_timestamp)
+        deleted = yield self.master.db.build_data.deleteOldBuildData(older_than_timestamp)  # type: ignore[union-attr]
         self.descriptionDone = ["deleted", str(deleted), "build data key-value pairs"]
         return SUCCESS
 
@@ -70,15 +78,21 @@ class BuildDataJanitor(BuildStep):
 class JanitorConfigurator(ConfiguratorBase):
     """Janitor is a configurator which create a Janitor Builder with all needed Janitor steps"""
 
-    def __init__(self, logHorizon=None, hour=0, build_data_horizon=None, **kwargs):
+    def __init__(
+        self,
+        logHorizon: datetime.timedelta | None = None,
+        hour: int = 0,
+        build_data_horizon: datetime.timedelta | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__()
         self.logHorizon = logHorizon
         self.build_data_horizon = build_data_horizon
         self.hour = hour
         self.kwargs = kwargs
 
-    def configure(self, config_dict):
-        steps = []
+    def configure(self, config_dict: dict[str, Any]) -> None:
+        steps: list[BuildStep | IBuildStepFactory] = []
         if self.logHorizon is not None:
             steps.append(LogChunksJanitor(logHorizon=self.logHorizon))
         if self.build_data_horizon is not None:
