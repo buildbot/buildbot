@@ -49,12 +49,12 @@ def sendchange(config: dict[str, Any]) -> InlineCallbacksType[int]:
     files = config.get('files', ())
     codebase = config.get('codebase', None)
 
-    s = sendchange_client.Sender(master, auth, encoding=encoding)
+    s = sendchange_client.Sender(master, auth, encoding=encoding)  # type: ignore[arg-type]
     try:
         yield s.send(
             branch,
             revision,
-            comments,
+            comments,  # type: ignore[arg-type]
             files,
             who=who,
             category=category,
