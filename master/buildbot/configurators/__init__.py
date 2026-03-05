@@ -19,6 +19,10 @@ for a very specific purpose.
 Higher level interfaces to buildbot configurations components.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 from zope.interface import implementer
 
 from buildbot.interfaces import IConfigurator
@@ -30,15 +34,15 @@ class ConfiguratorBase:
     I provide base helper methods for configurators
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def configure(self, config_dict):
+    def configure(self, config_dict: dict[str, Any]) -> None:
         self.config_dict = c = config_dict
-        self.schedulers = c.setdefault('schedulers', [])
-        self.protocols = c.setdefault('protocols', {})
-        self.builders = c.setdefault('builders', [])
-        self.workers = c.setdefault('workers', [])
-        self.projects = c.setdefault('projects', [])
-        self.secretsProviders = c.setdefault('secretsProviders', [])
-        self.www = c.setdefault('www', {})
+        self.schedulers: list[Any] = c.setdefault('schedulers', [])
+        self.protocols: dict[str, Any] = c.setdefault('protocols', {})
+        self.builders: list[Any] = c.setdefault('builders', [])
+        self.workers: list[Any] = c.setdefault('workers', [])
+        self.projects: list[Any] = c.setdefault('projects', [])
+        self.secretsProviders: list[Any] = c.setdefault('secretsProviders', [])
+        self.www: dict[str, Any] = c.setdefault('www', {})
