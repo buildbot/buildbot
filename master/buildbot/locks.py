@@ -289,8 +289,8 @@ class RealWorkerLock(service.SharedService):
 
         # the caller will want to call updateFromLockId after initialization
         self.lockName = name
-        self.maxCount = None
-        self.maxCountForWorker = None
+        self.maxCount = 0
+        self.maxCountForWorker = {}
         self.config_version = -1
         self._updateDescription()
         self.locks = {}
