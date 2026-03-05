@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -23,11 +24,12 @@ from buildbot.data import base
 from buildbot.data import types
 
 if TYPE_CHECKING:
+    from buildbot.data.resultspec import ResultSpec
     from buildbot.db.steps import StepModel
     from buildbot.util.twisted import InlineCallbacksType
 
 
-def _db2data(model: StepModel):
+def _db2data(model: StepModel) -> dict[str, Any]:
     return {
         'stepid': model.id,
         'number': model.number,
@@ -57,7 +59,9 @@ class StepEndpoint(base.BuildNestingMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         if 'stepid' in kwargs:
             dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
             return _db2data(dbdict) if dbdict else None
@@ -79,7 +83,9 @@ class StepsEndpoint(base.BuildNestingMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]] | None]:
         if 'buildid' in kwargs:
             buildid = kwargs['buildid']
         else:
@@ -121,13 +127,13 @@ class Step(base.ResourceType):
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
-    def generateEvent(self, stepid, event):
+    def generateEvent(self, stepid: int, event: str) -> InlineCallbacksType[None]:
         step = yield self.master.data.get(('steps', stepid))
         self.produceEvent(step, event)
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addStep(self, buildid, name):
+    def addStep(self, buildid: int, name: str) -> InlineCallbacksType[tuple[int, int, str]]:
         stepid, num, name = yield self.master.db.steps.addStep(
             buildid=buildid, name=name, state_string='pending'
         )
@@ -136,7 +142,9 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def startStep(self, stepid: int, started_at: int | None = None, locks_acquired: bool = False):
+    def startStep(
+        self, stepid: int, started_at: int | None = None, locks_acquired: bool = False
+    ) -> InlineCallbacksType[None]:
         if started_at is None:
             started_at = int(self.master.reactor.seconds())
         yield self.master.db.steps.startStep(
@@ -146,7 +154,9 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def set_step_locks_acquired_at(self, stepid: int, locks_acquired_at: int | None = None):
+    def set_step_locks_acquired_at(
+        self, stepid: int, locks_acquired_at: int | None = None
+    ) -> InlineCallbacksType[None]:
         if locks_acquired_at is None:
             locks_acquired_at = int(self.master.reactor.seconds())
 

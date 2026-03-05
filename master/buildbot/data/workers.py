@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -25,11 +26,12 @@ from buildbot.data import types
 from buildbot.util import identifiers
 
 if TYPE_CHECKING:
+    from buildbot.data.resultspec import ResultSpec
     from buildbot.db.workers import WorkerModel
     from buildbot.util.twisted import InlineCallbacksType
 
 
-def _db2data(model: WorkerModel):
+def _db2data(model: WorkerModel) -> dict[str, Any]:
     return {
         'workerid': model.id,
         'name': model.name,
@@ -58,7 +60,9 @@ class WorkerEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         sldict = yield self.master.db.workers.getWorker(
             workerid=kwargs.get('workerid'),
             name=kwargs.get('name'),
@@ -70,18 +74,20 @@ class WorkerEndpoint(base.Endpoint):
         return None
 
     @defer.inlineCallbacks
-    def control(self, action, args, kwargs):
+    def control(
+        self, action: str, args: dict[str, Any], kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[None]:
         if action not in ("stop", "pause", "unpause", "kill"):
             raise exceptions.InvalidControlException(f"action: {action} is not supported")
 
-        worker = yield self.get(None, kwargs)
+        worker = yield self.get(None, kwargs)  # type: ignore[arg-type]
         if worker is not None:
             self.master.mq.produce(
                 ("control", "worker", str(worker["workerid"]), action),
                 {"reason": kwargs.get("reason", args.get("reason", "no reason"))},
             )
         else:
-            raise exceptions.exceptions.InvalidPathError("worker not found")
+            raise exceptions.exceptions.InvalidPathError("worker not found")  # type: ignore[attr-defined]
 
 
 class WorkersEndpoint(base.Endpoint):
@@ -95,7 +101,9 @@ class WorkersEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]]]:
         paused = resultSpec.popBooleanFilter('paused')
         graceful = resultSpec.popBooleanFilter('graceful')
         workers_dicts = yield self.master.db.workers.getWorkers(
@@ -138,7 +146,9 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     # returns a Deferred that returns None
-    def workerConfigured(self, workerid, masterid, builderids):
+    def workerConfigured(
+        self, workerid: int, masterid: int, builderids: list[int]
+    ) -> defer.Deferred[None]:
         return self.master.db.workers.workerConfigured(
             workerid=workerid, masterid=masterid, builderids=builderids
         )

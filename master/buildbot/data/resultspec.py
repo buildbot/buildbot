@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import dataclasses
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.python import log
@@ -24,23 +25,29 @@ from twisted.python import log
 from buildbot.data import base
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from collections.abc import Generator
+    from collections.abc import Iterable
     from collections.abc import Sequence
+
+    from sqlalchemy.engine import Connection
+    from sqlalchemy.sql.selectable import Select
 
 
 class NotSupportedFieldTypeError(TypeError):
-    def __init__(self, data, *args: object) -> None:
+    def __init__(self, data: Any, *args: object) -> None:
         super().__init__(
             (f"Unsupported data type '{type(data)}': must be an instance of Dict or a Dataclass."),
             *args,
         )
 
 
-def _data_getter(d, fld):
+def _data_getter(d: dict[str, Any] | object, fld: bytes | str) -> Any:
     if isinstance(d, dict):
-        return d[fld]
+        return d[fld]  # type: ignore[index]
     if dataclasses.is_dataclass(d):
         try:
-            return getattr(d, fld)
+            return getattr(d, fld)  # type: ignore[arg-type]
         except AttributeError as e:
             # backward compatibility when only dict was allowed
             raise KeyError(*e.args) from e
@@ -100,14 +107,14 @@ class FieldBase:
         # only support string values, because currently there are no queries against lists in SQL
     }
 
-    def __init__(self, field: bytes | str, op: str, values: Sequence | set):
+    def __init__(self, field: bytes | str, op: str, values: Sequence[Any] | set[Any]):
         self.field = field
         self.op = op
-        self.values = values
+        self.values: Sequence[Any] | set[Any] = values
         # `str` is a Sequence as well...
         assert not isinstance(values, str)
 
-    def getOperator(self, sqlMode=False):
+    def getOperator(self, sqlMode: bool = False) -> Callable[..., Any]:
         v = self.values
         if len(v) == 1:
             if sqlMode:
@@ -122,16 +129,16 @@ class FieldBase:
             v = set(v)
         return ops[self.op]
 
-    def apply(self, data):
+    def apply(self, data: Iterable[Any]) -> Generator[Any, None, None]:
         fld = self.field
         v = self.values
         f = self.getOperator()
         return (d for d in data if f(_data_getter(d, fld), v))
 
-    def __repr__(self):
-        return f"resultspec.{self.__class__.__name__}('{self.field}','{self.op}',{self.values})"
+    def __repr__(self) -> str:
+        return f"resultspec.{self.__class__.__name__}({self.field!r},{self.op!r},{self.values})"
 
-    def __eq__(self, b):
+    def __eq__(self, b: object) -> bool:
         for i in self.__slots__:
             if getattr(self, i) != getattr(b, i):
                 return False
@@ -140,7 +147,7 @@ class FieldBase:
     def __hash__(self) -> int:
         return hash(tuple(getattr(self, s) for s in self.__slots__))
 
-    def __ne__(self, b):
+    def __ne__(self, b: object) -> bool:
         return not self == b
 
 
@@ -165,10 +172,10 @@ class NoneComparator:
     in Python 3.
     """
 
-    def __init__(self, value):
+    def __init__(self, value: Any) -> None:
         self.value = value
 
-    def __lt__(self, other):
+    def __lt__(self, other: NoneComparator) -> bool:
         if self.value is None and other.value is None:
             return False
         elif self.value is None:
@@ -177,16 +184,16 @@ class NoneComparator:
             return False
         return self.value < other.value
 
-    def __eq__(self, other):
-        return self.value == other.value
+    def __eq__(self, other: object) -> bool:
+        return self.value == other.value  # type: ignore[attr-defined]
 
     def __hash__(self) -> int:
         return hash(self.value)
 
-    def __ne__(self, other):
-        return self.value != other.value
+    def __ne__(self, other: object) -> bool:
+        return self.value != other.value  # type: ignore[attr-defined]
 
-    def __gt__(self, other):
+    def __gt__(self, other: NoneComparator) -> bool:
         if self.value is None and other.value is None:
             return False
         elif self.value is None:
@@ -204,22 +211,22 @@ class ReverseComparator:
     This can be used in reverse comparisons.
     """
 
-    def __init__(self, value):
+    def __init__(self, value: NoneComparator) -> None:
         self.value = value
 
-    def __lt__(self, other):
+    def __lt__(self, other: ReverseComparator) -> bool:
         return other.value < self.value
 
-    def __eq__(self, other):
-        return other.value == self.value
+    def __eq__(self, other: object) -> bool:
+        return other.value == self.value  # type: ignore[attr-defined]
 
     def __hash__(self) -> int:
         return hash(self.value)
 
-    def __ne__(self, other):
-        return other.value != self.value
+    def __ne__(self, other: object) -> bool:
+        return other.value != self.value  # type: ignore[attr-defined]
 
-    def __gt__(self, other):
+    def __gt__(self, other: ReverseComparator) -> bool:
         return other.value > self.value
 
 
@@ -227,24 +234,30 @@ class ResultSpec:
     __slots__ = ['fieldMapping', 'fields', 'filters', 'limit', 'offset', 'order', 'properties']
 
     def __init__(
-        self, filters=None, fields=None, properties=None, order=None, limit=None, offset=None
-    ):
+        self,
+        filters: list[Filter] | None = None,
+        fields: list[str] | None = None,
+        properties: list[Property] | None = None,
+        order: tuple[str, ...] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> None:
         self.filters = filters or []
         self.properties = properties or []
         self.fields = fields
         self.order = order
         self.limit = limit
         self.offset = offset
-        self.fieldMapping = {}
+        self.fieldMapping: dict[str, str] = {}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"ResultSpec(**{{'filters': {self.filters}, 'fields': {self.fields}, "
             f"'properties': {self.properties}, 'order': {self.order}, 'limit': {self.limit}, "
             f"'offset': {self.offset}" + "})"
         )
 
-    def __eq__(self, b):
+    def __eq__(self, b: object) -> bool:
         for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:
             if getattr(self, i) != getattr(b, i):
                 return False
@@ -260,30 +273,30 @@ class ResultSpec:
             self.offset,
         ))
 
-    def __ne__(self, b):
+    def __ne__(self, b: object) -> bool:
         return not self == b
 
-    def popProperties(self):
-        values = []
+    def popProperties(self) -> Sequence[Any]:
+        values: Sequence[Any] = []
         for p in self.properties:
             if p.field == b'property' and p.op == 'eq':
                 self.properties.remove(p)
-                values = p.values
+                values = p.values  # type: ignore[assignment]
                 break
         return values
 
-    def popFilter(self, field, op):
+    def popFilter(self, field: str, op: str) -> Sequence[Any] | None:
         for f in self.filters:
             if f.field == field and f.op == op:
                 self.filters.remove(f)
-                return f.values
+                return f.values  # type: ignore[return-value]
         return None
 
-    def popOneFilter(self, field, op):
+    def popOneFilter(self, field: str, op: str) -> Any:
         v = self.popFilter(field, op)
         return v[0] if v is not None else None
 
-    def popBooleanFilter(self, field):
+    def popBooleanFilter(self, field: str) -> bool | None:
         eqVals = self.popFilter(field, 'eq')
         if eqVals and len(eqVals) == 1:
             return eqVals[0]
@@ -292,13 +305,13 @@ class ResultSpec:
             return not neVals[0]
         return None
 
-    def popStringFilter(self, field):
+    def popStringFilter(self, field: str) -> str | None:
         eqVals = self.popFilter(field, 'eq')
         if eqVals and len(eqVals) == 1:
             return eqVals[0]
         return None
 
-    def popIntegerFilter(self, field):
+    def popIntegerFilter(self, field: str) -> int | None:
         eqVals = self.popFilter(field, 'eq')
         if eqVals and len(eqVals) == 1:
             try:
@@ -309,36 +322,36 @@ class ResultSpec:
                 ) from e
         return None
 
-    def removePagination(self):
+    def removePagination(self) -> None:
         self.limit = self.offset = None
 
-    def removeOrder(self):
+    def removeOrder(self) -> None:
         self.order = None
 
-    def popField(self, field):
+    def popField(self, field: str) -> bool:
         try:
-            i = self.fields.index(field)
+            i = self.fields.index(field)  # type: ignore[union-attr]
         except ValueError:
             return False
-        del self.fields[i]
+        del self.fields[i]  # type: ignore[union-attr]
         return True
 
-    def findColumn(self, query, field):
+    def findColumn(self, query: Select[Any], field: bytes | str) -> Any:
         # will throw key error if field not in mapping
-        mapped = self.fieldMapping[field]
+        mapped = self.fieldMapping[field]  # type: ignore[index]
         for col in query.inner_columns:
             if str(col) == mapped:
                 return col
-        raise KeyError(f"unable to find field {field} in query")
+        raise KeyError(f"unable to find field {field!r} in query")
 
-    def applyFilterToSQLQuery(self, query, f):
+    def applyFilterToSQLQuery(self, query: Select[Any], f: Filter) -> Select[Any]:
         field = f.field
         col = self.findColumn(query, field)
         # as sqlalchemy is overriding python operators, we can just use the same
         # python code generated by the filter
         return query.where(f.getOperator(sqlMode=True)(col, f.values))
 
-    def applyOrderToSQLQuery(self, query, o):
+    def applyOrderToSQLQuery(self, query: Select[Any], o: str) -> Select[Any]:
         reverse = False
         if o.startswith('-'):
             reverse = True
@@ -348,11 +361,11 @@ class ResultSpec:
             col = col.desc()
         return query.order_by(col)
 
-    def applyToSQLQuery(self, query):
+    def applyToSQLQuery(self, query: Select[Any]) -> tuple[Select[Any], Select[Any] | None]:
         filters = self.filters
         order = self.order
-        unmatched_filters = []
-        unmatched_order = []
+        unmatched_filters: list[Filter] = []
+        unmatched_order: list[str] = []
         # apply the filters if the name of field is found in the model, and
         # db2data
         for f in filters:
@@ -399,12 +412,14 @@ class ResultSpec:
 
         return query, count_query
 
-    def thd_execute(self, conn, q, dictFromRow):
+    def thd_execute(
+        self, conn: Connection, q: Select[Any], dictFromRow: Callable[..., Any]
+    ) -> list[Any] | base.ListResult:
         offset = self.offset
         limit = self.limit
         q, qc = self.applyToSQLQuery(q)
         res = conn.execute(q)
-        rv = [dictFromRow(row) for row in res.fetchall()]
+        rv: list[Any] | base.ListResult = [dictFromRow(row) for row in res.fetchall()]
 
         if qc is not None and (offset or limit):
             total = conn.execute(qc).scalar()
@@ -414,21 +429,21 @@ class ResultSpec:
             rv.limit = limit
         return rv
 
-    def apply(self, data):
+    def apply(self, data: Any) -> Any:
         if data is None:
             return data
 
         if self.fields:
             fields = set(self.fields)
 
-            def includeFields(d):
+            def includeFields(d: Any) -> Any:
                 if isinstance(d, dict):
                     return dict((k, v) for k, v in d.items() if k in fields)
                 elif dataclasses.is_dataclass(d):
                     raise TypeError("includeFields can't filter fields of dataclasses")
                 raise NotSupportedFieldTypeError(d)
 
-            applyFields = includeFields
+            applyFields: Callable[[Any], Any] | None = includeFields
         else:
             fields = None
             applyFields = None
@@ -436,6 +451,7 @@ class ResultSpec:
         if isinstance(data, dict) or dataclasses.is_dataclass(data):
             # item details
             if fields:
+                assert applyFields is not None
                 data = applyFields(data)
             return data
         else:
@@ -457,6 +473,7 @@ class ResultSpec:
                 limit = None
 
             if fields:
+                assert applyFields is not None
                 data = (applyFields(d) for d in data)
 
             # link the filters together and then flatten to list
@@ -468,32 +485,33 @@ class ResultSpec:
                 total = len(data)
 
             if self.order:
+                _sort_order = self.order
 
-                def keyFunc(elem, order=self.order):
+                def keyFunc(elem: Any) -> list[NoneComparator | ReverseComparator]:
                     """
                     Do a multi-level sort by passing in the keys
                     to sort by.
 
                     @param elem: each item in the list to sort.
-                    @param order: a list of keys to sort by, such as:
-                                ('lastName', 'firstName', 'age')
                     @return: a key used by sorted(). This will be a
                              list such as:
                              [a['lastName', a['firstName'], a['age']]
-                    @rtype: a C{list}
                     """
-                    compareKey = []
-                    for k in order:
+                    compareKey: list[NoneComparator | ReverseComparator] = []
+                    for k in _sort_order:
                         doReverse = False
                         if k[0] == '-':
                             # If we get a key '-lastName',
                             # it means sort by 'lastName' in reverse.
                             k = k[1:]
                             doReverse = True
-                        val = NoneComparator(_data_getter(elem, k))
+                        none_val = NoneComparator(_data_getter(elem, k))
+                        entry: NoneComparator | ReverseComparator
                         if doReverse:
-                            val = ReverseComparator(val)
-                        compareKey.append(val)
+                            entry = ReverseComparator(none_val)
+                        else:
+                            entry = none_val
+                        compareKey.append(entry)
                     return compareKey
 
                 data.sort(key=keyFunc)
@@ -516,5 +534,5 @@ class ResultSpec:
 
 # a resultSpec which does not implement filtering in python (for tests)
 class OptimisedResultSpec(ResultSpec):
-    def apply(self, data):
+    def apply(self, data: Any) -> Any:
         return data

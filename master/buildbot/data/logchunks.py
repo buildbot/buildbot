@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from typing import Any
 
     from buildbot.db.logs import LogModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
@@ -56,7 +57,9 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
             yield line
 
     @defer.inlineCallbacks
-    def get_log_lines_raw_data(self, kwargs):
+    def get_log_lines_raw_data(
+        self, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[tuple[AsyncGenerator[str, None], str, str] | tuple[None, None, None]]:
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
         log_dict = yield retriever.get_log_dict()
         if log_dict is None:
@@ -108,7 +111,9 @@ class LogChunkEndpoint(LogChunkEndpointBase):
     rootLinkName = "logchunks"
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
         logid = yield retriever.get_log_id()
         if logid is None:
@@ -147,7 +152,9 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         data = yield defer.Deferred.fromCoroutine(self.stream(resultSpec, kwargs))
         if data is None:
             return None
@@ -157,7 +164,9 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
         )
         return data
 
-    async def stream(self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]):
+    async def stream(
+        self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]
+    ) -> dict[str, Any] | None:
         log_lines_generator, log_type, log_slug = await self.get_log_lines_raw_data(kwargs)
 
         if log_lines_generator is None:
@@ -184,7 +193,9 @@ class RawInlineLogChunkEndpoint(LogChunkEndpointBase):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         data = yield defer.Deferred.fromCoroutine(self.stream(resultSpec, kwargs))
 
         if data is None:
@@ -196,7 +207,9 @@ class RawInlineLogChunkEndpoint(LogChunkEndpointBase):
 
         return data
 
-    async def stream(self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]):
+    async def stream(
+        self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]
+    ) -> dict[str, Any] | None:
         log_lines_generator, log_type, _ = await self.get_log_lines_raw_data(kwargs)
 
         if log_lines_generator is None:
