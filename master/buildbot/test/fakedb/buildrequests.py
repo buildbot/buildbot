@@ -25,16 +25,16 @@ class BuildRequest(Row):
 
     def __init__(
         self,
-        id=None,
-        buildsetid=None,
-        builderid=None,
-        priority=0,
-        complete=0,
-        results=-1,
-        submitted_at=12345678,
-        complete_at=None,
-        waited_for=0,
-    ):
+        id: int | None = None,
+        buildsetid: int | None = None,
+        builderid: int | None = None,
+        priority: int = 0,
+        complete: int = 0,
+        results: int = -1,
+        submitted_at: int = 12345678,
+        complete_at: int | None = None,
+        waited_for: int = 0,
+    ) -> None:
         super().__init__(
             id=id,
             buildsetid=buildsetid,
@@ -51,5 +51,7 @@ class BuildRequest(Row):
 class BuildRequestClaim(Row):
     table = "buildrequest_claims"
 
-    def __init__(self, brid=None, masterid=None, claimed_at=None):
+    def __init__(
+        self, brid: int | None = None, masterid: int | None = None, claimed_at: int | None = None
+    ) -> None:
         super().__init__(brid=brid, masterid=masterid, claimed_at=claimed_at)
