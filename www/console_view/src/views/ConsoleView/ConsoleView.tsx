@@ -491,7 +491,7 @@ export const ConsoleView = observer(() => {
         <td>
           <ChangeDetails
             change={change}
-            compact={true}
+            compact={false}
             showDetails={changeIsExpandedByChangeId.get(change.changeid) ?? false}
             setShowDetails={(show: boolean) =>
               changeIsExpandedByChangeId.set(change.changeid, show)

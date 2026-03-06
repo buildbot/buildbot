@@ -1,0 +1,1 @@
+Fixed console view not displaying avatars and timestamps for changes (:issue:`8156`).
