@@ -159,7 +159,7 @@ class FakeUpdates(service.AsyncService):
         parent_buildid: int | None = None,
         parent_relationship: str | None = None,
         priority: int = 0,
-    ) -> tuple[int, dict[int, int]]:
+    ) -> tuple[int, dict[str, int]]:
         self.testcase.assertIsInstance(scheduler, str)
         self.testcase.assertIsInstance(sourcestamps, (type(None), list))
         if sourcestamps is not None:
@@ -258,7 +258,7 @@ class FakeUpdates(service.AsyncService):
         committer: str | None = None,
         files: list[str] | None = None,
         comments: str,
-        when_timestamp: datetime.datetime | int,
+        when_timestamp: int,
         revision: str,
         parent_commitid: int | None = None,
     ) -> None:
@@ -303,7 +303,7 @@ class FakeUpdates(service.AsyncService):
         codebaseid: int,
         name: str,
         commitid: int | None = None,
-        last_timestamp: datetime.datetime | int,
+        last_timestamp: int,
     ) -> None:
         validation.verifyType(self.testcase, 'codebaseid', codebaseid, validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name, validation.StringValidator())

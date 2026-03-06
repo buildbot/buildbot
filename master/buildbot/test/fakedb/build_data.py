@@ -24,7 +24,19 @@ class BuildData(Row):
     id_column = 'id'
     binary_columns = ('value',)
 
-    def __init__(self, id=None, buildid=None, name=None, value=None, source=None):
+    def __init__(
+        self,
+        id: int | None = None,
+        buildid: int | None = None,
+        name: str | None = None,
+        value: bytes | None = None,
+        source: str | None = None,
+    ) -> None:
         super().__init__(
-            id=id, buildid=buildid, name=name, value=value, source=source, length=len(value)
+            id=id,
+            buildid=buildid,
+            name=name,
+            value=value,
+            source=source,
+            length=len(value) if value is not None else 0,
         )

@@ -26,14 +26,14 @@ class Builder(Row):
 
     def __init__(
         self,
-        id=None,
-        name=None,
-        name_hash=None,
-        projectid=None,
-        description=None,
-        description_format=None,
-        description_html=None,
-    ):
+        id: int | None = None,
+        name: str | None = None,
+        name_hash: str | None = None,
+        projectid: int | None = None,
+        description: str | None = None,
+        description_format: str | None = None,
+        description_html: str | None = None,
+    ) -> None:
         if name is None:
             name = f'builder-{id}'
         super().__init__(
@@ -51,7 +51,9 @@ class BuilderMaster(Row):
     table = "builder_masters"
     id_column = 'id'
 
-    def __init__(self, id=None, builderid=None, masterid=None):
+    def __init__(
+        self, id: int | None = None, builderid: int | None = None, masterid: int | None = None
+    ) -> None:
         super().__init__(id=id, builderid=builderid, masterid=masterid)
 
 
@@ -59,5 +61,7 @@ class BuildersTags(Row):
     table = "builders_tags"
     id_column = 'id'
 
-    def __init__(self, id=None, builderid=None, tagid=None):
+    def __init__(
+        self, id: int | None = None, builderid: int | None = None, tagid: int | None = None
+    ) -> None:
         super().__init__(id=id, builderid=builderid, tagid=tagid)

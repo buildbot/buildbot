@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from buildbot.test.fakedb.row import Row
 
@@ -23,7 +24,13 @@ class Scheduler(Row):
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
 
-    def __init__(self, id=None, name='schname', name_hash=None, enabled=1):
+    def __init__(
+        self,
+        id: int | None = None,
+        name: str = 'schname',
+        name_hash: str | None = None,
+        enabled: int = 1,
+    ) -> None:
         super().__init__(id=id, name=name, name_hash=name_hash, enabled=enabled)
 
 
@@ -35,7 +42,7 @@ class SchedulerMaster(Row):
         "masterid": None,
     }
 
-    def __init__(self, schedulerid=None, masterid=None):
+    def __init__(self, schedulerid: int | None = None, masterid: int | None = None) -> None:
         super().__init__(schedulerid=schedulerid, masterid=masterid)
 
 
@@ -48,5 +55,7 @@ class SchedulerChange(Row):
         "important": 1,
     }
 
-    def __init__(self, schedulerid=None, changeid=None, important=1):
+    def __init__(
+        self, schedulerid: int | None = None, changeid: int | None = None, important: int = 1
+    ) -> None:
         super().__init__(schedulerid=schedulerid, changeid=changeid, important=important)

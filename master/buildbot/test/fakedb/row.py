@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from buildbot.util import unicode2bytes
 from buildbot.util.sautils import hash_columns
@@ -51,8 +52,8 @@ class Row:
 
     _next_id = None
 
-    def __init__(self, **kwargs):
-        if self.__init__.__func__ is Row.__init__:
+    def __init__(self, **kwargs: Any) -> None:
+        if self.__init__.__func__ is Row.__init__:  # type: ignore[misc]
             raise RuntimeError(
                 'Row.__init__ must be overridden to supply default values for columns'
             )
@@ -76,12 +77,12 @@ class Row:
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         values_str = ''.join(f'{k}={v!r}, ' for k, v in self.values.items())
         return f'{self.__class__.__name__}({values_str})'
 
     @staticmethod
-    def nextId():
+    def nextId() -> int:
         id = Row._next_id if Row._next_id is not None else 1
         Row._next_id = id + 1
         return id

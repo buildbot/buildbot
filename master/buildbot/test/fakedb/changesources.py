@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from buildbot.test.fakedb.row import Row
 
@@ -23,12 +24,14 @@ class ChangeSource(Row):
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
 
-    def __init__(self, id=None, name='csname', name_hash=None):
+    def __init__(
+        self, id: int | None = None, name: str = 'csname', name_hash: str | None = None
+    ) -> None:
         super().__init__(id=id, name=name, name_hash=name_hash)
 
 
 class ChangeSourceMaster(Row):
     table = "changesource_masters"
 
-    def __init__(self, changesourceid=None, masterid=None):
+    def __init__(self, changesourceid: int | None = None, masterid: int | None = None) -> None:
         super().__init__(changesourceid=changesourceid, masterid=masterid)

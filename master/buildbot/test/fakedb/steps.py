@@ -25,18 +25,18 @@ class Step(Row):
 
     def __init__(
         self,
-        id=None,
-        number=29,
-        name='step29',
-        buildid=None,
-        started_at=1304262222,
-        locks_acquired_at=None,
-        complete_at=None,
-        state_string='',
-        results=None,
-        urls_json='[]',
-        hidden=0,
-    ):
+        id: int | None = None,
+        number: int = 29,
+        name: str = 'step29',
+        buildid: int | None = None,
+        started_at: int | None = 1304262222,
+        locks_acquired_at: int | None = None,
+        complete_at: int | None = None,
+        state_string: str = '',
+        results: int | None = None,
+        urls_json: str = '[]',
+        hidden: int = 0,
+    ) -> None:
         super().__init__(
             id=id,
             number=number,
