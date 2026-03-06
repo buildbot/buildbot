@@ -910,6 +910,7 @@ travis
 triallog
 triggerable
 Triggerable
+trixie
 trustRoots
 tryclient
 tuple
