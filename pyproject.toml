@@ -156,15 +156,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot.asyncio",
-      "buildbot.clients.sendchange",
-      "buildbot.clients.tryclient",
-      "buildbot.clients.usersclient",
-      "buildbot.configurators.janitor",
-      "buildbot.configurators",
-      "buildbot.interfaces",
-      "buildbot.locks",
-      "buildbot.manhole",
       "buildbot.master",
       "buildbot.monkeypatches.decorators",
       "buildbot.monkeypatches.servicechecks",
@@ -177,7 +168,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.plugins.db",
       "buildbot.plugins",
       "buildbot.revlinks",
-      "buildbot.spec.indent",
       "buildbot.test.fuzz.test_lru",
       "buildbot.test.integration.interop.test_commandmixin",
       "buildbot.test.integration.interop.test_compositestepmixin",
