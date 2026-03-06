@@ -271,7 +271,7 @@ class Change(base.ResourceType):
             revision=revision,
             when_timestamp=epoch2datetime(when_timestamp),
             branch=branch,
-            category=category,
+            category=category,  # type: ignore[arg-type]
             revlink=revlink,
             properties=properties,
             repository=repository,

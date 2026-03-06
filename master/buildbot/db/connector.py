@@ -243,7 +243,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         if not self.configured_db_config:
             return None
 
-        d = self.changes.pruneChanges(self.master.config.changeHorizon)  # type: ignore[union-attr]
+        d = self.changes.pruneChanges(self.master.config.changeHorizon)  # type: ignore[union-attr,arg-type]
         d.addErrback(log.err, 'while pruning changes')
         return d
 

@@ -433,7 +433,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return session.user_info
 
     def assertUserAllowed(
-        self, request: server.Request, ep: str, action: str, options: dict[str, Any]
+        self, request: server.Request, ep: tuple[str, ...], action: str, options: dict[str, Any]
     ) -> bool:
         user_info = self.getUserInfos(request)
         return self.authz.assertUserAllowed(ep, action, options, user_info)

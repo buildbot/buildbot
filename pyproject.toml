@@ -156,18 +156,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot.master",
-      "buildbot.monkeypatches.decorators",
-      "buildbot.monkeypatches.servicechecks",
-      "buildbot.monkeypatches",
-      "buildbot.mq.base",
-      "buildbot.mq.connector",
-      "buildbot.mq.simple",
-      "buildbot.mq.wamp",
-      "buildbot.pbutil",
-      "buildbot.plugins.db",
-      "buildbot.plugins",
-      "buildbot.revlinks",
       "buildbot.test.fuzz.test_lru",
       "buildbot.test.integration.interop.test_commandmixin",
       "buildbot.test.integration.interop.test_compositestepmixin",

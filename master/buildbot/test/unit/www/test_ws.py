@@ -169,7 +169,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
         yield self.proto.onConnect(request)
         self.master.www.authz.assertUserAllowed.assert_called_once_with(
-            'masters', 'get', {}, {'anonymous': True}
+            ('masters',), 'get', {}, {'anonymous': True}
         )
 
     @defer.inlineCallbacks
@@ -196,7 +196,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         yield self.proto.onConnect(request)
         self.master.www.authz.assertUserAllowed.assert_called_once_with(
-            'masters', 'get', {}, {'some': 'payload'}
+            ('masters',), 'get', {}, {'some': 'payload'}
         )
 
     @defer.inlineCallbacks
@@ -274,7 +274,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         yield self.proto.onConnect(request)
         self.master.www.authz.assertUserAllowed.assert_called_once_with(
-            'masters', 'get', {}, {'some': 'payload'}
+            ('masters',), 'get', {}, {'some': 'payload'}
         )
 
     @defer.inlineCallbacks
@@ -301,7 +301,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         yield self.proto.onConnect(request)
         self.master.www.authz.assertUserAllowed.assert_called_once_with(
-            'masters', 'get', {}, {'some': 'payload'}
+            ('masters',), 'get', {}, {'some': 'payload'}
         )
 
     @defer.inlineCallbacks

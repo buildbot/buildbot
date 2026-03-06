@@ -202,6 +202,7 @@ class WsProtocol(WebSocketServerProtocol):
             if token is None:
                 user_info = auth.build_anonymous_user_info()
             else:
+                assert www.site is not None and www.site.session_secret is not None
                 user_info = auth.parse_user_info_from_token(token, www.site.session_secret)
 
             yield auth.assert_user_allowed_any_access(www.authz, user_info)

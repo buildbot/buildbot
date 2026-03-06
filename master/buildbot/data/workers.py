@@ -154,7 +154,7 @@ class Worker(base.ResourceType):
         )
 
     @base.updateMethod
-    def findWorkerId(self, name: str) -> int:
+    def findWorkerId(self, name: str) -> defer.Deferred[int]:
         if not identifiers.isIdentifier(50, name):
             raise ValueError(f"Worker name {name!r} is not a 50-character identifier")
         return self.master.db.workers.findWorkerId(name)
@@ -162,7 +162,7 @@ class Worker(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def workerConnected(
-        self, workerid: int, masterid: int, workerinfo: str
+        self, workerid: int, masterid: int, workerinfo: dict[str, Any]
     ) -> InlineCallbacksType[None]:
         yield self.master.db.workers.workerConnected(
             workerid=workerid, masterid=masterid, workerinfo=workerinfo

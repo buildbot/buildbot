@@ -39,12 +39,14 @@ if TYPE_CHECKING:
 
 class Updates:
     # empty container object; see _scanModule, below
-    pass
+    def __getattr__(self, name: str) -> Any:
+        raise AttributeError(name)
 
 
 class RTypes:
     # empty container object; see _scanModule, below
-    pass
+    def __getattr__(self, name: str) -> Any:
+        raise AttributeError(name)
 
 
 class DataConnector(service.AsyncService):
@@ -125,9 +127,9 @@ class DataConnector(service.AsyncService):
             module = reflect.namedModule(moduleName)
             self._scanModule(module)
 
-    def getEndpoint(self, path: tuple[str, ...]) -> tuple[base.Endpoint, dict[str, Any]]:
+    def getEndpoint(self, path: tuple[str | int, ...]) -> tuple[base.Endpoint, dict[str, Any]]:
         try:
-            return self.matcher[path]
+            return self.matcher[path]  # type: ignore[index]
         except KeyError as e:
             raise exceptions.InvalidPathError(
                 "Invalid path: " + "/".join([str(p) for p in path])
@@ -138,7 +140,7 @@ class DataConnector(service.AsyncService):
 
     def get(
         self,
-        path: tuple[str, ...],
+        path: tuple[str | int, ...],
         filters: Any = None,
         fields: Any = None,
         order: Any = None,
@@ -152,7 +154,7 @@ class DataConnector(service.AsyncService):
 
     @defer.inlineCallbacks
     def get_with_resultspec(
-        self, path: tuple[str, ...], resultSpec: resultspec.ResultSpec
+        self, path: tuple[str | int, ...], resultSpec: resultspec.ResultSpec
     ) -> InlineCallbacksType[Any]:
         endpoint, kwargs = self.getEndpoint(path)
         rv = yield endpoint.get(resultSpec, kwargs)
@@ -160,7 +162,7 @@ class DataConnector(service.AsyncService):
             rv = resultSpec.apply(rv)
         return rv
 
-    def control(self, action: str, args: Any, path: tuple[str, ...]) -> Any:
+    def control(self, action: str, args: Any, path: tuple[str | int, ...]) -> Any:
         endpoint, kwargs = self.getEndpoint(path)
         return endpoint.control(action, args, kwargs)
 

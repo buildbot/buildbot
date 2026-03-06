@@ -13,19 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import unittest
+from typing import Any
+from typing import Callable
 
 from twisted.python import util
 
 
-def onlyOnce(fn):
+def onlyOnce(fn: Callable[..., Any]) -> Callable[..., Any]:
     "Set up FN to only run once within an interpreter instance"
 
-    def wrap(*args, **kwargs):
+    def wrap(*args: Any, **kwargs: Any) -> Any:
         if hasattr(fn, 'called'):
             return None
-        fn.called = 1
+        fn.called = 1  # type: ignore[attr-defined]
         return fn(*args, **kwargs)
 
     util.mergeFunctionMetadata(fn, wrap)
@@ -39,32 +43,32 @@ def onlyOnce(fn):
 
 
 @onlyOnce
-def patch_testcase_timeout():
+def patch_testcase_timeout() -> None:
     # any test that should take more than 5 second should be annotated so.
-    unittest.TestCase.timeout = 5
+    unittest.TestCase.timeout = 5  # type: ignore[attr-defined]
 
     # but we know that the DB tests are very slow, so we increase a bit that value for
     # real database tests
     if os.environ.get("BUILDBOT_TEST_DB_URL", None) is not None:
-        unittest.TestCase.timeout = 120
+        unittest.TestCase.timeout = 120  # type: ignore[attr-defined]
 
 
 @onlyOnce
-def patch_servicechecks():
+def patch_servicechecks() -> None:
     from buildbot.monkeypatches import servicechecks  # noqa: PLC0415
 
     servicechecks.patch()
 
 
 @onlyOnce
-def patch_decorators():
+def patch_decorators() -> None:
     from buildbot.monkeypatches import decorators  # noqa: PLC0415
 
     decorators.patch()
 
 
 @onlyOnce
-def patch_config_for_unit_tests():
+def patch_config_for_unit_tests() -> None:
     from buildbot.config.master import set_is_in_unit_tests  # noqa: PLC0415
 
     # by default, buildbot.config warns about not configured buildbotNetUsageData.
@@ -73,7 +77,7 @@ def patch_config_for_unit_tests():
 
 
 @onlyOnce
-def patch_twisted_failure():
+def patch_twisted_failure() -> None:
     try:
         from twisted import __version__ as twisted_version  # noqa: PLC0415
         from twisted.python.versions import Version  # noqa: PLC0415
@@ -86,18 +90,18 @@ def patch_twisted_failure():
 
         original_setCopyableState = CopiedFailure.setCopyableState
 
-        def patched_setCopyableState(self, state):
+        def patched_setCopyableState(self: Any, state: dict[str, Any]) -> Any:
             if 'parents' not in state:
                 state['parents'] = []
             return original_setCopyableState(self, state)
 
-        CopiedFailure.setCopyableState = patched_setCopyableState
+        CopiedFailure.setCopyableState = patched_setCopyableState  # type: ignore[method-assign]
 
     except ImportError:
         pass
 
 
-def patch_all(for_tests=False):
+def patch_all(for_tests: bool = False) -> None:
     if for_tests:
         patch_testcase_timeout()
         patch_config_for_unit_tests()

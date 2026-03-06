@@ -213,7 +213,8 @@ class Buildset(base.ResourceType):
 
         # notify about the component build requests
         brResource = self.master.data.getResourceType("buildrequest")
-        brResource.generateEvent(list(brids.values()), 'new')
+        assert brResource is not None
+        brResource.generateEvent(list(brids.values()), 'new')  # type: ignore[attr-defined]
 
         # and the buildset itself
         msg = {
@@ -253,7 +254,7 @@ class Buildset(base.ResourceType):
         brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid)
 
         # figure out the overall results of the buildset:
-        cumulative_results: int | None = SUCCESS
+        cumulative_results: int = SUCCESS
         for brdict in brdicts:
             cumulative_results = worst_status(cumulative_results, brdict.results)
 

@@ -307,4 +307,4 @@ def build_cookie_name(is_secure: bool, sitepath: list[bytes]) -> bytes:
 
 def assert_user_allowed_any_access(authz: Authz, user_info: dict[str, Any]) -> defer.Deferred:
     # assume that if user cannot access /masters endpoint, then it can't access anything
-    return authz.assertUserAllowed('masters', 'get', {}, user_info)
+    return authz.assertUserAllowed(('masters',), 'get', {}, user_info)

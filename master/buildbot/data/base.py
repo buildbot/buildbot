@@ -336,7 +336,7 @@ class NestedBuildDataRetriever:
             self.log_dict = None
             return None
         log_dict = self.log_dict = await self.master.db.logs.getLogBySlug(
-            step_dict.id, self.args.get('log_slug')
+            step_dict.id, self.args['log_slug']
         )
         return log_dict
 

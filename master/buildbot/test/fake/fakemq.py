@@ -78,7 +78,7 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         if not matched:
             raise AssertionError("no consumer found")
 
-    def startConsuming(
+    def startConsuming(  # type: ignore[override]
         self,
         callback: Callable,
         filter: tuple[str | None, ...],
