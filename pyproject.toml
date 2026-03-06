@@ -182,7 +182,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.statistics.stats_service",
       "buildbot.statistics.storage_backends.base",
       "buildbot.statistics.storage_backends.influxdb_client",
-      "buildbot.test.fakedb.workers",
       "buildbot.test.fuzz.test_lru",
       "buildbot.test.integration.interop.test_commandmixin",
       "buildbot.test.integration.interop.test_compositestepmixin",
