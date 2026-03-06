@@ -25,17 +25,17 @@ class TestResultSet(Row):
 
     def __init__(
         self,
-        id=None,
-        builderid=None,
-        buildid=None,
-        stepid=None,
-        description=None,
-        category='cat',
-        value_unit='unit',
-        tests_passed=None,
-        tests_failed=None,
-        complete=1,
-    ):
+        id: int | None = None,
+        builderid: int | None = None,
+        buildid: int | None = None,
+        stepid: int | None = None,
+        description: str | None = None,
+        category: str = 'cat',
+        value_unit: str = 'unit',
+        tests_passed: int | None = None,
+        tests_failed: int | None = None,
+        complete: int = 1,
+    ) -> None:
         super().__init__(
             id=id,
             builderid=builderid,
