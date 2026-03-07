@@ -576,10 +576,7 @@ test_deps = [
     'moto',
     "Markdown>=3.0.0",
     'parameterized',
-    # LZ4 fails to build on Windows:
-    # https://github.com/steeve/python-lz4/issues/27
-    # lz4 required for log compression tests.
-    'lz4; platform_system!="Windows"',
+    'lz4',
 ]
 
 setup_args['extras_require'] = {
