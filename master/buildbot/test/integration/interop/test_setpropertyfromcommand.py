@@ -14,18 +14,26 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
 
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 # This integration test helps reproduce http://trac.buildbot.net/ticket/3024
 # we make sure that we can reconfigure the master while build is running
 class SetPropertyFromCommand(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.plugins import schedulers  # noqa: PLC0415
         from buildbot.plugins import steps  # noqa: PLC0415
@@ -40,16 +48,16 @@ class SetPropertyFromCommand(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_setProp(self):
+    def test_setProp(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
         oldNewLog = self.master.data.updates.addLog
 
         @defer.inlineCallbacks
-        def newLog(*arg, **kw):
+        def newLog(*arg: Any, **kw: Any) -> InlineCallbacksType[None]:
             # Simulate db delay. We usually don't test race conditions
             # with delays, but in integrations test, that would be pretty
             # tricky
-            yield task.deferLater(reactor, 0.1, lambda: None)
+            yield task.deferLater(reactor, 0.1, lambda: None)  # type: ignore[arg-type]
             res = yield oldNewLog(*arg, **kw)
             return res
 
