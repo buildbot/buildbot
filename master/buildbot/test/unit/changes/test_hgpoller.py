@@ -15,6 +15,8 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -24,6 +26,11 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.runprocess import ExpectMasterShell
 from buildbot.test.runprocess import MasterRunProcessMixin
 from buildbot.test.util import changesource
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 LINESEP_BYTES = os.linesep.encode("ascii")
 PATHSEP_BYTES = os.pathsep.encode("ascii")
@@ -37,7 +44,7 @@ class TestHgPollerBase(
     bookmarks: list[str] | None = None
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_master_run_process()
         yield self.setUpChangeSource()
@@ -46,17 +53,17 @@ class TestHgPollerBase(
         self.remote_hgweb = 'http://example.com/foo/baz/rev/{}'
         self.repo_ready = True
 
-        def _isRepositoryReady():
+        def _isRepositoryReady() -> bool:
             return self.repo_ready
 
         self.create_hgpoller()
         yield self.poller.setServiceParent(self.master)
-        self.poller._isRepositoryReady = _isRepositoryReady
+        self.poller._isRepositoryReady = _isRepositoryReady  # type: ignore[method-assign]
 
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
-    def create_hgpoller(self):
+    def create_hgpoller(self) -> None:
         self.poller = hgpoller.HgPoller(
             self.remote_repo,
             usetimestamps=self.usetimestamps,
@@ -67,7 +74,9 @@ class TestHgPollerBase(
         )
 
     @defer.inlineCallbacks
-    def check_current_rev(self, wished, branch='default'):
+    def check_current_rev(
+        self, wished: int | str, branch: str = 'default'
+    ) -> InlineCallbacksType[None]:
         rev = yield self.poller._getCurrentRev(branch)
         self.assertEqual(rev, str(wished))
 
@@ -76,7 +85,7 @@ class TestHgPollerBranches(TestHgPollerBase):
     branches = ['one', 'two']
 
     @defer.inlineCallbacks
-    def test_poll_initial(self):
+    def test_poll_initial(self) -> InlineCallbacksType[None]:
         self.expect_commands(
             ExpectMasterShell([
                 'hg',
@@ -105,7 +114,7 @@ class TestHgPollerBranches(TestHgPollerBase):
         yield self.check_current_rev(22341, 'two')
 
     @defer.inlineCallbacks
-    def test_poll_regular(self):
+    def test_poll_regular(self) -> InlineCallbacksType[None]:
         # normal operation. There's a previous revision, we get a new one.
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
@@ -155,8 +164,8 @@ class TestHgPollerBranches(TestHgPollerBase):
             .stdout(b'3' + LINESEP_BYTES),
         )
 
-        yield self.poller._setCurrentRev(3, 'two')
-        yield self.poller._setCurrentRev(4, 'one')
+        yield self.poller._setCurrentRev(3, 'two')  # type: ignore[arg-type]
+        yield self.poller._setCurrentRev(4, 'one')  # type: ignore[arg-type]
 
         yield self.poller.poll()
         yield self.check_current_rev(6, 'one')
@@ -172,7 +181,7 @@ class TestHgPollerBookmarks(TestHgPollerBase):
     bookmarks = ['one', 'two']
 
     @defer.inlineCallbacks
-    def test_poll_initial(self):
+    def test_poll_initial(self) -> InlineCallbacksType[None]:
         self.expect_commands(
             ExpectMasterShell([
                 'hg',
@@ -201,7 +210,7 @@ class TestHgPollerBookmarks(TestHgPollerBase):
         yield self.check_current_rev(22341, 'two')
 
     @defer.inlineCallbacks
-    def test_poll_regular(self):
+    def test_poll_regular(self) -> InlineCallbacksType[None]:
         # normal operation. There's a previous revision, we get a new one.
         # Let's say there was an intervening commit on an untracked branch, to
         # make it more interesting.
@@ -256,8 +265,8 @@ class TestHgPollerBookmarks(TestHgPollerBase):
             .stdout(b'3' + LINESEP_BYTES),
         )
 
-        yield self.poller._setCurrentRev(3, 'two')
-        yield self.poller._setCurrentRev(4, 'one')
+        yield self.poller._setCurrentRev(3, 'two')  # type: ignore[arg-type]
+        yield self.poller._setCurrentRev(4, 'one')  # type: ignore[arg-type]
 
         yield self.poller.poll()
         yield self.check_current_rev(6, 'one')
@@ -269,22 +278,22 @@ class TestHgPollerBookmarks(TestHgPollerBase):
 
 
 class TestHgPoller(TestHgPollerBase):
-    def gpoFullcommandPattern(self, commandName, *expected_args):
+    def gpoFullcommandPattern(self, commandName: str, *expected_args: str) -> Callable[..., bool]:
         """Match if the command is commandName and arg list start as expected.
 
         This allows to test a bit more if expected GPO are issued, be it
         by obscure failures due to the result not being given.
         """
 
-        def matchesSubcommand(bin, given_args, **kwargs):
+        def matchesSubcommand(bin: str, given_args: list[str], **kwargs: Any) -> bool:
             return bin == commandName and tuple(given_args[: len(expected_args)]) == expected_args
 
         return matchesSubcommand
 
-    def test_describe(self):
+    def test_describe(self) -> None:
         self.assertSubstring("HgPoller", self.poller.describe())
 
-    def test_name(self):
+    def test_name(self) -> None:
         self.assertEqual(self.remote_repo, self.poller.name)
 
         # and one with explicit name...
@@ -295,11 +304,11 @@ class TestHgPoller(TestHgPollerBase):
         other = hgpoller.HgPoller(self.remote_repo, branches=["b1", "b2"], workdir='/some/dir')
         self.assertEqual(self.remote_repo + "_b1_b2", other.name)
 
-    def test_hgbin_default(self):
+    def test_hgbin_default(self) -> None:
         self.assertEqual(self.poller.hgbin, "hg")
 
     @defer.inlineCallbacks
-    def test_poll_initial(self):
+    def test_poll_initial(self) -> InlineCallbacksType[None]:
         self.repo_ready = False
         self.expect_commands(
             ExpectMasterShell(['hg', 'init', '/some/dir']),
@@ -320,7 +329,7 @@ class TestHgPoller(TestHgPollerBase):
         yield self.check_current_rev(73591)
 
     @defer.inlineCallbacks
-    def test_poll_several_heads(self):
+    def test_poll_several_heads(self) -> InlineCallbacksType[None]:
         # If there are several heads on the named branch, the poller mustn't
         # climb (good enough for now, ideally it should even go to the common
         # ancestor)
@@ -333,14 +342,14 @@ class TestHgPoller(TestHgPollerBase):
             .stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES),
         )
 
-        yield self.poller._setCurrentRev(3)
+        yield self.poller._setCurrentRev(3)  # type: ignore[arg-type]
 
         # do the poll: we must stay at rev 3
         yield self.poller.poll()
         yield self.check_current_rev(3)
 
     @defer.inlineCallbacks
-    def test_poll_regular(self):
+    def test_poll_regular(self) -> InlineCallbacksType[None]:
         # normal operation. There's a previous revision, we get a new one.
         self.expect_commands(
             ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz']).workdir(
@@ -379,7 +388,7 @@ class TestHgPoller(TestHgPollerBase):
             ),
         )
 
-        yield self.poller._setCurrentRev(4)
+        yield self.poller._setCurrentRev(4)  # type: ignore[arg-type]
 
         yield self.poller.poll()
         yield self.check_current_rev(5)
@@ -390,7 +399,7 @@ class TestHgPoller(TestHgPollerBase):
         self.assertEqual(change['comments'], 'Comment for rev 5')
 
     @defer.inlineCallbacks
-    def test_poll_force_push(self):
+    def test_poll_force_push(self) -> InlineCallbacksType[None]:
         #  There's a previous revision, but not linked with new rev
         self.expect_commands(
             ExpectMasterShell(['hg', 'pull', '-b', 'default', 'ssh://example.com/foo/baz']).workdir(
@@ -432,7 +441,7 @@ class TestHgPoller(TestHgPollerBase):
             ),
         )
 
-        yield self.poller._setCurrentRev(4)
+        yield self.poller._setCurrentRev(4)  # type: ignore[arg-type]
 
         yield self.poller.poll()
         yield self.check_current_rev(5)
@@ -452,7 +461,7 @@ class HgPollerNoTimestamp(TestHgPoller):
 class HgPollerCategoryCallable(TestHgPoller):
     """Test HgPoller() with callable category"""
 
-    def create_hgpoller(self):
+    def create_hgpoller(self) -> None:
         self.poller = hgpoller.HgPoller(
             self.remote_repo,
             usetimestamps=self.usetimestamps,
