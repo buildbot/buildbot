@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import random
+from typing import TYPE_CHECKING
+from typing import TypeVar
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -22,30 +26,37 @@ from twisted.python import log
 from buildbot.test.util import fuzz
 from buildbot.util import lru
 
+if TYPE_CHECKING:
+    from twisted.python.failure import Failure
+
+    from buildbot.util.twisted import InlineCallbacksType
+
+_T = TypeVar('_T')
+
 # construct weakref-able objects for particular keys
 
 
-def short(k):
+def short(k: str) -> set[str]:
     return set([k.upper() * 3])
 
 
-def long(k):
+def long(k: str) -> set[str]:
     return set([k.upper() * 6])
 
 
-def deferUntilLater(secs, result=None):
-    d = defer.Deferred()
-    reactor.callLater(secs, d.callback, result)
+def deferUntilLater(secs: float, result: _T = None) -> defer.Deferred[_T]:  # type: ignore[assignment]
+    d: defer.Deferred[_T] = defer.Deferred()
+    reactor.callLater(secs, d.callback, result)  # type: ignore[attr-defined]
     return d
 
 
 class LRUCacheFuzzer(fuzz.FuzzTestCase):
     FUZZ_TIME = 60
 
-    def setUp(self):
+    def setUp(self) -> None:
         lru.inv_failed = False
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.assertFalse(lru.inv_failed, "invariant failed; see logs")
         if hasattr(self, 'lru'):
             log.msg(
@@ -55,26 +66,26 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
     # tests
 
     @defer.inlineCallbacks
-    def do_fuzz(self, endTime):
+    def do_fuzz(self, endTime: float) -> InlineCallbacksType[None]:
         lru.inv_failed = False
 
-        def delayed_miss_fn(key):
+        def delayed_miss_fn(key: int) -> defer.Deferred[set[int]]:
             return deferUntilLater(random.uniform(0.001, 0.002), set([key + 1000]))
 
-        self.lru = lru.AsyncLRUCache(delayed_miss_fn, 50)
+        self.lru: lru.AsyncLRUCache[int, set[int]] = lru.AsyncLRUCache(delayed_miss_fn, 50)
 
         keys = list(range(250))
-        errors = []  # bail out early in the event of an error
+        errors: list[Failure] = []  # bail out early in the event of an error
         results = []  # keep references to (most) results
 
         # fire off as many requests as we can in one second, with lots of
         # overlap.
-        while not errors and reactor.seconds() < endTime:
+        while not errors and reactor.seconds() < endTime:  # type: ignore[attr-defined]
             key = random.choice(keys)
 
             d = self.lru.get(key)
 
-            def check(result, key):
+            def check(result: set[int], key: int) -> None:
                 self.assertEqual(result, set([key + 1000]))
                 if random.uniform(0, 1.0) < 0.9:
                     results.append(result)
@@ -83,7 +94,7 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
             d.addCallback(check, key)
 
             @d.addErrback
-            def eb(f):
+            def eb(f: Failure) -> Failure:
                 errors.append(f)
                 return f  # unhandled error -> in the logs
 
@@ -94,7 +105,7 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
         # now wait until all of the pending calls have cleared, noting that
         # this method will be counted as one delayed call, in the current
         # implementation
-        while len(reactor.getDelayedCalls()) > 1:
+        while len(reactor.getDelayedCalls()) > 1:  # type: ignore[attr-defined]
             # give the reactor some time to process pending events
             yield deferUntilLater(0.001)
 
