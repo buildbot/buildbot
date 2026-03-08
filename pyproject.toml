@@ -156,7 +156,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot.test.reactor",
       "buildbot.test.regressions.test_bad_change_properties_rows",
       "buildbot.test.regressions.test_oldpaths",
       "buildbot.test.regressions.test_steps_shell_WarningCountingShellCommand",

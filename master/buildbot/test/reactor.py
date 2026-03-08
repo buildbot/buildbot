@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
+from typing import Any
 
+from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import threadpool
 
@@ -38,7 +41,7 @@ class TestReactorMixin(_TestReactorMixinBase):
     at the end
     """
 
-    def setup_test_reactor(self, use_asyncio=False, auto_tear_down=True) -> None:
+    def setup_test_reactor(self, use_asyncio: bool = False, auto_tear_down: bool = True) -> None:
         if use_asyncio:
             warn_deprecated('4.2.0', 'use_asyncio=True is deprecated')
         if not auto_tear_down:
@@ -51,9 +54,13 @@ class TestReactorMixin(_TestReactorMixinBase):
 
         _setReactor(self.reactor)
 
-        def deferToThread(f, *args, **kwargs):
+        def deferToThread(f: Callable[..., Any], *args: Any, **kwargs: Any) -> defer.Deferred[Any]:
             return threads.deferToThreadPool(
-                self.reactor, self.reactor.getThreadPool(), f, *args, **kwargs
+                self.reactor,
+                self.reactor.getThreadPool(),  # type: ignore[arg-type]
+                f,
+                *args,
+                **kwargs,
             )
 
         self.patch(threads, 'deferToThread', deferToThread)
