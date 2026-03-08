@@ -16,6 +16,9 @@
 # this class is known to contain cruft and will be looked at later, so
 # no current implementation utilizes it aside from scripts.runner.
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -26,6 +29,11 @@ from buildbot.process.users import manual
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class ManualUsersMixin:
     """
@@ -34,7 +42,7 @@ class ManualUsersMixin:
     """
 
     @defer.inlineCallbacks
-    def setUpManualUsers(self):
+    def setUpManualUsers(self) -> InlineCallbacksType[None]:
         self.master = yield fakemaster.make_master(self, wantDb=True)
 
 
@@ -46,16 +54,23 @@ class TestUsersBase(unittest.TestCase):
 
 
 class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase, ManualUsersMixin):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         self.setUpManualUsers()
 
-    def call_perspective_commandline(self, *args):
+    def call_perspective_commandline(
+        self,
+        op: str,
+        bb_username: str | None,
+        bb_password: str | None,
+        ids: list[object] | None,
+        info: list[object] | None,
+    ) -> defer.Deferred[str]:
         persp = manual.CommandlineUserManagerPerspective(self.master)
-        return persp.perspective_commandline(*args)
+        return persp.perspective_commandline(op, bb_username, bb_password, ids, info)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_add(self):
+    def test_perspective_commandline_add(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'git': 'x'}]
         )
@@ -70,7 +85,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_update(self):
+    def test_perspective_commandline_update(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
@@ -88,7 +103,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_update_bb(self):
+    def test_perspective_commandline_update_bb(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
@@ -110,7 +125,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_update_both(self):
+    def test_perspective_commandline_update_both(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
@@ -131,7 +146,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_remove(self):
+    def test_perspective_commandline_remove(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'h@c', 'git': 'hi <h@c>'}]
         )
@@ -140,7 +155,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         self.assertEqual(res, None)
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_get(self):
+    def test_perspective_commandline_get(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
@@ -160,7 +175,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_get_multiple_attrs(self):
+    def test_perspective_commandline_get_multiple_attrs(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x', 'git': 'x@c'}]
         )
@@ -179,7 +194,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_add_format(self):
+    def test_perspective_commandline_add_format(self) -> InlineCallbacksType[None]:
         result = yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
@@ -188,7 +203,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         self.assertEqual(result, exp_format)
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_update_format(self):
+    def test_perspective_commandline_update_format(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x', 'svn': 'x'}]
         )
@@ -200,7 +215,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         self.assertEqual(result, exp_format)
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_remove_format(self):
+    def test_perspective_commandline_remove_format(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'h@c', 'git': 'hi <h@c>'}]
         )
@@ -210,7 +225,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         self.assertEqual(result, exp_format)
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_get_format(self):
+    def test_perspective_commandline_get_format(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_commandline(
             'add', None, None, None, [{'identifier': 'x@y', 'git': 'x <x@y>'}]
         )
@@ -229,14 +244,14 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
         self.assertEqual(result, exp_format)
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_remove_no_match_format(self):
+    def test_perspective_commandline_remove_no_match_format(self) -> InlineCallbacksType[None]:
         result = yield self.call_perspective_commandline('remove', None, None, ['x'], None)
 
         exp_format = "user(s) removed:\n"
         self.assertEqual(result, exp_format)
 
     @defer.inlineCallbacks
-    def test_perspective_commandline_get_no_match_format(self):
+    def test_perspective_commandline_get_no_match_format(self) -> InlineCallbacksType[None]:
         result = yield self.call_perspective_commandline('get', None, None, ['x'], None)
 
         exp_format = "user(s) found:\nno match found\n"
@@ -245,7 +260,7 @@ class TestCommandlineUserManagerPerspective(TestReactorMixin, unittest.TestCase,
 
 class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase, ManualUsersMixin):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setUpManualUsers()
         self.manual_component = manual.CommandlineUserManager(
@@ -254,24 +269,26 @@ class TestCommandlineUserManager(TestReactorMixin, unittest.TestCase, ManualUser
         yield self.manual_component.setServiceParent(self.master)
 
     @defer.inlineCallbacks
-    def test_no_userpass(self):
+    def test_no_userpass(self) -> InlineCallbacksType[None]:
         with self.assertRaises(AssertionError):
             yield defer.maybeDeferred(manual.CommandlineUserManager)
 
     @defer.inlineCallbacks
-    def test_no_port(self):
+    def test_no_port(self) -> InlineCallbacksType[None]:
         with self.assertRaises(AssertionError):
             yield manual.CommandlineUserManager(username="x", passwd="y")
 
     @defer.inlineCallbacks
-    def test_service(self):
+    def test_service(self) -> InlineCallbacksType[None]:
         # patch out the pbmanager's 'register' command both to be sure
         # the registration is correct and to get a copy of the factory
         registration = mock.Mock()
         registration.unregister = lambda: defer.succeed(None)
         self.master.pbmanager = mock.Mock()
 
-        def register(portstr, user, passwd, factory):
+        def register(
+            portstr: str, user: str, passwd: str, factory: Callable[..., object]
+        ) -> defer.Deferred[object]:
             self.assertEqual([portstr, user, passwd], ['9990', 'user', 'userpw'])
             self.got_factory = factory
             return defer.succeed(registration)
