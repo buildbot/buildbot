@@ -14,8 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
 import shutil
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
@@ -31,6 +34,9 @@ from buildbot.steps.worker import CompositeStepMixin
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 # This integration test creates a master and worker environment
 # and make sure the transfer steps are working
 
@@ -42,7 +48,7 @@ class TransferStepsMasterPb(RunMasterBase):
     proto = "pb"
 
     @defer.inlineCallbacks
-    def setup_config(self, bigfilename):
+    def setup_config(self, bigfilename: str) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -67,7 +73,7 @@ class TransferStepsMasterPb(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def setup_config_glob(self):
+    def setup_config_glob(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -75,7 +81,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
         class CustomStep(BuildStep, CompositeStepMixin):
             @defer.inlineCallbacks
-            def run(self):
+            def run(self) -> InlineCallbacksType[int]:
                 content = yield self.getFileContentFromWorker(
                     "dir/file1.txt", abandonOnFailure=True
                 )
@@ -100,7 +106,7 @@ class TransferStepsMasterPb(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def setup_config_single_step(self, step):
+    def setup_config_single_step(self, step: BuildStep) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -114,7 +120,7 @@ class TransferStepsMasterPb(RunMasterBase):
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         yield self.setup_master(c)
 
-    def readMasterDirContents(self, top):
+    def readMasterDirContents(self, top: str) -> dict[str, str]:
         contents = {}
         for root, _, files in os.walk(top):
             for name in files:
@@ -125,7 +131,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @flaky(bugNumber=4407, onPlatform='win32')
     @defer.inlineCallbacks
-    def test_transfer(self):
+    def test_transfer(self) -> InlineCallbacksType[None]:
         yield self.setup_config(bigfilename=self.mktemp())
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
@@ -145,7 +151,7 @@ class TransferStepsMasterPb(RunMasterBase):
         os.unlink("master.txt")
 
     @defer.inlineCallbacks
-    def test_globTransfer(self):
+    def test_globTransfer(self) -> InlineCallbacksType[None]:
         yield self.setup_config_glob()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
@@ -163,7 +169,7 @@ class TransferStepsMasterPb(RunMasterBase):
         shutil.rmtree("dest")
 
     @defer.inlineCallbacks
-    def test_no_exist_file_upload(self):
+    def test_no_exist_file_upload(self) -> InlineCallbacksType[None]:
         step = FileUpload(workersrc="dir/noexist_path", masterdest="master_dest")
         yield self.setup_config_single_step(step)
 
@@ -174,7 +180,7 @@ class TransferStepsMasterPb(RunMasterBase):
         self.assertFalse(os.path.exists("master_dest"))
 
     @defer.inlineCallbacks
-    def test_no_exist_directory_upload(self):
+    def test_no_exist_directory_upload(self) -> InlineCallbacksType[None]:
         step = DirectoryUpload(workersrc="dir/noexist_path", masterdest="master_dest")
         yield self.setup_config_single_step(step)
 
@@ -185,7 +191,7 @@ class TransferStepsMasterPb(RunMasterBase):
         self.assertFalse(os.path.exists("master_dest"))
 
     @defer.inlineCallbacks
-    def test_no_exist_multiple_file_upload(self):
+    def test_no_exist_multiple_file_upload(self) -> InlineCallbacksType[None]:
         step = MultipleFileUpload(workersrcs=["dir/noexist_path"], masterdest="master_dest")
         yield self.setup_config_single_step(step)
 
