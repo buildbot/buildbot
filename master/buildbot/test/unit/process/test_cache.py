@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -20,34 +23,37 @@ from twisted.trial import unittest
 
 from buildbot.process import cache
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class CacheManager(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.caches = cache.CacheManager()
 
-    def make_config(self, **kwargs):
+    def make_config(self, **kwargs: int) -> mock.Mock:
         cfg = mock.Mock()
         cfg.caches = kwargs
         return cfg
 
-    def test_get_cache_idempotency(self):
-        foo_cache = self.caches.get_cache("foo", None)
-        bar_cache = self.caches.get_cache("bar", None)
-        foo_cache2 = self.caches.get_cache("foo", None)
+    def test_get_cache_idempotency(self) -> None:
+        foo_cache = self.caches.get_cache("foo", None)  # type: ignore[arg-type]
+        bar_cache = self.caches.get_cache("bar", None)  # type: ignore[arg-type]
+        foo_cache2 = self.caches.get_cache("foo", None)  # type: ignore[arg-type]
         self.assertIdentical(foo_cache, foo_cache2)
         self.assertNotIdentical(foo_cache, bar_cache)
 
     @defer.inlineCallbacks
-    def test_reconfigServiceWithBuildbotConfig(self):
+    def test_reconfigServiceWithBuildbotConfig(self) -> InlineCallbacksType[None]:
         # load config with one cache loaded and the other not
-        foo_cache = self.caches.get_cache("foo", None)
+        foo_cache = self.caches.get_cache("foo", None)  # type: ignore[arg-type]
         yield self.caches.reconfigServiceWithBuildbotConfig(self.make_config(foo=5, bar=6, bing=11))
 
-        bar_cache = self.caches.get_cache("bar", None)
+        bar_cache = self.caches.get_cache("bar", None)  # type: ignore[arg-type]
         self.assertEqual((foo_cache.max_size, bar_cache.max_size), (5, 6))
 
-    def test_get_metrics(self):
-        self.caches.get_cache("foo", None)
+    def test_get_metrics(self) -> None:
+        self.caches.get_cache("foo", None)  # type: ignore[arg-type]
         self.assertIn('foo', self.caches.get_metrics())
         metric = self.caches.get_metrics()['foo']
         for k in 'hits', 'refhits', 'misses', 'max_size':
