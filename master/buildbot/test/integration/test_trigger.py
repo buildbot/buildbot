@@ -14,12 +14,18 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 from io import StringIO
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.test.util.integration import print_build
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 # This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them
@@ -52,7 +58,7 @@ class TriggeringMaster(RunMasterBase):
     }
 
     @defer.inlineCallbacks
-    def setup_config(self, addFailure=False):
+    def setup_config(self, addFailure: bool = False) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -87,7 +93,7 @@ class TriggeringMaster(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_trigger(self):
+    def test_trigger(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
@@ -104,7 +110,7 @@ class TriggeringMaster(RunMasterBase):
         self.assertRegex(dump.getvalue(), expectedOutputRegex.format(loglines=loglines))
 
     @defer.inlineCallbacks
-    def test_trigger_failure(self):
+    def test_trigger_failure(self) -> InlineCallbacksType[None]:
         yield self.setup_config(addFailure=True)
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
