@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -25,19 +28,22 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import service
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class FakeManhole(service.AsyncService):
     pass
 
 
 class TestDebugServices(TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         self.master = mock.Mock(name='master')
         self.config = MasterConfig()
 
     @defer.inlineCallbacks
-    def test_reconfigService_manhole(self):
+    def test_reconfigService_manhole(self) -> InlineCallbacksType[None]:
         master = yield fakemaster.make_master(self)
         ds = debug.DebugServices()
         yield ds.setServiceParent(master)
@@ -47,7 +53,7 @@ class TestDebugServices(TestReactorMixin, unittest.TestCase):
         yield ds.reconfigServiceWithBuildbotConfig(self.config)
 
         # set a manhole, fire it up
-        self.config.manhole = manhole = FakeManhole()
+        self.config.manhole = manhole = FakeManhole()  # type: ignore[assignment]
         yield ds.reconfigServiceWithBuildbotConfig(self.config)
 
         self.assertTrue(manhole.running)
@@ -61,7 +67,7 @@ class TestDebugServices(TestReactorMixin, unittest.TestCase):
         self.assertIdentical(manhole.master, None)
 
         # re-start to test stopService
-        self.config.manhole = manhole
+        self.config.manhole = manhole  # type: ignore[assignment]
         yield ds.reconfigServiceWithBuildbotConfig(self.config)
 
         # disown the service, and see that it unregisters
