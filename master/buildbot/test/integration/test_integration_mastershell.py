@@ -14,7 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import sys
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -25,13 +29,16 @@ from buildbot.process.factory import BuildFactory
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.util import asyncSleep
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config_for_master_command(self, **kwargs):
+    def setup_config_for_master_command(self, **kwargs: Any) -> InlineCallbacksType[None]:
         c = {}
 
         c['schedulers'] = [schedulers.AnyBranchScheduler(name="sched", builderNames=["testy"])]
@@ -41,7 +48,7 @@ class ShellMaster(RunMasterBase):
         c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
         yield self.setup_master(c)
 
-    def get_change(self):
+    def get_change(self) -> dict[str, Any]:
         return {
             "branch": "master",
             "files": ["foo.c"],
@@ -53,7 +60,7 @@ class ShellMaster(RunMasterBase):
         }
 
     @defer.inlineCallbacks
-    def test_shell(self):
+    def test_shell(self) -> InlineCallbacksType[None]:
         yield self.setup_config_for_master_command(command='echo hello')
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.get_change(), wantLogs=True)
@@ -61,7 +68,7 @@ class ShellMaster(RunMasterBase):
         self.assertEqual(build['steps'][1]['state_string'], 'Ran')
 
     @defer.inlineCallbacks
-    def test_logs(self):
+    def test_logs(self) -> InlineCallbacksType[None]:
         yield self.setup_config_for_master_command(command=[sys.executable, '-c', 'print("hello")'])
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.get_change(), wantLogs=True)
@@ -71,7 +78,7 @@ class ShellMaster(RunMasterBase):
         self.assertEqual(build['steps'][1]['state_string'], 'Ran')
 
     @defer.inlineCallbacks
-    def test_fails(self):
+    def test_fails(self) -> InlineCallbacksType[None]:
         yield self.setup_config_for_master_command(command=[sys.executable, '-c', 'exit(1)'])
 
         build = yield self.doForceBuild(wantSteps=True, useChange=self.get_change(), wantLogs=True)
@@ -79,7 +86,7 @@ class ShellMaster(RunMasterBase):
         self.assertEqual(build['steps'][1]['state_string'], 'failed (1) (failure)')
 
     @defer.inlineCallbacks
-    def test_interrupt(self):
+    def test_interrupt(self) -> InlineCallbacksType[None]:
         yield self.setup_config_for_master_command(
             name='sleep', command=[sys.executable, '-c', "while True: pass"]
         )
@@ -87,7 +94,7 @@ class ShellMaster(RunMasterBase):
         d = self.doForceBuild(wantSteps=True, useChange=self.get_change(), wantLogs=True)
 
         @defer.inlineCallbacks
-        def on_new_step(_, data):
+        def on_new_step(_: tuple[str, ...], data: dict[str, Any]) -> InlineCallbacksType[None]:
             if data['name'] == 'sleep':
                 # wait until the step really starts
                 yield asyncSleep(1)
