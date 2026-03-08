@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.process import results
@@ -21,16 +25,19 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
-    def __init__(self, is_list_mkdir, is_list_rmdir):
+    def __init__(self, is_list_mkdir: bool, is_list_rmdir: bool) -> None:
         super().__init__()
         self.logEnviron = False
         self.is_list_mkdir = is_list_mkdir
         self.is_list_rmdir = is_list_rmdir
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         contents = yield self.runGlob('*')
         if contents != []:
             return results.FAILURE
@@ -43,7 +50,7 @@ class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
                 return results.FAILURE
 
         if self.is_list_mkdir:
-            yield self.runMkdir(paths)
+            yield self.runMkdir(paths)  # type: ignore[arg-type]
         else:
             for path in paths:
                 yield self.runMkdir(path)
@@ -61,7 +68,7 @@ class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
                 return results.FAILURE
 
         if self.is_list_rmdir:
-            yield self.runRmdir(paths)
+            yield self.runRmdir(paths)  # type: ignore[arg-type]
         else:
             for path in paths:
                 yield self.runRmdir(path)
@@ -78,7 +85,9 @@ class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
 # and makes sure the composite step mixin is working.
 class CompositeStepMixinMaster(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self, is_list_mkdir=True, is_list_rmdir=True):
+    def setup_config(
+        self, is_list_mkdir: bool = True, is_list_rmdir: bool = True
+    ) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -93,15 +102,17 @@ class CompositeStepMixinMaster(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_compositemixin_rmdir_list(self):
+    def test_compositemixin_rmdir_list(self) -> InlineCallbacksType[None]:
         yield self.do_compositemixin_test(is_list_mkdir=False, is_list_rmdir=True)
 
     @defer.inlineCallbacks
-    def test_compositemixin(self):
+    def test_compositemixin(self) -> InlineCallbacksType[None]:
         yield self.do_compositemixin_test(is_list_mkdir=False, is_list_rmdir=False)
 
     @defer.inlineCallbacks
-    def do_compositemixin_test(self, is_list_mkdir, is_list_rmdir):
+    def do_compositemixin_test(
+        self, is_list_mkdir: bool, is_list_rmdir: bool
+    ) -> InlineCallbacksType[None]:
         yield self.setup_config(is_list_mkdir=is_list_mkdir, is_list_rmdir=is_list_rmdir)
 
         change = {
@@ -126,5 +137,5 @@ class CompositeStepMixinMasterMsgPack(CompositeStepMixinMaster):
     proto = "msgpack"
 
     @defer.inlineCallbacks
-    def test_compositemixin_mkdir_rmdir_lists(self):
+    def test_compositemixin_mkdir_rmdir_lists(self) -> InlineCallbacksType[None]:
         yield self.do_compositemixin_test(is_list_mkdir=True, is_list_rmdir=True)
