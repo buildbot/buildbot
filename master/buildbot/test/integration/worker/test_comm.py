@@ -14,7 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.cred import credentials
 from twisted.internet import defer
@@ -37,6 +41,13 @@ from buildbot.util.eventual import eventually
 from buildbot.worker import manager as workermanager
 from buildbot.worker.protocols.manager.pb import PBManager
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.base import AbstractWorker
+    from buildbot.worker.protocols.pb import Connection
+
 PKI_DIR = util.sibpath(__file__, 'pki')
 
 
@@ -53,41 +64,41 @@ class FakeWorkerWorker(pb.Referenceable):
     @ivar master_persp: remote perspective on the master
     """
 
-    def __init__(self, callWhenBuilderListSet):
+    def __init__(self, callWhenBuilderListSet: Callable[[], None]) -> None:
         self.callWhenBuilderListSet = callWhenBuilderListSet
-        self.master_persp = None
-        self._detach_deferreds = []
+        self.master_persp: pb.RemoteReference | None = None
+        self._detach_deferreds: list[defer.Deferred[None]] = []
         self._detached = False
 
-    def waitForDetach(self):
+    def waitForDetach(self) -> defer.Deferred[None]:
         if self._detached:
             return defer.succeed(None)
-        d = defer.Deferred()
+        d: defer.Deferred[None] = defer.Deferred()
         self._detach_deferreds.append(d)
         return d
 
-    def setMasterPerspective(self, persp):
+    def setMasterPerspective(self, persp: pb.RemoteReference) -> None:
         self.master_persp = persp
         # clear out master_persp on disconnect
 
-        def clear_persp():
+        def clear_persp() -> None:
             self.master_persp = None
 
         persp.broker.notifyOnDisconnect(clear_persp)
 
-        def fire_deferreds():
+        def fire_deferreds() -> None:
             self._detached = True
             deferreds = self._detach_deferreds
-            self._detach_deferreds = None
+            self._detach_deferreds = None  # type: ignore[assignment]
             for d in deferreds:
                 d.callback(None)
 
         persp.broker.notifyOnDisconnect(fire_deferreds)
 
-    def remote_print(self, message):
+    def remote_print(self, message: str) -> None:
         log.msg(f"WORKER-SIDE: remote_print({message!r})")
 
-    def remote_getWorkerInfo(self):
+    def remote_getWorkerInfo(self) -> dict[str, Any]:
         return {
             'info': 'here',
             'worker_commands': {
@@ -100,13 +111,15 @@ class FakeWorkerWorker(pb.Referenceable):
             b'\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(): b'\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88'.decode(),
         }
 
-    def remote_getVersion(self):
+    def remote_getVersion(self) -> str:
         return buildbot.version
 
-    def remote_getCommands(self):
+    def remote_getCommands(self) -> dict[str, int]:
         return {'x': 1}
 
-    def remote_setBuilderList(self, builder_info):
+    def remote_setBuilderList(
+        self, builder_info: list[tuple[str, str]]
+    ) -> dict[str, FakeWorkerForBuilder]:
         builder_names = [n for n, dir in builder_info]
         slbuilders = [FakeWorkerForBuilder() for n in builder_names]
         eventually(self.callWhenBuilderListSet)
@@ -114,28 +127,30 @@ class FakeWorkerWorker(pb.Referenceable):
 
 
 class FakeBuilder(builder.Builder):
-    def attached(self, worker, commands):
+    def attached(  # type: ignore[override]
+        self, worker: AbstractWorker, commands: dict[str, str] | None
+    ) -> defer.Deferred[None]:
         return defer.succeed(None)
 
-    def detached(self, worker):
+    def detached(self, worker: AbstractWorker) -> None:
         pass
 
-    def getOldestRequestTime(self):
+    def getOldestRequestTime(self) -> int:  # type: ignore[override]
         return 0
 
-    def maybeStartBuild(self):
+    def maybeStartBuild(self) -> defer.Deferred[None]:  # type: ignore[override]
         return defer.succeed(None)
 
 
 class MyWorker(worker.Worker):
-    def attached(self, conn):
-        self.detach_d = defer.Deferred()
-        return super().attached(conn)
+    def attached(self, conn: Connection) -> InlineCallbacksType[None]:  # type: ignore[override]
+        self.detach_d: defer.Deferred[None] = defer.Deferred()
+        return super().attached(conn)  # type: ignore[return-value]
 
-    def detached(self):
+    def detached(self) -> None:  # type: ignore[override]
         super().detached()
         d = self.detach_d
-        self.detach_d = None
+        self.detach_d = None  # type: ignore[assignment]
         d.callback(None)
 
 
@@ -160,7 +175,7 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
     """
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
 
@@ -187,7 +202,7 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
         self.workerworker = None
         self.endpoint = None
         self.broker = None
-        self._detach_deferreds = []
+        self._detach_deferreds: list[defer.Deferred[None]] = []
 
         # patch in our FakeBuilder for the regular Builder class
         self.patch(botmaster, 'Builder', FakeBuilder)
@@ -196,7 +211,7 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
         self.client_connection_string_tpl = "tcp:host=127.0.0.1:port={port}"
 
         @defer.inlineCallbacks
-        def cleanup():
+        def cleanup() -> InlineCallbacksType[None]:
             if self.broker:
                 del self.broker
             if self.endpoint:
@@ -217,13 +232,13 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
         self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
-    def addWorker(self, **kwargs):
+    def addWorker(self, **kwargs: Any) -> InlineCallbacksType[None]:
         """
         Create a master-side worker instance and add it to the BotMaster
 
         @param **kwargs: arguments to pass to the L{Worker} constructor.
         """
-        self.buildworker = MyWorker("testworker", "pw", **kwargs)
+        self.buildworker = MyWorker("testworker", "pw", **kwargs)  # type: ignore[assignment]
 
         # reconfig the master to get it set up
         new_config = self.master.config
@@ -240,9 +255,9 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
 
         # as part of the reconfig, the worker registered with the pbmanager, so
         # get the port it was assigned
-        self.port = self.buildworker.registration.getPBPort()
+        self.port = self.buildworker.registration.getPBPort()  # type: ignore[attr-defined]
 
-    def connectWorker(self, waitForBuilderList=True):
+    def connectWorker(self, waitForBuilderList: bool = True) -> defer.Deferred[FakeWorkerWorker]:
         """
         Connect a worker the master via PB
 
@@ -253,26 +268,26 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
         """
         factory = pb.PBClientFactory()
         creds = credentials.UsernamePassword(b"testworker", b"pw")
-        setBuilderList_d = defer.Deferred()
+        setBuilderList_d: defer.Deferred[None] = defer.Deferred()
         workerworker = FakeWorkerWorker(lambda: setBuilderList_d.callback(None))
 
         login_d = factory.login(creds, workerworker)
 
         @login_d.addCallback
-        def logged_in(persp):
+        def logged_in(persp: pb.RemoteReference) -> FakeWorkerWorker:
             workerworker.setMasterPerspective(persp)
 
             # set up to hear when the worker side disconnects
-            workerworker.detach_d = defer.Deferred()
-            persp.broker.notifyOnDisconnect(lambda: workerworker.detach_d.callback(None))
-            self._detach_deferreds.append(workerworker.detach_d)
+            workerworker.detach_d = defer.Deferred()  # type: ignore[attr-defined]
+            persp.broker.notifyOnDisconnect(lambda: workerworker.detach_d.callback(None))  # type: ignore[attr-defined]
+            self._detach_deferreds.append(workerworker.detach_d)  # type: ignore[attr-defined]
 
             return workerworker
 
         self.endpoint = clientFromString(
             reactor, self.client_connection_string_tpl.format(port=self.port)
         )
-        connected_d = self.endpoint.connect(factory)
+        connected_d = self.endpoint.connect(factory)  # type: ignore[attr-defined]
 
         dlist = [connected_d, login_d]
         if waitForBuilderList:
@@ -280,14 +295,14 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
 
         d = defer.DeferredList(dlist, consumeErrors=True, fireOnOneErrback=True)
         d.addCallback(lambda _: workerworker)
-        return d
+        return d  # type: ignore[return-value]
 
-    def workerSideDisconnect(self, worker):
+    def workerSideDisconnect(self, worker: FakeWorkerWorker) -> None:
         """Disconnect from the worker side"""
-        worker.master_persp.broker.transport.loseConnection()
+        worker.master_persp.broker.transport.loseConnection()  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
-    def test_connect_disconnect(self):
+    def test_connect_disconnect(self) -> InlineCallbacksType[None]:
         """Test a single worker connecting and disconnecting."""
         yield self.addWorker()
 
@@ -301,7 +316,7 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
         yield worker.waitForDetach()
 
     @defer.inlineCallbacks
-    def test_tls_connect_disconnect(self):
+    def test_tls_connect_disconnect(self) -> InlineCallbacksType[None]:
         """Test with TLS or SSL endpoint.
 
         According to the deprecation note for the SSL client endpoint,
@@ -312,7 +327,7 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
         to generate the testing cert is in ``PKI_DIR/ca``
         """
 
-        def escape_colon(path):
+        def escape_colon(path: str) -> str:
             # on windows we can't have \ as it serves as the escape character for :
             return path.replace('\\', '/').replace(':', '\\:')
 
@@ -336,10 +351,10 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
         yield worker.waitForDetach()
 
     @defer.inlineCallbacks
-    def test_worker_info(self):
+    def test_worker_info(self) -> InlineCallbacksType[None]:
         yield self.addWorker()
         worker = yield self.connectWorker()
-        props = self.buildworker.info
+        props = self.buildworker.info  # type: ignore[attr-defined]
         # check worker info passing
         self.assertEqual(props.getProperty("info"), "here")
         # check worker info passing with UTF-8
@@ -360,7 +375,7 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
         yield worker.waitForDetach()
 
     @defer.inlineCallbacks
-    def _test_duplicate_worker(self):
+    def _test_duplicate_worker(self) -> InlineCallbacksType[None]:
         yield self.addWorker()
 
         # connect first worker
@@ -383,7 +398,7 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
-    def _test_duplicate_worker_old_dead(self):
+    def _test_duplicate_worker_old_dead(self) -> InlineCallbacksType[None]:
         yield self.addWorker()
 
         # connect first worker
@@ -391,7 +406,7 @@ class TestWorkerComm(TestReactorMixin, unittest.TestCase):
 
         # monkeypatch that worker to fail with PBConnectionLost when its
         # remote_print method is called
-        def remote_print(message):
+        def remote_print(message: str) -> None:
             worker1.master_persp.broker.transport.loseConnection()
             raise pb.PBConnectionLost("fake!")
 
