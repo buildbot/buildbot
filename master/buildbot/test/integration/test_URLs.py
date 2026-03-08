@@ -14,11 +14,18 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.python import runtime
 
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 # This integration test creates a master and worker environment
 # and make sure the UrlForBuild renderable is working
@@ -28,7 +35,7 @@ class UrlForBuildMaster(RunMasterBase):
     proto = "null"
 
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -45,7 +52,7 @@ class UrlForBuildMaster(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_url(self):
+    def test_url(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
