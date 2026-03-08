@@ -19,6 +19,8 @@ import os
 import pprint
 import sqlite3
 import tarfile
+from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from alembic.autogenerate import compare_metadata
@@ -33,6 +35,11 @@ from buildbot.db.model import UpgradeFromBefore3p0Error
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import querylog
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class UpgradeTestMixin(TestReactorMixin):
@@ -49,7 +56,7 @@ class UpgradeTestMixin(TestReactorMixin):
     timeout = 1200
 
     @defer.inlineCallbacks
-    def setUpUpgradeTest(self):
+    def setUpUpgradeTest(self) -> InlineCallbacksType[None]:
         self.basedir = None
 
         if self.source_tarball:
@@ -94,13 +101,13 @@ class UpgradeTestMixin(TestReactorMixin):
 
     # save subclasses the trouble of calling our setUp and tearDown methods
 
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setUpUpgradeTest()
 
     @defer.inlineCallbacks
-    def assertModelMatches(self):
-        def comp(engine):
+    def assertModelMatches(self) -> InlineCallbacksType[None]:
+        def comp(engine: sa.engine.Engine) -> str | None:
             # use compare_model_to_db, which gets everything but indexes
             with engine.connect() as conn:
                 opts = None
@@ -146,7 +153,7 @@ class UpgradeTestMixin(TestReactorMixin):
                     ]
                     exp = sorted(exp + implied, key=lambda k: k["name"])
 
-                got = sorted(insp.get_indexes(tbl.name), key=lambda x: x['name'])
+                got = sorted(insp.get_indexes(tbl.name), key=lambda x: x['name'])  # type: ignore[arg-type, return-value]
                 if exp != got:
                     got_names = {idx['name'] for idx in got}
                     exp_names = {idx['name'] for idx in exp}
@@ -162,7 +169,7 @@ class UpgradeTestMixin(TestReactorMixin):
                         gi = {
                             "name": name,
                             "unique": (got_info[name]['unique'] and 1) or 0,
-                            "column_names": sorted(got_info[name]['column_names']),
+                            "column_names": sorted(got_info[name]['column_names']),  # type: ignore[type-var]
                         }
                         ei = exp_info[name]
                         if gi != ei:
@@ -187,7 +194,7 @@ class UpgradeTestMixin(TestReactorMixin):
         if diff:
             self.fail("\n" + pprint.pformat(diff))
 
-    def gotError(self, e):
+    def gotError(self, e: Exception) -> None:
         if isinstance(e, (sqlite3.DatabaseError, DatabaseError)):
             if "file is encrypted or is not a database" in str(e):
                 self.flushLoggedErrors(sqlite3.DatabaseError)
@@ -195,7 +202,9 @@ class UpgradeTestMixin(TestReactorMixin):
                 raise unittest.SkipTest(f"sqlite dump not readable on this machine {e!s}")
 
     @defer.inlineCallbacks
-    def do_test_upgrade(self, pre_callbacks=None):
+    def do_test_upgrade(
+        self, pre_callbacks: list[Callable[[], Any]] | None = None
+    ) -> InlineCallbacksType[None]:
         if pre_callbacks is None:
             pre_callbacks = []
 
@@ -206,13 +215,13 @@ class UpgradeTestMixin(TestReactorMixin):
         except Exception as e:
             self.gotError(e)
 
-        yield self.master.db.pool.do(self.verify_thd)
+        yield self.master.db.pool.do(self.verify_thd)  # type: ignore[attr-defined]
         yield self.assertModelMatches()
 
 
 class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def test_emptydb_modelmatches(self):
+    def test_emptydb_modelmatches(self) -> InlineCallbacksType[None]:
         os_encoding = locale.getpreferredencoding()
         try:
             '\N{SNOWMAN}'.encode(os_encoding)
@@ -230,15 +239,15 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
 class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
     source_tarball = "v2.10.5.tgz"
 
-    def test_upgrade(self):
+    def test_upgrade(self) -> defer.Deferred[None]:
         return self.do_test_upgrade()
 
-    def verify_thd(self, conn):
+    def verify_thd(self, conn: sa.engine.Connection) -> None:
         pass
 
     @defer.inlineCallbacks
-    def test_got_invalid_sqlite_file(self):
-        def upgrade():
+    def test_got_invalid_sqlite_file(self) -> InlineCallbacksType[None]:
+        def upgrade() -> defer.Deferred[None]:
             return defer.fail(sqlite3.DatabaseError('file is encrypted or is not a database'))
 
         self.master.db.model.upgrade = upgrade
@@ -246,9 +255,9 @@ class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
             yield self.do_test_upgrade()
 
     @defer.inlineCallbacks
-    def test_got_invalid_sqlite_file2(self):
-        def upgrade():
-            return defer.fail(DatabaseError('file is encrypted or is not a database', None, None))
+    def test_got_invalid_sqlite_file2(self) -> InlineCallbacksType[None]:
+        def upgrade() -> defer.Deferred[None]:
+            return defer.fail(DatabaseError('file is encrypted or is not a database', None, None))  # type: ignore[arg-type]
 
         self.master.db.model.upgrade = upgrade
         with self.assertRaises(unittest.SkipTest):
@@ -258,34 +267,34 @@ class UpgradeTestV2_10_5(UpgradeTestMixin, unittest.TestCase):
 class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
     source_tarball = "v090b4.tgz"
 
-    def gotError(self, e):
+    def gotError(self, e: Exception) -> None:
         self.flushLoggedErrors(UpgradeFromBefore3p0Error)
 
-    def test_upgrade(self):
+    def test_upgrade(self) -> defer.Deferred[None]:
         return self.do_test_upgrade()
 
-    def verify_thd(self, conn):
+    def verify_thd(self, conn: sa.engine.Connection) -> None:
         r = conn.execute(sa.text("select version from migrate_version limit 1"))
         version = r.scalar()
         self.assertEqual(version, 44)
 
-    def assertModelMatches(self):
+    def assertModelMatches(self) -> None:  # type: ignore[override]
         pass
 
 
 class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
     source_tarball = "v087p1.tgz"
 
-    def gotError(self, e):
+    def gotError(self, e: Exception) -> None:
         self.flushLoggedErrors(UpgradeFromBefore0p9Error)
 
-    def verify_thd(self, conn):
+    def verify_thd(self, conn: sa.engine.Connection) -> None:
         r = conn.execute(sa.text("select version from migrate_version limit 1"))
         version = r.scalar()
         self.assertEqual(version, 22)
 
-    def assertModelMatches(self):
+    def assertModelMatches(self) -> None:  # type: ignore[override]
         pass
 
-    def test_upgrade(self):
+    def test_upgrade(self) -> defer.Deferred[None]:
         return self.do_test_upgrade()
