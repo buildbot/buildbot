@@ -156,7 +156,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot.test.integration.test_integration_secrets_with_vault_hvac",
       "buildbot.test.integration.test_integration_template",
       "buildbot.test.integration.test_integration_with_secrets",
       "buildbot.test.integration.test_locks",
