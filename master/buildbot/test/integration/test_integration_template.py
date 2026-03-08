@@ -14,9 +14,16 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.test.util.integration import RunMasterBase
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 # This integration test creates a master and worker environment,
@@ -24,7 +31,7 @@ from buildbot.test.util.integration import RunMasterBase
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -42,7 +49,7 @@ class ShellMaster(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_shell(self):
+    def test_shell(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
         # if you don't need change, you can just remove this change, and useChange parameter
         change = {
