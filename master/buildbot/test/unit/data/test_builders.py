@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -28,13 +31,16 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util.twisted import async_to_deferred
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = builders.BuilderEndpoint
     resourceTypeClass = builders.Builder
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=1, name='buildera'),
@@ -45,20 +51,20 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing(self):
+    def test_get_existing(self) -> InlineCallbacksType[None]:
         builder = yield self.callGet(('builders', 2))
 
         self.validateData(builder)
         self.assertEqual(builder['name'], 'builderb')
 
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         builder = yield self.callGet(('builders', 99))
 
         self.assertEqual(builder, None)
 
     @async_to_deferred
-    async def test_get_by_name(self):
+    async def test_get_by_name(self) -> None:
         builder = await self.callGet(('builders', 'builderb'))
 
         self.validateData(builder)
@@ -66,7 +72,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(builder['name'], 'builderb')
 
     @async_to_deferred
-    async def test_get_unicode_by_name(self):
+    async def test_get_unicode_by_name(self) -> None:
         builder = await self.callGet(('builders', 'builder unicode \N{SNOWMAN}'))
 
         self.validateData(builder)
@@ -74,26 +80,26 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(builder['name'], 'builder unicode \N{SNOWMAN}')
 
     @defer.inlineCallbacks
-    def test_get_missing_with_name(self):
+    def test_get_missing_with_name(self) -> InlineCallbacksType[None]:
         builder = yield self.callGet(('builders', 'builderc'))
 
         self.assertEqual(builder, None)
 
     @defer.inlineCallbacks
-    def test_get_existing_with_master(self):
+    def test_get_existing_with_master(self) -> InlineCallbacksType[None]:
         builder = yield self.callGet(('masters', 13, 'builders', 2))
 
         self.validateData(builder)
         self.assertEqual(builder['name'], 'builderb')
 
     @defer.inlineCallbacks
-    def test_get_existing_with_different_master(self):
+    def test_get_existing_with_different_master(self) -> InlineCallbacksType[None]:
         builder = yield self.callGet(('masters', 14, 'builders', 2))
 
         self.assertEqual(builder, None)
 
     @defer.inlineCallbacks
-    def test_get_missing_with_master(self):
+    def test_get_missing_with_master(self) -> InlineCallbacksType[None]:
         builder = yield self.callGet(('masters', 13, 'builders', 99))
 
         self.assertEqual(builder, None)
@@ -104,7 +110,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = builders.Builder
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Project(id=201, name='project201'),
@@ -128,7 +134,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_get(self) -> InlineCallbacksType[None]:
         builders = yield self.callGet(('builders',))
 
         for b in builders:
@@ -137,7 +143,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['builderid'] for b in builders]), [1, 2, 3, 4, 5])
 
     @defer.inlineCallbacks
-    def test_get_masterid(self):
+    def test_get_masterid(self) -> InlineCallbacksType[None]:
         builders = yield self.callGet(('masters', 13, 'builders'))
 
         for b in builders:
@@ -146,7 +152,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['builderid'] for b in builders]), [2])
 
     @defer.inlineCallbacks
-    def test_get_projectid(self):
+    def test_get_projectid(self) -> InlineCallbacksType[None]:
         builders = yield self.callGet(('projects', 201, 'builders'))
 
         for b in builders:
@@ -155,7 +161,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['builderid'] for b in builders]), [3, 4])
 
     @async_to_deferred
-    async def test_get_workerid(self):
+    async def test_get_workerid(self) -> None:
         builders = await self.callGet(('workers', 1, 'builders'))
 
         for b in builders:
@@ -164,13 +170,13 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['builderid'] for b in builders]), [2])
 
     @defer.inlineCallbacks
-    def test_get_masterid_missing(self):
+    def test_get_masterid_missing(self) -> InlineCallbacksType[None]:
         builders = yield self.callGet(('masters', 14, 'builders'))
 
         self.assertEqual(sorted([b['builderid'] for b in builders]), [])
 
     @defer.inlineCallbacks
-    def test_get_contains_one_tag(self):
+    def test_get_contains_one_tag(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.ResultSpec(
             filters=[resultspec.Filter('tags', 'contains', ["tagA"])]
         )
@@ -184,7 +190,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['builderid'] for b in builders]), [3, 5])
 
     @defer.inlineCallbacks
-    def test_get_contains_two_tags(self):
+    def test_get_contains_two_tags(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.ResultSpec(
             filters=[resultspec.Filter('tags', 'contains', ["tagA", "tagB"])]
         )
@@ -198,7 +204,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['builderid'] for b in builders]), [3, 4, 5])
 
     @defer.inlineCallbacks
-    def test_get_contains_two_tags_one_unknown(self):
+    def test_get_contains_two_tags_one_unknown(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.ResultSpec(
             filters=[resultspec.Filter('tags', 'contains', ["tagA", "tagC"])]
         )
@@ -214,7 +220,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = builders.Builder(self.master)
@@ -223,37 +229,43 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             fakedb.Master(id=14),
         ])
 
-    def test_signature_findBuilderId(self):
+    def test_signature_findBuilderId(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.findBuilderId,  # fake
             self.rtype.findBuilderId,
         )  # real
-        def findBuilderId(self, name):
+        def findBuilderId(self: object, name: str) -> None:
             pass
 
-    def test_findBuilderId(self):
+    def test_findBuilderId(self) -> None:
         # this just passes through to the db method, so test that
         rv = defer.succeed(None)
         self.master.db.builders.findBuilderId = mock.Mock(return_value=rv)
         self.assertIdentical(self.rtype.findBuilderId('foo'), rv)
 
-    def test_signature_updateBuilderInfo(self):
+    def test_signature_updateBuilderInfo(self) -> None:
         @self.assertArgSpecMatches(self.master.data.updates.updateBuilderInfo)
         def updateBuilderInfo(
-            self, builderid, description, description_format, description_html, projectid, tags
-        ):
+            self: object,
+            builderid: int,
+            description: str | None,
+            description_format: str | None,
+            description_html: str | None,
+            projectid: int,
+            tags: list[int | str],
+        ) -> None:
             pass
 
-    def test_signature_updateBuilderList(self):
+    def test_signature_updateBuilderList(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.updateBuilderList,  # fake
             self.rtype.updateBuilderList,
         )  # real
-        def updateBuilderList(self, masterid, builderNames):
+        def updateBuilderList(self: object, masterid: int, builderNames: list[str]) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_updateBuilderList(self):
+    def test_updateBuilderList(self) -> InlineCallbacksType[None]:
         # add one builder master
         yield self.rtype.updateBuilderList(13, ['somebuilder'])
         self.assertEqual(
@@ -273,7 +285,7 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         # add another
         yield self.rtype.updateBuilderList(13, ['somebuilder', 'another'])
 
-        def builderKey(builder: BuilderModel):
+        def builderKey(builder: BuilderModel) -> int:
             return builder.id
 
         self.assertEqual(
@@ -348,8 +360,8 @@ class Builder(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test__masterDeactivated(self):
+    def test__masterDeactivated(self) -> InlineCallbacksType[None]:
         # this method just calls updateBuilderList, so test that.
-        self.rtype.updateBuilderList = mock.Mock(spec=self.rtype.updateBuilderList)
+        self.rtype.updateBuilderList = mock.Mock(spec=self.rtype.updateBuilderList)  # type: ignore[method-assign]
         yield self.rtype._masterDeactivated(10)
         self.rtype.updateBuilderList.assert_called_with(10, [])
