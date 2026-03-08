@@ -13,10 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import copy
 import datetime
 import json
 import types
+from typing import TYPE_CHECKING
+from typing import Any
 
 from parameterized import parameterized
 from twisted.internet import defer
@@ -33,9 +37,14 @@ from buildbot.test.util import changesource
 from buildbot.test.util.state import StateTestMixin
 from buildbot.util import datetime2epoch
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestGerritHelpers(unittest.TestCase):
-    def test_proper_json(self):
+    def test_proper_json(self) -> None:
         self.assertEqual(
             "Justin Case <justin.case@example.com>",
             gerritchangesource._gerrit_user_to_author({
@@ -45,7 +54,7 @@ class TestGerritHelpers(unittest.TestCase):
             }),
         )
 
-    def test_missing_username(self):
+    def test_missing_username(self) -> None:
         self.assertEqual(
             "Justin Case <justin.case@example.com>",
             gerritchangesource._gerrit_user_to_author({
@@ -54,7 +63,7 @@ class TestGerritHelpers(unittest.TestCase):
             }),
         )
 
-    def test_missing_name(self):
+    def test_missing_name(self) -> None:
         self.assertEqual(
             "unknown <justin.case@example.com>",
             gerritchangesource._gerrit_user_to_author({"email": "justin.case@example.com"}),
@@ -72,7 +81,7 @@ class TestGerritHelpers(unittest.TestCase):
             ),
         )
 
-    def test_missing_email(self):
+    def test_missing_email(self) -> None:
         self.assertEqual(
             "Justin Case",
             gerritchangesource._gerrit_user_to_author({
@@ -98,14 +107,16 @@ class TestGerritChangeSource(
     unittest.TestCase,
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_master_run_process()
-        self._got_events = []
+        self._got_events: list[dict[str, Any]] = []
         yield self.setUpChangeSource()
 
     @defer.inlineCallbacks
-    def create_gerrit(self, host, user, *args, **kwargs):
+    def create_gerrit(
+        self, host: str, user: str, *args: Any, **kwargs: Any
+    ) -> InlineCallbacksType[gerritchangesource.GerritChangeSource]:
         http_url = kwargs.get("http_url", None)
         if http_url:
             self._http = yield fakehttpclientservice.HTTPClientService.getService(
@@ -116,12 +127,16 @@ class TestGerritChangeSource(
         return s
 
     @defer.inlineCallbacks
-    def create_gerrit_synchronized(self, host, user, *args, **kwargs):
+    def create_gerrit_synchronized(
+        self, host: str, user: str, *args: Any, **kwargs: Any
+    ) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit(host, user, *args, **kwargs)
         s._is_synchronized = True
         return s
 
-    def assert_changes(self, expected_changes, ignore_keys):
+    def assert_changes(
+        self, expected_changes: list[dict[str, Any]], ignore_keys: Iterable[str]
+    ) -> None:
         self.assertEqual(len(self.master.data.updates.changesAdded), len(expected_changes))
         for i, expected_change in enumerate(expected_changes):
             change = self.master.data.updates.changesAdded[i]
@@ -129,21 +144,21 @@ class TestGerritChangeSource(
                 del change[key]
             self.assertEqual(change, expected_change)
 
-    def override_event_received(self, s):
-        s.eventReceived = self._got_events.append
+    def override_event_received(self, s: gerritchangesource.GerritChangeSource) -> None:
+        s.eventReceived = self._got_events.append  # type: ignore[method-assign, assignment]
 
-    def assert_events_received(self, events):
+    def assert_events_received(self, events: list[dict[str, Any]]) -> None:
         self.assertEqual(self._got_events, events)
 
     # tests
 
     @defer.inlineCallbacks
-    def test_describe(self):
+    def test_describe(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit('somehost', 'someuser')
         self.assertSubstring("GerritChangeSource", s.describe())
 
     @defer.inlineCallbacks
-    def test_name(self):
+    def test_name(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit('somehost', 'someuser')
         self.assertEqual("GerritChangeSource:someuser@somehost:29418", s.name)
 
@@ -214,19 +229,19 @@ class TestGerritChangeSource(
     }
 
     @defer.inlineCallbacks
-    def test_line_received_patchset_created(self):
+    def test_line_received_patchset_created(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized('somehost', 'someuser')
         yield s._line_received_stream(json.dumps(self.patchset_created_event))
 
         self.assert_changes([self.expected_change_patchset_created], ignore_keys=['properties'])
 
     @defer.inlineCallbacks
-    def test_line_received_patchset_created_props(self):
+    def test_line_received_patchset_created_props(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized('somehost', 'someuser')
         yield s._line_received_stream(json.dumps(self.patchset_created_event))
 
         change = copy.deepcopy(self.expected_change_patchset_created)
-        change['properties'] = {
+        change['properties'] = {  # type: ignore[assignment]
             'event.change.branch': 'master',
             'event.change.commitMessage': 'test1\n\nChange-Id: I21234123412341234123412341234\n',
             'event.change.createdOn': 1627214047,
@@ -325,7 +340,7 @@ class TestGerritChangeSource(
     }
 
     @defer.inlineCallbacks
-    def test_line_received_comment_added(self):
+    def test_line_received_comment_added(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized(
             'somehost', 'someuser', handled_events=["comment-added"]
         )
@@ -334,7 +349,7 @@ class TestGerritChangeSource(
         self.assert_changes([self.expected_change_comment_added], ignore_keys=['properties'])
 
     @defer.inlineCallbacks
-    def test_line_received_ref_updated(self):
+    def test_line_received_ref_updated(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized('somehost', 'someuser')
         yield s._line_received_stream(
             json.dumps({
@@ -386,7 +401,7 @@ class TestGerritChangeSource(
         )
 
     @defer.inlineCallbacks
-    def test_line_received_ref_updated_for_change(self):
+    def test_line_received_ref_updated_for_change(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized('somehost', 'someuser')
         yield s._line_received_stream(
             json.dumps({
@@ -408,7 +423,7 @@ class TestGerritChangeSource(
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def test_duplicate_non_source_events_not_ignored(self):
+    def test_duplicate_non_source_events_not_ignored(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized(
             'somehost',
             'someuser',
@@ -421,7 +436,7 @@ class TestGerritChangeSource(
         self.assertEqual(len(self.master.data.updates.changesAdded), 2)
 
     @defer.inlineCallbacks
-    def test_malformed_events_ignored(self):
+    def test_malformed_events_ignored(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized('somehost', 'someuser')
         # "change" not in event
         yield s._line_received_stream(
@@ -466,7 +481,7 @@ class TestGerritChangeSource(
     }
 
     @defer.inlineCallbacks
-    def test_handled_events_filter_true(self):
+    def test_handled_events_filter_true(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized(
             'somehost', 'some_choosy_user', handled_events=["change-merged"]
         )
@@ -478,18 +493,22 @@ class TestGerritChangeSource(
         self.assertEqual(c["branch"], "br")
 
     @defer.inlineCallbacks
-    def test_handled_events_filter_false(self):
+    def test_handled_events_filter_false(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized('somehost', 'some_choosy_user')
         yield s._line_received_stream(json.dumps(self.change_merged_event))
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def test_custom_handler(self):
+    def test_custom_handler(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized(
             'somehost', 'some_choosy_user', handled_events=["change-merged"]
         )
 
-        def custom_handler(self, properties, event):
+        def custom_handler(
+            self: gerritchangesource.GerritChangeSource,
+            properties: dict[str, Any],
+            event: dict[str, Any],
+        ) -> defer.Deferred[None]:
             event['change']['project'] = "world"
             return self.addChangeFromEvent(properties, event)
 
@@ -517,10 +536,10 @@ class TestGerritChangeSource(
     ]
 
     @defer.inlineCallbacks
-    def test_activate(self):
+    def test_activate(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit("somehost", "someuser", debug=True)
 
-        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)  # type: ignore[arg-type]
 
         yield self.startChangeSource()
         s.activate()
@@ -530,20 +549,20 @@ class TestGerritChangeSource(
 
         self.reactor.expect_process_signalProcess(0, "KILL")
         d = self.stopChangeSource()
-        self.reactor.process_done(0, None)
+        self.reactor.process_done(0, None)  # type: ignore[arg-type]
         yield d
 
     @defer.inlineCallbacks
-    def test_failure_backoff(self):
+    def test_failure_backoff(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit("somehost", "someuser", debug=True)
 
-        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)  # type: ignore[arg-type]
 
         yield self.startChangeSource()
         s.activate()
 
         pid = 0
-        self.reactor.process_done(pid, None)
+        self.reactor.process_done(pid, None)  # type: ignore[arg-type]
         pid += 1
 
         # The check happens as follows:
@@ -555,15 +574,15 @@ class TestGerritChangeSource(
         self.reactor.advance(0.05)
         for time in [0.5, 0.5 * 1.5, 0.5 * 1.5 * 1.5, 0.5 * 1.5 * 1.5 * 1.5]:
             self.reactor.advance(time - 0.1)
-            self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+            self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)  # type: ignore[arg-type]
             self.reactor.advance(0.1)
-            self.reactor.process_done(pid, None)
+            self.reactor.process_done(pid, None)  # type: ignore[arg-type]
             pid += 1
             self.reactor.advance(0.05)
 
         yield self.stopChangeSource()
 
-    def _build_messages_to_bytes(self, timestamps):
+    def _build_messages_to_bytes(self, timestamps: Iterable[float]) -> bytes:
         messages = [
             json.dumps({
                 "type": "patchset-created",
@@ -576,7 +595,9 @@ class TestGerritChangeSource(
             out += (message + "\n").encode("utf-8")
         return out
 
-    def _set_time_to(self, year, month, day, hours, minutes, seconds):
+    def _set_time_to(
+        self, year: int, month: int, day: int, hours: int, minutes: int, seconds: int
+    ) -> None:
         self.reactor.advance(
             datetime2epoch(datetime.datetime(year, month, day, hours, minutes, seconds))
             - self.reactor.seconds()
@@ -587,7 +608,9 @@ class TestGerritChangeSource(
         ("has_no_ts_in_db", False),
     ])
     @defer.inlineCallbacks
-    def test_poll_after_broken_connection(self, name, has_ts_in_db):
+    def test_poll_after_broken_connection(
+        self, name: str, has_ts_in_db: bool
+    ) -> InlineCallbacksType[None]:
         self._set_time_to(2021, 1, 2, 3, 4, 5)
         start_time = self.reactor.seconds()
 
@@ -609,7 +632,7 @@ class TestGerritChangeSource(
 
         self.override_event_received(s)
 
-        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)  # type: ignore[arg-type]
         self.reactor.expect_process_signalProcess(0, "KILL")
 
         # Initial poll
@@ -637,7 +660,7 @@ class TestGerritChangeSource(
         )
         self.reactor.advance(40)
 
-        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)  # type: ignore[arg-type]
         self.reactor.expect_process_signalProcess(1, "KILL")
         self._http.expect(
             "get",
@@ -647,7 +670,7 @@ class TestGerritChangeSource(
         )
 
         # This is what triggers process startup
-        self.reactor.process_done(0, None)
+        self.reactor.process_done(0, None)  # type: ignore[arg-type]
 
         self.reactor.advance(2)
 
@@ -679,7 +702,7 @@ class TestGerritChangeSource(
         self.assertTrue(s._is_synchronized)
 
         d = self.stopChangeSource()
-        self.reactor.process_done(1, None)
+        self.reactor.process_done(1, None)  # type: ignore[arg-type]
         yield d
 
         yield self.assert_state(s._oid, last_event_ts=start_time + 42)
@@ -696,7 +719,7 @@ class TestGerritChangeSource(
         ])
 
     @defer.inlineCallbacks
-    def test_poll_after_broken_connection_with_message_before(self):
+    def test_poll_after_broken_connection_with_message_before(self) -> InlineCallbacksType[None]:
         self._set_time_to(2021, 1, 2, 3, 4, 5)
         start_time = self.reactor.seconds()
 
@@ -711,7 +734,7 @@ class TestGerritChangeSource(
 
         self.override_event_received(s)
 
-        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)  # type: ignore[arg-type]
         self.reactor.expect_process_signalProcess(0, "KILL")
 
         # Initial poll
@@ -761,7 +784,7 @@ class TestGerritChangeSource(
 
         self.reactor.advance(40)
 
-        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)  # type: ignore[arg-type]
         self.reactor.expect_process_signalProcess(1, "KILL")
         self._http.expect(
             "get",
@@ -771,7 +794,7 @@ class TestGerritChangeSource(
         )
 
         # This is what triggers process startup above
-        self.reactor.process_done(0, None)
+        self.reactor.process_done(0, None)  # type: ignore[arg-type]
 
         # Stream should not be made primary until there are messages flowing
         self.assertFalse(s._is_synchronized)
@@ -807,7 +830,7 @@ class TestGerritChangeSource(
         self.assertTrue(s._is_synchronized)
 
         d = self.stopChangeSource()
-        self.reactor.process_done(1, None)
+        self.reactor.process_done(1, None)  # type: ignore[arg-type]
         yield d
 
         yield self.assert_state(s._oid, last_event_ts=start_time + 42)
@@ -822,7 +845,7 @@ class TestGerritChangeSource(
         ])
 
     @defer.inlineCallbacks
-    def test_poll_after_working_connection_but_no_messages(self):
+    def test_poll_after_working_connection_but_no_messages(self) -> InlineCallbacksType[None]:
         self._set_time_to(2021, 1, 2, 3, 4, 5)
         start_time = self.reactor.seconds()
 
@@ -837,7 +860,7 @@ class TestGerritChangeSource(
 
         self.override_event_received(s)
 
-        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)
+        self.reactor.expect_spawn("ssh", self.somehost_someuser_ssh_args)  # type: ignore[arg-type]
         self.reactor.expect_process_signalProcess(0, "KILL")
 
         # Initial poll
@@ -920,7 +943,7 @@ class TestGerritChangeSource(
         self.assertTrue(s._is_synchronized)
 
         d = self.stopChangeSource()
-        self.reactor.process_done(0, None)
+        self.reactor.process_done(0, None)  # type: ignore[arg-type]
         yield d
 
         yield self.assert_state(s._oid, last_event_ts=start_time + 257)
@@ -965,7 +988,7 @@ class TestGerritChangeSource(
     query_files_failure = b'{"type":"stats","rowCount":0}'
 
     @defer.inlineCallbacks
-    def test_getFiles(self):
+    def test_getFiles(self) -> InlineCallbacksType[None]:
         s = yield self.create_gerrit_synchronized('host', 'user', gerritport=2222)
         exp_argv = [
             "ssh",
@@ -1001,7 +1024,7 @@ class TestGerritChangeSource(
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
-    def test_getFilesFromEvent(self):
+    def test_getFilesFromEvent(self) -> InlineCallbacksType[None]:
         self.expect_commands(
             ExpectMasterShell([
                 "ssh",
@@ -1045,19 +1068,19 @@ class TestGerritEventLogPoller(
     OBJECTID = 1234
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpChangeSource()
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
-    def newChangeSource(self, **kwargs):
+    def newChangeSource(self, **kwargs: Any) -> InlineCallbacksType[None]:
         auth = kwargs.pop('auth', ('log', 'pass'))
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'gerrit', auth=auth
         )
-        self.changesource = gerritchangesource.GerritEventLogPoller(
+        self.changesource = gerritchangesource.GerritEventLogPoller(  # type: ignore[assignment]
             'gerrit',
             auth=auth,
             gitBaseURL="ssh://someuser@somehost:29418",
@@ -1066,24 +1089,24 @@ class TestGerritEventLogPoller(
         )
 
     @defer.inlineCallbacks
-    def startChangeSource(self):
-        yield self.changesource.setServiceParent(self.master)
+    def startChangeSource(self) -> InlineCallbacksType[None]:
+        yield self.changesource.setServiceParent(self.master)  # type: ignore[attr-defined]
         yield self.attachChangeSource(self.changesource)
 
     @defer.inlineCallbacks
-    def test_describe(self):
+    def test_describe(self) -> InlineCallbacksType[None]:
         # describe is not used yet in buildbot nine, but it can still be useful in the future, so
         # lets implement and test it
         yield self.newChangeSource()
-        self.assertSubstring('GerritEventLogPoller', self.changesource.describe())
+        self.assertSubstring('GerritEventLogPoller', self.changesource.describe())  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_name(self):
+    def test_name(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource()
-        self.assertEqual('GerritEventLogPoller:gerrit', self.changesource.name)
+        self.assertEqual('GerritEventLogPoller:gerrit', self.changesource.name)  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_poller_uses_correct_signature(self):
+    def test_poller_uses_correct_signature(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Object(
                 id=self.OBJECTID,
@@ -1102,15 +1125,15 @@ class TestGerritEventLogPoller(
 
         yield self.startChangeSource()
 
-        d = self.changesource._poller()
+        d = self.changesource._poller()  # type: ignore[attr-defined]
         self.reactor.advance(0)
         yield d
 
-        d = self.changesource.disownServiceParent()
+        d = self.changesource.disownServiceParent()  # type: ignore[attr-defined]
         yield d
 
     @defer.inlineCallbacks
-    def test_lineReceived_patchset_created(self):
+    def test_lineReceived_patchset_created(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Object(
                 id=self.OBJECTID,
@@ -1152,7 +1175,7 @@ class TestGerritEventLogPoller(
         )
 
         yield self.startChangeSource()
-        yield self.changesource._connector.poll()
+        yield self.changesource._connector.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
@@ -1196,7 +1219,7 @@ class TestGerritEventLogPoller(
             content=self.change_revision_resp,
         )
 
-        yield self.changesource._connector.poll()
+        yield self.changesource._connector.poll()  # type: ignore[attr-defined]
         yield self.assert_state(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
 
     change_revision_dict = {
@@ -1206,7 +1229,7 @@ class TestGerritEventLogPoller(
     change_revision_resp = b')]}\n' + json.dumps(change_revision_dict).encode('utf8')
 
     @defer.inlineCallbacks
-    def test_getFiles(self):
+    def test_getFiles(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource(get_files=True)
         yield self.startChangeSource()
 
@@ -1216,11 +1239,11 @@ class TestGerritEventLogPoller(
             content=self.change_revision_resp,
         )
 
-        files = yield self.changesource.getFiles(100, 1)
+        files = yield self.changesource.getFiles(100, 1)  # type: ignore[attr-defined]
         self.assertEqual(set(files), {'/COMMIT_MSG', 'file1'})
 
     @defer.inlineCallbacks
-    def test_getFiles_handle_error(self):
+    def test_getFiles_handle_error(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource(get_files=True)
         yield self.startChangeSource()
 
@@ -1230,22 +1253,22 @@ class TestGerritEventLogPoller(
             content=b')]}\n',  # more than one line expected
         )
 
-        files = yield self.changesource.getFiles(100, 1)
+        files = yield self.changesource.getFiles(100, 1)  # type: ignore[attr-defined]
         self.assertEqual(files, [])
         self.assertEqual(len(self.flushLoggedErrors()), 1)
 
 
 class TestGerritChangeFilter(unittest.TestCase):
-    def test_event_type(self):
+    def test_event_type(self) -> None:
         props = {
             'event.type': 'patchset-created',
             'event.change.branch': 'master',
         }
 
         ch = Change(**TestGerritChangeSource.expected_change_patchset_created, properties=props)
-        f = gerritchangesource.GerritChangeFilter(branch=["master"], eventtype=["patchset-created"])
+        f = gerritchangesource.GerritChangeFilter(branch=["master"], eventtype=["patchset-created"])  # type: ignore[arg-type]
         self.assertTrue(f.filter_change(ch))
-        f = gerritchangesource.GerritChangeFilter(branch="master2", eventtype=["patchset-created"])
+        f = gerritchangesource.GerritChangeFilter(branch="master2", eventtype=["patchset-created"])  # type: ignore[arg-type]
         self.assertFalse(f.filter_change(ch))
         f = gerritchangesource.GerritChangeFilter(branch="master", eventtype="ref-updated")
         self.assertFalse(f.filter_change(ch))
@@ -1255,20 +1278,20 @@ class TestGerritChangeFilter(unittest.TestCase):
             'event.change.branch in [\'master\']>',
         )
 
-    def create_props(self, branch, event_type):
+    def create_props(self, branch: str, event_type: str) -> dict[str, str]:
         return {
             'event.type': event_type,
             'event.change.branch': branch,
         }
 
-    def test_event_type_re(self):
+    def test_event_type_re(self) -> None:
         f = gerritchangesource.GerritChangeFilter(eventtype_re="patchset-.*")
         self.assertTrue(
             f.filter_change(Change(properties=self.create_props("br", "patchset-created")))
         )
         self.assertFalse(f.filter_change(Change(properties=self.create_props("br", "ref-updated"))))
 
-    def test_event_type_fn(self):
+    def test_event_type_fn(self) -> None:
         f = gerritchangesource.GerritChangeFilter(eventtype_fn=lambda t: t == "patchset-created")
         self.assertTrue(
             f.filter_change(Change(properties=self.create_props("br", "patchset-created")))
@@ -1276,7 +1299,7 @@ class TestGerritChangeFilter(unittest.TestCase):
         self.assertFalse(f.filter_change(Change(properties=self.create_props("br", "ref-updated"))))
         self.assertEqual(repr(f), '<GerritChangeFilter on <lambda>(eventtype)>')
 
-    def test_branch_fn(self):
+    def test_branch_fn(self) -> None:
         f = gerritchangesource.GerritChangeFilter(branch_fn=lambda t: t == "br0")
         self.assertTrue(
             f.filter_change(Change(properties=self.create_props("br0", "patchset-created")))
