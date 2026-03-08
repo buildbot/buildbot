@@ -156,7 +156,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot.test.integration.interop.test_interruptcommand",
       "buildbot.test.integration.interop.test_setpropertyfromcommand",
       "buildbot.test.integration.interop.test_transfer",
       "buildbot.test.integration.interop.test_worker_reconnect",
