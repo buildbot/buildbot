@@ -13,16 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class SecretsConfig(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self, use_with=False):
+    def setup_config(self, use_with: bool = False) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -46,7 +53,7 @@ class SecretsConfig(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_secret(self):
+    def test_secret(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -54,7 +61,7 @@ class SecretsConfig(RunMasterBase):
         self.assertTrue(res)
 
     @defer.inlineCallbacks
-    def test_withsecrets(self):
+    def test_withsecrets(self) -> InlineCallbacksType[None]:
         yield self.setup_config(use_with=True)
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
