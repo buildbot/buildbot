@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from packaging.version import parse as parse_version
 from twisted import __version__ as twistedVersion
 from twisted.internet import defer
@@ -21,12 +25,15 @@ from twisted.internet import defer
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 # This integration test creates a master and worker environment,
 # with one builder and a shellcommand step, which use usePTY
 class ShellMaster(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self, usePTY):
+    def setup_config(self, usePTY: bool) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -47,7 +54,7 @@ class ShellMaster(RunMasterBase):
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
-    def test_usePTY(self):
+    def test_usePTY(self) -> InlineCallbacksType[None]:
         yield self.setup_config(usePTY=True)
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
@@ -67,7 +74,7 @@ class ShellMaster(RunMasterBase):
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
-    def test_NOusePTY(self):
+    def test_NOusePTY(self) -> InlineCallbacksType[None]:
         yield self.setup_config(usePTY=False)
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
