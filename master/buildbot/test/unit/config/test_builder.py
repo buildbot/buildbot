@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.config.builder import BuilderConfig
@@ -28,75 +30,75 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
 
     # utils
 
-    def assertAttributes(self, cfg, **expected):
+    def assertAttributes(self, cfg: BuilderConfig, **expected: str | list | dict | None) -> None:
         got = {attr: getattr(cfg, attr) for attr, exp in expected.items()}
         self.assertEqual(got, expected)
 
     # tests
 
-    def test_no_name(self):
+    def test_no_name(self) -> None:
         with self.assertRaisesConfigError("builder's name is required"):
             BuilderConfig(factory=self.factory, workernames=['a'])
 
-    def test_reserved_name(self):
+    def test_reserved_name(self) -> None:
         with self.assertRaisesConfigError("builder names must not start with an underscore: '_a'"):
             BuilderConfig(name='_a', factory=self.factory, workernames=['a'])
 
-    def test_utf8_name(self):
+    def test_utf8_name(self) -> None:
         with self.assertRaisesConfigError("builder names must be unicode or ASCII"):
             BuilderConfig(name="\N{SNOWMAN}".encode(), factory=self.factory, workernames=['a'])
 
-    def test_no_factory(self):
+    def test_no_factory(self) -> None:
         with self.assertRaisesConfigError("builder 'a': has no factory"):
             BuilderConfig(name='a', workernames=['a'])
 
-    def test_wrong_type_factory(self):
+    def test_wrong_type_factory(self) -> None:
         with self.assertRaisesConfigError("builder 'a': factory is not"):
             BuilderConfig(factory=[], name='a', workernames=['a'])
 
-    def test_no_workernames(self):
+    def test_no_workernames(self) -> None:
         with self.assertRaisesConfigError("builder 'a': at least one workername is required"):
             BuilderConfig(name='a', factory=self.factory)
 
-    def test_bogus_workernames(self):
+    def test_bogus_workernames(self) -> None:
         with self.assertRaisesConfigError("workernames must be a list or a string"):
-            BuilderConfig(name='a', workernames={1: 2}, factory=self.factory)
+            BuilderConfig(name='a', workernames={1: 2}, factory=self.factory)  # type: ignore[arg-type]
 
-    def test_bogus_workername(self):
+    def test_bogus_workername(self) -> None:
         with self.assertRaisesConfigError("workername must be a string"):
-            BuilderConfig(name='a', workername=1, factory=self.factory)
+            BuilderConfig(name='a', workername=1, factory=self.factory)  # type: ignore[arg-type]
 
-    def test_tags_must_be_list(self):
+    def test_tags_must_be_list(self) -> None:
         with self.assertRaisesConfigError("tags must be a list"):
-            BuilderConfig(tags='abc', name='a', workernames=['a'], factory=self.factory)
+            BuilderConfig(tags='abc', name='a', workernames=['a'], factory=self.factory)  # type: ignore[arg-type]
 
-    def test_tags_must_be_list_of_str(self):
+    def test_tags_must_be_list_of_str(self) -> None:
         with self.assertRaisesConfigError("tags list contains something that is not a string"):
-            BuilderConfig(tags=['abc', 13], name='a', workernames=['a'], factory=self.factory)
+            BuilderConfig(tags=['abc', 13], name='a', workernames=['a'], factory=self.factory)  # type: ignore[list-item]
 
-    def test_tags_no_tag_dupes(self):
+    def test_tags_no_tag_dupes(self) -> None:
         with self.assertRaisesConfigError("builder 'a': tags list contains duplicate tags: abc"):
             BuilderConfig(
                 tags=['abc', 'bca', 'abc'], name='a', workernames=['a'], factory=self.factory
             )
 
-    def test_inv_nextWorker(self):
+    def test_inv_nextWorker(self) -> None:
         with self.assertRaisesConfigError("nextWorker must be a callable"):
-            BuilderConfig(nextWorker="foo", name="a", workernames=['a'], factory=self.factory)
+            BuilderConfig(nextWorker="foo", name="a", workernames=['a'], factory=self.factory)  # type: ignore[arg-type]
 
-    def test_inv_nextBuild(self):
+    def test_inv_nextBuild(self) -> None:
         with self.assertRaisesConfigError("nextBuild must be a callable"):
-            BuilderConfig(nextBuild="foo", name="a", workernames=['a'], factory=self.factory)
+            BuilderConfig(nextBuild="foo", name="a", workernames=['a'], factory=self.factory)  # type: ignore[arg-type]
 
-    def test_inv_canStartBuild(self):
+    def test_inv_canStartBuild(self) -> None:
         with self.assertRaisesConfigError("canStartBuild must be a callable"):
-            BuilderConfig(canStartBuild="foo", name="a", workernames=['a'], factory=self.factory)
+            BuilderConfig(canStartBuild="foo", name="a", workernames=['a'], factory=self.factory)  # type: ignore[arg-type]
 
-    def test_inv_env(self):
+    def test_inv_env(self) -> None:
         with self.assertRaisesConfigError("builder's env must be a dictionary"):
-            BuilderConfig(env="foo", name="a", workernames=['a'], factory=self.factory)
+            BuilderConfig(env="foo", name="a", workernames=['a'], factory=self.factory)  # type: ignore[arg-type]
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         cfg = BuilderConfig(name='a b c', workername='a', factory=self.factory)
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(
@@ -114,12 +116,12 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
             description=None,
         )
 
-    def test_unicode_name(self):
+    def test_unicode_name(self) -> None:
         cfg = BuilderConfig(name='a \N{SNOWMAN} c', workername='a', factory=self.factory)
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg, name='a \N{SNOWMAN} c')
 
-    def test_args(self):
+    def test_args(self) -> None:
         cfg = BuilderConfig(
             name='b',
             workername='s1',
@@ -133,7 +135,7 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
             locks=['l'],
             env={"x": 10},
             properties={"y": 20},
-            collapseRequests='cr',
+            collapseRequests='cr',  # type: ignore[arg-type]
             description='buzz',
         )
         self.assertIdentical(cfg.factory, self.factory)
@@ -151,13 +153,13 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
             description='buzz',
         )
 
-    def test_too_long_property(self):
+    def test_too_long_property(self) -> None:
         with self.assertRaisesConfigError("exceeds maximum length of"):
             BuilderConfig(
                 name="a", workernames=['a'], factory=self.factory, properties={'a' * 257: 'value'}
             )
 
-    def test_too_long_default_property(self):
+    def test_too_long_default_property(self) -> None:
         with self.assertRaisesConfigError("exceeds maximum length of"):
             BuilderConfig(
                 name="a",
@@ -166,13 +168,13 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
                 defaultProperties={'a' * 257: 'value'},
             )
 
-    def test_description_wrong_format(self):
+    def test_description_wrong_format(self) -> None:
         with self.assertRaisesConfigError("builder description format must be None"):
             BuilderConfig(
                 name="a", workernames=['a'], factory=self.factory, description_format="unknown"
             )
 
-    def test_getConfigDict(self):
+    def test_getConfigDict(self) -> None:
         ns = lambda: 'ns'
         nb = lambda: 'nb'
         cfg = BuilderConfig(
@@ -188,7 +190,7 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
             locks=['l'],
             env={"x": 10},
             properties={"y": 20},
-            collapseRequests='cr',
+            collapseRequests='cr',  # type: ignore[arg-type]
             description='buzz',
         )
         self.assertEqual(
@@ -210,10 +212,13 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
             },
         )
 
-    def test_getConfigDict_collapseRequests(self):
+    def test_getConfigDict_collapseRequests(self) -> None:
         for cr in (False, lambda a, b, c: False):
             cfg = BuilderConfig(
-                name='b', collapseRequests=cr, factory=self.factory, workername='s1'
+                name='b',
+                collapseRequests=cr,  # type: ignore[arg-type]
+                factory=self.factory,
+                workername='s1',
             )
             self.assertEqual(
                 cfg.getConfigDict(),
@@ -227,41 +232,41 @@ class BuilderConfigTests(ConfigErrorsMixin, unittest.TestCase):
                 },
             )
 
-    def test_init_workername_keyword(self):
+    def test_init_workername_keyword(self) -> None:
         cfg = BuilderConfig(name='a b c', workername='a', factory=self.factory)
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workername_positional(self):
+    def test_init_workername_positional(self) -> None:
         with assertNotProducesWarnings(DeprecatedApiWarning):
             cfg = BuilderConfig('a b c', 'a', factory=self.factory)
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workernames_keyword(self):
+    def test_init_workernames_keyword(self) -> None:
         cfg = BuilderConfig(name='a b c', workernames=['a'], factory=self.factory)
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workernames_positional(self):
+    def test_init_workernames_positional(self) -> None:
         with assertNotProducesWarnings(DeprecatedApiWarning):
             cfg = BuilderConfig('a b c', None, ['a'], factory=self.factory)
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workerbuilddir_keyword(self):
+    def test_init_workerbuilddir_keyword(self) -> None:
         cfg = BuilderConfig(
             name='a b c', workername='a', factory=self.factory, workerbuilddir="dir"
         )
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
-    def test_init_workerbuilddir_positional(self):
+    def test_init_workerbuilddir_positional(self) -> None:
         with assertNotProducesWarnings(DeprecatedApiWarning):
             cfg = BuilderConfig('a b c', 'a', None, None, 'dir', factory=self.factory)
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
-    def test_init_next_worker_keyword(self):
+    def test_init_next_worker_keyword(self) -> None:
         f = lambda: None
         cfg = BuilderConfig(name='a b c', workername='a', factory=self.factory, nextWorker=f)
         self.assertEqual(cfg.nextWorker, f)
