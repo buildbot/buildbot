@@ -24,6 +24,7 @@ import inspect
 import os
 import sys
 
+from setuptools import find_packages
 from setuptools.command.sdist import sdist
 from setuptools_scm import get_version
 
@@ -90,68 +91,22 @@ __file__ = inspect.getframeinfo(inspect.currentframe()).filename
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
     long_description = long_d_f.read()
 
-setup_args = {
-    'packages': [
-        "buildbot",
-        "buildbot.configurators",
-        "buildbot.worker",
-        "buildbot.worker.protocols",
-        "buildbot.worker.protocols.manager",
-        "buildbot.changes",
-        "buildbot.clients",
-        "buildbot.config",
-        "buildbot.data",
-        "buildbot.db",
-        "buildbot.db.compression",
-        "buildbot.db.migrations",
-        "buildbot.db.migrations.versions",
-        "buildbot.db.types",
-        "buildbot.machine",
-        "buildbot.monkeypatches",
-        "buildbot.mq",
-        "buildbot.plugins",
-        "buildbot.process",
-        "buildbot.process.users",
-        "buildbot.reporters",
-        "buildbot.reporters.generators",
-        "buildbot.schedulers",
-        "buildbot.scripts",
-        "buildbot.secrets",
-        "buildbot.secrets.providers",
-        "buildbot.spec",
-        "buildbot.spec.types",
-        "buildbot.statistics",
-        "buildbot.statistics.storage_backends",
-        "buildbot.steps",
-        "buildbot.steps.package",
-        "buildbot.steps.package.deb",
-        "buildbot.steps.package.rpm",
-        "buildbot.steps.source",
-        "buildbot.util",
-        "buildbot.wamp",
-        "buildbot.www",
-        "buildbot.www.hooks",
-        "buildbot.www.authz",
-        "buildbot.test",
-        "buildbot.test.util",
-        "buildbot.test.fake",
-        "buildbot.test.fakedb",
-        "buildbot.test.integration.pki",
-        "buildbot.test.integration.pki.ca",
-        "buildbot.test.unit.test_templates_dir",
-        "buildbot.test.unit.test_templates_dir.plugin",
+packages = find_packages(
+    exclude=[
+        # skip tests for wheels (save 50% of the archive)
+        "buildbot.test.fuzz*",
+        "buildbot.test.integration*",
+        "buildbot.test.integration.interop*",
+        "buildbot.test.regressions*",
+        "buildbot.test.unit*",
     ]
-    + (
-        []
-        if BUILDING_WHEEL
-        else [  # skip tests for wheels (save 50% of the archive)
-            "buildbot.test.fuzz",
-            "buildbot.test.integration",
-            "buildbot.test.integration.interop",
-            "buildbot.test.regressions",
-            "buildbot.test.unit",
-        ]
-    ),
+    if BUILDING_WHEEL
+    else [],
+)
+packages.sort()
+
+setup_args = {
+    'packages': packages,
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
     'data_files': [("buildbot", [])],
