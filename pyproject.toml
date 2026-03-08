@@ -187,7 +187,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.db.test_test_results",
       "buildbot.test.unit.db.test_users",
       "buildbot.test.unit.db.test_workers",
-      "buildbot.test.unit.process.test_build",
       "buildbot.test.unit.process.test_builder",
       "buildbot.test.unit.process.test_buildrequest",
       "buildbot.test.unit.process.test_buildrequestdistributor",
