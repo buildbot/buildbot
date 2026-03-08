@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import Any
 from unittest import mock
 
@@ -29,13 +32,18 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = builds.BuildEndpoint
     resourceTypeClass = builds.Build
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='builder77'),
@@ -58,45 +66,45 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing(self):
+    def test_get_existing(self) -> InlineCallbacksType[None]:
         build = yield self.callGet(('builds', 14))
         self.validateData(build)
         self.assertEqual(build['number'], 4)
 
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         build = yield self.callGet(('builds', 9999))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
-    def test_get_missing_builder_number(self):
+    def test_get_missing_builder_number(self) -> InlineCallbacksType[None]:
         build = yield self.callGet(('builders', 999, 'builds', 4))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
-    def test_get_builder_missing_number(self):
+    def test_get_builder_missing_number(self) -> InlineCallbacksType[None]:
         build = yield self.callGet(('builders', 77, 'builds', 44))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
-    def test_get_builder_number(self):
+    def test_get_builder_number(self) -> InlineCallbacksType[None]:
         build = yield self.callGet(('builders', 77, 'builds', 5))
         self.validateData(build)
         self.assertEqual(build['buildid'], 15)
 
     @defer.inlineCallbacks
-    def test_get_buildername_number(self):
+    def test_get_buildername_number(self) -> InlineCallbacksType[None]:
         build = yield self.callGet(('builders', 'builder77', 'builds', 5))
         self.validateData(build)
         self.assertEqual(build['buildid'], 15)
 
     @defer.inlineCallbacks
-    def test_get_buildername_not_existing_number(self):
+    def test_get_buildername_not_existing_number(self) -> InlineCallbacksType[None]:
         build = yield self.callGet(('builders', 'builder77_nope', 'builds', 5))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
-    def test_properties_injection(self):
+    def test_properties_injection(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.OptimisedResultSpec(
             properties=[resultspec.Property(b'property', 'eq', ['reason'])]
         )
@@ -105,21 +113,21 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertIn('reason', build['properties'])
 
     @defer.inlineCallbacks
-    def test_action_stop(self):
+    def test_action_stop(self) -> InlineCallbacksType[None]:
         yield self.callControl("stop", {}, ('builders', 77, 'builds', 5))
         self.master.mq.assertProductions([
             (('control', 'builds', '15', 'stop'), {'reason': 'no reason'})
         ])
 
     @defer.inlineCallbacks
-    def test_action_stop_reason(self):
+    def test_action_stop_reason(self) -> InlineCallbacksType[None]:
         yield self.callControl("stop", {'reason': 'because'}, ('builders', 77, 'builds', 5))
         self.master.mq.assertProductions([
             (('control', 'builds', '15', 'stop'), {'reason': 'because'})
         ])
 
     @defer.inlineCallbacks
-    def test_action_rebuild(self):
+    def test_action_rebuild(self) -> InlineCallbacksType[None]:
         self.patch(
             self.master.data.updates,
             "rebuildBuildrequest",
@@ -137,7 +145,7 @@ class BuildTriggeredBuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = builds.Build
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Master(id=88),
@@ -161,12 +169,12 @@ class BuildTriggeredBuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_not_existing(self):
+    def test_get_not_existing(self) -> InlineCallbacksType[None]:
         builds = yield self.callGet(('builds', 50, 'triggered_builds'))
         self.assertEqual(builds, [])
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_get(self) -> InlineCallbacksType[None]:
         builds = yield self.callGet(('builds', 51, 'triggered_builds'))
 
         for build in builds:
@@ -180,7 +188,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = builds.Build
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='builder77'),
@@ -223,7 +231,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_all(self):
+    def test_get_all(self) -> InlineCallbacksType[None]:
         builds = yield self.callGet(('builds',))
 
         for build in builds:
@@ -232,7 +240,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4, 5, 6])
 
     @defer.inlineCallbacks
-    def test_get_builder(self):
+    def test_get_builder(self) -> InlineCallbacksType[None]:
         builds = yield self.callGet(('builders', 78, 'builds'))
 
         for build in builds:
@@ -241,7 +249,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [5])
 
     @defer.inlineCallbacks
-    def test_get_buildername(self):
+    def test_get_buildername(self) -> InlineCallbacksType[None]:
         builds = yield self.callGet(('builders', 'builder78', 'builds'))
 
         for build in builds:
@@ -250,12 +258,12 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [5])
 
     @defer.inlineCallbacks
-    def test_get_buildername_not_existing(self):
+    def test_get_buildername_not_existing(self) -> InlineCallbacksType[None]:
         builds = yield self.callGet(('builders', 'builder78_nope', 'builds'))
         self.assertEqual(builds, [])
 
     @defer.inlineCallbacks
-    def test_get_buildrequest(self):
+    def test_get_buildrequest(self) -> InlineCallbacksType[None]:
         builds = yield self.callGet(('buildrequests', 82, 'builds'))
 
         for build in builds:
@@ -264,12 +272,12 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
-    def test_get_buildrequest_not_existing(self):
+    def test_get_buildrequest_not_existing(self) -> InlineCallbacksType[None]:
         builds = yield self.callGet(('buildrequests', 899, 'builds'))
         self.assertEqual(builds, [])
 
     @defer.inlineCallbacks
-    def test_get_buildrequest_via_filter(self):
+    def test_get_buildrequest_via_filter(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('buildrequestid', 'eq', [82])]
         )
@@ -281,7 +289,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
-    def test_get_buildrequest_via_filter_with_string(self):
+    def test_get_buildrequest_via_filter_with_string(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('buildrequestid', 'eq', ['82'])]
         )
@@ -293,7 +301,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
-    def test_get_worker(self):
+    def test_get_worker(self) -> InlineCallbacksType[None]:
         builds = yield self.callGet(('workers', 13, 'builds'))
 
         for build in builds:
@@ -302,7 +310,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
-    def test_get_complete(self):
+    def test_get_complete(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('complete', 'eq', [False])]
         )
@@ -314,7 +322,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
-    def test_get_complete_at(self):
+    def test_get_complete_at(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('complete_at', 'eq', [None])]
         )
@@ -326,7 +334,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
-    def test_properties_injection(self):
+    def test_properties_injection(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.OptimisedResultSpec(
             properties=[resultspec.Property(b'property', 'eq', ['reason'])]
         )
@@ -338,7 +346,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertTrue(any(('reason' in b['properties']) for b in builds))
 
     @defer.inlineCallbacks
-    def test_get_filter_eq(self):
+    def test_get_filter_eq(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('builderid', 'eq', [78, 79])]
         )
@@ -350,7 +358,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [5, 6])
 
     @defer.inlineCallbacks
-    def test_get_filter_ne(self):
+    def test_get_filter_ne(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('builderid', 'ne', [78, 79])]
         )
@@ -380,7 +388,7 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     }
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = builds.Build(self.master)
@@ -400,14 +408,14 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def do_test_callthrough(
         self,
-        dbMethodName,
-        method,
-        exp_retval=(1, 2),
-        exp_args=None,
-        exp_kwargs=None,
-        *args,
-        **kwargs,
-    ):
+        dbMethodName: str,
+        method: Callable[..., defer.Deferred[Any]],
+        exp_retval: tuple[int, int] | None = (1, 2),
+        exp_args: tuple[Any, ...] | None = None,
+        exp_kwargs: dict[str, Any] | None = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         m = mock.Mock(return_value=defer.succeed(exp_retval))
         setattr(self.master.db.builds, dbMethodName, m)
         res = yield method(*args, **kwargs)
@@ -415,22 +423,28 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
         m.assert_called_with(*(exp_args or args), **(exp_kwargs or kwargs))
 
     @defer.inlineCallbacks
-    def do_test_event(self, method, exp_events=None, *args, **kwargs):
+    def do_test_event(
+        self,
+        method: Callable[..., defer.Deferred[None]],
+        exp_events: list[tuple[tuple[str, ...], dict[str, Any]]] | None = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         self.reactor.advance(1)
         if exp_events is None:
             exp_events = []
         yield method(*args, **kwargs)
         self.master.mq.assertProductions(exp_events)
 
-    def test_signature_addBuild(self):
+    def test_signature_addBuild(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.addBuild,  # fake
             self.rtype.addBuild,
         )  # real
-        def addBuild(self, builderid, buildrequestid, workerid):
+        def addBuild(self: object, builderid: int, buildrequestid: int, workerid: int) -> None:
             pass
 
-    def test_addBuild(self):
+    def test_addBuild(self) -> defer.Deferred[None]:
         return self.do_test_callthrough(
             'addBuild',
             self.rtype.addBuild,
@@ -446,9 +460,9 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def test_addBuildEvent(self):
+    def test_addBuildEvent(self) -> defer.Deferred[None]:
         @defer.inlineCallbacks
-        def addBuild(*args, **kwargs):
+        def addBuild(*args: Any, **kwargs: Any) -> InlineCallbacksType[None]:
             buildid, _ = yield self.rtype.addBuild(*args, **kwargs)
             yield self.rtype.generateNewBuildEvent(buildid)
             return None
@@ -465,27 +479,27 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    def test_signature_setBuildStateString(self):
+    def test_signature_setBuildStateString(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.setBuildStateString,  # fake
             self.rtype.setBuildStateString,
         )  # real
-        def setBuildStateString(self, buildid, state_string):
+        def setBuildStateString(self: object, buildid: int, state_string: str) -> None:
             pass
 
-    def test_setBuildStateString(self):
+    def test_setBuildStateString(self) -> defer.Deferred[None]:
         return self.do_test_callthrough(
             'setBuildStateString', self.rtype.setBuildStateString, buildid=10, state_string='a b'
         )
 
-    def test_signature_add_build_locks_duration(self):
+    def test_signature_add_build_locks_duration(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.add_build_locks_duration, self.rtype.add_build_locks_duration
         )
-        def add_build_locks_duration(self, buildid, duration_s):
+        def add_build_locks_duration(self: object, buildid: int, duration_s: int) -> None:
             pass
 
-    def test_add_build_locks_duration(self):
+    def test_add_build_locks_duration(self) -> defer.Deferred[None]:
         return self.do_test_callthrough(
             "add_build_locks_duration",
             self.rtype.add_build_locks_duration,
@@ -494,15 +508,15 @@ class Build(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             duration_s=5,
         )
 
-    def test_signature_finishBuild(self):
+    def test_signature_finishBuild(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.finishBuild,  # fake
             self.rtype.finishBuild,
         )  # real
-        def finishBuild(self, buildid, results):
+        def finishBuild(self: object, buildid: int, results: int) -> None:
             pass
 
-    def test_finishBuild(self):
+    def test_finishBuild(self) -> defer.Deferred[None]:
         return self.do_test_callthrough(
             'finishBuild', self.rtype.finishBuild, buildid=15, results=3
         )
