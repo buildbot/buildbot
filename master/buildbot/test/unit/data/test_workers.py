@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -26,6 +30,9 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 testData = [
     fakedb.Builder(id=40, name='b1'),
@@ -47,11 +54,11 @@ testData = [
 ]
 
 
-def configuredOnKey(worker):
+def configuredOnKey(worker: dict[str, Any]) -> tuple[int, int]:
     return (worker.get('masterid', 0), worker.get('builderid', 0))
 
 
-def _filt(bs, builderid, masterid):
+def _filt(bs: dict[str, Any], builderid: int | None, masterid: int | None) -> dict[str, Any]:
     bs['connected_to'] = sorted([
         d for d in bs['connected_to'] if not masterid or masterid == d['masterid']
     ])
@@ -67,7 +74,7 @@ def _filt(bs, builderid, masterid):
     return bs
 
 
-def w1(builderid=None, masterid=None):
+def w1(builderid: int | None = None, masterid: int | None = None) -> dict[str, Any]:
     return _filt(
         {
             'workerid': 1,
@@ -92,7 +99,7 @@ def w1(builderid=None, masterid=None):
     )
 
 
-def w2(builderid=None, masterid=None):
+def w2(builderid: int | None = None, masterid: int | None = None) -> dict[str, Any]:
     return _filt(
         {
             'workerid': 2,
@@ -123,12 +130,12 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = workers.Worker
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data(testData)
 
     @defer.inlineCallbacks
-    def test_get_existing(self):
+    def test_get_existing(self) -> InlineCallbacksType[None]:
         worker = yield self.callGet(('workers', 2))
 
         self.validateData(worker)
@@ -136,7 +143,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(worker, w2())
 
     @defer.inlineCallbacks
-    def test_get_existing_name(self):
+    def test_get_existing_name(self) -> InlineCallbacksType[None]:
         worker = yield self.callGet(('workers', 'linux'))
 
         self.validateData(worker)
@@ -144,7 +151,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(worker, w1())
 
     @defer.inlineCallbacks
-    def test_get_existing_masterid(self):
+    def test_get_existing_masterid(self) -> InlineCallbacksType[None]:
         worker = yield self.callGet(('masters', 14, 'workers', 2))
 
         self.validateData(worker)
@@ -152,7 +159,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(worker, w2(masterid=14))
 
     @defer.inlineCallbacks
-    def test_get_existing_builderid(self):
+    def test_get_existing_builderid(self) -> InlineCallbacksType[None]:
         worker = yield self.callGet(('builders', 40, 'workers', 2))
 
         self.validateData(worker)
@@ -160,7 +167,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(worker, w2(builderid=40))
 
     @defer.inlineCallbacks
-    def test_get_existing_masterid_builderid(self):
+    def test_get_existing_masterid_builderid(self) -> InlineCallbacksType[None]:
         worker = yield self.callGet(('masters', 13, 'builders', 40, 'workers', 2))
 
         self.validateData(worker)
@@ -168,13 +175,13 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(worker, w2(masterid=13, builderid=40))
 
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         worker = yield self.callGet(('workers', 99))
 
         self.assertEqual(worker, None)
 
     @defer.inlineCallbacks
-    def test_set_worker_paused(self):
+    def test_set_worker_paused(self) -> InlineCallbacksType[None]:
         yield self.master.data.updates.set_worker_paused(2, True, "reason")
         worker = yield self.callGet(('workers', 2))
         self.validateData(worker)
@@ -182,14 +189,14 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(worker["pause_reason"], "reason")
 
     @defer.inlineCallbacks
-    def test_set_worker_graceful(self):
+    def test_set_worker_graceful(self) -> InlineCallbacksType[None]:
         yield self.master.data.updates.set_worker_graceful(2, True)
         worker = yield self.callGet(('workers', 2))
         self.validateData(worker)
         self.assertEqual(worker['graceful'], True)
 
     @defer.inlineCallbacks
-    def test_actions(self):
+    def test_actions(self) -> InlineCallbacksType[None]:
         for action in ("stop", "pause", "unpause", "kill"):
             yield self.callControl(action, {}, ('masters', 13, 'builders', 40, 'workers', 2))
             self.master.mq.assertProductions([
@@ -197,7 +204,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ])
 
     @defer.inlineCallbacks
-    def test_bad_actions(self):
+    def test_bad_actions(self) -> InlineCallbacksType[None]:
         with self.assertRaises(exceptions.InvalidControlException):
             yield self.callControl("bad_action", {}, ('masters', 13, 'builders', 40, 'workers', 2))
 
@@ -207,12 +214,12 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = workers.Worker
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data(testData)
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_get(self) -> InlineCallbacksType[None]:
         workers = yield self.callGet(('workers',))
 
         for b in workers:
@@ -223,7 +230,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_masterid(self):
+    def test_get_masterid(self) -> InlineCallbacksType[None]:
         workers = yield self.callGet((
             'masters',
             '13',
@@ -239,7 +246,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_builderid(self):
+    def test_get_builderid(self) -> InlineCallbacksType[None]:
         workers = yield self.callGet((
             'builders',
             '41',
@@ -254,7 +261,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_masterid_builderid(self):
+    def test_get_masterid_builderid(self) -> InlineCallbacksType[None]:
         workers = yield self.callGet((
             'masters',
             '13',
@@ -272,7 +279,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_set_worker_paused_find_by_paused(self):
+    def test_set_worker_paused_find_by_paused(self) -> InlineCallbacksType[None]:
         yield self.master.data.updates.set_worker_paused(2, True, None)
         resultSpec = resultspec.OptimisedResultSpec(
             filters=[resultspec.Filter('paused', 'eq', [True])]
@@ -287,7 +294,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class Worker(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = workers.Worker(self.master)
@@ -296,40 +303,44 @@ class Worker(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             fakedb.Master(id=14),
         ])
 
-    def test_signature_findWorkerId(self):
+    def test_signature_findWorkerId(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.findWorkerId,  # fake
             self.rtype.findWorkerId,
         )  # real
-        def findWorkerId(self, name):
+        def findWorkerId(self: object, name: str) -> None:
             pass
 
-    def test_signature_workerConfigured(self):
+    def test_signature_workerConfigured(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.workerConfigured,  # fake
             self.rtype.workerConfigured,
         )  # real
-        def workerConfigured(self, workerid, masterid, builderids):
+        def workerConfigured(
+            self: object, workerid: int, masterid: int, builderids: list[int]
+        ) -> None:
             pass
 
-    def test_signature_set_worker_paused(self):
+    def test_signature_set_worker_paused(self) -> None:
         @self.assertArgSpecMatches(self.master.data.updates.set_worker_paused)
-        def set_worker_paused(self, workerid, paused, pause_reason=None):
+        def set_worker_paused(
+            self: object, workerid: int, paused: bool, pause_reason: str | None = None
+        ) -> None:
             pass
 
-    def test_signature_set_worker_graceful(self):
+    def test_signature_set_worker_graceful(self) -> None:
         @self.assertArgSpecMatches(self.master.data.updates.set_worker_graceful)
-        def set_worker_graceful(self, workerid, graceful):
+        def set_worker_graceful(self: object, workerid: int, graceful: bool) -> None:
             pass
 
-    def test_findWorkerId(self):
+    def test_findWorkerId(self) -> None:
         # this just passes through to the db method, so test that
         rv = defer.succeed(None)
         self.master.db.workers.findWorkerId = mock.Mock(return_value=rv)
         self.assertIdentical(self.rtype.findWorkerId('foo'), rv)
 
-    def test_findWorkerId_not_id(self):
+    def test_findWorkerId_not_id(self) -> None:
         with self.assertRaises(ValueError):
-            self.rtype.findWorkerId(b'foo')
+            self.rtype.findWorkerId(b'foo')  # type: ignore[arg-type]
         with self.assertRaises(ValueError):
             self.rtype.findWorkerId('123/foo')
