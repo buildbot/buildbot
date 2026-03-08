@@ -13,12 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import asyncio
 import multiprocessing
 import os
 import signal
 import socket
 import sys
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -32,14 +36,19 @@ from ..interop import test_setpropertyfromcommand
 from ..interop import test_transfer
 from ..interop import test_worker_reconnect
 
+if TYPE_CHECKING:
+    import types
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 # This integration test puts HTTP proxy in between the master and worker.
 
 
-def get_log_path():
+def get_log_path() -> str:
     return f'test_worker_proxy_stdout_{os.getpid()}.txt'
 
 
-def write_to_log(msg, with_traceback=False):
+def write_to_log(msg: str, with_traceback: bool = False) -> None:
     with open(get_log_path(), 'a', encoding='utf-8') as outfile:
         outfile.write(msg)
         if with_traceback:
@@ -48,8 +57,10 @@ def write_to_log(msg, with_traceback=False):
             traceback.print_exc(file=outfile)
 
 
-async def handle_client(local_reader, local_writer):
-    async def pipe(reader, writer):
+async def handle_client(
+    local_reader: asyncio.StreamReader, local_writer: asyncio.StreamWriter
+) -> None:
+    async def pipe(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         try:
             while not reader.at_eof():
                 writer.write(await reader.read(2048))
@@ -69,11 +80,11 @@ async def handle_client(local_reader, local_writer):
         try:
             remote_reader, remote_writer = await asyncio.open_connection(host.decode(), int(port))
         except socket.gaierror:
-            write_to_log(f"failed to relay to {host} {port}\n")
+            write_to_log(f"failed to relay to {host.decode()} {port.decode()}\n")
             local_writer.write(b"HTTP/1.1 404 Not Found\r\n\r\n")
             return
 
-        write_to_log(f"relaying to {host} {port}\n")
+        write_to_log(f"relaying to {host.decode()} {port.decode()}\n")
         local_writer.write(b"HTTP/1.1 200 Connection established\r\n\r\n")
         pipe1 = pipe(local_reader, remote_writer)
         pipe2 = pipe(remote_reader, local_writer)
@@ -83,7 +94,7 @@ async def handle_client(local_reader, local_writer):
         local_writer.close()
 
 
-def run_proxy(queue):
+def run_proxy(queue: multiprocessing.Queue[int]) -> None:
     write_to_log("run_proxy\n")
 
     try:
@@ -111,10 +122,10 @@ def run_proxy(queue):
 
         queue.put(port)
 
-        def signal_handler(sig, trace):
+        def signal_handler(sig: signal.Signals, trace: types.FrameType | None) -> None:
             raise KeyboardInterrupt
 
-        signal.signal(signal.SIGTERM, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)  # type: ignore[arg-type]
 
         write_to_log(f"Serving on {host}:{port}\n")
         try:
@@ -131,7 +142,7 @@ def run_proxy(queue):
         write_to_log(f"Exception Raised: {e!s}\n", with_traceback=True)
 
     finally:
-        queue.put(get_log_path())
+        queue.put(get_log_path())  # type: ignore[arg-type]
 
 
 class RunMasterBehindProxy(RunMasterBase):
@@ -139,15 +150,15 @@ class RunMasterBehindProxy(RunMasterBase):
     timeout = 30
     enable_debug = False
 
-    def setUp(self):
+    def setUp(self) -> None:
         write_to_log("setUp\n")
-        self.queue = multiprocessing.Queue()
+        self.queue: multiprocessing.Queue[int] = multiprocessing.Queue()
         self.proxy_process = multiprocessing.Process(target=run_proxy, args=(self.queue,))
         self.proxy_process.start()
         self.target_port = self.queue.get()
         write_to_log(f"got target_port {self.target_port}\n")
 
-        def cleanup():
+        def cleanup() -> None:
             write_to_log("cleanup\n")
             self.proxy_process.terminate()
             self.proxy_process.join()
@@ -164,7 +175,9 @@ class RunMasterBehindProxy(RunMasterBase):
         self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
-    def setup_master(self, config_dict, startWorker=True):
+    def setup_master(  # type: ignore[override]
+        self, config_dict: dict[str, Any], startWorker: bool = True
+    ) -> InlineCallbacksType[None]:
         proxy_connection_string = f"tcp:127.0.0.1:{self.target_port}"
         yield super().setup_master(
             config_dict, startWorker, proxy_connection_string=proxy_connection_string
