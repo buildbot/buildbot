@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 from parameterized import parameterized
 from twisted.internet import defer
@@ -26,14 +29,17 @@ from buildbot.steps.download_secret_to_worker import DownloadSecretsToWorker
 from buildbot.steps.download_secret_to_worker import RemoveWorkerFileSecret
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class DownloadSecretsBase(RunMasterBase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.temp_dir = os.path.abspath(self.mktemp())
         os.mkdir(self.temp_dir)
 
     @defer.inlineCallbacks
-    def setup_config(self, path, data, remove=False):
+    def setup_config(self, path: str, data: str, remove: bool = False) -> InlineCallbacksType[None]:
         c = {}
 
         c['schedulers'] = [ForceScheduler(name="force", builderNames=["testy"])]
@@ -43,11 +49,11 @@ class DownloadSecretsBase(RunMasterBase):
         if remove:
             f.addStep(RemoveWorkerFileSecret([(path, data)]))
 
-        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]  # type: ignore[list-item]
 
         yield self.setup_master(c)
 
-    def get_homedir(self):
+    def get_homedir(self) -> str | None:
         path = os.path.expanduser('~')
         if path == '~':
             return None
@@ -60,7 +66,9 @@ class DownloadSecretsBase(RunMasterBase):
         ('relative_to_home_remove', True, True),
     ])
     @defer.inlineCallbacks
-    def test_transfer_secrets(self, name, relative_to_home, remove):
+    def test_transfer_secrets(
+        self, name: str, relative_to_home: bool, remove: bool
+    ) -> InlineCallbacksType[None]:
         bb_path = self.temp_dir
         if relative_to_home:
             homedir = self.get_homedir()
