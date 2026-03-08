@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
 import json
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -26,23 +29,31 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
+if TYPE_CHECKING:
+    from buildbot.data.buildrequests import BuildRequestData
+    from buildbot.master import BuildMaster
+    from buildbot.test.fakedb.row import Row
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         self.master.botmaster = mock.Mock(name='botmaster')
         self.master.botmaster.builders = {}
-        self.builders = {}
+        self.builders = {}  # type: ignore[var-annotated]
         self.bldr = yield self.createBuilder('A', builderid=77)
 
     @defer.inlineCallbacks
-    def createBuilder(self, name, builderid=None):
+    def createBuilder(
+        self, name: str, builderid: int | None = None
+    ) -> InlineCallbacksType[mock.Mock]:
         if builderid is None:
             b = fakedb.Builder(name=name)
             yield self.master.db.insert_test_data([b])
-            builderid = b.id
+            builderid = b.id  # type: ignore[attr-defined]
 
         bldr = mock.Mock(name=name)
         bldr.name = name
@@ -54,13 +65,18 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         return bldr
 
     @defer.inlineCallbacks
-    def do_request_collapse(self, brids, exp):
+    def do_request_collapse(self, brids: list[int], exp: list[int]) -> InlineCallbacksType[None]:
         brCollapser = buildrequest.BuildRequestCollapser(self.master, brids)
         self.assertEqual(exp, sorted((yield brCollapser.collapse())))
 
     @defer.inlineCallbacks
-    def test_collapseRequests_no_other_request(self):
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
+    def test_collapseRequests_no_other_request(self) -> InlineCallbacksType[None]:
+        def collapseRequests_fn(
+            master: BuildMaster,
+            builder: Builder,
+            brdict1: BuildRequestData,
+            brdict2: BuildRequestData,
+        ) -> bool:
             # Allow all requests
             self.fail("Should never be called")
             # pylint: disable=unreachable
@@ -102,8 +118,13 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def test_collapseRequests_no_collapse(self):
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
+    def test_collapseRequests_no_collapse(self) -> InlineCallbacksType[None]:
+        def collapseRequests_fn(
+            master: BuildMaster,
+            builder: Builder,
+            brdict1: BuildRequestData,
+            brdict2: BuildRequestData,
+        ) -> bool:
             # Fail all collapse attempts
             return False
 
@@ -112,8 +133,13 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse([21], [])
 
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_all(self):
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
+    def test_collapseRequests_collapse_all(self) -> InlineCallbacksType[None]:
+        def collapseRequests_fn(
+            master: BuildMaster,
+            builder: Builder,
+            brdict1: BuildRequestData,
+            brdict2: BuildRequestData,
+        ) -> bool:
             # collapse all attempts
             return True
 
@@ -122,8 +148,13 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse([21], [19, 20])
 
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_all_duplicates(self):
-        def collapseRequests_fn(master, builder, brdict1, brdict2):
+    def test_collapseRequests_collapse_all_duplicates(self) -> InlineCallbacksType[None]:
+        def collapseRequests_fn(
+            master: BuildMaster,
+            builder: Builder,
+            brdict1: BuildRequestData,
+            brdict2: BuildRequestData,
+        ) -> bool:
             # collapse all attempts
             return True
 
@@ -141,13 +172,13 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     def makeBuildRequestRows(
         self,
-        brid,
-        bsid,
-        changeid,
-        ssid,
-        patchid=None,
-        bs_properties=None,
-    ):
+        brid: int,
+        bsid: int,
+        changeid: int | None,
+        ssid: int,
+        patchid: int | None = None,
+        bs_properties: dict[str, tuple[str, str]] | None = None,
+    ) -> list[Row]:
         rows = [
             fakedb.Buildset(id=bsid, reason='foo', submitted_at=1300305712, results=-1),
             fakedb.BuildsetSourceStamp(sourcestampid=ssid, buildsetid=bsid),
@@ -195,7 +226,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         return rows
 
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_with_codebases(self):
+    def test_collapseRequests_collapse_default_with_codebases(self) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A'),
@@ -212,7 +243,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse([21], [19, 20])
 
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_does_not_collapse_older(self):
+    def test_collapseRequests_collapse_default_does_not_collapse_older(
+        self,
+    ) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222),
@@ -228,7 +261,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse([21], [20])
 
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_does_not_collapse_concurrent_claims(self):
+    def test_collapseRequests_collapse_default_does_not_collapse_concurrent_claims(
+        self,
+    ) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222),
@@ -238,10 +273,15 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         rows += self.makeBuildRequestRows(19, 119, None, 222)
         rows += self.makeBuildRequestRows(20, 120, None, 222)
 
-        claimed = []
+        claimed = []  # type: ignore[var-annotated]
 
         @defer.inlineCallbacks
-        def collapse_fn(master, builder, brdict1, brdict2):
+        def collapse_fn(
+            master: BuildMaster,
+            builder: Builder,
+            brdict1: BuildRequestData,
+            brdict2: BuildRequestData,
+        ) -> InlineCallbacksType[None]:
             if not claimed:
                 yield self.master.data.updates.claimBuildRequests([20])
                 claimed.append(20)
@@ -254,7 +294,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse([21], [19])
 
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_does_not_collapse_scheduler_props(self):
+    def test_collapseRequests_collapse_default_does_not_collapse_scheduler_props(
+        self,
+    ) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222),
@@ -286,7 +328,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse([20], [16, 17])
 
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_with_codebases_branches(self):
+    def test_collapseRequests_collapse_default_with_codebases_branches(
+        self,
+    ) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A', branch='br1'),
@@ -305,7 +349,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse([21], [19])
 
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_with_codebases_repository(self):
+    def test_collapseRequests_collapse_default_with_codebases_repository(
+        self,
+    ) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A', repository='repo1'),
@@ -324,7 +370,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
         yield self.do_request_collapse([21], [19])
 
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_with_codebases_projects(self):
+    def test_collapseRequests_collapse_default_with_codebases_projects(
+        self,
+    ) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A', project='proj1'),
@@ -344,7 +392,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     # * Neither source stamp has a patch (e.g., from a try scheduler)
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_with_a_patch(self):
+    def test_collapseRequests_collapse_default_with_a_patch(self) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A'),
@@ -371,7 +419,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     # * Either both source stamps are associated with changes..
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_with_changes(self):
+    def test_collapseRequests_collapse_default_with_changes(self) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A'),
@@ -389,7 +437,9 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
     # * ... or neither are associated with changes but they have matching revisions.
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default_with_non_matching_revision(self):
+    def test_collapseRequests_collapse_default_with_non_matching_revision(
+        self,
+    ) -> InlineCallbacksType[None]:
         rows = [
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.SourceStamp(id=222, codebase='A'),
@@ -408,7 +458,7 @@ class TestBuildRequestCollapser(TestReactorMixin, unittest.TestCase):
 
 
 class TestSourceStamp(unittest.TestCase):
-    def test_asdict_minimal(self):
+    def test_asdict_minimal(self) -> None:
         ssdatadict = {
             'ssid': '123',
             'branch': None,
@@ -437,7 +487,7 @@ class TestSourceStamp(unittest.TestCase):
             },
         )
 
-    def test_asdict_no_patch(self):
+    def test_asdict_no_patch(self) -> None:
         ssdatadict = {
             'ssid': '123',
             'branch': 'testbranch',
@@ -466,7 +516,7 @@ class TestSourceStamp(unittest.TestCase):
             },
         )
 
-    def test_asdict_with_patch(self):
+    def test_asdict_with_patch(self) -> None:
         ssdatadict = {
             'ssid': '123',
             'branch': 'testbranch',
@@ -504,11 +554,11 @@ class TestSourceStamp(unittest.TestCase):
 
 
 class TestBuildRequest(TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
     @defer.inlineCallbacks
-    def test_fromBrdict(self):
+    def test_fromBrdict(self) -> InlineCallbacksType[None]:
         master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
@@ -555,7 +605,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         self.assertEqual(br.bsid, 539)
 
     @defer.inlineCallbacks
-    def test_fromBrdict_no_sourcestamps(self):
+    def test_fromBrdict_no_sourcestamps(self) -> InlineCallbacksType[None]:
         master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
@@ -571,7 +621,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
             yield buildrequest.BuildRequest.fromBrdict(master, brdict)
 
     @defer.inlineCallbacks
-    def test_fromBrdict_multiple_sourcestamps(self):
+    def test_fromBrdict_multiple_sourcestamps(self) -> InlineCallbacksType[None]:
         master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield master.db.insert_test_data([
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
@@ -634,7 +684,7 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
         self.assertEqual(br.bsid, 539)
 
     @defer.inlineCallbacks
-    def test_mergeSourceStampsWith_common_codebases(self):
+    def test_mergeSourceStampsWith_common_codebases(self) -> InlineCallbacksType[None]:
         """This testcase has two buildrequests
         Request Change Codebase Revision Comment
         ----------------------------------------------------------------------
@@ -748,13 +798,13 @@ class TestBuildRequest(TestReactorMixin, unittest.TestCase):
                 source2 = source
 
         self.assertFalse(source1 is None)
-        self.assertEqual(source1.revision, '9284')
+        self.assertEqual(source1.revision, '9284')  # type: ignore[union-attr]
 
         self.assertFalse(source2 is None)
-        self.assertEqual(source2.revision, '9201')
+        self.assertEqual(source2.revision, '9201')  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
-    def test_canBeCollapsed_different_codebases_raises_error(self):
+    def test_canBeCollapsed_different_codebases_raises_error(self) -> InlineCallbacksType[None]:
         """This testcase has two buildrequests
         Request Change Codebase   Revision Comment
         ----------------------------------------------------------------------
