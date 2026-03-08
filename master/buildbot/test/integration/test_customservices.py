@@ -14,9 +14,17 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 
 from buildbot.test.util.integration import RunFakeMasterTestCase
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 # This integration test creates a master and worker environment,
 # with one builder and a custom step
@@ -25,11 +33,11 @@ from buildbot.test.util.integration import RunFakeMasterTestCase
 
 
 class CustomServiceMaster(RunFakeMasterTestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         self.num_reconfig = 0
 
-    def create_master_config(self):
+    def create_master_config(self) -> dict[str, Any]:
         self.num_reconfig += 1
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.process.factory import BuildFactory  # noqa: PLC0415
@@ -37,14 +45,14 @@ class CustomServiceMaster(RunFakeMasterTestCase):
         from buildbot.util.service import BuildbotService  # noqa: PLC0415
 
         class MyShellCommand(ShellCommand):
-            def getResultSummary(self):
-                service = self.master.service_manager.namedServices['myService']
+            def getResultSummary(self) -> dict[str, str]:
+                service = self.master.service_manager.namedServices['myService']  # type: ignore[union-attr]
                 return {"step": f'num reconfig: {service.num_reconfig}'}
 
         class MyService(BuildbotService):
             name = "myService"
 
-            def reconfigService(self, num_reconfig):
+            def reconfigService(self, num_reconfig: int) -> defer.Deferred[None]:  # type: ignore[override]
                 self.num_reconfig = num_reconfig
                 return defer.succeed(None)
 
@@ -65,13 +73,13 @@ class CustomServiceMaster(RunFakeMasterTestCase):
         }
 
         if self.num_reconfig == 3:
-            config_dict['services'].append(
+            config_dict['services'].append(  # type: ignore[attr-defined]
                 MyService(name="myService2", num_reconfig=self.num_reconfig)
             )
         return config_dict
 
     @defer.inlineCallbacks
-    def test_custom_service(self):
+    def test_custom_service(self) -> InlineCallbacksType[None]:
         yield self.setup_master(self.create_master_config())
 
         yield self.do_test_build_by_name('builder')
