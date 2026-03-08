@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -21,6 +25,9 @@ from buildbot.data import forceschedulers
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test import fakedb
 from buildbot.test.util import endpoint
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 expected_default = {
     'all_fields': [
@@ -190,7 +197,7 @@ class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     maxDiff = None
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         scheds = [ForceScheduler(name="defaultforce", builderNames=["builder"])]
         self.master.allSchedulers = lambda: scheds
@@ -202,13 +209,13 @@ class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.master.startService()
 
     @defer.inlineCallbacks
-    def test_get_existing(self):
+    def test_get_existing(self) -> InlineCallbacksType[None]:
         res = yield self.callGet(('forceschedulers', "defaultforce"))
         self.validateData(res)
         self.assertEqual(res, expected_default)
 
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         res = yield self.callGet(('forceschedulers', 'foo'))
         self.assertEqual(res, None)
 
@@ -219,7 +226,7 @@ class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     maxDiff = None
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         scheds = [ForceScheduler(name="defaultforce", builderNames=["builder"])]
         self.master.allSchedulers = lambda: scheds
@@ -231,6 +238,6 @@ class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.master.startService()
 
     @defer.inlineCallbacks
-    def test_get_existing(self):
+    def test_get_existing(self) -> InlineCallbacksType[None]:
         res = yield self.callGet(('forceschedulers',))
         self.assertEqual(res, [expected_default])
