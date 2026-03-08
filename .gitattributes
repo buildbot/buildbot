@@ -1,4 +1,4 @@
-master/buildbot/__init__.py             export-subst
+master/.git_archival.txt                export-subst
 pkg/buildbot_pkg.py                     export-subst
 worker/buildbot_worker/__init__.py      export-subst
 .gitattributes                          export-ignore

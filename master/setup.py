@@ -20,48 +20,27 @@ Standard setup script.
 """
 
 from setuptools import setup  # isort:skip
-
-
 import inspect
 import os
 import sys
 
-from setuptools import Command
 from setuptools.command.sdist import sdist
+from setuptools_scm import get_version
 
-from buildbot import version
+use_scm_version = {
+    "root": "..",
+    "relative_to": __file__,
+    "version_file": "buildbot/_version.py",
+    "local_scheme": "no-local-version",
+}
+version = get_version(**use_scm_version)
 
 BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
-
-
-class install_data_twisted(Command):
-    """make sure VERSION file is installed in package."""
-
-    def initialize_options(self):
-        self.install_dir = None
-
-    def finalize_options(self):
-        self.set_undefined_options(
-            'install',
-            ('install_lib', 'install_dir'),
-        )
-
-    def run(self):
-        # ensure there's a buildbot/VERSION file
-        fn = os.path.join(self.install_dir, 'buildbot', 'VERSION')
-        with open(fn, 'w') as f:
-            f.write(version)
 
 
 class our_sdist(sdist):
     def make_release_tree(self, base_dir, files):
         sdist.make_release_tree(self, base_dir, files)
-
-        # ensure there's a buildbot/VERSION file
-        fn = os.path.join(base_dir, 'buildbot', 'VERSION')
-        with open(fn, 'w') as f:
-            f.write(version)
-
         # ensure that NEWS has a copy of the latest release notes, with the
         # proper version substituted
         src_fn = os.path.join('docs', 'relnotes/index.rst')
@@ -112,7 +91,6 @@ with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
     long_description = long_d_f.read()
 
 setup_args = {
-    'version': version,
     'packages': [
         "buildbot",
         "buildbot.configurators",
@@ -177,7 +155,7 @@ setup_args = {
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
     'data_files': [("buildbot", [])],
-    'cmdclass': {'install_data': install_data_twisted, 'sdist': our_sdist},
+    'cmdclass': {'sdist': our_sdist},
     'entry_points': concat_dicts(
         define_plugin_entries([
             (
@@ -603,6 +581,7 @@ setup_args = {
             ]
         },
     ),
+    'use_scm_version': use_scm_version,
 }
 
 bundle_version = version.split("-")[0]

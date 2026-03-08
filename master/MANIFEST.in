@@ -35,3 +35,36 @@ include buildbot/db/migrations/README include buildbot/db/migrations/alembic.ini
 include contrib/* contrib/windows/* contrib/os-x/* contrib/css/* contrib/libvirt/*
 include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
 include contrib/init-scripts/* contrib/bash/* contrib/zsh/*
+
+exclude .git_archival.txt
+
+exclude Makefile ruff.toml tox.ini
+exclude buildbot/db/migrations/script.py.mako
+exclude buildbot/test/integration/*.txt
+exclude buildbot/test/integration/*.tgz
+exclude buildbot/test/integration/worker/*
+exclude buildbot/test/unit/changes/*
+exclude buildbot/test/unit/config/*
+exclude buildbot/test/unit/data/*
+exclude buildbot/test/unit/db/*
+exclude buildbot/test/unit/process/*
+exclude buildbot/test/unit/reporters/*
+exclude buildbot/test/unit/schedulers/*
+exclude buildbot/test/unit/scripts/*
+exclude buildbot/test/unit/steps/*
+exclude buildbot/test/unit/util/*
+exclude buildbot/test/unit/worker/*
+exclude buildbot/test/unit/db_migrate/*
+exclude buildbot/test/unit/www/**
+exclude contrib/docker/**
+exclude contrib/systemd/buildbot@.service
+exclude docker/*
+exclude docker-example/**
+exclude docs/relnotes.rst.jinja docs/spelling_wordlist.txt
+exclude docs/bbdocs/test/__init__.py
+exclude docs/developer/database/*
+exclude docs/developer/raml/*
+exclude docs/manual/configuration/**
+exclude docs/manual/customization/*
+exclude docs/manual/upgrading/*
+exclude docs/templates/raml.jinja

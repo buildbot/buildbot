@@ -16,11 +16,11 @@
 from twisted.trial import unittest
 
 
-class VersioningUtilsTests(unittest.SynchronousTestCase):
+class VersioningUtilsTests_PKG(unittest.SynchronousTestCase):
     # Version utils are copied in three packages.
     # this unit test is made to be able to test the three versions
     # with the same test
-    module_under_test = "buildbot"
+    module_under_test = "buildbot_pkg"
 
     def setUp(self):
         try:
@@ -49,9 +49,5 @@ class VersioningUtilsTests(unittest.SynchronousTestCase):
         self.assertEqual(version, "1.0.0")
 
 
-class VersioningUtilsTests_PKG(VersioningUtilsTests):
-    module_under_test = "buildbot_pkg"
-
-
-class VersioningUtilsTests_WORKER(VersioningUtilsTests):
+class VersioningUtilsTests_WORKER(VersioningUtilsTests_PKG):
     module_under_test = "buildbot_worker"
