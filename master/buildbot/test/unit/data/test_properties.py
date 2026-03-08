@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -27,13 +31,18 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = properties.BuildsetPropertiesEndpoint
     resourceTypeClass = properties.Properties
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Buildset(id=13, reason='because I said so'),
@@ -46,7 +55,7 @@ class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_properties(self):
+    def test_get_properties(self) -> InlineCallbacksType[None]:
         props = yield self.callGet(('buildsets', 14, 'properties'))
 
         self.assertEqual(props, {'prop': (22, 'fakedb')})
@@ -57,7 +66,7 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = properties.Properties
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=1),
@@ -71,46 +80,55 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_properties(self):
+    def test_get_properties(self) -> InlineCallbacksType[None]:
         props = yield self.callGet(('builds', 786, 'properties'))
 
         self.assertEqual(props, {'year': (1651, 'Wikipedia'), 'island_name': ("despair", 'Book')})
 
     @defer.inlineCallbacks
-    def test_get_properties_from_builder(self):
+    def test_get_properties_from_builder(self) -> InlineCallbacksType[None]:
         props = yield self.callGet(('builders', 1, 'builds', 5, 'properties'))
         self.assertEqual(props, {'year': (1651, 'Wikipedia'), 'island_name': ("despair", 'Book')})
 
 
 class Properties(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=False, wantDb=True, wantData=True)
         self.rtype = properties.Properties(self.master)
 
     @defer.inlineCallbacks
     def do_test_callthrough(
-        self, dbMethodName, method, exp_args=None, exp_kwargs=None, *args, **kwargs
-    ):
+        self,
+        dbMethodName: str,
+        method: Callable[..., defer.Deferred[Any]],
+        exp_args: tuple[Any, ...] | None = None,
+        exp_kwargs: dict[str, Any] | None = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         rv = (1, 2)
         m = mock.Mock(return_value=defer.succeed(rv))
         setattr(self.master.db.builds, dbMethodName, m)
         res = yield method(*args, **kwargs)
         self.assertIdentical(res, rv)
         m.assert_called_with(
-            *(exp_args or args), **(((exp_kwargs is None) and kwargs) or exp_kwargs)
+            *(exp_args or args),
+            **(((exp_kwargs is None) and kwargs) or exp_kwargs),  # type: ignore[arg-type]
         )
 
-    def test_signature_setBuildProperty(self):
+    def test_signature_setBuildProperty(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.setBuildProperty,  # fake
             self.rtype.setBuildProperty,
         )  # real
-        def setBuildProperty(self, buildid, name, value, source):
+        def setBuildProperty(
+            self: object, buildid: int, name: str, value: Any, source: str
+        ) -> None:
             pass
 
-    def test_setBuildProperty(self):
+    def test_setBuildProperty(self) -> defer.Deferred[None]:
         return self.do_test_callthrough(
             'setBuildProperty',
             self.rtype.setBuildProperty,
@@ -123,7 +141,7 @@ class Properties(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_setBuildProperties(self):
+    def test_setBuildProperties(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=1),
             fakedb.Buildset(id=28),
