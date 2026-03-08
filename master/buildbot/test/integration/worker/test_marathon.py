@@ -14,7 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest.case import SkipTest
 
 from twisted.internet import defer
@@ -26,6 +30,11 @@ from buildbot.process.factory import BuildFactory
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.worker.marathon import MarathonLatentWorker
+
+if TYPE_CHECKING:
+    from buildbot.interfaces import IBuildStepFactory
+    from buildbot.process.buildstep import BuildStep
+    from buildbot.util.twisted import InlineCallbacksType
 
 # This integration test creates a master and marathon worker environment,
 # It requires environment variable set to your marathon hosting.
@@ -46,7 +55,7 @@ NUM_CONCURRENT = int(os.environ.get("MARATHON_TEST_NUM_CONCURRENT_BUILD", "1"))
 
 
 class MarathonMaster(RunMasterBase):
-    def setUp(self):
+    def setUp(self) -> None:
         if "BBTEST_MARATHON_URL" not in os.environ:
             raise SkipTest(
                 "marathon integration tests only run when environment variable BBTEST_MARATHON_URL"
@@ -54,7 +63,9 @@ class MarathonMaster(RunMasterBase):
             )
 
     @defer.inlineCallbacks
-    def setup_config(self, num_concurrent, extra_steps=None):
+    def setup_config(
+        self, num_concurrent: int, extra_steps: list[BuildStep | IBuildStepFactory] | None = None
+    ) -> InlineCallbacksType[None]:
         if extra_steps is None:
             extra_steps = []
         c = {}
@@ -90,9 +101,9 @@ class MarathonMaster(RunMasterBase):
         if creds is not None:
             user, password = creds.split(":")
         else:
-            user = password = None
+            user = password = None  # type: ignore[assignment]
         masterFQDN = os.environ.get('masterFQDN')
-        marathon_extra_config = {}
+        marathon_extra_config: dict[str, Any] = {}
         c['workers'] = [
             MarathonLatentWorker(
                 'marathon' + str(i),
@@ -110,15 +121,15 @@ class MarathonMaster(RunMasterBase):
         # if the masterFQDN is forced (proxy case), then we use 9989 default port
         # else, we try to find a free port
         if masterFQDN is not None:
-            c['protocols'] = {"pb": {"port": "tcp:9989"}}
+            c['protocols'] = {"pb": {"port": "tcp:9989"}}  # type: ignore[assignment]
         else:
-            c['protocols'] = {"pb": {"port": "tcp:0"}}
+            c['protocols'] = {"pb": {"port": "tcp:0"}}  # type: ignore[assignment]
 
         yield self.setup_master(c, startWorker=False)
 
     @defer.inlineCallbacks
-    def test_trigger(self):
-        yield self.setup_master(num_concurrent=NUM_CONCURRENT)
+    def test_trigger(self) -> InlineCallbacksType[None]:
+        yield self.setup_master(num_concurrent=NUM_CONCURRENT)  # type: ignore[call-arg]
         yield self.doForceBuild()
 
         builds = yield self.master.data.get(("builds",))
