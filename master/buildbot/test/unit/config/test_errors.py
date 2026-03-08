@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.config.errors import ConfigErrors
@@ -22,32 +24,32 @@ from buildbot.config.errors import error
 
 
 class ConfigErrorsTest(unittest.TestCase):
-    def test_constr(self):
+    def test_constr(self) -> None:
         ex = ConfigErrors(['a', 'b'])
         self.assertEqual(ex.errors, ['a', 'b'])
 
-    def test_addError(self):
+    def test_addError(self) -> None:
         ex = ConfigErrors(['a'])
         ex.addError('c')
         self.assertEqual(ex.errors, ['a', 'c'])
 
-    def test_nonempty(self):
+    def test_nonempty(self) -> None:
         empty = ConfigErrors()
         full = ConfigErrors(['a'])
         self.assertTrue(not empty)
         self.assertFalse(not full)
 
-    def test_error_raises(self):
+    def test_error_raises(self) -> None:
         with self.assertRaises(ConfigErrors) as e:
             error("message")
         self.assertEqual(e.exception.errors, ["message"])
 
-    def test_error_no_raise(self):
+    def test_error_no_raise(self) -> None:
         with capture_config_errors() as errors:
             error("message")
         self.assertEqual(errors.errors, ["message"])
 
-    def test_str(self):
+    def test_str(self) -> None:
         ex = ConfigErrors()
         self.assertEqual(str(ex), "")
 
