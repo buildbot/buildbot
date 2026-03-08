@@ -32,11 +32,14 @@ from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from collections.abc import Coroutine
+    from collections.abc import Generator
     from typing import Any
     from typing import Callable
     from typing import TypeVar
 
     from typing_extensions import ParamSpec
+
+    from buildbot.util.twisted import InlineCallbacksType
 
     _T = TypeVar('_T')
     _P = ParamSpec('_P')
@@ -44,7 +47,7 @@ if TYPE_CHECKING:
 
 class Tests(RunFakeMasterTestCase):
     @defer.inlineCallbacks
-    def do_terminates_ping_on_shutdown(self, quick_mode):
+    def do_terminates_ping_on_shutdown(self, quick_mode: bool) -> InlineCallbacksType[None]:
         """
         During shutdown we want to terminate any outstanding pings.
         """
@@ -71,13 +74,15 @@ class Tests(RunFakeMasterTestCase):
         yield self.master.botmaster.cleanShutdown(quickMode=quick_mode, stopReactor=False)
         self.flushLoggedErrors(PingException)
 
-    def test_terminates_ping_on_shutdown_quick_mode(self):
+    def test_terminates_ping_on_shutdown_quick_mode(self) -> defer.Deferred[None]:
         return self.do_terminates_ping_on_shutdown(quick_mode=True)
 
-    def test_terminates_ping_on_shutdown_slow_mode(self):
+    def test_terminates_ping_on_shutdown_slow_mode(self) -> defer.Deferred[None]:
         return self.do_terminates_ping_on_shutdown(quick_mode=False)
 
-    def _wait_step(self, wait_step: float = 0.1, timeout_seconds: float = 5.0):
+    def _wait_step(
+        self, wait_step: float = 0.1, timeout_seconds: float = 5.0
+    ) -> Generator[None, None, None]:
         for _ in range(0, int(timeout_seconds * 1000), int(wait_step * 1000)):
             self.reactor.advance(wait_step)
             yield
