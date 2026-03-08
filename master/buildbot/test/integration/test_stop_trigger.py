@@ -14,8 +14,12 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import sys
 import textwrap
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -26,6 +30,11 @@ from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import CANCELLED
 from buildbot.test.util.integration import RunMasterBase
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 # This integration test creates a master and worker environment,
@@ -44,7 +53,11 @@ class TriggeringMaster(RunMasterBase):
     }
 
     @defer.inlineCallbacks
-    def setup_trigger_config(self, triggeredFactory, nextBuild=None):
+    def setup_trigger_config(
+        self,
+        triggeredFactory: BuildFactory,
+        nextBuild: Callable[..., defer.Deferred[None | dict[str, Any]]] | None = None,
+    ) -> InlineCallbacksType[None]:
         c = {}
 
         c['schedulers'] = [
@@ -69,13 +82,13 @@ class TriggeringMaster(RunMasterBase):
         if nextBuild is not None:
             triggeredBuilderKwargs['nextBuild'] = nextBuild
 
-        triggeredBuilder = BuilderConfig(**triggeredBuilderKwargs)
+        triggeredBuilder = BuilderConfig(**triggeredBuilderKwargs)  # type: ignore[arg-type]
 
         c['builders'] = [mainBuilder, triggeredBuilder]
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def setup_config_trigger_runs_forever(self):
+    def setup_config_trigger_runs_forever(self) -> InlineCallbacksType[None]:
         f2 = BuildFactory()
 
         # Infinite sleep command.
@@ -100,21 +113,25 @@ class TriggeringMaster(RunMasterBase):
         yield self.setup_trigger_config(f2)
 
     @defer.inlineCallbacks
-    def setup_config_triggered_build_not_created(self):
+    def setup_config_triggered_build_not_created(self) -> InlineCallbacksType[None]:
         f2 = BuildFactory()
         f2.addStep(steps.ShellCommand(command="echo 'hello'"))
 
-        def nextBuild(*args, **kwargs):
+        def nextBuild(*args: Any, **kwargs: Any) -> defer.Deferred[None]:
             return defer.succeed(None)
 
-        yield self.setup_trigger_config(f2, nextBuild=nextBuild)
+        yield self.setup_trigger_config(f2, nextBuild=nextBuild)  # type: ignore[arg-type]
 
-    def assertBuildIsCancelled(self, b):
+    def assertBuildIsCancelled(self, b: dict[str, Any]) -> None:
         self.assertTrue(b['complete'])
         self.assertEqual(b['results'], CANCELLED, repr(b))
 
     @defer.inlineCallbacks
-    def runTest(self, newBuildCallback, flushErrors=False):
+    def runTest(  # type: ignore[override]
+        self,
+        newBuildCallback: Callable[[tuple[str, ...], dict[str, Any]], None],
+        flushErrors: bool = False,
+    ) -> InlineCallbacksType[None]:
         newConsumer = yield self.master.mq.startConsuming(newBuildCallback, ('builds', None, 'new'))
         build = yield self.doForceBuild(wantSteps=True, useChange=self.change, wantLogs=True)
         self.assertBuildIsCancelled(build)
@@ -126,11 +143,11 @@ class TriggeringMaster(RunMasterBase):
             self.flushLoggedErrors()
 
     @defer.inlineCallbacks
-    def testTriggerRunsForever(self):
+    def testTriggerRunsForever(self) -> InlineCallbacksType[None]:
         yield self.setup_config_trigger_runs_forever()
         self.higherBuild = None
 
-        def newCallback(_, data):
+        def newCallback(_: tuple[str, ...], data: dict[str, Any]) -> None:
             if self.higherBuild is None:
                 self.higherBuild = data['buildid']
             else:
@@ -140,28 +157,28 @@ class TriggeringMaster(RunMasterBase):
         yield self.runTest(newCallback, flushErrors=True)
 
     @defer.inlineCallbacks
-    def testTriggerRunsForeverAfterCmdStarted(self):
+    def testTriggerRunsForeverAfterCmdStarted(self) -> InlineCallbacksType[None]:
         yield self.setup_config_trigger_runs_forever()
         self.higherBuild = None
 
-        def newCallback(_, data):
+        def newCallback(_: tuple[str, ...], data: dict[str, Any]) -> None:
             if self.higherBuild is None:
                 self.higherBuild = data['buildid']
             else:
 
-                def f():
+                def f() -> None:
                     self.master.data.control("stop", {}, ("builds", self.higherBuild))
                     self.higherBuild = None
 
-                reactor.callLater(5.0, f)
+                reactor.callLater(5.0, f)  # type: ignore[attr-defined]
 
         yield self.runTest(newCallback, flushErrors=True)
 
     @defer.inlineCallbacks
-    def testTriggeredBuildIsNotCreated(self):
+    def testTriggeredBuildIsNotCreated(self) -> InlineCallbacksType[None]:
         yield self.setup_config_triggered_build_not_created()
 
-        def newCallback(_, data):
+        def newCallback(_: tuple[str, ...], data: dict[str, Any]) -> None:
             self.master.data.control("stop", {}, ("builds", data['buildid']))
 
         yield self.runTest(newCallback)
