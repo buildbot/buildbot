@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from zope.interface import implementer
 
@@ -31,6 +34,9 @@ from buildbot.test.fake.step import BuildStepController
 from buildbot.test.fake.worker import WorkerController
 from buildbot.test.util.integration import RunFakeMasterTestCase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 RemoteWorker: type | None = None
 try:
     from buildbot_worker.bot import LocalWorker as RemoteWorker
@@ -40,32 +46,32 @@ except ImportError:
 
 @implementer(IBuildStepFactory)
 class StepController:
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self.kwargs = kwargs
-        self.steps = []
+        self.steps: list[tuple[BuildStep, defer.Deferred[int]]] = []
 
-    def buildStep(self):
-        step_deferred = defer.Deferred()
+    def buildStep(self) -> BuildStep:
+        step_deferred: defer.Deferred[int] = defer.Deferred()
         step = create_step_from_step_or_factory(ControllableStep(step_deferred, **self.kwargs))
-        self.steps.append((step, step_deferred))
-        return step
+        self.steps.append((step, step_deferred))  # type: ignore[arg-type]
+        return step  # type: ignore[return-value]
 
 
 class ControllableStep(BuildStep):
-    def run(self):
-        return self._step_deferred
+    def run(self) -> None:  # type: ignore[override]
+        return self._step_deferred  # type: ignore[return-value]
 
-    def __init__(self, step_deferred, **kwargs):
+    def __init__(self, step_deferred: defer.Deferred[int], **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._step_deferred = step_deferred
 
-    def interrupt(self, reason):
+    def interrupt(self, reason: str | Exception) -> None:  # type: ignore[override]
         self._step_deferred.callback(CANCELLED)
 
 
 class Tests(RunFakeMasterTestCase):
     @defer.inlineCallbacks
-    def test_latent_max_builds(self):
+    def test_latent_max_builds(self) -> InlineCallbacksType[None]:
         """
         If max_builds is set, only one build is started on a latent
         worker at a time.
@@ -119,7 +125,7 @@ class Tests(RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_local_worker_max_builds(self):
+    def test_local_worker_max_builds(self) -> InlineCallbacksType[None]:
         """
         If max_builds is set, only one build is started on a worker
         at a time.
@@ -166,7 +172,7 @@ class Tests(RunFakeMasterTestCase):
         self.assertEqual(len(started_builds), 1)
 
     @defer.inlineCallbacks
-    def test_worker_registered_to_machine(self):
+    def test_worker_registered_to_machine(self) -> InlineCallbacksType[None]:
         worker = self.createLocalWorker('worker1', machine_name='machine1')
         machine = Machine('machine1')
 
@@ -189,7 +195,7 @@ class Tests(RunFakeMasterTestCase):
         self.assertIs(worker.machine, machine)
 
     @defer.inlineCallbacks
-    def test_worker_reconfigure_with_new_builder(self):
+    def test_worker_reconfigure_with_new_builder(self) -> InlineCallbacksType[None]:
         """
         Checks if we can successfully reconfigure if we add new builders to worker.
         """
@@ -204,7 +210,7 @@ class Tests(RunFakeMasterTestCase):
         }
         yield self.setup_master(config_dict)
 
-        config_dict['builders'] += [
+        config_dict['builders'] += [  # type: ignore[operator]
             BuilderConfig(name="builder2", workernames=['local1'], factory=BuildFactory()),
         ]
         config_dict['workers'] = [self.createLocalWorker('local1', max_builds=2)]
@@ -213,7 +219,9 @@ class Tests(RunFakeMasterTestCase):
         yield self.reconfig_master(config_dict)
 
     @defer.inlineCallbacks
-    def test_step_with_worker_build_props_during_worker_disconnect(self):
+    def test_step_with_worker_build_props_during_worker_disconnect(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         We need to handle worker disconnection and steps with worker build properties gracefully
         """
@@ -247,7 +255,7 @@ class Tests(RunFakeMasterTestCase):
         yield self.assertBuildResults(1, RETRY)
 
     @defer.inlineCallbacks
-    def test_worker_os_release_info_roundtrip(self):
+    def test_worker_os_release_info_roundtrip(self) -> InlineCallbacksType[None]:
         """
         Checks if we can successfully get information about the platform the worker is running on.
         This is very similar to test_worker_comm.TestWorkerComm.test_worker_info, except that
@@ -270,7 +278,7 @@ class Tests(RunFakeMasterTestCase):
 
         from buildbot_worker.base import BotBase  # noqa: PLC0415
 
-        expected_props_dict = {}
+        expected_props_dict: dict[str, str] = {}
         BotBase._read_os_release(BotBase.os_release_file, expected_props_dict)
 
         for key, value in expected_props_dict.items():
