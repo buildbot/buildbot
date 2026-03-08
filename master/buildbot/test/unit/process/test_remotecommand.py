@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.trial import unittest
@@ -23,9 +27,21 @@ from buildbot.test.util import interfaces
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
+    from collections.abc import Callable
+
+    from twisted.internet import defer
+    from twisted.python.failure import Failure
+
+    from buildbot.process.buildstep import BuildStep
+    from buildbot.process.log import Log
+    from buildbot.process.log import StreamLog
+    from buildbot.worker.protocols.base import Connection
+
 
 class TestRemoteShellCommand(unittest.TestCase):
-    def test_obfuscated_arguments(self):
+    def test_obfuscated_arguments(self) -> None:
         command = [
             "echo",
             ("obfuscated", "real", "fake"),
@@ -54,7 +70,7 @@ class TestRemoteShellCommand(unittest.TestCase):
             ],
         )
 
-    def test_not_obfuscated_arguments(self):
+    def test_not_obfuscated_arguments(self) -> None:
         command = "echo test"
         cmd = remotecommand.RemoteShellCommand("build", command)
         self.assertEqual(cmd.command, command)
@@ -68,99 +84,108 @@ class TestRemoteShellCommand(unittest.TestCase):
 
 
 class Tests(interfaces.InterfaceTests, unittest.TestCase):
-    def makeRemoteCommand(self, stdioLogName='stdio'):
+    def makeRemoteCommand(self, stdioLogName: str = 'stdio') -> remotecommand.RemoteCommand:
         return remotecommand.RemoteCommand('ping', {'arg': 'val'}, stdioLogName=stdioLogName)
 
-    def test_signature_RemoteCommand_constructor(self):
+    def test_signature_RemoteCommand_constructor(self) -> None:
         @self.assertArgSpecMatches(remotecommand.RemoteCommand.__init__)
         def __init__(
-            self,
-            remote_command,
-            args,
-            ignore_updates=False,
-            collectStdout=False,
-            collectStderr=False,
-            decodeRC=None,
-            stdioLogName='stdio',
-        ):
+            self: Any,
+            remote_command: str,
+            args: dict[str, Any],
+            ignore_updates: bool = False,
+            collectStdout: bool = False,
+            collectStderr: bool = False,
+            decodeRC: dict[int | None, int] | None = None,
+            stdioLogName: str = 'stdio',
+        ) -> None:
             pass
 
-    def test_signature_RemoteShellCommand_constructor(self):
+    def test_signature_RemoteShellCommand_constructor(self) -> None:
         @self.assertArgSpecMatches(remotecommand.RemoteShellCommand.__init__)
         def __init__(
-            self,
-            workdir,
-            command,
-            env=None,
-            want_stdout=1,
-            want_stderr=1,
-            timeout=20 * 60,
-            maxTime=None,
-            max_lines=None,
-            sigtermTime=None,
-            logfiles=None,
-            usePTY=None,
-            logEnviron=True,
-            collectStdout=False,
-            collectStderr=False,
-            interruptSignal=None,
-            initialStdin=None,
-            decodeRC=None,
-            stdioLogName='stdio',
-        ):
+            self: Any,
+            workdir: str | None,
+            command: str | bytes | list[str | bytes | tuple[str, str, str]],
+            env: dict[str, str] | None = None,
+            want_stdout: int = 1,
+            want_stderr: int = 1,
+            timeout: float = 20 * 60,
+            maxTime: float | None = None,
+            max_lines: int | None = None,
+            sigtermTime: float | None = None,
+            logfiles: dict[str, str] | None = None,
+            usePTY: bool | None = None,
+            logEnviron: bool = True,
+            collectStdout: bool = False,
+            collectStderr: bool = False,
+            interruptSignal: str | None = None,
+            initialStdin: str | None = None,
+            decodeRC: dict[int | None, int] | None = None,
+            stdioLogName: str = 'stdio',
+        ) -> None:
             pass
 
-    def test_signature_run(self):
+    def test_signature_run(self) -> None:
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.run)
-        def run(self, step, conn, builder_name):
+        def run(self: Any, step: BuildStep, conn: Connection, builder_name: str) -> None:
             pass
 
-    def test_signature_useLog(self):
+    def test_signature_useLog(self) -> None:
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.useLog)
-        def useLog(self, log_, closeWhenFinished=False, logfileName=None):
+        def useLog(
+            self: Any, log_: Log, closeWhenFinished: bool = False, logfileName: str | None = None
+        ) -> None:
             pass
 
-    def test_signature_useLogDelayed(self):
+    def test_signature_useLogDelayed(self) -> None:
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.useLogDelayed)
-        def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
+        def useLogDelayed(
+            self: Any,
+            logfileName: str,
+            activateCallBack: Callable[
+                [remotecommand.RemoteCommand], defer.Deferred[StreamLog] | Awaitable[StreamLog]
+            ],
+            closeWhenFinished: bool = False,
+        ) -> None:
             pass
 
-    def test_signature_interrupt(self):
+    def test_signature_interrupt(self) -> None:
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.interrupt)
-        def useLogDelayed(self, why):
+        def useLogDelayed(self: Any, why: Failure | str) -> None:
             pass
 
-    def test_signature_didFail(self):
+    def test_signature_didFail(self) -> None:
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.didFail)
-        def useLogDelayed(self):
+        def useLogDelayed(self: Any) -> None:
             pass
 
-    def test_signature_logs(self):
+    def test_signature_logs(self) -> None:
         cmd = self.makeRemoteCommand()
         self.assertIsInstance(cmd.logs, dict)
 
-    def test_signature_active(self):
+    def test_signature_active(self) -> None:
         cmd = self.makeRemoteCommand()
         self.assertIsInstance(cmd.active, bool)
 
-    def test_RemoteShellCommand_constructor(self):
+    def test_RemoteShellCommand_constructor(self) -> None:
         remotecommand.RemoteShellCommand('wkdir', 'some-command')
 
-    def test_notStdioLog(self):
+    def test_notStdioLog(self) -> None:
         logname = 'notstdio'
         cmd = self.makeRemoteCommand(stdioLogName=logname)
         log = logfile.FakeLogFile(logname)
-        cmd.useLog(log)
+        cmd.useLog(log)  # type: ignore[arg-type]
         cmd.addStdout('some stdout')
         self.assertEqual(log.stdout, 'some stdout')
         cmd.addStderr('some stderr')
@@ -168,13 +193,13 @@ class Tests(interfaces.InterfaceTests, unittest.TestCase):
         cmd.addHeader('some header')
         self.assertEqual(log.header, 'some header')
 
-    def test_RemoteShellCommand_usePTY_on_worker_2_16(self):
+    def test_RemoteShellCommand_usePTY_on_worker_2_16(self) -> None:
         cmd = remotecommand.RemoteShellCommand('workdir', 'shell')
 
-        def workerVersion(command, oldversion=None):
+        def workerVersion(command: str, oldversion: str | None = None) -> str:
             return '2.16'
 
-        def workerVersionIsOlderThan(command, minversion):
+        def workerVersionIsOlderThan(command: str, minversion: str) -> bool:
             return ['2', '16'] < minversion.split('.')
 
         step = mock.Mock()
@@ -190,7 +215,7 @@ class Tests(interfaces.InterfaceTests, unittest.TestCase):
 
 
 class TestWorkerTransition(unittest.TestCase):
-    def test_RemoteShellCommand_usePTY(self):
+    def test_RemoteShellCommand_usePTY(self) -> None:
         with assertNotProducesWarnings(DeprecatedApiWarning):
             cmd = remotecommand.RemoteShellCommand('workdir', 'command')
 
