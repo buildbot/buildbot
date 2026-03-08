@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.plugins import steps
@@ -21,12 +25,17 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.interfaces import IBuildStepFactory
+    from buildbot.process.buildstep import BuildStep
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestLog(RunMasterBase):
     # master configuration
 
     @defer.inlineCallbacks
-    def setup_config(self, step):
+    def setup_config(self, step: BuildStep | IBuildStepFactory) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -40,13 +49,15 @@ class TestLog(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_shellcommand(self):
+    def test_shellcommand(self) -> InlineCallbacksType[None]:
         testcase = self
 
-        class MyStep(steps.ShellCommand):
-            def _newLog(self, name, type, logid, logEncoding):
+        class MyStep(steps.ShellCommand):  # type: ignore[name-defined]
+            def _newLog(
+                self, name: str, type: str, logid: int, logEncoding: str | None = None
+            ) -> None:
                 r = super()._newLog(name, type, logid, logEncoding)
-                testcase.curr_log = r
+                testcase.curr_log = r  # type: ignore[attr-defined]
                 return r
 
         step = MyStep(command='echo hello')
@@ -65,16 +76,18 @@ class TestLog(RunMasterBase):
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], SUCCESS)
-        self.assertTrue(self.curr_log.finished)
+        self.assertTrue(self.curr_log.finished)  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_mastershellcommand(self):
+    def test_mastershellcommand(self) -> InlineCallbacksType[None]:
         testcase = self
 
-        class MyStep(steps.MasterShellCommand):
-            def _newLog(self, name, type, logid, logEncoding):
+        class MyStep(steps.MasterShellCommand):  # type: ignore[name-defined]
+            def _newLog(
+                self, name: str, type: str, logid: int, logEncoding: str | None = None
+            ) -> None:
                 r = super()._newLog(name, type, logid, logEncoding)
-                testcase.curr_log = r
+                testcase.curr_log = r  # type: ignore[attr-defined]
                 return r
 
         step = MyStep(command='echo hello')
@@ -93,16 +106,18 @@ class TestLog(RunMasterBase):
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], SUCCESS)
-        self.assertTrue(self.curr_log.finished)
+        self.assertTrue(self.curr_log.finished)  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_mastershellcommand_issue(self):
+    def test_mastershellcommand_issue(self) -> InlineCallbacksType[None]:
         testcase = self
 
-        class MyStep(steps.MasterShellCommand):
-            def _newLog(self, name, type, logid, logEncoding):
+        class MyStep(steps.MasterShellCommand):  # type: ignore[name-defined]
+            def _newLog(
+                self, name: str, type: str, logid: int, logEncoding: str | None = None
+            ) -> None:
                 r = super()._newLog(name, type, logid, logEncoding)
-                testcase.curr_log = r
+                testcase.curr_log = r  # type: ignore[attr-defined]
                 testcase.patch(r, "finish", lambda: defer.fail(RuntimeError('Could not finish')))
                 return r
 
@@ -121,7 +136,7 @@ class TestLog(RunMasterBase):
         }
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        self.assertFalse(self.curr_log.finished)
+        self.assertFalse(self.curr_log.finished)  # type: ignore[attr-defined]
         self.assertEqual(build['results'], EXCEPTION)
         errors = self.flushLoggedErrors()
         self.assertEqual(len(errors), 1)
