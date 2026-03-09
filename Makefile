@@ -35,6 +35,7 @@ ALL_PKGS := master worker pkg $(WWW_PKGS)
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 WWW_PKGS_FOR_PRETTIER := $(filter-out www/plugin_support www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
 WWW_PKGS_FOR_NPM := $(filter-out www/badges, $(WWW_PURE_DEP_PKGS) $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_NPM_BUILD := $(filter-out www/badges, $(WWW_PKGS))
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
 
@@ -78,17 +79,21 @@ frontend_tests: frontend_deps check_for_npm
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
 		do (cd $$i; $(NPM) run build-dev || exit 1; $(NPM) run test || exit 1) || exit 1; done
 
+frontend_build: frontend_deps
+	for i in $(WWW_PKGS_FOR_NPM_BUILD); \
+		do (cd $$i; $(NPM) run build); done
+
 # rebuild front-end from source
-frontend: frontend_deps
+frontend: frontend_build
 	for i in pkg $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
 
 # build frontend wheels for installation elsewhere
-frontend_wheels: frontend_deps
+frontend_wheels: frontend_build
 	for i in pkg $(WWW_PKGS); \
 		do (cd $$i; $(VENV_PYTHON) -m build --no-isolation --wheel || exit 1) || exit 1; done
 
 # do installation tests. Test front-end can build and install for all install methods
-frontend_install_tests: frontend_deps
+frontend_install_tests: frontend_build
 	trial pkg/test_buildbot_pkg.py
 
 # upgrade FE dependencies
@@ -167,7 +172,7 @@ release_notes: $(VENV_NAME)
 	towncrier build --yes  --version $(VERSION) --date `date -u  +%F`
 	git commit -m "Release notes for $(VERSION)"
 
-$(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_deps
+$(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_build
 	. $(VENV_NAME)/$(VENV_BIN_DIR)/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
 
 cleanup_for_tarballs:
