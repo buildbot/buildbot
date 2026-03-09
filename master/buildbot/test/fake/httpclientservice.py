@@ -84,7 +84,7 @@ class HTTPClientService(service.SharedService):
         assert not base_url.endswith("/"), "baseurl should not end with /"
         super().__init__()
         self._session = httpclientservice.HTTPSession(
-            self,
+            self,  # type: ignore[arg-type]
             base_url,
             auth=auth,
             headers=headers,

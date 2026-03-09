@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json as jsonmodule
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -29,6 +33,9 @@ from buildbot.util import service
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 try:
     import txrequests
 except ImportError:
@@ -41,41 +48,41 @@ log = Logger()
 
 @implementer(IHttpResponse)
 class TxRequestsResponseWrapper:
-    def __init__(self, res):
+    def __init__(self, res: Any) -> None:
         self._res = res
 
-    def content(self):
+    def content(self) -> defer.Deferred[bytes]:
         return defer.succeed(self._res.content)
 
-    def json(self):
+    def json(self) -> defer.Deferred[Any]:
         return defer.succeed(self._res.json())
 
     @property
-    def code(self):
+    def code(self) -> int:
         return self._res.status_code
 
     @property
-    def url(self):
+    def url(self) -> str:
         return self._res.url
 
 
 @implementer(IHttpResponse)
 class TreqResponseWrapper:
-    def __init__(self, res):
+    def __init__(self, res: Any) -> None:
         self._res = res
 
-    def content(self):
+    def content(self) -> defer.Deferred[bytes]:
         return self._res.content()
 
-    def json(self):
+    def json(self) -> defer.Deferred[Any]:
         return self._res.json()
 
     @property
-    def code(self):
+    def code(self) -> int:
         return self._res.code
 
     @property
-    def url(self):
+    def url(self) -> str:
         return self._res.request.absoluteURI.decode()
 
 
@@ -94,14 +101,14 @@ class HTTPClientService(service.SharedService):
 
     def __init__(
         self,
-        base_url,
-        auth=None,
-        headers=None,
-        verify=None,
-        cert=None,
-        debug=False,
-        skipEncoding=False,
-    ):
+        base_url: str,
+        auth: Any = None,
+        headers: dict[str, str] | None = None,
+        verify: Any = None,
+        cert: Any = None,
+        debug: bool | None = False,
+        skipEncoding: bool = False,
+    ) -> None:
         super().__init__()
         self._session = HTTPSession(
             self,
@@ -113,18 +120,18 @@ class HTTPClientService(service.SharedService):
             debug=debug,
             skip_encoding=skipEncoding,
         )
-        self._pool = None
-        self._txrequests_sessions = []
+        self._pool: HTTPConnectionPool | None = None
+        self._txrequests_sessions: list[Any] = []
 
-    def updateHeaders(self, headers):
+    def updateHeaders(self, headers: dict[str, str]) -> None:
         self._session.update_headers(headers)
 
     @staticmethod
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
-    def checkAvailable(from_module):
+    def checkAvailable(from_module: str) -> None:
         pass
 
-    def startService(self):
+    def startService(self) -> defer.Deferred[list[Any]]:
         if txrequests is not None:
             self._txrequests_pool = ThreadPool(minthreads=1, maxthreads=self.MAX_THREADS)
             # unclosed ThreadPool leads to reactor hangs at shutdown
@@ -141,7 +148,7 @@ class HTTPClientService(service.SharedService):
         return super().startService()
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         if txrequests is not None:
             sessions = self._txrequests_sessions
             self._txrequests_sessions = []
@@ -152,7 +159,7 @@ class HTTPClientService(service.SharedService):
             yield self._pool.closeCachedConnections()
         yield super().stopService()
 
-    def _do_request(self, session, method, ep, **kwargs):
+    def _do_request(self, session: HTTPSession, method: str, ep: str, **kwargs: Any) -> Any:
         prefer_treq = self.PREFER_TREQ
         if session.auth is not None and not isinstance(session.auth, tuple):
             prefer_treq = False
@@ -161,7 +168,9 @@ class HTTPClientService(service.SharedService):
         else:
             return self._do_txrequest(session, method, ep, **kwargs)
 
-    def _prepare_request(self, session, ep, kwargs):
+    def _prepare_request(
+        self, session: HTTPSession, ep: str, kwargs: dict[str, Any]
+    ) -> tuple[str, dict[str, Any]]:
         if ep.startswith('http://') or ep.startswith('https://'):
             url = ep
         else:
@@ -188,12 +197,14 @@ class HTTPClientService(service.SharedService):
         return url, kwargs
 
     @defer.inlineCallbacks
-    def _do_txrequest(self, session, method, ep, **kwargs):
+    def _do_txrequest(
+        self, session: HTTPSession, method: str, ep: str, **kwargs: Any
+    ) -> InlineCallbacksType[Any]:
         url, kwargs = yield self._prepare_request(session, ep, kwargs)
         if session.debug:
             log.debug("http {url} {kwargs}", url=url, kwargs=kwargs)
 
-        def readContent(txrequests_session, res):
+        def readContent(txrequests_session: Any, res: Any) -> Any:
             # this forces reading of the content inside the thread
             _ = res.content
             if session.debug:
@@ -220,48 +231,50 @@ class HTTPClientService(service.SharedService):
         return IHttpResponse(TxRequestsResponseWrapper(res))
 
     @defer.inlineCallbacks
-    def _do_treq(self, session, method, ep, **kwargs):
+    def _do_treq(
+        self, session: HTTPSession, method: str, ep: str, **kwargs: Any
+    ) -> InlineCallbacksType[Any]:
         url, kwargs = yield self._prepare_request(session, ep, kwargs)
         # treq requires header values to be an array
         if "headers" in kwargs:
             kwargs['headers'] = {k: [v] for k, v in kwargs["headers"].items()}
 
         if session._treq_agent is None:
-            session._trex_agent = Agent(self.master.reactor, pool=self._pool)
-        kwargs['agent'] = session._trex_agent
+            session._trex_agent = Agent(self.master.reactor, pool=self._pool)  # type: ignore[attr-defined]
+        kwargs['agent'] = session._trex_agent  # type: ignore[attr-defined]
 
         res = yield getattr(treq, method)(url, **kwargs)
         return IHttpResponse(TreqResponseWrapper(res))
 
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.get()")
-    def get(self, ep, **kwargs):
+    def get(self, ep: str, **kwargs: Any) -> Any:
         return self._do_request(self._session, 'get', ep, **kwargs)
 
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.put()")
-    def put(self, ep, **kwargs):
+    def put(self, ep: str, **kwargs: Any) -> Any:
         return self._do_request(self._session, 'put', ep, **kwargs)
 
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.delete()")
-    def delete(self, ep, **kwargs):
+    def delete(self, ep: str, **kwargs: Any) -> Any:
         return self._do_request(self._session, 'delete', ep, **kwargs)
 
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0), "Use HTTPSession.post()")
-    def post(self, ep, **kwargs):
+    def post(self, ep: str, **kwargs: Any) -> Any:
         return self._do_request(self._session, 'post', ep, **kwargs)
 
 
 class HTTPSession:
     def __init__(
         self,
-        http,
-        base_url,
-        auth=None,
-        headers=None,
-        verify=None,
-        cert=None,
-        debug=False,
-        skip_encoding=False,
-    ):
+        http: HTTPClientService,
+        base_url: str,
+        auth: Any = None,
+        headers: dict[str, str] | None = None,
+        verify: Any = None,
+        cert: Any = None,
+        debug: bool | None = False,
+        skip_encoding: bool = False,
+    ) -> None:
         assert not base_url.endswith("/"), "baseurl should not end with /: " + base_url
         self.http = http
         self.base_url = base_url
@@ -273,22 +286,22 @@ class HTTPSession:
         self.debug = debug
         self.skip_encoding = skip_encoding
 
-        self._treq_agent = None
-        self._txrequests_session = None
+        self._treq_agent: Any = None
+        self._txrequests_session: Any = None
 
-    def update_headers(self, headers):
+    def update_headers(self, headers: dict[str, str]) -> None:
         if self.headers is None:
             self.headers = {}
         self.headers.update(headers)
 
-    def get(self, ep, **kwargs):
+    def get(self, ep: str, **kwargs: Any) -> Any:
         return self.http._do_request(self, 'get', ep, **kwargs)
 
-    def put(self, ep, **kwargs):
+    def put(self, ep: str, **kwargs: Any) -> Any:
         return self.http._do_request(self, 'put', ep, **kwargs)
 
-    def delete(self, ep, **kwargs):
+    def delete(self, ep: str, **kwargs: Any) -> Any:
         return self.http._do_request(self, 'delete', ep, **kwargs)
 
-    def post(self, ep, **kwargs):
+    def post(self, ep: str, **kwargs: Any) -> Any:
         return self.http._do_request(self, 'post', ep, **kwargs)

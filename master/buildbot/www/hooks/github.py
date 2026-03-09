@@ -257,7 +257,7 @@ class GitHubEventHandler(PullRequestMixin):
         url = f'/repos/{repo}/commits/{sha}'
         http = yield httpclientservice.HTTPSession(
             self.master.httpservice,
-            self.github_api_endpoint,
+            self.github_api_endpoint,  # type: ignore[arg-type]
             headers=headers,
             debug=self.debug,
             verify=self.verify,
@@ -291,7 +291,7 @@ class GitHubEventHandler(PullRequestMixin):
         url = f"/repos/{repo}/pulls/{number}/files"
         http = yield httpclientservice.HTTPSession(
             self.master.httpservice,
-            self.github_api_endpoint,
+            self.github_api_endpoint,  # type: ignore[arg-type]
             headers=headers,
             debug=self.debug,
             verify=self.verify,
