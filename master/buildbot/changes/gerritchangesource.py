@@ -286,7 +286,7 @@ class GerritSshStreamEventsConnector:
             self._ended_deferred: defer.Deferred[None] = defer.Deferred()
 
         @defer.inlineCallbacks
-        def outLineReceived(self, line: bytes) -> InlineCallbacksType[None]:
+        def outLineReceived(self, line: bytes) -> InlineCallbacksType[None]:  # type: ignore[override]
             if self.connector.debug:
                 log.msg(
                     f"{self.connector.change_source.name} "
