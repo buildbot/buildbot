@@ -405,7 +405,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.util.warnings",
       "buildbot.test.util.www",
       "buildbot.test",
-      "buildbot.util.identifiers",
       "buildbot.util.importlib_compat",
       "buildbot.util.kubeclientservice",
       "buildbot.util.lineboundaries",

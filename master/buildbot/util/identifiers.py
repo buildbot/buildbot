@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
+from typing import Any
 
 from buildbot import util
 
@@ -25,7 +28,7 @@ subsequent_re = re.compile('[^a-zA-Z0-9_-]')
 trailing_digits_re = re.compile('_([0-9]+)$')
 
 
-def isIdentifier(maxLength, obj):
+def isIdentifier(maxLength: int, obj: Any) -> bool:
     if not isinstance(obj, str):
         return False
     elif not ident_re.match(obj):
@@ -35,7 +38,7 @@ def isIdentifier(maxLength, obj):
     return True
 
 
-def forceIdentifier(maxLength, s):
+def forceIdentifier(maxLength: int, s: str) -> str:
     if not isinstance(s, str):
         raise TypeError(f"{str!r} cannot be coerced to an identifier")
 
@@ -51,14 +54,14 @@ def forceIdentifier(maxLength, s):
     return s
 
 
-def incrementIdentifier(maxLength, ident):
+def incrementIdentifier(maxLength: int, ident: str) -> str:
     num = 1
     mo = trailing_digits_re.search(ident)
     if mo:
         ident = ident[: mo.start(1) - 1]
         num = int(mo.group(1))
-    num = f'_{num + 1}'
-    if len(num) > maxLength:
+    num_str = f'_{num + 1}'
+    if len(num_str) > maxLength:
         raise ValueError("cannot generate a larger identifier")
-    ident = ident[: maxLength - len(num)] + num
+    ident = ident[: maxLength - len(num_str)] + num_str
     return ident
