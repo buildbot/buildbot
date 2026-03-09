@@ -18,19 +18,21 @@
 # Copyright Python Software Foundation and contributors
 # Licensed under Python Software Foundation License Version 2
 
+from __future__ import annotations
+
 import ntpath
 import os
 import posixpath
 
 
-def posix_expanduser(path, worker_environ):
+def posix_expanduser(path: str, worker_environ: dict[str, str]) -> str:
     """Expand ~ and ~user constructions.  If user or $HOME is unknown,
     do nothing."""
     path = os.fspath(path)
     tilde = '~'
     if not path.startswith(tilde):
         return path
-    sep = posixpath._get_sep(path)
+    sep = posixpath._get_sep(path)  # type: ignore[attr-defined]
     i = path.find(sep, 1)
     if i < 0:
         i = len(path)
@@ -42,7 +44,7 @@ def posix_expanduser(path, worker_environ):
                 # pwd module unavailable, return path unchanged
                 return path
             try:
-                userhome = pwd.getpwuid(os.getuid()).pw_dir
+                userhome = pwd.getpwuid(os.getuid()).pw_dir  # type: ignore[attr-defined]
             except KeyError:
                 # bpo-10496: if the current user identifier doesn't exist in the
                 # password database, return the path unchanged
@@ -57,7 +59,7 @@ def posix_expanduser(path, worker_environ):
             return path
         name = path[1:i]
         try:
-            pwent = pwd.getpwnam(name)
+            pwent = pwd.getpwnam(name)  # type: ignore[attr-defined]
         except KeyError:
             # bpo-10496: if the user name from the path doesn't exist in the
             # password database, return the path unchanged
@@ -68,7 +70,7 @@ def posix_expanduser(path, worker_environ):
     return (userhome + path[i:]) or root
 
 
-def nt_expanduser(path, worker_environ):
+def nt_expanduser(path: str, worker_environ: dict[str, str]) -> str:
     """Expand ~ and ~user constructs.
     If user or $HOME is unknown, do nothing."""
     path = os.fspath(path)
@@ -77,7 +79,7 @@ def nt_expanduser(path, worker_environ):
         return path
     i = 1
     n = len(path)
-    while i < n and path[i] not in ntpath._get_bothseps(path):
+    while i < n and path[i] not in ntpath._get_bothseps(path):  # type: ignore[attr-defined]
         i += 1
 
     if 'USERPROFILE' in worker_environ:
