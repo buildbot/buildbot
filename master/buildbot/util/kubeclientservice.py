@@ -71,7 +71,7 @@ class KubeConfigLoaderBase(service.BuildbotService):
 
 
 class KubeHardcodedConfig(KubeConfigLoaderBase):
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
         master_url: str | None = None,
         bearerToken: Any = None,
@@ -97,7 +97,7 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
         if verify is not None:
             self.config['verify'] = verify
 
-    checkConfig = reconfigService
+    checkConfig = reconfigService  # type: ignore[assignment]
 
     @defer.inlineCallbacks
     def getAuthorization(self) -> InlineCallbacksType[str | None]:
@@ -146,7 +146,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
             super().processEnded(status)
             self.terminated_deferred.callback(None)
 
-    def checkConfig(self, proxy_port: int = 8001, namespace: str = "default") -> None:
+    def checkConfig(self, proxy_port: int = 8001, namespace: str = "default") -> None:  # type: ignore[override]
         self.proxy_port = proxy_port
         self.namespace = namespace
         self.pp: KubeCtlProxyConfigLoader.LocalPP | None = None
@@ -184,7 +184,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
         self.kube_proxy_output = yield self.pp.got_output_deferred
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         try:
             yield self.start_subprocess()
         except Exception:
@@ -208,7 +208,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
     kube_token_file = os.path.join(kube_dir, 'token')
     kube_cert_file = os.path.join(kube_dir, 'ca.crt')
 
-    def checkConfig(self) -> None:
+    def checkConfig(self) -> None:  # type: ignore[override]
         if not os.path.exists(self.kube_dir):
             config.error(f"Not in kubernetes cluster (kube_dir not found: {self.kube_dir})")
 
@@ -271,7 +271,7 @@ class KubeClientService(service.SharedService):
             self._lock.release()
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self._lock.acquire()
         try:
             yield super().startService()

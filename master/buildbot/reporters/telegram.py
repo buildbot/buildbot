@@ -663,7 +663,7 @@ class TelegramStatusBot(StatusBot):
         self.nickname = None  # type: ignore[assignment]
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield super().startService()
         for c in self.chat_ids:
             channel = self.getChannel(c)
@@ -915,7 +915,7 @@ class TelegramWebhookBot(TelegramStatusBot):
         self.webhook.setServiceParent(self)
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield super().startService()
         url = bytes2unicode(self.master.config.buildbotURL)
         if not url.endswith('/'):
@@ -1030,7 +1030,7 @@ class TelegramBot(service.BuildbotService):
         base_url = "https://api.telegram.org/bot" + bot_token
         return httpclientservice.HTTPSession(self.master.httpservice, base_url)
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         bot_token: Any,
         chat_ids: Any = None,

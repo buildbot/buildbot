@@ -66,7 +66,7 @@ class _FailingBuilderConfig:
 class FailingBuildsetCanceller(BuildbotService):
     compare_attrs: ClassVar[Sequence[str]] = (*BuildbotService.compare_attrs, 'filters')
 
-    def checkConfig(self, name: str, filters: list[tuple[Any, ...]], **kwargs: Any) -> None:
+    def checkConfig(self, name: str, filters: list[tuple[Any, ...]], **kwargs: Any) -> None:  # type: ignore[override]
         FailingBuildsetCanceller.check_filters(filters)
 
         self.name = name
@@ -77,7 +77,7 @@ class FailingBuildsetCanceller(BuildbotService):
         self.filters = FailingBuildsetCanceller.filter_tuples_to_filter_set_object(filters)
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield super().startService()
         self._build_finished_consumer = yield self.master.mq.startConsuming(
             self._on_build_finished, ('builds', None, 'finished')

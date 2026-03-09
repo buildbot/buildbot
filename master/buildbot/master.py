@@ -239,7 +239,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     _already_started = False
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         assert not self._already_started, "can only start the master once"
         self._already_started = True
 

@@ -133,7 +133,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             f'<{self.__class__.__name__}({self.name}, {self.builderNames}, enabled={self.enabled})>'
         )
 
-    def reconfigService(self, *args: Any, **kwargs: Any) -> None:
+    def reconfigService(self, *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
         raise NotImplementedError()
 
     # activity handling
@@ -517,7 +517,7 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
         self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         builderNames: Any,
         properties: dict[str, Any] | None = None,

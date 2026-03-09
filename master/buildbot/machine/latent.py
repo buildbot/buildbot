@@ -46,7 +46,7 @@ class States(enum.Enum):
 class AbstractLatentMachine(Machine):
     DEFAULT_MISSING_TIMEOUT = 20 * 60
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         name: str,
         build_wait_timeout: int = 0,

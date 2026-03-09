@@ -75,7 +75,7 @@ class HashiCorpVaultKvSecretProvider(SecretProviderBase):
 
     name: str | None = 'SecretInVaultKv'  # type: ignore[assignment]
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         vault_server: str | None = None,
         authenticator: VaultAuthenticator | None = None,

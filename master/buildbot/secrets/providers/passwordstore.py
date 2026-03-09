@@ -47,12 +47,12 @@ class SecretInPass(SecretProviderBase):
         if not os.access(dirname, os.F_OK):
             config.error(f"directory {dirname} does not exist")
 
-    def checkConfig(self, gpgPassphrase: str | None = None, dirname: str | None = None) -> None:
+    def checkConfig(self, gpgPassphrase: str | None = None, dirname: str | None = None) -> None:  # type: ignore[override]
         self.checkPassIsInPath()
         if dirname:
             self.checkPassDirectoryIsAvailableAndReadable(dirname)
 
-    def reconfigService(self, gpgPassphrase: str | None = None, dirname: str | None = None) -> None:
+    def reconfigService(self, gpgPassphrase: str | None = None, dirname: str | None = None) -> None:  # type: ignore[override]
         self._env = {**os.environ}
         if gpgPassphrase:
             self._env["PASSWORD_STORE_GPG_OPTS"] = f"--passphrase {gpgPassphrase}"

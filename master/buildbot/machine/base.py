@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 @implementer(interfaces.IMachine)
 class Machine(service.BuildbotService):
-    def checkConfig(self, name: str, **kwargs: Any) -> None:
+    def checkConfig(self, name: str, **kwargs: Any) -> None:  # type: ignore[override]
         super().checkConfig(**kwargs)
         self.name = name
         self.workers: list[AbstractWorker] = []

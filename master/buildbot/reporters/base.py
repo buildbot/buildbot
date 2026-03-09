@@ -50,7 +50,7 @@ class ReporterBase(service.BuildbotService):
         self._event_consumers: dict[tuple[str, ...], QueueRef] = {}
         self._pending_got_event_calls: dict[tuple[str, Any], defer.Deferred[None]] = {}
 
-    def checkConfig(self, generators: list[Any]) -> None:
+    def checkConfig(self, generators: list[Any]) -> None:  # type: ignore[override]
         if not isinstance(generators, list):
             config.error('{}: generators argument must be a list')
 

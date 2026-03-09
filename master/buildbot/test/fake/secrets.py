@@ -12,7 +12,7 @@ class FakeSecretStorage(SecretProviderBase):
         super().__init__(*args, **kwargs, secretdict=secretdict)
         self._setup_secrets(secretdict=secretdict)
 
-    def reconfigService(self, secretdict: dict | None = None) -> None:
+    def reconfigService(self, secretdict: dict | None = None) -> None:  # type: ignore[override]
         self._setup_secrets(secretdict=secretdict)
 
     def _setup_secrets(self, secretdict: dict | None = None) -> None:

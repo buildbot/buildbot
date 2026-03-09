@@ -65,7 +65,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
     pollRandomDelayMin: int | None = None
     pollRandomDelayMax: int | None = None
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         name: str | None = None,
         pollInterval: int = 60 * 10,

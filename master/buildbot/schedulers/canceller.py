@@ -243,7 +243,7 @@ class _OldBuildrequestTracker:
 class OldBuildCanceller(BuildbotService):
     compare_attrs: ClassVar[Sequence[str]] = (*BuildbotService.compare_attrs, 'filters')
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         name: str,
         filters: list[tuple[list[str], SourceStampFilter]],
@@ -310,7 +310,7 @@ class OldBuildCanceller(BuildbotService):
             self._build_tracker.on_complete_buildrequest(breq['buildrequestid'])
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield super().startService()
         self._change_consumer = yield self.master.mq.startConsuming(
             self._on_change, ('changes', None, 'new')

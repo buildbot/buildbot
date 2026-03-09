@@ -143,7 +143,7 @@ class BaseDispatcher(service.AsyncMultiService):
         raise NotImplementedError
 
     @async_to_deferred
-    async def startService(self) -> None:
+    async def startService(self) -> None:  # type: ignore[override]
         await super().startService()
         if self._service._waitingForPort is not None:
             port = await self._service._waitingForPort
