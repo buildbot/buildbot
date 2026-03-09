@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -25,13 +29,16 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = build_data.BuildDataNoValueEndpoint
     resourceTypeClass = build_data.BuildData
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
@@ -46,7 +53,7 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing_build_data_by_build_id(self):
+    def test_get_existing_build_data_by_build_id(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builds', 30, 'data', 'name1'))
         self.validateData(result)
         self.assertEqual(
@@ -61,7 +68,9 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_existing_build_data_by_builder_name_build_number(self):
+    def test_get_existing_build_data_by_builder_name_build_number(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name1'))
         self.validateData(result)
         self.assertEqual(
@@ -76,7 +85,7 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_existing_build_data_by_builder_id_build_number(self):
+    def test_get_existing_build_data_by_builder_id_build_number(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name1'))
         self.validateData(result)
         self.assertEqual(
@@ -91,42 +100,52 @@ class TestBuildDataNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_missing_by_build_id_missing_build(self):
+    def test_get_missing_by_build_id_missing_build(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builds', 31, 'data', 'name1'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_build_id_missing_name(self):
+    def test_get_missing_by_build_id_missing_name(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builds', 30, 'data', 'name_missing'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_builder(self):
+    def test_get_missing_by_builder_name_build_number_missing_builder(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 'b_missing', 'builds', 7, 'data', 'name1'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_build(self):
+    def test_get_missing_by_builder_name_build_number_missing_build(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 'b1', 'builds', 17, 'data', 'name1'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_name(self):
+    def test_get_missing_by_builder_name_build_number_missing_name(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name_missing'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_builder(self):
+    def test_get_missing_by_builder_id_build_number_missing_builder(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 188, 'builds', 7, 'data', 'name1'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_build(self):
+    def test_get_missing_by_builder_id_build_number_missing_build(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 88, 'builds', 17, 'data', 'name1'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_name(self):
+    def test_get_missing_by_builder_id_build_number_missing_name(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name_missing'))
         self.assertIsNone(result)
 
@@ -136,7 +155,7 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = build_data.BuildData
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
@@ -150,13 +169,13 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
         ])
 
-    def validateData(self, data):
+    def validateData(self, data: dict[str, bytes | str]) -> None:
         self.assertIsInstance(data['raw'], bytes)
         self.assertIsInstance(data['mime-type'], str)
         self.assertIsInstance(data['filename'], str)
 
     @defer.inlineCallbacks
-    def test_get_existing_build_data_by_build_id(self):
+    def test_get_existing_build_data_by_build_id(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builds', 30, 'data', 'name1', 'value'))
         self.validateData(result)
         self.assertEqual(
@@ -169,7 +188,9 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_existing_build_data_by_builder_name_build_number(self):
+    def test_get_existing_build_data_by_builder_name_build_number(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 'b1', 'builds', 7, 'data', 'name1', 'value'))
         self.validateData(result)
         self.assertEqual(
@@ -182,7 +203,7 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_existing_build_data_by_builder_id_build_number(self):
+    def test_get_existing_build_data_by_builder_id_build_number(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name1', 'value'))
         self.validateData(result)
         self.assertEqual(
@@ -195,17 +216,19 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_missing_by_build_id_missing_build(self):
+    def test_get_missing_by_build_id_missing_build(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builds', 31, 'data', 'name1', 'value'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_build_id_missing_name(self):
+    def test_get_missing_by_build_id_missing_name(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builds', 30, 'data', 'name_missing', 'value'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_builder(self):
+    def test_get_missing_by_builder_name_build_number_missing_builder(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet((
             'builders',
             'b_missing',
@@ -218,12 +241,16 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_build(self):
+    def test_get_missing_by_builder_name_build_number_missing_build(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 'b1', 'builds', 17, 'data', 'name1', 'value'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_name_build_number_missing_name(self):
+    def test_get_missing_by_builder_name_build_number_missing_name(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet((
             'builders',
             'b1',
@@ -236,17 +263,21 @@ class TestBuildDataEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_builder(self):
+    def test_get_missing_by_builder_id_build_number_missing_builder(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 188, 'builds', 7, 'data', 'name1', 'value'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_build(self):
+    def test_get_missing_by_builder_id_build_number_missing_build(
+        self,
+    ) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 88, 'builds', 17, 'data', 'name1', 'value'))
         self.assertIsNone(result)
 
     @defer.inlineCallbacks
-    def test_get_missing_by_builder_id_build_number_missing_name(self):
+    def test_get_missing_by_builder_id_build_number_missing_name(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('builders', 88, 'builds', 7, 'data', 'name_missing', 'value'))
         self.assertIsNone(result)
 
@@ -256,7 +287,7 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = build_data.BuildData
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
@@ -287,7 +318,9 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ('not_existing', 10, []),
     ])
     @defer.inlineCallbacks
-    def test_get_builders_builder_name(self, name, build_number, exp_names):
+    def test_get_builders_builder_name(
+        self, name: str, build_number: int, exp_names: list[str]
+    ) -> InlineCallbacksType[None]:
         results = yield self.callGet(('builders', 'b1', 'builds', build_number, 'data'))
         for result in results:
             self.validateData(result)
@@ -300,7 +333,9 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ('not_existing', 10, []),
     ])
     @defer.inlineCallbacks
-    def test_get_builders_builder_id(self, name, build_number, exp_names):
+    def test_get_builders_builder_id(
+        self, name: str, build_number: int, exp_names: list[str]
+    ) -> InlineCallbacksType[None]:
         results = yield self.callGet(('builders', 88, 'builds', build_number, 'data'))
         for result in results:
             self.validateData(result)
@@ -313,7 +348,9 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ('not_existing', 33, []),
     ])
     @defer.inlineCallbacks
-    def test_get_builds_id(self, name, buildid, exp_names):
+    def test_get_builds_id(
+        self, name: str, buildid: int, exp_names: list[str]
+    ) -> InlineCallbacksType[None]:
         results = yield self.callGet(('builds', buildid, 'data'))
         for result in results:
             self.validateData(result)
@@ -322,7 +359,7 @@ class TestBuildDatasNoValueEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = build_data.BuildData(self.master)
@@ -335,13 +372,13 @@ class TestBuildData(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
             fakedb.Build(id=2, buildrequestid=41, masterid=88, builderid=88, workerid=47),
         ])
 
-    def test_signature_set_build_data(self):
+    def test_signature_set_build_data(self) -> None:
         @self.assertArgSpecMatches(self.master.data.updates.setBuildData, self.rtype.setBuildData)
-        def setBuildData(self, buildid, name, value, source):
+        def setBuildData(self: object, buildid: int, name: str, value: bytes, source: str) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_set_build_data(self):
+    def test_set_build_data(self) -> InlineCallbacksType[None]:
         yield self.rtype.setBuildData(buildid=2, name='name1', value=b'value1', source='source1')
 
         result = yield self.master.db.build_data.getBuildData(2, 'name1')

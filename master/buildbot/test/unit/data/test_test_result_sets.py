@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -26,13 +30,16 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util.twisted import async_to_deferred
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestResultSetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = test_result_sets.TestResultSetEndpoint
     resourceTypeClass = test_result_sets.TestResultSet
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
@@ -57,7 +64,7 @@ class TestResultSetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing_result_set(self):
+    def test_get_existing_result_set(self) -> InlineCallbacksType[None]:
         result = yield self.callGet(('test_result_sets', 13))
         self.validateData(result)
         self.assertEqual(
@@ -77,7 +84,7 @@ class TestResultSetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_missing_result_set(self):
+    def test_get_missing_result_set(self) -> InlineCallbacksType[None]:
         results = yield self.callGet(('test_result_sets', 14))
         self.assertIsNone(results)
 
@@ -87,7 +94,7 @@ class TestResultSetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = test_result_sets.TestResultSet
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
@@ -122,35 +129,35 @@ class TestResultSetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_result_sets_all(self):
+    def test_get_result_sets_all(self) -> InlineCallbacksType[None]:
         results = yield self.callGet(('test_result_sets',))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_result_setid'] for r in results], [13, 14])
 
     @defer.inlineCallbacks
-    def test_get_result_sets_builders_builderid(self):
+    def test_get_result_sets_builders_builderid(self) -> InlineCallbacksType[None]:
         results = yield self.callGet(('builders', 88, 'test_result_sets'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_result_setid'] for r in results], [13, 14])
 
     @defer.inlineCallbacks
-    def test_get_result_sets_builders_buildername(self):
+    def test_get_result_sets_builders_buildername(self) -> InlineCallbacksType[None]:
         results = yield self.callGet(('builders', 'b1', 'test_result_sets'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_result_setid'] for r in results], [13, 14])
 
     @defer.inlineCallbacks
-    def test_get_result_sets_builds_buildid(self):
+    def test_get_result_sets_builds_buildid(self) -> InlineCallbacksType[None]:
         results = yield self.callGet(('builds', 30, 'test_result_sets'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_result_setid'] for r in results], [13, 14])
 
     @defer.inlineCallbacks
-    def test_get_result_sets_steps_stepid(self):
+    def test_get_result_sets_steps_stepid(self) -> InlineCallbacksType[None]:
         results = yield self.callGet(('steps', 131, 'test_result_sets'))
         for result in results:
             self.validateData(result)
@@ -254,7 +261,7 @@ class TestResultSetsFromCommitRangeEndpoint(endpoint.EndpointMixin, unittest.Tes
 
 class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         yield self.master.db.insert_test_data([
@@ -284,22 +291,35 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         ])
         self.rtype = test_result_sets.TestResultSet(self.master)
 
-    def test_signature_add_test_result_set(self):
+    def test_signature_add_test_result_set(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.addTestResultSet, self.rtype.addTestResultSet
         )
-        def addTestResultSet(self, builderid, buildid, stepid, description, category, value_unit):
+        def addTestResultSet(
+            self: object,
+            builderid: int,
+            buildid: int,
+            stepid: int,
+            description: str,
+            category: str,
+            value_unit: str,
+        ) -> None:
             pass
 
-    def test_signature_complete_test_result_set(self):
+    def test_signature_complete_test_result_set(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.completeTestResultSet, self.rtype.completeTestResultSet
         )
-        def completeTestResultSet(self, test_result_setid, tests_passed=None, tests_failed=None):
+        def completeTestResultSet(
+            self: object,
+            test_result_setid: int,
+            tests_passed: int | None = None,
+            tests_failed: int | None = None,
+        ) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_add_test_result_set(self):
+    def test_add_test_result_set(self) -> InlineCallbacksType[None]:
         test_result_setid = yield self.rtype.addTestResultSet(
             builderid=1, buildid=2, stepid=3, description='desc', category='cat4', value_unit='ms'
         )
@@ -339,7 +359,7 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         )
 
     @defer.inlineCallbacks
-    def test_complete_test_result_set_no_results(self):
+    def test_complete_test_result_set_no_results(self) -> InlineCallbacksType[None]:
         test_result_setid = yield self.master.db.test_result_sets.addTestResultSet(
             builderid=1, buildid=2, stepid=3, description='desc', category='cat4', value_unit='ms'
         )
@@ -381,7 +401,7 @@ class TestResultSet(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCa
         )
 
     @defer.inlineCallbacks
-    def test_complete_test_result_set_with_results(self):
+    def test_complete_test_result_set_with_results(self) -> InlineCallbacksType[None]:
         test_result_setid = yield self.master.db.test_result_sets.addTestResultSet(
             builderid=1, buildid=2, stepid=3, description='desc', category='cat4', value_unit='ms'
         )

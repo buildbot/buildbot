@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.trial.unittest import TestCase
 
 from buildbot.process.builder import Builder
@@ -25,7 +27,7 @@ class TestAbstractWorkerForBuilder(TestCase):
     Tests for ``AbstractWorkerForBuilder``.
     """
 
-    def test_buildStarted_called(self):
+    def test_buildStarted_called(self) -> None:
         """
         If the worker associated to worker builder has a ``buildStarted`` method,
         calling ``buildStarted`` on the worker builder calls the method on the
@@ -35,7 +37,7 @@ class TestAbstractWorkerForBuilder(TestCase):
         class ConcreteWorker(AbstractWorker):
             _buildStartedCalls = []
 
-            def buildStarted(self, workerforbuilder):
+            def buildStarted(self, workerforbuilder: AbstractWorkerForBuilder) -> None:
                 self._buildStartedCalls.append(workerforbuilder)
 
         fake_builder = Builder("fake_builder")
@@ -48,7 +50,7 @@ class TestAbstractWorkerForBuilder(TestCase):
 
         self.assertEqual(ConcreteWorker._buildStartedCalls, [workerforbuilder])
 
-    def test_buildStarted_missing(self):
+    def test_buildStarted_missing(self) -> None:
         """
         If the worker associated to worker builder doesn't not have a
         ``buildStarted`` method, calling ``buildStarted`` on the worker builder

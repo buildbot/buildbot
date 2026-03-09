@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from parameterized import parameterized
@@ -28,13 +31,16 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class ProjectEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = projects.ProjectEndpoint
     resourceTypeClass = projects.Project
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Project(id=1, name='project1'),
@@ -42,27 +48,27 @@ class ProjectEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing_id(self):
+    def test_get_existing_id(self) -> InlineCallbacksType[None]:
         project = yield self.callGet(('projects', 2))
 
         self.validateData(project)
         self.assertEqual(project['name'], 'project2')
 
     @defer.inlineCallbacks
-    def test_get_existing_name(self):
+    def test_get_existing_name(self) -> InlineCallbacksType[None]:
         project = yield self.callGet(('projects', 'project2'))
 
         self.validateData(project)
         self.assertEqual(project['name'], 'project2')
 
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         project = yield self.callGet(('projects', 99))
 
         self.assertIsNone(project)
 
     @defer.inlineCallbacks
-    def test_get_missing_with_name(self):
+    def test_get_missing_with_name(self) -> InlineCallbacksType[None]:
         project = yield self.callGet(('projects', 'project99'))
 
         self.assertIsNone(project)
@@ -73,7 +79,7 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = projects.Project
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Project(id=1, name='project1'),
@@ -91,7 +97,9 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ('inactive', False, [1, 3]),
     ])
     @defer.inlineCallbacks
-    def test_get(self, name, active_filter, expected_projectids):
+    def test_get(
+        self, name: str, active_filter: bool | None, expected_projectids: list[int]
+    ) -> InlineCallbacksType[None]:
         result_spec = None
         if active_filter is not None:
             result_spec = resultspec.OptimisedResultSpec(
@@ -108,7 +116,7 @@ class ProjectsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = projects.Project(self.master)
@@ -116,29 +124,34 @@ class Project(interfaces.InterfaceTests, TestReactorMixin, unittest.TestCase):
             fakedb.Project(id=13, name="fake_project"),
         ])
 
-    def test_signature_find_project_id(self):
+    def test_signature_find_project_id(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.find_project_id,  # fake
             self.rtype.find_project_id,
         )  # real
-        def find_project_id(self, name: str, auto_create: bool = True):
+        def find_project_id(self: object, name: str, auto_create: bool = True) -> None:
             pass
 
-    def test_find_project_id(self):
+    def test_find_project_id(self) -> None:
         # this just passes through to the db method, so test that
         rv = defer.succeed(None)
         self.master.db.projects.find_project_id = mock.Mock(return_value=rv)
         self.assertIdentical(self.rtype.find_project_id('foo'), rv)
 
-    def test_signature_update_project_info(self):
+    def test_signature_update_project_info(self) -> None:
         @self.assertArgSpecMatches(self.master.data.updates.update_project_info)
         def update_project_info(
-            self, projectid, slug, description, description_format, description_html
-        ):
+            self: object,
+            projectid: int,
+            slug: str,
+            description: str | None,
+            description_format: str | None,
+            description_html: str | None,
+        ) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_update_project_info(self):
+    def test_update_project_info(self) -> InlineCallbacksType[None]:
         yield self.master.data.updates.update_project_info(
             13,
             "slug13",

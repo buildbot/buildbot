@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -22,13 +25,16 @@ from buildbot.config.master import MasterConfig
 from buildbot.process.users import manager
 from buildbot.util import service
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class FakeUserManager(service.AsyncMultiService):
     pass
 
 
 class TestUserManager(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.master = mock.Mock()
         self.umm = manager.UserManagerManager(self.master)
         self.umm.startService()
@@ -37,7 +43,7 @@ class TestUserManager(unittest.TestCase):
         self.config = MasterConfig()
 
     @defer.inlineCallbacks
-    def test_reconfigServiceWithBuildbotConfig(self):
+    def test_reconfigServiceWithBuildbotConfig(self) -> InlineCallbacksType[None]:
         # add a user manager
         um1 = FakeUserManager()
         self.config.user_managers = [um1]

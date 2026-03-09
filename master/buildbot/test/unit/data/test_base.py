@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -25,29 +28,32 @@ from buildbot.test.util import endpoint
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class ResourceType(TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
-    def makeResourceTypeSubclass(self, **attributes):
+    def makeResourceTypeSubclass(self, **attributes: object) -> type:
         attributes.setdefault('name', 'thing')
         return type('ThingResourceType', (base.ResourceType,), attributes)
 
-    def test_sets_master(self):
+    def test_sets_master(self) -> None:
         cls = self.makeResourceTypeSubclass()
         master = mock.Mock()
         inst = cls(master)
         self.assertIdentical(inst.master, master)
 
-    def test_getEndpoints_instances_fails(self):
-        ep = base.Endpoint(None, None)
+    def test_getEndpoints_instances_fails(self) -> None:
+        ep = base.Endpoint(None, None)  # type: ignore[arg-type]
         cls = self.makeResourceTypeSubclass(endpoints=[ep])
         inst = cls(None)
         with self.assertRaises(TypeError):
             inst.getEndpoints()
 
-    def test_getEndpoints_classes(self):
+    def test_getEndpoints_classes(self) -> None:
         class MyEndpoint(base.Endpoint):
             pass
 
@@ -59,7 +65,7 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
         self.assertIdentical(eps[0].master, master)
 
     @defer.inlineCallbacks
-    def test_produceEvent(self):
+    def test_produceEvent(self) -> InlineCallbacksType[None]:
         cls = self.makeResourceTypeSubclass(
             name='singular', eventPathPatterns=["/foo/:fooid/bar/:barid"]
         )
@@ -75,7 +81,7 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_compilePatterns(self):
+    def test_compilePatterns(self) -> InlineCallbacksType[None]:
         class MyResourceType(base.ResourceType):
             eventPathPatterns = [
                 "/builder/:builderid/build/:number",
@@ -88,7 +94,7 @@ class ResourceType(TestReactorMixin, unittest.TestCase):
         self.assertEqual(inst.eventPaths, ['builder/{builderid}/build/{number}', 'build/{buildid}'])
 
     @defer.inlineCallbacks
-    def test_compilePatterns_multiline_string_deprecation(self):
+    def test_compilePatterns_multiline_string_deprecation(self) -> InlineCallbacksType[None]:
         class MyResourceType(base.ResourceType):
             eventPathPatterns = """
                 /builder/:builderid/build/:number
@@ -118,26 +124,26 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = MyResourceType
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
 
-    def test_sets_master(self):
+    def test_sets_master(self) -> None:
         self.assertIdentical(self.master, self.ep.master)
 
 
 class ListResult(unittest.TestCase):
-    def test_constructor(self):
+    def test_constructor(self) -> None:
         lr = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
         self.assertEqual(lr.data, [1, 2, 3])
         self.assertEqual(lr.offset, 10)
         self.assertEqual(lr.total, 20)
         self.assertEqual(lr.limit, 3)
 
-    def test_repr(self):
+    def test_repr(self) -> None:
         lr = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
         self.assertTrue(repr(lr).startswith('ListResult'))
 
-    def test_eq(self):
+    def test_eq(self) -> None:
         lr1 = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
         lr2 = base.ListResult([1, 2, 3], offset=20, total=30, limit=3)
         lr3 = base.ListResult([1, 2, 3], offset=20, total=30, limit=3)
@@ -145,7 +151,7 @@ class ListResult(unittest.TestCase):
         self.assertNotEqual(lr1, lr2)
         self.assertNotEqual(lr1, lr3)
 
-    def test_eq_to_list(self):
+    def test_eq_to_list(self) -> None:
         list = [1, 2, 3]
         lr1 = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
         self.assertNotEqual(lr1, list)

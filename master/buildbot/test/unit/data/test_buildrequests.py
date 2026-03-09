@@ -14,7 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import datetime
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -30,6 +34,11 @@ from buildbot.test.util import interfaces
 from buildbot.util import UTC
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = buildrequests.BuildRequestEndpoint
@@ -43,7 +52,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     COMPLETE_AT_EPOCH = 329920275
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
@@ -67,7 +76,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def testGetExisting(self):
+    def testGetExisting(self) -> InlineCallbacksType[None]:
         self.master.db.buildrequests.claimBuildRequests([44], claimed_at=self.CLAIMED_AT)
         self.master.db.buildrequests.completeBuildRequests([44], 75, complete_at=self.COMPLETE_AT)
         buildrequest = yield self.callGet(('buildrequests', 44))
@@ -88,12 +97,12 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildrequest['properties'], None)
 
     @defer.inlineCallbacks
-    def testGetMissing(self):
+    def testGetMissing(self) -> InlineCallbacksType[None]:
         buildrequest = yield self.callGet(('buildrequests', 9999))
         self.assertEqual(buildrequest, None)
 
     @defer.inlineCallbacks
-    def testGetProperty(self):
+    def testGetProperty(self) -> InlineCallbacksType[None]:
         prop = resultspec.Property(b'property', 'eq', ['prop1'])
         buildrequest = yield self.callGet(
             ('buildrequests', 44), resultSpec=resultspec.ResultSpec(properties=[prop])
@@ -102,7 +111,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildrequest['properties'], {'prop1': ('one', 'fake1')})
 
     @defer.inlineCallbacks
-    def testGetProperties(self):
+    def testGetProperties(self) -> InlineCallbacksType[None]:
         prop = resultspec.Property(b'property', 'eq', ['*'])
         buildrequest = yield self.callGet(
             ('buildrequests', 44), resultSpec=resultspec.ResultSpec(properties=[prop])
@@ -125,7 +134,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     COMPLETE_AT_EPOCH = 329920275
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='bbb'),
@@ -149,7 +158,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def testGetAll(self):
+    def testGetAll(self) -> InlineCallbacksType[None]:
         buildrequests = yield self.callGet(('buildrequests',))
 
         for br in buildrequests:
@@ -158,12 +167,12 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([br['buildrequestid'] for br in buildrequests]), [44, 45, 46])
 
     @defer.inlineCallbacks
-    def testGetNoBuildRequest(self):
+    def testGetNoBuildRequest(self) -> InlineCallbacksType[None]:
         buildrequests = yield self.callGet(('builders', 79, 'buildrequests'))
         self.assertEqual(buildrequests, [])
 
     @defer.inlineCallbacks
-    def testGetBuilderid(self):
+    def testGetBuilderid(self) -> InlineCallbacksType[None]:
         buildrequests = yield self.callGet(('builders', 78, 'buildrequests'))
 
         for br in buildrequests:
@@ -172,12 +181,12 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([br['buildrequestid'] for br in buildrequests]), [46])
 
     @defer.inlineCallbacks
-    def testGetUnknownBuilderid(self):
+    def testGetUnknownBuilderid(self) -> InlineCallbacksType[None]:
         buildrequests = yield self.callGet(('builders', 79, 'buildrequests'))
         self.assertEqual(buildrequests, [])
 
     @defer.inlineCallbacks
-    def testGetProperties(self):
+    def testGetProperties(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.BuildsetProperty(
                 buildsetid=8822, property_name='prop1', property_value='["one", "fake1"]'
@@ -197,7 +206,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def testGetNoFilters(self):
+    def testGetNoFilters(self) -> InlineCallbacksType[None]:
         getBuildRequestsMock = mock.Mock(return_value={})
         self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
         yield self.callGet(('buildrequests',))
@@ -210,7 +219,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def testGetFilters(self):
+    def testGetFilters(self) -> InlineCallbacksType[None]:
         getBuildRequestsMock = mock.Mock(return_value={})
         self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
         f1 = resultspec.Filter('complete', 'eq', [False])
@@ -230,7 +239,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def testGetClaimedByMasterIdFilters(self):
+    def testGetClaimedByMasterIdFilters(self) -> InlineCallbacksType[None]:
         getBuildRequestsMock = mock.Mock(return_value={})
         self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
         f1 = resultspec.Filter('claimed', 'eq', [True])
@@ -245,15 +254,17 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def testGetSortedLimit(self):
+    def testGetSortedLimit(self) -> InlineCallbacksType[None]:
         yield self.master.db.buildrequests.completeBuildRequests([44], 1)
         res = yield self.callGet(
-            ('buildrequests',), resultSpec=resultspec.ResultSpec(order=['results'], limit=2)
+            ('buildrequests',),
+            resultSpec=resultspec.ResultSpec(order=['results'], limit=2),  # type: ignore[arg-type]
         )
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0]['results'], -1)
         res = yield self.callGet(
-            ('buildrequests',), resultSpec=resultspec.ResultSpec(order=['-results'], limit=2)
+            ('buildrequests',),
+            resultSpec=resultspec.ResultSpec(order=['-results'], limit=2),  # type: ignore[arg-type]
         )
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0]['results'], 1)
@@ -267,7 +278,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         pass
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = buildrequests.BuildRequest(self.master)
@@ -275,19 +286,19 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
     @defer.inlineCallbacks
     def doTestCallthrough(
         self,
-        dbMethodName,
-        dbMockedMethod,
-        method,
-        methodargs=None,
-        methodkwargs=None,
-        expectedRes=None,
-        expectedException=None,
-        expectedDbApiCalled=True,
-    ):
+        dbMethodName: str,
+        dbMockedMethod: Callable[..., defer.Deferred[None]],
+        method: Callable[..., Any],
+        methodargs: list[Any] | None = None,
+        methodkwargs: dict[str, Any] | None = None,
+        expectedRes: bool | None = None,
+        expectedException: type[Exception] | None = None,
+        expectedDbApiCalled: bool = True,
+    ) -> InlineCallbacksType[None]:
         self.patch(self.master.db.buildrequests, dbMethodName, dbMockedMethod)
         if expectedException is not None:
             try:
-                yield method(*methodargs, **methodkwargs)
+                yield method(*methodargs, **methodkwargs)  # type: ignore[misc, arg-type]
             except expectedException:
                 pass
             except Exception as e:
@@ -295,21 +306,23 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
             else:
                 self.fail(f'{expectedException} exception should be raised')
         else:
-            res = yield method(*methodargs, **methodkwargs)
+            res = yield method(*methodargs, **methodkwargs)  # type: ignore[misc, arg-type]
             self.assertEqual(res, expectedRes)
         if expectedDbApiCalled:
-            dbMockedMethod.assert_called_with(*methodargs, **methodkwargs)
+            dbMockedMethod.assert_called_with(*methodargs, **methodkwargs)  # type: ignore[attr-defined]
 
-    def testSignatureClaimBuildRequests(self):
+    def testSignatureClaimBuildRequests(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.claimBuildRequests,  # fake
             self.rtype.claimBuildRequests,
         )  # real
-        def claimBuildRequests(self, brids, claimed_at=None):
+        def claimBuildRequests(
+            self: object, brids: list[int], claimed_at: datetime.datetime | None = None
+        ) -> None:
             pass
 
     @defer.inlineCallbacks
-    def testFakeDataClaimBuildRequests(self):
+    def testFakeDataClaimBuildRequests(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=123),
@@ -323,12 +336,12 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertTrue(res)
 
     @defer.inlineCallbacks
-    def testFakeDataClaimBuildRequestsNoneArgs(self):
+    def testFakeDataClaimBuildRequestsNoneArgs(self) -> InlineCallbacksType[None]:
         res = yield self.master.data.updates.claimBuildRequests([])
         self.assertTrue(res)
 
     @defer.inlineCallbacks
-    def testClaimBuildRequests(self):
+    def testClaimBuildRequests(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=123),
             fakedb.Buildset(id=8822),
@@ -370,7 +383,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         )
 
     @defer.inlineCallbacks
-    def testClaimBuildRequestsNoBrids(self):
+    def testClaimBuildRequestsNoBrids(self) -> InlineCallbacksType[None]:
         claimBuildRequestsMock = mock.Mock(return_value=defer.succeed(None))
         yield self.doTestCallthrough(
             'claimBuildRequests',
@@ -385,7 +398,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertEqual(self.master.mq.productions, [])
 
     @defer.inlineCallbacks
-    def testClaimBuildRequestsAlreadyClaimed(self):
+    def testClaimBuildRequestsAlreadyClaimed(self) -> InlineCallbacksType[None]:
         claimBuildRequestsMock = mock.Mock(
             side_effect=buildrequests.AlreadyClaimedError('oups ! buildrequest already claimed')
         )
@@ -401,7 +414,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertEqual(self.master.mq.productions, [])
 
     @defer.inlineCallbacks
-    def testClaimBuildRequestsUnknownException(self):
+    def testClaimBuildRequestsUnknownException(self) -> InlineCallbacksType[None]:
         claimBuildRequestsMock = mock.Mock(
             side_effect=self.dBLayerException('oups ! unknown error')
         )
@@ -416,26 +429,26 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         )
         self.assertEqual(self.master.mq.productions, [])
 
-    def testSignatureUnclaimBuildRequests(self):
+    def testSignatureUnclaimBuildRequests(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.unclaimBuildRequests,  # fake
             self.rtype.unclaimBuildRequests,
         )  # real
-        def unclaimBuildRequests(self, brids):
+        def unclaimBuildRequests(self: object, brids: list[int]) -> None:
             pass
 
     @defer.inlineCallbacks
-    def testFakeDataUnclaimBuildRequests(self):
+    def testFakeDataUnclaimBuildRequests(self) -> InlineCallbacksType[None]:
         res = yield self.master.data.updates.unclaimBuildRequests([44, 55])
         self.assertEqual(res, None)
 
     @defer.inlineCallbacks
-    def testFakeDataUnclaimBuildRequestsNoneArgs(self):
+    def testFakeDataUnclaimBuildRequestsNoneArgs(self) -> InlineCallbacksType[None]:
         res = yield self.master.data.updates.unclaimBuildRequests([])
         self.assertEqual(res, None)
 
     @defer.inlineCallbacks
-    def testUnclaimBuildRequests(self):
+    def testUnclaimBuildRequests(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=123),
             fakedb.Buildset(id=8822),
@@ -476,7 +489,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         )
 
     @defer.inlineCallbacks
-    def testUnclaimBuildRequestsNoBrids(self):
+    def testUnclaimBuildRequestsNoBrids(self) -> InlineCallbacksType[None]:
         unclaimBuildRequestsMock = mock.Mock(return_value=defer.succeed(None))
         yield self.doTestCallthrough(
             'unclaimBuildRequests',
@@ -489,16 +502,21 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
             expectedDbApiCalled=False,
         )
 
-    def testSignatureCompleteBuildRequests(self):
+    def testSignatureCompleteBuildRequests(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.completeBuildRequests,  # fake
             self.rtype.completeBuildRequests,
         )  # real
-        def completeBuildRequests(self, brids, results, complete_at=None):
+        def completeBuildRequests(
+            self: object,
+            brids: list[int],
+            results: int,
+            complete_at: datetime.datetime | None = None,
+        ) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_complete_build_requests(self):
+    def test_complete_build_requests(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
             fakedb.Builder(id=77),
@@ -519,12 +537,12 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertTrue(res)
 
     @defer.inlineCallbacks
-    def test_complete_build_requests_no_brids(self):
+    def test_complete_build_requests_no_brids(self) -> InlineCallbacksType[None]:
         res = yield self.master.data.updates.completeBuildRequests([], 0)
         self.assertTrue(res)
 
     @defer.inlineCallbacks
-    def testCompleteBuildRequests(self):
+    def testCompleteBuildRequests(self) -> InlineCallbacksType[None]:
         completeBuildRequestsMock = mock.Mock(return_value=defer.succeed(None))
         yield self.doTestCallthrough(
             'completeBuildRequests',
@@ -537,7 +555,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         )
 
     @defer.inlineCallbacks
-    def testCompleteBuildRequestsNoBrids(self):
+    def testCompleteBuildRequestsNoBrids(self) -> InlineCallbacksType[None]:
         completeBuildRequestsMock = mock.Mock(return_value=defer.succeed(None))
         yield self.doTestCallthrough(
             'completeBuildRequests',
@@ -551,7 +569,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         )
 
     @defer.inlineCallbacks
-    def testCompleteBuildRequestsNotClaimed(self):
+    def testCompleteBuildRequestsNotClaimed(self) -> InlineCallbacksType[None]:
         completeBuildRequestsMock = mock.Mock(
             side_effect=buildrequests.NotClaimedError('oups ! buildrequest not claimed')
         )
@@ -566,7 +584,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         )
 
     @defer.inlineCallbacks
-    def testCompleteBuildRequestsUnknownException(self):
+    def testCompleteBuildRequestsUnknownException(self) -> InlineCallbacksType[None]:
         completeBuildRequestsMock = mock.Mock(
             side_effect=self.dBLayerException('oups ! unknown error')
         )
@@ -581,7 +599,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         )
 
     @defer.inlineCallbacks
-    def testRebuildBuildrequest(self):
+    def testRebuildBuildrequest(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name='builder'),
             fakedb.Master(id=88),
@@ -648,7 +666,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         self.assertEqual(properties, {'prop1': ('one', 'fake1'), 'prop2': ('two', 'fake2')})
 
     @defer.inlineCallbacks
-    def test_rebuild_buildrequest_rebuilt_build(self):
+    def test_rebuild_buildrequest_rebuilt_build(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name="builder"),
             fakedb.Master(id=88),
@@ -707,7 +725,7 @@ class TestBuildRequest(interfaces.InterfaceTests, TestReactorMixin, unittest.Tes
         )
 
     @defer.inlineCallbacks
-    def test_rebuild_buildrequest_repeated_rebuilt_build(self):
+    def test_rebuild_buildrequest_repeated_rebuilt_build(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=77, name="builder"),
             fakedb.Master(id=88),

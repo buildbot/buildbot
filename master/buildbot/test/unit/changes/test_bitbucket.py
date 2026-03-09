@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
 from datetime import datetime
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -25,6 +29,9 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
 from buildbot.test.util.logging import LoggingMixin
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class SourceRest:
@@ -62,13 +69,13 @@ class SourceRest:
 }
 """
 
-    def __init__(self, owner, slug, hash, date):
+    def __init__(self, owner: str, slug: str, hash: str, date: str) -> None:
         self.owner = owner
         self.slug = slug
         self.hash = hash
         self.date = date
 
-    def response(self):
+    def response(self) -> str:
         return self.template % {
             "owner": self.owner,
             "slug": self.slug,
@@ -77,13 +84,13 @@ class SourceRest:
             "date": self.date,
         }
 
-    def repo_response(self):
+    def repo_response(self) -> str:
         return self.repo_template % {
             "owner": self.owner,
             "slug": self.slug,
         }
 
-    def diff_response(self):
+    def diff_response(self) -> str:
         return """
 diff --git a/path/to/a/file.txt b/path/to/a/file.txt
 index 3e59caa..be38dcf 100644
@@ -127,7 +134,16 @@ class PullRequestRest:
 }
 """
 
-    def __init__(self, nr, title, description, display_name, source, created_on, updated_on=None):
+    def __init__(
+        self,
+        nr: int,
+        title: str,
+        description: str,
+        display_name: str,
+        source: SourceRest,
+        created_on: str,
+        updated_on: str | None = None,
+    ) -> None:
         self.nr = nr
         self.title = title
         self.description = description
@@ -139,7 +155,7 @@ class PullRequestRest:
         else:
             self.updated_on = self.created_on
 
-    def response(self):
+    def response(self) -> str:
         return self.template % {
             "description": self.description,
             "title": self.title,
@@ -200,7 +216,7 @@ class PullRequestListRest:
         }
 """
 
-    def __init__(self, owner, slug, prs):
+    def __init__(self, owner: str, slug: str, prs: list[PullRequestRest]) -> None:
         self.owner = owner
         self.slug = slug
         self.prs = prs
@@ -211,7 +227,7 @@ class PullRequestListRest:
             self.pr_by_id[pr.nr] = pr
             self.src_by_url[f"{pr.source.owner}/{pr.source.slug}"] = pr.source
 
-    def response(self):
+    def response(self) -> str:
         s = ""
         for pr in self.prs:
             s += self.template % {
@@ -238,7 +254,9 @@ class PullRequestListRest:
 }}
 """
 
-    def getPage(self, url, timeout=None, headers=None):
+    def getPage(
+        self, url: str, timeout: int | float | None = None, headers: dict[str, str] | None = None
+    ) -> defer.Deferred[str]:
         list_url_re = re.compile(
             f"https://api.bitbucket.org/2.0/repositories/{self.owner}/{self.slug}/pullrequests"
         )
@@ -253,19 +271,19 @@ class PullRequestListRest:
         )
 
         if list_url_re.match(url):
-            return defer.succeed(self.request())
+            return defer.succeed(self.request())  # type: ignore[attr-defined]
 
         m = pr_url_re.match(url)
         if m:
-            return self.pr_by_id[int(m.group("id"))].request()
+            return self.pr_by_id[int(m.group("id"))].request()  # type: ignore[attr-defined]
 
         m = source_commit_url_re.match(url)
         if m:
-            return self.src_by_url[f'{m.group("src_owner")}/{m.group("src_slug")}'].request()
+            return self.src_by_url[f'{m.group("src_owner")}/{m.group("src_slug")}'].request()  # type: ignore[attr-defined]
 
         m = source_url_re.match(url)
         if m:
-            return self.src_by_url[f'{m.group("src_owner")}/{m.group("src_slug")}'].repo_request()
+            return self.src_by_url[f'{m.group("src_owner")}/{m.group("src_slug")}'].repo_request()  # type: ignore[attr-defined]
 
         raise Error(code=404)
 
@@ -273,7 +291,7 @@ class PullRequestListRest:
 class TestBitbucketPullrequestPoller(
     changesource.ChangeSourceMixin, TestReactorMixin, LoggingMixin, unittest.TestCase
 ):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[object]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setUpLogging()
 
@@ -304,32 +322,38 @@ class TestBitbucketPullrequestPoller(
 
         return self.setUpChangeSource()
 
-    def _fakeGetPage(self, result):
+    def _fakeGetPage(self, result: str) -> None:
         # Install a fake getPage that puts the requested URL in self.getPage_got_url
         # and return result
         self.getPage_got_url = None
 
-        def fake(url, timeout=None, headers=None):
+        def fake(
+            url: str, timeout: int | float | None = None, headers: dict[str, str] | None = None
+        ) -> defer.Deferred[str]:
             self.getPage_got_url = url
             return defer.succeed(result)
 
         self.patch(self.changesource, "getPage", fake)
 
-    def _fakeGetPage403(self, expected_headers):
-        def fail_unauthorized(url, timeout=None, headers=None):
+    def _fakeGetPage403(self, expected_headers: dict[str, str]) -> None:
+        def fail_unauthorized(
+            url: str, timeout: int | float | None = None, headers: dict[str, str] | None = None
+        ) -> None:
             if headers != expected_headers:
                 raise Error(code=403)
 
         self.patch(self.changesource, "getPage", fail_unauthorized)
 
-    def _fakeGetPage404(self):
-        def fail(url, timeout=None, headers=None):
+    def _fakeGetPage404(self) -> None:
+        def fail(
+            url: str, timeout: int | float | None = None, headers: dict[str, str] | None = None
+        ) -> None:
             raise Error(code=404)
 
         self.patch(self.changesource, "getPage", fail)
 
     @defer.inlineCallbacks
-    def _new_change_source(self, **kwargs):
+    def _new_change_source(self, **kwargs: Any) -> InlineCallbacksType[BitbucketPullrequestPoller]:
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'https://api.bitbucket.org/2.0', auth=None
         )
@@ -340,23 +364,23 @@ class TestBitbucketPullrequestPoller(
 
     # tests
     @defer.inlineCallbacks
-    def test_describe(self):
+    def test_describe(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(owner='owner', slug='slug')
-        assert re.search(r'owner/slug', self.changesource.describe())
+        assert re.search(r'owner/slug', self.changesource.describe())  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_poll_unknown_repo(self):
+    def test_poll_unknown_repo(self) -> InlineCallbacksType[None]:
         # Polling a non-existent repository should result in a 404
         yield self._new_change_source(owner='owner', slug='slug')
 
         self._http.expect('get', '/repositories/owner/slug/pullrequests', content_json={}, code=404)
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertLogged('error 404 while loading')
 
     @defer.inlineCallbacks
-    def test_poll_no_pull_requests(self):
+    def test_poll_no_pull_requests(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(owner='owner', slug='slug')
 
         rest_pr_list = PullRequestListRest(
@@ -369,12 +393,12 @@ class TestBitbucketPullrequestPoller(
             'get', '/repositories/owner/slug/pullrequests', content=rest_pr_list.response()
         )
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def test_poll_new_pull_requests(self):
+    def test_poll_new_pull_requests(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(owner='owner', slug='slug')
 
         self._http.expect(
@@ -405,7 +429,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_src.repo_response(),
         )
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -432,7 +456,7 @@ class TestBitbucketPullrequestPoller(
         )
 
     @defer.inlineCallbacks
-    def test_poll_no_updated_pull_request(self):
+    def test_poll_no_updated_pull_request(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(owner='owner', slug='slug')
 
         self._http.expect(
@@ -467,7 +491,7 @@ class TestBitbucketPullrequestPoller(
             'get', '/repositories/owner/slug/pullrequests', content=self.rest_pr_list.response()
         )
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -494,11 +518,11 @@ class TestBitbucketPullrequestPoller(
         )
 
         # repoll
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
     @defer.inlineCallbacks
-    def test_poll_updated_pull_request(self):
+    def test_poll_updated_pull_request(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(owner='owner', slug='slug')
 
         rest_src2 = SourceRest(
@@ -578,7 +602,7 @@ class TestBitbucketPullrequestPoller(
             content=rest_src2.repo_response(),
         )
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
         self.maxDiff = None
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -604,7 +628,7 @@ class TestBitbucketPullrequestPoller(
             ],
         )
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -649,7 +673,7 @@ class TestBitbucketPullrequestPoller(
         )
 
     @defer.inlineCallbacks
-    def test_poll_pull_request_filter_False(self):
+    def test_poll_pull_request_filter_False(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(
             owner='owner', slug='slug', pullrequest_filter=lambda x: False
         )
@@ -664,12 +688,12 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_pr.response(),
         )
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def test_poll_pull_request_filter_True(self):
+    def test_poll_pull_request_filter_True(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(owner='owner', slug='slug', pullrequest_filter=lambda x: True)
 
         self._http.expect(
@@ -700,7 +724,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_src.repo_response(),
         )
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -727,7 +751,7 @@ class TestBitbucketPullrequestPoller(
         )
 
     @defer.inlineCallbacks
-    def test_poll_pull_request_not_useTimestamps(self):
+    def test_poll_pull_request_not_useTimestamps(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(owner='owner', slug='slug', useTimestamps=False)
 
         self._http.expect(
@@ -760,7 +784,7 @@ class TestBitbucketPullrequestPoller(
 
         self.reactor.advance(1396825656)
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -786,7 +810,7 @@ class TestBitbucketPullrequestPoller(
         )
 
     @defer.inlineCallbacks
-    def test_poll_pull_request_properties(self):
+    def test_poll_pull_request_properties(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(
             owner='owner', slug='slug', bitbucket_property_whitelist=["bitbucket.*"]
         )
@@ -819,7 +843,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_src.repo_response(),
         )
 
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
