@@ -195,7 +195,7 @@ class Try_Jobdir(TryBase):
         keys = [v1_keys, v2_keys, v3_keys, v4_keys]
         # v5 introduces properties and uses JSON serialization
 
-        parsed_job = {}
+        parsed_job: dict[str, Any] = {}
 
         def extract_netstrings(p: netstrings.NetstringParser, keys: list[str]) -> None:
             for i, key in enumerate(keys):
