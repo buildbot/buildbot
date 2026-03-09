@@ -106,7 +106,7 @@ class ReconfigurablePollingChangeSource(ChangeSource):
             yield self.doPoll.stop()
             # As a implementation detail, poller will 'pollAtReconfigure' if poll interval changes
             # and pollAtLaunch=True
-            yield self.doPoll.start(
+            yield self.doPoll.start(  # type: ignore[func-returns-value]
                 interval=self.pollInterval,
                 now=self.pollAtLaunch,
                 random_delay_min=self.pollRandomDelayMin,
@@ -127,10 +127,10 @@ class ReconfigurablePollingChangeSource(ChangeSource):
 
     def activate(self) -> defer.Deferred[None]:
         self.doPoll.start(
-            interval=self.pollInterval,
-            now=self.pollAtLaunch,
-            random_delay_min=self.pollRandomDelayMin,
-            random_delay_max=self.pollRandomDelayMax,
+            interval=self.pollInterval,  # type: ignore[arg-type]
+            now=self.pollAtLaunch,  # type: ignore[arg-type]
+            random_delay_min=self.pollRandomDelayMin,  # type: ignore[arg-type]
+            random_delay_max=self.pollRandomDelayMax,  # type: ignore[arg-type]
         )
         return defer.succeed(None)
 
