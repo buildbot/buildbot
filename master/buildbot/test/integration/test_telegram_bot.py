@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -38,24 +42,29 @@ from buildbot.www import auth
 from buildbot.www import authz
 from buildbot.www import service as wwwservice
 
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IConsumer
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 @implementer(IBodyProducer)
 class BytesProducer:
-    def __init__(self, body):
+    def __init__(self, body: bytes) -> None:
         self.body = body
         self.length = len(body)
 
     def resumeProducing(self) -> None:
         raise NotImplementedError()
 
-    def startProducing(self, consumer):
+    def startProducing(self, consumer: IConsumer) -> defer.Deferred[None]:
         consumer.write(self.body)
         return defer.succeed(None)
 
-    def pauseProducing(self):
+    def pauseProducing(self) -> None:
         pass
 
-    def stopProducing(self):
+    def stopProducing(self) -> None:
         pass
 
 
@@ -68,13 +77,13 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def setup_http_service(self, bot_token):
+    def setup_http_service(self, bot_token: str) -> InlineCallbacksType[None]:
         base_url = "https://api.telegram.org/bot" + bot_token
         self.http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, base_url
         )
 
-    def expect_telegram_requests(self, bot_token):
+    def expect_telegram_requests(self, bot_token: str) -> None:
         self.http.expect(
             "post", "/getMe", content_json={'ok': 1, 'result': {'username': 'testbot'}}
         )
@@ -92,7 +101,7 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
             )
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setUpDirs('basedir')
         master = yield fakemaster.make_master(
             self, wantDb=True, sqlite_memory=False, wantRealReactor=True, auto_shutdown=False
@@ -127,7 +136,7 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
         # the config.  The second reconfig isn't really required, but doesn't
         # hurt.
         self.url = f'http://127.0.0.1:{master.www.getPortnum()}/'
-        self.url = unicode2bytes(self.url)
+        self.url = unicode2bytes(self.url)  # type: ignore[assignment]
         master.config.buildbotURL = self.url
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
 
@@ -135,7 +144,7 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
 
         self.agent = client.Agent(reactor)
 
-        self.bot_url = self.url + b"telegram12345:secret"
+        self.bot_url = self.url + b"telegram12345:secret"  # type: ignore[operator]
         yield self.setup_http_service('12345:secret')
         self.expect_telegram_requests('12345:secret')
 
@@ -147,15 +156,15 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
 
         yield tb.startService()
 
-        self.sent_messages = []
+        self.sent_messages: list[tuple[int, str]] = []
 
-        def send_message(chat, message, **kwargs):
+        def send_message(chat: int, message: str, **kwargs: Any) -> None:
             self.sent_messages.append((chat, message))
 
-        tb.bot.send_message = send_message
+        tb.bot.send_message = send_message  # type: ignore[method-assign, union-attr]
 
         @defer.inlineCallbacks
-        def cleanup():
+        def cleanup() -> InlineCallbacksType[None]:
             if self.master:
                 yield self.master.www.stopService()
                 yield self.master.mq.stopService()
@@ -164,7 +173,7 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
         self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
-    def testWebhook(self):
+    def testWebhook(self) -> InlineCallbacksType[None]:
         payload = unicode2bytes(
             json.dumps({
                 "update_id": 12345,
@@ -183,7 +192,7 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
 
         pg = yield self.agent.request(
             b'POST',
-            self.bot_url,
+            self.bot_url,  # type: ignore[arg-type]
             Headers({'Content-Type': ['application/json']}),
             BytesProducer(payload),
         )
@@ -194,21 +203,21 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertIn('-12345678', self.sent_messages[1][1])
 
     @defer.inlineCallbacks
-    def testReconfig(self):
+    def testReconfig(self) -> InlineCallbacksType[None]:
         # initial config and reconfig will issue requests twice
         self.expect_telegram_requests('12345:secret')
 
-        tb = self.master.config.services['TelegramBot']
+        tb = self.master.config.services['TelegramBot']  # type: ignore[union-attr]
         yield tb.reconfigService(
             bot_token='12345:secret', useWebhook=True, chat_ids=[-123456], notify_events=['problem']
         )
 
     @defer.inlineCallbacks
-    def testLoadState(self):
-        tboid = yield self.master.db.state.getObjectId(
+    def testLoadState(self) -> InlineCallbacksType[None]:
+        tboid = yield self.master.db.state.getObjectId(  # type: ignore[union-attr]
             'testbot', 'buildbot.reporters.telegram.TelegramWebhookBot'
         )
-        yield self.master.db.insert_test_data([
+        yield self.master.db.insert_test_data([  # type: ignore[union-attr]
             fakedb.ObjectState(
                 objectid=tboid,
                 name='notify_events',
@@ -219,21 +228,21 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
             ),
         ])
 
-        tb = self.master.config.services['TelegramBot']
+        tb = self.master.config.services['TelegramBot']  # type: ignore[union-attr]
         yield tb.bot.loadState()
         c = tb.bot.getContact({'id': 123456789}, {'id': 123456789})
         self.assertEqual(c.channel.notify_events, {'started', 'finished'})
         self.assertEqual(c.channel.missing_workers, {12})
 
     @defer.inlineCallbacks
-    def testSaveState(self):
-        tb = self.master.config.services['TelegramBot']
-        tboid = yield self.master.db.state.getObjectId(
+    def testSaveState(self) -> InlineCallbacksType[None]:
+        tb = self.master.config.services['TelegramBot']  # type: ignore[union-attr]
+        tboid = yield self.master.db.state.getObjectId(  # type: ignore[union-attr]
             'testbot', 'buildbot.reporters.telegram.TelegramWebhookBot'
         )
 
-        notify_events = yield self.master.db.state.getState(tboid, 'notify_events', ())
-        missing_workers = yield self.master.db.state.getState(tboid, 'missing_workers', ())
+        notify_events = yield self.master.db.state.getState(tboid, 'notify_events', ())  # type: ignore[union-attr]
+        missing_workers = yield self.master.db.state.getState(tboid, 'missing_workers', ())  # type: ignore[union-attr]
         self.assertNotIn([99, ['cancelled']], notify_events)
         self.assertNotIn([99, [13]], missing_workers)
 
@@ -247,23 +256,23 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
         yield tb.bot.saveNotifyEvents()
         yield tb.bot.saveMissingWorkers()
 
-        notify_events = yield self.master.db.state.getState(tboid, 'notify_events', ())
-        missing_workers = yield self.master.db.state.getState(tboid, 'missing_workers', ())
+        notify_events = yield self.master.db.state.getState(tboid, 'notify_events', ())  # type: ignore[union-attr]
+        missing_workers = yield self.master.db.state.getState(tboid, 'missing_workers', ())  # type: ignore[union-attr]
         self.assertNotIn(98, (c for c, _ in notify_events))
         self.assertIn([99, ['cancelled']], notify_events)
         self.assertIn([99, [13]], missing_workers)
 
     @defer.inlineCallbacks
-    def testMissingWorker(self):
-        yield self.master.db.insert_test_data([fakedb.Worker(id=1, name='local1')])
+    def testMissingWorker(self) -> InlineCallbacksType[None]:
+        yield self.master.db.insert_test_data([fakedb.Worker(id=1, name='local1')])  # type: ignore[union-attr]
 
-        tb = self.master.config.services['TelegramBot']
+        tb = self.master.config.services['TelegramBot']  # type: ignore[union-attr]
         channel = tb.bot.getChannel(-123456)
         self.assertEqual(channel.notify_events, {'worker'})
 
-        yield self.master.data.updates.workerMissing(
+        yield self.master.data.updates.workerMissing(  # type: ignore[union-attr]
             workerid=1,
-            masterid=self.master.masterid,
+            masterid=self.master.masterid,  # type: ignore[union-attr]
             last_connection='long time ago',
             notify=['admin@worker.org'],
         )
@@ -272,9 +281,9 @@ class TelegramBot(www.RequiresWwwMixin, dirs.DirsMixin, unittest.TestCase):
             "Worker `local1` is missing. It was seen last on long time ago.",
         )
 
-        yield self.master.data.updates.workerConnected(
+        yield self.master.data.updates.workerConnected(  # type: ignore[union-attr]
             workerid=1,
-            masterid=self.master.masterid,
+            masterid=self.master.masterid,  # type: ignore[union-attr]
             workerinfo={},
         )
         self.assertEqual(self.sent_messages[1][1], "Worker `local1` is back online.")

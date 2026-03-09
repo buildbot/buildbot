@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.process import results
@@ -21,12 +25,15 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import CommandMixin
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 # This integration test creates a master and worker environment,
 # and makes sure the command mixin is working.
 class CommandMixinMaster(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -40,7 +47,7 @@ class CommandMixinMaster(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_commandmixin(self):
+    def test_commandmixin(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
 
         change = {
@@ -67,7 +74,7 @@ class CommandMixinMasterMsgPack(CommandMixinMaster):
 
 class TestCommandMixinStep(BuildStep, CommandMixin):
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         contents = yield self.runGlob('*')
         if contents != []:
             return results.FAILURE

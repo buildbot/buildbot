@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.python.failure import Failure
@@ -42,6 +47,12 @@ from buildbot.test.util.patch_delay import patchForDelay
 from buildbot.worker import manager
 from buildbot.worker.latent import States
 
+if TYPE_CHECKING:
+    from buildbot.mq.base import QueueRef
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.base import AbstractWorker
+    from buildbot.worker.manager import WorkerRegistration
+
 
 class TestException(Exception):
     """
@@ -50,13 +61,15 @@ class TestException(Exception):
 
 
 class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
-    def tearDown(self):
+    def tearDown(self) -> None:
         # Flush the errors logged by the master stop cancelling the builds.
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
         super().tearDown()
 
     @defer.inlineCallbacks
-    def create_single_worker_config(self, controller_kwargs=None):
+    def create_single_worker_config(
+        self, controller_kwargs: dict[str, Any] | None = None
+    ) -> InlineCallbacksType[tuple[LatentController, int]]:
         if not controller_kwargs:
             controller_kwargs = {}
 
@@ -80,7 +93,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         return controller, builder_id
 
     @defer.inlineCallbacks
-    def create_single_worker_config_with_step(self, controller_kwargs=None):
+    def create_single_worker_config_with_step(
+        self, controller_kwargs: dict[str, Any] | None = None
+    ) -> InlineCallbacksType[tuple[LatentController, BuildStepController, int]]:
         if not controller_kwargs:
             controller_kwargs = {}
 
@@ -105,7 +120,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         return controller, stepcontroller, builder_id
 
     @defer.inlineCallbacks
-    def create_single_worker_two_builder_config(self, controller_kwargs=None):
+    def create_single_worker_two_builder_config(
+        self, controller_kwargs: dict[str, Any] | None = None
+    ) -> InlineCallbacksType[tuple[LatentController, list[int]]]:
         if not controller_kwargs:
             controller_kwargs = {}
 
@@ -137,15 +154,17 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         return controller, builder_ids
 
     @defer.inlineCallbacks
-    def reconfig_workers_remove_all(self):
+    def reconfig_workers_remove_all(self) -> InlineCallbacksType[None]:
         config_dict = {'workers': [], 'multiMaster': True}
         config = MasterConfig.loadFromDict(config_dict, '<dict>')
         yield self.master.workers.reconfigServiceWithBuildbotConfig(config)
 
-    def stop_first_build(self, results):
-        stopped_d = defer.Deferred()
+    def stop_first_build(
+        self, results: int
+    ) -> tuple[defer.Deferred[QueueRef], defer.Deferred[None]]:
+        stopped_d: defer.Deferred[None] = defer.Deferred()
 
-        def new_callback(_, data):
+        def new_callback(_: tuple[str, ...], data: dict[str, Any]) -> None:
             if stopped_d.called:
                 return
 
@@ -162,7 +181,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         return consumed_d, stopped_d
 
     @defer.inlineCallbacks
-    def test_latent_workers_start_in_parallel(self):
+    def test_latent_workers_start_in_parallel(self) -> InlineCallbacksType[None]:
         """
         If there are two latent workers configured, and two build
         requests for them, both workers will start substantiating
@@ -197,7 +216,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_refused_substantiations_get_requeued(self):
+    def test_refused_substantiations_get_requeued(self) -> InlineCallbacksType[None]:
         """
         If a latent worker refuses to substantiate, the build request becomes
         unclaimed.
@@ -224,7 +243,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
-    def test_failed_substantiations_get_requeued(self):
+    def test_failed_substantiations_get_requeued(self) -> InlineCallbacksType[None]:
         """
         If a latent worker fails to substantiate, the build request becomes
         unclaimed.
@@ -251,7 +270,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_failed_substantiations_get_exception(self):
+    def test_failed_substantiations_get_exception(self) -> InlineCallbacksType[None]:
         """
         If a latent worker fails to substantiate, the result is an exception.
         """
@@ -272,7 +291,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_worker_accepts_builds_after_failure(self):
+    def test_worker_accepts_builds_after_failure(self) -> InlineCallbacksType[None]:
         """
         If a latent worker fails to substantiate, the worker is still able to
         accept jobs.
@@ -323,7 +342,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_worker_multiple_substantiations_succeed(self):
+    def test_worker_multiple_substantiations_succeed(self) -> InlineCallbacksType[None]:
         """
         If multiple builders trigger try to substantiate a worker at
         the same time, if the substantiation succeeds then all of
@@ -343,7 +362,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_very_late_detached_after_substantiation(self):
+    def test_very_late_detached_after_substantiation(self) -> InlineCallbacksType[None]:
         """
         A latent worker may detach at any time after stop_instance() call.
         Make sure it works at the most late detachment point, i.e. when we're
@@ -381,7 +400,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.disconnect_worker()
 
     @defer.inlineCallbacks
-    def test_substantiation_during_stop_instance(self):
+    def test_substantiation_during_stop_instance(self) -> InlineCallbacksType[None]:
         """
         If a latent worker detaches before stop_instance() completes and we
         start a build then it should start successfully without causing an
@@ -420,7 +439,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.disconnect_worker()
 
     @defer.inlineCallbacks
-    def test_substantiation_during_stop_instance_canStartBuild_race(self):
+    def test_substantiation_during_stop_instance_canStartBuild_race(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         If build attempts substantiation after the latent worker detaches,
         but stop_instance() is not completed yet, then we should successfully
@@ -462,7 +483,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.stop_instance(True)
 
     @defer.inlineCallbacks
-    def test_insubstantiation_during_substantiation_refuses_substantiation(self):
+    def test_insubstantiation_during_substantiation_refuses_substantiation(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         If a latent worker gets insubstantiation() during substantiation, then it should refuse
         to substantiate.
@@ -482,7 +505,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.assertBuildResults(1, RETRY)
 
     @defer.inlineCallbacks
-    def test_stopservice_during_insubstantiation_completes(self):
+    def test_stopservice_during_insubstantiation_completes(self) -> InlineCallbacksType[None]:
         """
         When stopService is called and a worker is insubstantiating, we should wait for this
         process to complete.
@@ -513,9 +536,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         ('with_worker_connecting', True, True),
     ])
     @defer.inlineCallbacks
-    def test_stopservice_during_substantiation_completes(
-        self, name, subst_success, worker_connects
-    ):
+    def test_stopservice_during_substantiation_completes(  # type: ignore[no-untyped-def]
+        self, name: str, subst_success: bool, worker_connects
+    ) -> InlineCallbacksType[None]:
         """
         When stopService is called and a worker is substantiating, we should wait for this
         process to complete.
@@ -541,7 +564,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield d
 
     @defer.inlineCallbacks
-    def test_substantiation_is_cancelled_by_build_stop(self):
+    def test_substantiation_is_cancelled_by_build_stop(self) -> InlineCallbacksType[None]:
         """
         Stopping a build during substantiation should cancel the substantiation itself.
         Otherwise we will be left with a substantiating worker without a corresponding build
@@ -568,16 +591,18 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         ('before_start_instance_with_worker', True, True),
     ])
     @defer.inlineCallbacks
-    def test_reconfigservice_during_substantiation_clean_shutdown_after(
-        self, name, worker_connects, before_start_service
-    ):
+    def test_reconfigservice_during_substantiation_clean_shutdown_after(  # type: ignore[no-untyped-def]
+        self, name: str, worker_connects: bool, before_start_service
+    ) -> InlineCallbacksType[None]:
         """
         When stopService is called and a worker is substantiating, we should wait for this
         process to complete.
         """
         registered_workers = []
 
-        def registration_updates(reg, worker_config, global_config):
+        def registration_updates(
+            reg: WorkerRegistration, worker_config: AbstractWorker, global_config: MasterConfig
+        ) -> None:
             registered_workers.append((worker_config.workername, worker_config.password))
 
         self.patch(manager.WorkerRegistration, 'update', registration_updates)
@@ -607,7 +632,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(registered_workers, [('local', 'password_1'), ('local', 'password_1')])
 
     @defer.inlineCallbacks
-    def test_substantiation_cancelled_by_insubstantiation_when_waiting_for_insubstantiation(self):
+    def test_substantiation_cancelled_by_insubstantiation_when_waiting_for_insubstantiation(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         We should cancel substantiation if we insubstantiate when that substantiation is waiting
         on current insubstantiation to finish
@@ -637,7 +664,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.assertBuildResults(2, RETRY)
 
     @defer.inlineCallbacks
-    def test_stalled_substantiation_then_timeout_get_requeued(self):
+    def test_stalled_substantiation_then_timeout_get_requeued(self) -> InlineCallbacksType[None]:
         """
         If a latent worker substantiate, but not connect, and then be
         unsubstantiated, the build request becomes unclaimed.
@@ -664,7 +691,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_stalled_substantiation_then_check_instance_fails_get_requeued(self):
+    def test_stalled_substantiation_then_check_instance_fails_get_requeued(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         If a latent worker substantiate, but not connect and check_instance() indicates a crash,
         the build request should become unclaimed as soon as check_instance_interval passes
@@ -699,7 +728,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_sever_connection_before_ping_then_timeout_get_requeued(self):
+    def test_sever_connection_before_ping_then_timeout_get_requeued(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         If a latent worker connects, but its connection is severed without
         notification in the TCP layer, we successfully wait until TCP times
@@ -737,7 +768,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.flushLoggedErrors(pb.PBConnectionLost)
 
     @defer.inlineCallbacks
-    def test_failed_sendBuilderList_get_requeued(self):
+    def test_failed_sendBuilderList_get_requeued(self) -> InlineCallbacksType[None]:
         """
         sendBuilderList can fail due to missing permissions on the workdir,
         the build request becomes unclaimed
@@ -758,7 +789,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         )
 
         # The worker succeed to substantiate
-        def remote_setBuilderList(self, dirs):
+        def remote_setBuilderList(self, dirs: list[tuple[str, str]]) -> None:  # type: ignore[no-untyped-def]
             raise TestException("can't create dir")
 
         controller.patchBot(self, 'remote_setBuilderList', remote_setBuilderList)
@@ -788,7 +819,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_failed_ping_get_requeued(self):
+    def test_failed_ping_get_requeued(self) -> InlineCallbacksType[None]:
         """
         sendBuilderList can fail due to missing permissions on the workdir,
         the build request becomes unclaimed
@@ -809,7 +840,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         )
 
         # The worker succeed to substantiate
-        def remote_print(self, msg):
+        def remote_print(self, msg: str) -> None:  # type: ignore[no-untyped-def]
             if msg == "ping":
                 raise TestException("can't ping")
 
@@ -840,7 +871,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_worker_close_connection_while_building(self):
+    def test_worker_close_connection_while_building(self) -> InlineCallbacksType[None]:
         """
         If the worker close connection in the middle of the build, the next
         build can start correctly
@@ -872,7 +903,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.disconnect_worker()
 
     @defer.inlineCallbacks
-    def test_negative_build_timeout_reattach_substantiated(self):
+    def test_negative_build_timeout_reattach_substantiated(self) -> InlineCallbacksType[None]:
         """
         When build_wait_timeout is negative, we don't disconnect the worker from
         our side. We should still support accidental disconnections from
@@ -910,7 +941,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.disconnect_worker()
 
     @defer.inlineCallbacks
-    def test_sever_connection_while_building(self):
+    def test_sever_connection_while_building(self) -> InlineCallbacksType[None]:
         """
         If the connection to worker is severed without TCP notification in the
         middle of the build, the build is re-queued and successfully restarted.
@@ -942,7 +973,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.assertBuildResults(2, SUCCESS)
 
     @defer.inlineCallbacks
-    def test_sever_connection_during_insubstantiation(self):
+    def test_sever_connection_during_insubstantiation(self) -> InlineCallbacksType[None]:
         """
         If latent worker connection is severed without notification in the TCP
         layer, we successfully wait until TCP times out, insubstantiate and
@@ -980,7 +1011,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.flushLoggedErrors(pb.PBConnectionLost)
 
     @defer.inlineCallbacks
-    def test_sever_connection_during_insubstantiation_and_buildrequest(self):
+    def test_sever_connection_during_insubstantiation_and_buildrequest(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         If latent worker connection is severed without notification in the TCP
         layer, we successfully wait until TCP times out, insubstantiate and
@@ -1018,7 +1051,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.flushLoggedErrors(pb.PBConnectionLost)
 
     @defer.inlineCallbacks
-    def test_negative_build_timeout_reattach_insubstantiating(self):
+    def test_negative_build_timeout_reattach_insubstantiating(self) -> InlineCallbacksType[None]:
         """
         When build_wait_timeout is negative, we don't disconnect the worker from
         our side, but it can disconnect and reattach from worker side due to,
@@ -1063,7 +1096,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_negative_build_timeout_no_disconnect_insubstantiating(self):
+    def test_negative_build_timeout_no_disconnect_insubstantiating(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         When build_wait_timeout is negative, we don't disconnect the worker from
         our side, so it should be possible to insubstantiate and substantiate
@@ -1101,7 +1136,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
-    def test_negative_build_timeout_insubstantiates_on_master_shutdown(self):
+    def test_negative_build_timeout_insubstantiates_on_master_shutdown(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         When build_wait_timeout is negative, we should still insubstantiate when master shuts down.
         """
@@ -1122,7 +1159,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield d
 
     @defer.inlineCallbacks
-    def test_stop_instance_synchronous_exception(self):
+    def test_stop_instance_synchronous_exception(self) -> InlineCallbacksType[None]:
         """
         Throwing a synchronous exception from stop_instance should allow subsequent build to start.
         """
@@ -1133,7 +1170,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         controller.auto_stop(True)
 
         # patch stop_instance() to raise exception synchronously
-        def raise_stop_instance(fast):
+        def raise_stop_instance(fast: bool) -> None:
             raise TestException()
 
         real_stop_instance = controller.worker.stop_instance
@@ -1159,7 +1196,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.assertBuildResults(2, SUCCESS)
 
     @defer.inlineCallbacks
-    def test_build_stop_with_cancelled_during_substantiation(self):
+    def test_build_stop_with_cancelled_during_substantiation(self) -> InlineCallbacksType[None]:
         """
         If a build is stopping during latent worker substantiating, the build
         becomes cancelled
@@ -1183,7 +1220,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
-    def test_build_stop_with_retry_during_substantiation(self):
+    def test_build_stop_with_retry_during_substantiation(self) -> InlineCallbacksType[None]:
         """
         If master is shutting down during latent worker substantiating, the build becomes retry.
         """
@@ -1214,7 +1251,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
-    def test_rejects_build_on_instance_with_different_type_timeout_zero(self):
+    def test_rejects_build_on_instance_with_different_type_timeout_zero(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         If latent worker supports getting its instance type from properties that
         are rendered from build then the buildrequestdistributor must not
@@ -1254,7 +1293,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.assertBuildResults(2, SUCCESS)
 
     @defer.inlineCallbacks
-    def test_rejects_build_on_instance_with_different_type_timeout_nonzero(self):
+    def test_rejects_build_on_instance_with_different_type_timeout_nonzero(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         If latent worker supports getting its instance type from properties that
         are rendered from build then the buildrequestdistributor must not
@@ -1305,7 +1346,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield self.assertBuildResults(2, SUCCESS)
 
     @defer.inlineCallbacks
-    def test_supports_no_build_for_substantiation(self):
+    def test_supports_no_build_for_substantiation(self) -> InlineCallbacksType[None]:
         """
         Abstract latent worker should support being substantiated without a
         build and then insubstantiated.
@@ -1322,7 +1363,9 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         yield d
 
     @defer.inlineCallbacks
-    def test_supports_no_build_for_substantiation_accepts_build_later(self):
+    def test_supports_no_build_for_substantiation_accepts_build_later(
+        self,
+    ) -> InlineCallbacksType[None]:
         """
         Abstract latent worker should support being substantiated without a
         build and then accept a build request.
@@ -1344,13 +1387,17 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
 
 
 class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
-    def tearDown(self):
+    def tearDown(self) -> None:
         # Flush the errors logged by the master stop cancelling the builds.
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
         super().tearDown()
 
     @defer.inlineCallbacks
-    def create_single_worker_config(self, build_wait_timeout=0):
+    def create_single_worker_config(
+        self, build_wait_timeout: int = 0
+    ) -> InlineCallbacksType[
+        tuple[LatentMachineController, LatentController, BuildStepController, int]
+    ]:
         machine_controller = LatentMachineController(
             name='machine1', build_wait_timeout=build_wait_timeout
         )
@@ -1379,7 +1426,11 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         return machine_controller, worker_controller, step_controller, builder_id
 
     @defer.inlineCallbacks
-    def create_two_worker_config(self, build_wait_timeout=0, controller_kwargs=None):
+    def create_two_worker_config(
+        self, build_wait_timeout: int = 0, controller_kwargs: dict[str, Any] | None = None
+    ) -> InlineCallbacksType[
+        tuple[LatentMachineController, list[LatentController], list[BuildStepController], list[int]]
+    ]:
         if not controller_kwargs:
             controller_kwargs = {}
 
@@ -1428,7 +1479,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         )
 
     @defer.inlineCallbacks
-    def test_1worker_starts_and_stops_after_single_build_success(self):
+    def test_1worker_starts_and_stops_after_single_build_success(self) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controller,
@@ -1450,7 +1501,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(machine_controller.machine.state, MachineStates.STOPPED)
 
     @defer.inlineCallbacks
-    def test_1worker_starts_and_stops_after_single_build_failure(self):
+    def test_1worker_starts_and_stops_after_single_build_failure(self) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controller,
@@ -1472,7 +1523,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(machine_controller.machine.state, MachineStates.STOPPED)
 
     @defer.inlineCallbacks
-    def test_1worker_stops_machine_after_timeout(self):
+    def test_1worker_stops_machine_after_timeout(self) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controller,
@@ -1502,7 +1553,9 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(machine_controller.machine.state, MachineStates.STOPPED)
 
     @defer.inlineCallbacks
-    def test_1worker_does_not_stop_machine_machine_after_timeout_during_build(self):
+    def test_1worker_does_not_stop_machine_machine_after_timeout_during_build(
+        self,
+    ) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controller,
@@ -1543,7 +1596,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(machine_controller.machine.state, MachineStates.STOPPED)
 
     @defer.inlineCallbacks
-    def test_1worker_insubstantiated_after_start_failure(self):
+    def test_1worker_insubstantiated_after_start_failure(self) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controller,
@@ -1562,7 +1615,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(worker_controller.started, False)
 
     @defer.inlineCallbacks
-    def test_1worker_eats_exception_from_start_machine(self):
+    def test_1worker_eats_exception_from_start_machine(self) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controller,
@@ -1586,7 +1639,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.flushLoggedErrors(FakeError)
 
     @defer.inlineCallbacks
-    def test_1worker_eats_exception_from_stop_machine(self):
+    def test_1worker_eats_exception_from_stop_machine(self) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controller,
@@ -1612,7 +1665,9 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.flushLoggedErrors(FakeError)
 
     @defer.inlineCallbacks
-    def test_2workers_build_substantiates_insubstantiates_both_workers(self):
+    def test_2workers_build_substantiates_insubstantiates_both_workers(
+        self,
+    ) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controllers,
@@ -1641,7 +1696,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(machine_controller.machine.state, MachineStates.STOPPED)
 
     @defer.inlineCallbacks
-    def test_2workers_two_builds_start_machine_concurrently(self):
+    def test_2workers_two_builds_start_machine_concurrently(self) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controllers,
@@ -1672,7 +1727,7 @@ class LatentWithLatentMachine(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(machine_controller.machine.state, MachineStates.STOPPED)
 
     @defer.inlineCallbacks
-    def test_2workers_insubstantiated_after_one_start_failure(self):
+    def test_2workers_insubstantiated_after_one_start_failure(self) -> InlineCallbacksType[None]:
         (
             machine_controller,
             worker_controllers,

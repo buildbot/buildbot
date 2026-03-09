@@ -12,10 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
 import os
 import shutil
 import tempfile
 import time
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.cred.error import UnauthorizedLogin
 from twisted.internet import defer
@@ -34,6 +38,17 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker import manager as workermanager
 from buildbot.worker.protocols.manager.pb import PBManager
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from twisted.python.failure import Failure
+    from twisted.spread.pb import Broker
+    from twisted.spread.pb import RemoteReference
+
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.base import AbstractWorker as AbstractWorkerType
+    from buildbot.worker.protocols.pb import Connection
+
 PKI_DIR = util.sibpath(__file__, 'pki')
 
 # listening on port 0 says to the kernel to choose any free port (race-free)
@@ -43,16 +58,18 @@ DEFAULT_PORT = os.environ.get("BUILDBOT_TEST_DEFAULT_PORT", "0")
 
 
 class FakeBuilder(builder.Builder):
-    def attached(self, worker, commands):
+    def attached(  # type: ignore[override]
+        self, worker: AbstractWorkerType, commands: dict[str, str] | None
+    ) -> defer.Deferred[None]:
         return defer.succeed(None)
 
-    def detached(self, worker):
+    def detached(self, worker: AbstractWorkerType) -> None:
         pass
 
-    def getOldestRequestTime(self):
-        return 0
+    def getOldestRequestTime(self) -> InlineCallbacksType[datetime | None]:  # type: ignore[override]
+        return 0  # type: ignore[return-value]
 
-    def maybeStartBuild(self):
+    def maybeStartBuild(self) -> defer.Deferred[None]:  # type: ignore[override]
         return defer.succeed(None)
 
 
@@ -69,28 +86,28 @@ class TestingWorker(buildbot_worker.bot.Worker):
     corresponding conditions, actually allowing the services to fulfill them.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-        self.tests_disconnected = defer.Deferred()
-        self.tests_connected = defer.Deferred()
-        self.tests_login_failed = defer.Deferred()
+        self.tests_disconnected: defer.Deferred[None] = defer.Deferred()
+        self.tests_connected: defer.Deferred[RemoteReference] = defer.Deferred()
+        self.tests_login_failed: defer.Deferred[tuple[Failure, Broker]] = defer.Deferred()
         self.master_perspective = None
-        orig_got_persp = self.bf.gotPerspective
-        orig_failed_get_persp = self.bf.failedToGetPerspective
+        orig_got_persp = self.bf.gotPerspective  # type: ignore[union-attr]
+        orig_failed_get_persp = self.bf.failedToGetPerspective  # type: ignore[union-attr]
 
-        def gotPerspective(persp):
+        def gotPerspective(persp: RemoteReference) -> None:
             orig_got_persp(persp)
             self.master_perspective = persp
             self.tests_connected.callback(persp)
             persp.broker.notifyOnDisconnect(lambda: self.tests_disconnected.callback(None))
 
-        def failedToGetPerspective(why, broker):
+        def failedToGetPerspective(why: Failure, broker: Broker) -> None:
             orig_failed_get_persp(why, broker)
             self.tests_login_failed.callback((why, broker))
 
-        self.bf.gotPerspective = gotPerspective
-        self.bf.failedToGetPerspective = failedToGetPerspective
+        self.bf.gotPerspective = gotPerspective  # type: ignore[method-assign, union-attr]
+        self.bf.failedToGetPerspective = failedToGetPerspective  # type: ignore[method-assign, union-attr]
 
 
 class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
@@ -110,7 +127,7 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
     timeout = 30
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         # set the worker port to a loopback address with unspecified
@@ -140,10 +157,10 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
 
         self.client_connection_string_tpl = r"tcp:host=127.0.0.1:port={port}"
 
-        self.tmpdirs = set()
+        self.tmpdirs: set[str] = set()
 
         @defer.inlineCallbacks
-        def cleanup():
+        def cleanup() -> InlineCallbacksType[None]:
             for tmp in self.tmpdirs:
                 if os.path.exists(tmp):
                     shutil.rmtree(tmp)
@@ -160,18 +177,18 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def addMasterSideWorker(
         self,
-        connection_string=f"tcp:{DEFAULT_PORT}:interface=127.0.0.1",
-        name="testworker",
-        password="pw",
-        update_port=True,
-        **kwargs,
-    ):
+        connection_string: str = f"tcp:{DEFAULT_PORT}:interface=127.0.0.1",
+        name: str = "testworker",
+        password: str = "pw",
+        update_port: bool = True,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         """
         Create a master-side worker instance and add it to the BotMaster
 
         @param **kwargs: arguments to pass to the L{Worker} constructor.
         """
-        self.buildworker = worker.Worker(name, password, **kwargs)
+        self.buildworker = worker.Worker(name, password, **kwargs)  # type: ignore[assignment]
 
         # reconfig the master to get it set up
         new_config = self.master.config
@@ -189,22 +206,22 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
         if update_port:
             # as part of the reconfig, the worker registered with the
             # pbmanager, so get the port it was assigned
-            self.port = self.buildworker.registration.getPBPort()
+            self.port = self.buildworker.registration.getPBPort()  # type: ignore[attr-defined]
 
-    def workerSideDisconnect(self, worker):
+    def workerSideDisconnect(self, worker: TestingWorker) -> defer.Deferred[None]:
         """Disconnect from the worker side
 
         This seems a good way to simulate a broken connection. Returns a Deferred
         """
-        return worker.bf.disconnect()
+        return worker.bf.disconnect()  # type: ignore[union-attr]
 
     def addWorker(
         self,
-        connection_string_tpl=r"tcp:host=127.0.0.1:port={port}",
-        password="pw",
-        name="testworker",
-        keepalive=None,
-    ):
+        connection_string_tpl: str = r"tcp:host=127.0.0.1:port={port}",
+        password: str = "pw",
+        name: str = "testworker",
+        keepalive: float | None = None,
+    ) -> TestingWorker:
         """Add a true Worker object to the services."""
         wdir = tempfile.mkdtemp()
         self.tmpdirs.add(wdir)
@@ -220,15 +237,15 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_connect_disconnect(self):
+    def test_connect_disconnect(self) -> InlineCallbacksType[None]:
         yield self.addMasterSideWorker()
 
-        def could_not_connect():
+        def could_not_connect() -> None:
             self.fail("Worker never got connected to master")
 
-        timeout = reactor.callLater(self.timeout, could_not_connect)
+        timeout = reactor.callLater(self.timeout, could_not_connect)  # type: ignore[attr-defined]
         worker = self.addWorker()
-        yield worker.startService()
+        yield worker.startService()  # type: ignore[func-returns-value]
         yield worker.tests_connected
 
         timeout.cancel()
@@ -237,19 +254,19 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
         yield worker.tests_disconnected
 
     @defer.inlineCallbacks
-    def test_reconnect_network(self):
+    def test_reconnect_network(self) -> InlineCallbacksType[None]:
         yield self.addMasterSideWorker()
 
-        def could_not_connect():
+        def could_not_connect() -> None:
             self.fail("Worker did not reconnect in time to master")
 
         worker = self.addWorker(r"tcp:host=127.0.0.1:port={port}")
-        yield worker.startService()
+        yield worker.startService()  # type: ignore[func-returns-value]
         yield worker.tests_connected
 
         self.assertTrue('bldr' in worker.bot.builders)
 
-        timeout = reactor.callLater(self.timeout, could_not_connect)
+        timeout = reactor.callLater(self.timeout, could_not_connect)  # type: ignore[attr-defined]
         yield self.workerSideDisconnect(worker)
         yield worker.tests_connected
 
@@ -258,7 +275,7 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
         yield worker.tests_disconnected
 
     @defer.inlineCallbacks
-    def test_applicative_reconnection(self):
+    def test_applicative_reconnection(self) -> InlineCallbacksType[None]:
         """Test reconnection on PB errors.
 
         The worker starts with a password that the master does not accept
@@ -266,11 +283,11 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
         """
         yield self.addMasterSideWorker()
         worker = self.addWorker(password="pw2")
-        yield worker.startService()
+        yield worker.startService()  # type: ignore[func-returns-value]
         yield worker.tests_login_failed
         self.assertEqual(1, len(self.flushLoggedErrors(UnauthorizedLogin)))
 
-        def could_not_connect():
+        def could_not_connect() -> None:
             self.fail("Worker did not reconnect in time to master")
 
         # we have two reasons to call that again:
@@ -282,7 +299,7 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
             update_port=False,  # don't know why, but it'd fail
             connection_string=f"tcp:{self.port}:interface=127.0.0.1",
         )
-        timeout = reactor.callLater(self.timeout, could_not_connect)
+        timeout = reactor.callLater(self.timeout, could_not_connect)  # type: ignore[attr-defined]
         yield worker.tests_connected
 
         timeout.cancel()
@@ -292,18 +309,18 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
         yield worker.tests_disconnected
 
     @defer.inlineCallbacks
-    def test_pb_keepalive(self):
+    def test_pb_keepalive(self) -> InlineCallbacksType[None]:
         """Test applicative (PB) keepalives.
 
         This works by patching the master to callback a deferred on which the
         test waits.
         """
 
-        def perspective_keepalive(Connection_self):
-            waiter = worker.keepalive_waiter
+        def perspective_keepalive(Connection_self: Connection) -> None:
+            waiter = worker.keepalive_waiter  # type: ignore[attr-defined]
             if waiter is not None:
                 waiter.callback(time.time())
-                worker.keepalive_waiter = None
+                worker.keepalive_waiter = None  # type: ignore[attr-defined]
 
         from buildbot.worker.protocols.pb import Connection  # noqa: PLC0415
 
@@ -312,17 +329,17 @@ class TestWorkerConnection(TestReactorMixin, unittest.TestCase):
         yield self.addMasterSideWorker()
         # short keepalive to make the test bearable to run
         worker = self.addWorker(keepalive=0.1)
-        waiter = worker.keepalive_waiter = defer.Deferred()
+        waiter = worker.keepalive_waiter = defer.Deferred()  # type: ignore[attr-defined]
 
-        yield worker.startService()
+        yield worker.startService()  # type: ignore[func-returns-value]
         yield worker.tests_connected
         first = yield waiter
-        yield worker.bf.currentKeepaliveWaiter
+        yield worker.bf.currentKeepaliveWaiter  # type: ignore[union-attr]
 
-        waiter = worker.keepalive_waiter = defer.Deferred()
+        waiter = worker.keepalive_waiter = defer.Deferred()  # type: ignore[attr-defined]
 
         second = yield waiter
-        yield worker.bf.currentKeepaliveWaiter
+        yield worker.bf.currentKeepaliveWaiter  # type: ignore[union-attr]
 
         self.assertGreater(second, first)
         self.assertLess(second, first + 1)  # seems safe enough

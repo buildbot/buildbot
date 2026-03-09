@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.internet import defer
@@ -31,24 +32,27 @@ from buildbot.test.util import www
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.worker import Worker
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class RunMaster(RunMasterBase, www.RequiresWwwMixin):
     proto = 'pb'
 
     @defer.inlineCallbacks
-    def do_test_master(self):
+    def do_test_master(self) -> InlineCallbacksType[None]:
         yield self.setup_master(BuildmasterConfig, startWorker=False)
 
         # hang out for a fraction of a second, to let startup processes run
-        yield deferLater(reactor, 0.01, lambda: None)
+        yield deferLater(reactor, 0.01, lambda: None)  # type: ignore[arg-type]
 
     # run this test twice, to make sure the first time shut everything down
     # correctly; if this second test fails, but the first succeeds, then
     # something is not cleaning up correctly in stopService.
-    def test_master1(self):
+    def test_master1(self) -> defer.Deferred[None]:
         return self.do_test_master()
 
-    def test_master2(self):
+    def test_master2(self) -> defer.Deferred[None]:
         return self.do_test_master()
 
 

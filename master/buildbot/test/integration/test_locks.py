@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from parameterized import parameterized
 from twisted.internet import defer
 
@@ -24,15 +29,22 @@ from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import RunFakeMasterTestCase
 from buildbot.util.eventual import flushEventualQueue
 
+if TYPE_CHECKING:
+    from buildbot.locks import MasterLock
+    from buildbot.locks import WorkerLock
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class Tests(RunFakeMasterTestCase):
     @defer.inlineCallbacks
-    def create_single_worker_two_builder_lock_config(self, lock_cls, mode):
+    def create_single_worker_two_builder_lock_config(
+        self, lock_cls: type[MasterLock] | type[WorkerLock], mode: str
+    ) -> InlineCallbacksType[tuple[list[BuildStepController], list[int]]]:
         stepcontrollers = [BuildStepController(), BuildStepController()]
 
         lock = lock_cls("lock1", maxCount=1)
 
-        config_dict = {
+        config_dict: dict[str, Any] = {
             'builders': [
                 BuilderConfig(
                     name='builder1',
@@ -54,7 +66,7 @@ class Tests(RunFakeMasterTestCase):
             'multiMaster': True,
         }
         yield self.setup_master(config_dict)
-        builder_ids = [
+        builder_ids: list[int] = [
             (yield self.master.data.updates.findBuilderId('builder1')),
             (yield self.master.data.updates.findBuilderId('builder2')),
         ]
@@ -62,7 +74,9 @@ class Tests(RunFakeMasterTestCase):
         return stepcontrollers, builder_ids
 
     @defer.inlineCallbacks
-    def create_single_worker_two_builder_step_lock_config(self, lock_cls, mode):
+    def create_single_worker_two_builder_step_lock_config(
+        self, lock_cls: type[MasterLock] | type[WorkerLock], mode: str
+    ) -> InlineCallbacksType[tuple[list[BuildStepController], list[int]]]:
         lock = lock_cls("lock1", maxCount=1)
 
         stepcontrollers = [
@@ -70,7 +84,7 @@ class Tests(RunFakeMasterTestCase):
             BuildStepController(locks=[lock.access(mode)]),
         ]
 
-        config_dict = {
+        config_dict: dict[str, Any] = {
             'builders': [
                 BuilderConfig(
                     name='builder1',
@@ -90,7 +104,7 @@ class Tests(RunFakeMasterTestCase):
             'multiMaster': True,
         }
         yield self.setup_master(config_dict)
-        builder_ids = [
+        builder_ids: list[int] = [
             (yield self.master.data.updates.findBuilderId('builder1')),
             (yield self.master.data.updates.findBuilderId('builder2')),
         ]
@@ -98,7 +112,9 @@ class Tests(RunFakeMasterTestCase):
         return stepcontrollers, builder_ids
 
     @defer.inlineCallbacks
-    def create_two_worker_two_builder_lock_config(self, mode):
+    def create_two_worker_two_builder_lock_config(
+        self, mode: str
+    ) -> InlineCallbacksType[tuple[list[BuildStepController], list[int]]]:
         stepcontrollers = [BuildStepController(), BuildStepController()]
 
         master_lock = util.MasterLock("lock1", maxCount=1)
@@ -134,7 +150,9 @@ class Tests(RunFakeMasterTestCase):
         return stepcontrollers, builder_ids
 
     @defer.inlineCallbacks
-    def assert_two_builds_created_one_after_another(self, stepcontrollers, builder_ids):
+    def assert_two_builds_created_one_after_another(
+        self, stepcontrollers: list[BuildStepController], builder_ids: list[int]
+    ) -> InlineCallbacksType[None]:
         # start two builds and verify that a second build starts after the
         # first is finished
         yield self.create_build_request([builder_ids[0]])
@@ -164,7 +182,9 @@ class Tests(RunFakeMasterTestCase):
         self.assertEqual(builds[1]['results'], SUCCESS)
 
     @defer.inlineCallbacks
-    def assert_two_steps_created_one_after_another(self, stepcontrollers, builder_ids):
+    def assert_two_steps_created_one_after_another(
+        self, stepcontrollers: list[BuildStepController], builder_ids: list[int]
+    ) -> InlineCallbacksType[None]:
         # start two builds and verify that a second build starts after the
         # first is finished
         yield self.create_build_request([builder_ids[0]])
@@ -206,7 +226,9 @@ class Tests(RunFakeMasterTestCase):
         (util.WorkerLock, 'exclusive'),
     ])
     @defer.inlineCallbacks
-    def test_builder_lock_prevents_concurrent_builds(self, lock_cls, mode):
+    def test_builder_lock_prevents_concurrent_builds(
+        self, lock_cls: type[MasterLock] | type[WorkerLock], mode: str
+    ) -> InlineCallbacksType[None]:
         """
         Tests whether a builder lock works at all in preventing a build when
         the lock is taken.
@@ -224,7 +246,9 @@ class Tests(RunFakeMasterTestCase):
         (util.WorkerLock, 'exclusive'),
     ])
     @defer.inlineCallbacks
-    def test_step_lock_prevents_concurrent_builds(self, lock_cls, mode):
+    def test_step_lock_prevents_concurrent_builds(
+        self, lock_cls: type[MasterLock] | type[WorkerLock], mode: str
+    ) -> InlineCallbacksType[None]:
         """
         Tests whether a builder lock works at all in preventing a build when
         the lock is taken.
@@ -236,7 +260,9 @@ class Tests(RunFakeMasterTestCase):
 
     @parameterized.expand(['counting', 'exclusive'])
     @defer.inlineCallbacks
-    def test_builder_lock_release_wakes_builds_for_another_builder(self, mode):
+    def test_builder_lock_release_wakes_builds_for_another_builder(
+        self, mode: str
+    ) -> InlineCallbacksType[None]:
         """
         If a builder locks a master lock then the build request distributor
         must retry running any buildrequests that might have been not scheduled
@@ -248,17 +274,25 @@ class Tests(RunFakeMasterTestCase):
 
 
 class TestReconfig(RunFakeMasterTestCase):
-    def create_stepcontrollers(self, count, lock, mode):
+    def create_stepcontrollers(
+        self, count: int, lock: MasterLock | WorkerLock | None, mode: str | None
+    ) -> list[BuildStepController]:
         stepcontrollers = []
         for _ in range(count):
-            locks = [lock.access(mode)] if lock is not None else []
+            locks = [lock.access(mode)] if lock is not None else []  # type: ignore[arg-type]
             stepcontrollers.append(BuildStepController(locks=locks))
         return stepcontrollers
 
-    def update_builder_config(self, config_dict, stepcontrollers, lock, mode):
+    def update_builder_config(
+        self,
+        config_dict: dict[str, Any],
+        stepcontrollers: list[BuildStepController],
+        lock: MasterLock | WorkerLock | None,
+        mode: str | None,
+    ) -> None:
         config_dict['builders'] = []
         for i, stepcontroller in enumerate(stepcontrollers):
-            locks = [lock.access(mode)] if lock is not None else []
+            locks = [lock.access(mode)] if lock is not None else []  # type: ignore[arg-type]
             b = BuilderConfig(
                 name=f'builder{i}',
                 workernames=['worker1'],
@@ -268,7 +302,15 @@ class TestReconfig(RunFakeMasterTestCase):
             config_dict['builders'].append(b)
 
     @defer.inlineCallbacks
-    def create_single_worker_n_builder_lock_config(self, builder_count, lock_cls, max_count, mode):
+    def create_single_worker_n_builder_lock_config(
+        self,
+        builder_count: int,
+        lock_cls: type[MasterLock] | type[WorkerLock],
+        max_count: int,
+        mode: str,
+    ) -> InlineCallbacksType[
+        tuple[list[BuildStepController], dict[str, Any], MasterLock | WorkerLock, list[int]]
+    ]:
         stepcontrollers = self.create_stepcontrollers(builder_count, None, None)
 
         lock = lock_cls("lock1", maxCount=max_count)
@@ -293,8 +335,14 @@ class TestReconfig(RunFakeMasterTestCase):
 
     @defer.inlineCallbacks
     def create_single_worker_n_builder_step_lock_config(
-        self, builder_count, lock_cls, max_count, mode
-    ):
+        self,
+        builder_count: int,
+        lock_cls: type[MasterLock] | type[WorkerLock],
+        max_count: int,
+        mode: str,
+    ) -> InlineCallbacksType[
+        tuple[list[BuildStepController], dict[str, Any], MasterLock | WorkerLock, list[int]]
+    ]:
         lock = lock_cls("lock1", maxCount=max_count)
         stepcontrollers = self.create_stepcontrollers(builder_count, lock, mode)
 
@@ -329,14 +377,14 @@ class TestReconfig(RunFakeMasterTestCase):
     @defer.inlineCallbacks
     def test_changing_max_lock_count_does_not_break_builder_locks(
         self,
-        builder_count,
-        lock_cls,
-        mode,
-        max_count_before,
-        max_count_after,
-        allowed_builds_before,
-        allowed_builds_after,
-    ):
+        builder_count: int,
+        lock_cls: type[MasterLock] | type[WorkerLock],
+        mode: str,
+        max_count_before: int,
+        max_count_after: int,
+        allowed_builds_before: int,
+        allowed_builds_after: int,
+    ) -> InlineCallbacksType[None]:
         """
         Check that Buildbot does not allow extra claims on a claimed lock after
         a reconfig that changed the maxCount of that lock. Some Buildbot
@@ -392,14 +440,14 @@ class TestReconfig(RunFakeMasterTestCase):
     @defer.inlineCallbacks
     def test_changing_max_lock_count_does_not_break_step_locks(
         self,
-        builder_count,
-        lock_cls,
-        mode,
-        max_count_before,
-        max_count_after,
-        allowed_steps_before,
-        allowed_steps_after,
-    ):
+        builder_count: int,
+        lock_cls: type[MasterLock] | type[WorkerLock],
+        mode: str,
+        max_count_before: int,
+        max_count_after: int,
+        allowed_steps_before: int,
+        allowed_steps_after: int,
+    ) -> InlineCallbacksType[None]:
         """
         Check that Buildbot does not allow extra claims on a claimed lock after
         a reconfig that changed the maxCount of that lock. Some Buildbot

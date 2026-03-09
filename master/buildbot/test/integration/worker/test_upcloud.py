@@ -14,7 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest.case import SkipTest
 
 from twisted.internet import defer
@@ -26,6 +30,11 @@ from buildbot.process.factory import BuildFactory
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.worker.upcloud import UpcloudLatentWorker
+
+if TYPE_CHECKING:
+    from buildbot.interfaces import IBuildStepFactory
+    from buildbot.process.buildstep import BuildStep
+    from buildbot.util.twisted import InlineCallbacksType
 
 # This integration test creates a master and upcloud worker environment. You
 # need to have upcloud account for this to work. Running this will cost money.
@@ -41,7 +50,7 @@ class UpcloudMaster(RunMasterBase):
     # wait 5 minutes.
     timeout = 300
 
-    def setUp(self):
+    def setUp(self) -> None:
         if "BBTEST_UPCLOUD_CREDS" not in os.environ:
             raise SkipTest(
                 "upcloud integration tests only run when environment variable BBTEST_UPCLOUD_CREDS"
@@ -49,7 +58,7 @@ class UpcloudMaster(RunMasterBase):
             )
 
     @defer.inlineCallbacks
-    def test_trigger(self):
+    def test_trigger(self) -> InlineCallbacksType[None]:
         yield self.setup_master(masterConfig(num_concurrent=1), startWorker=False)
         yield self.doForceBuild()
 
@@ -61,7 +70,9 @@ class UpcloudMaster(RunMasterBase):
 
 
 # master configuration
-def masterConfig(num_concurrent, extra_steps=None):
+def masterConfig(
+    num_concurrent: int, extra_steps: list[BuildStep | IBuildStepFactory] | None = None
+) -> dict[str, Any]:
     if extra_steps is None:
         extra_steps = []
     c = {}
@@ -135,7 +146,7 @@ sudo -H -u buildbot bash -c "buildbot-worker start /buildworker"
     # if the masterFQDN is forced (proxy case), then we use 9989 default port
     # else, we try to find a free port
     if masterFQDN is not None:
-        c['protocols'] = {"pb": {"port": "tcp:9989"}}
+        c['protocols'] = {"pb": {"port": "tcp:9989"}}  # type: ignore[assignment]
     else:
         c['protocols'] = {"pb": {"port": "tcp:0"}}
 

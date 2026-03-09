@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.process.results import FAILURE
@@ -21,6 +25,9 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps.source.base import Source
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 from buildbot.test.util.integration import RunMasterBase
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 # a simple patch which adds a Makefile
 PATCH = b"""diff --git a/Makefile b/Makefile
@@ -38,7 +45,9 @@ class MySource(Source):
     """A source class which only applies the patch"""
 
     @defer.inlineCallbacks
-    def run_vc(self, branch, revision, patch):
+    def run_vc(
+        self, branch: str | None, revision: str | None, patch: tuple[int, bytes, str] | None
+    ) -> InlineCallbacksType[int]:
         self.stdio_log = yield self.addLogForRemoteCommands("stdio")
         if patch:
             yield self.patch(patch)
@@ -47,7 +56,7 @@ class MySource(Source):
 
 class ShellMaster(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -73,7 +82,7 @@ class ShellMaster(RunMasterBase):
 
     @skipUnlessPlatformIs("posix")  # make is not installed on windows
     @defer.inlineCallbacks
-    def test_shell(self):
+    def test_shell(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
         build = yield self.doForceBuild(
             wantSteps=True, wantLogs=True, forceParams={'foo_patch_body': PATCH}
@@ -83,7 +92,7 @@ class ShellMaster(RunMasterBase):
         self.assertEqual(build['results'], SUCCESS)
 
     @defer.inlineCallbacks
-    def test_shell_no_patch(self):
+    def test_shell_no_patch(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)

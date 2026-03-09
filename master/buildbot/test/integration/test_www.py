@@ -40,6 +40,10 @@ from buildbot.www import service as wwwservice
 if TYPE_CHECKING:
     from typing import Callable
 
+    from twisted.python.failure import Failure
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 SOMETIME = 1348971992
 OTHERTIME = 1008971992
 
@@ -48,14 +52,14 @@ class BodyReader(protocol.Protocol):
     # an IProtocol that reads the entire HTTP body and then calls back
     # with it
 
-    def __init__(self, finishedDeferred):
-        self.body = []
+    def __init__(self, finishedDeferred: defer.Deferred[bytes]) -> None:
+        self.body: list[bytes] = []
         self.finishedDeferred = finishedDeferred
 
-    def dataReceived(self, data):
+    def dataReceived(self, data: bytes) -> None:
         self.body.append(data)
 
-    def connectionLost(self, reason):
+    def connectionLost(self, reason: Failure) -> None:  # type: ignore[override]
         if reason.check(client.ResponseDone):
             self.finishedDeferred.callback(b''.join(self.body))
         else:
@@ -66,7 +70,7 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
     master = None
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         # set up a full master serving HTTP
         master = yield fakemaster.make_master(
             self,
@@ -97,7 +101,7 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
         # the config.  The second reconfig isn't really required, but doesn't
         # hurt.
         self.url = f'http://127.0.0.1:{master.www.getPortnum()}/'
-        self.url = unicode2bytes(self.url)
+        self.url = unicode2bytes(self.url)  # type: ignore[assignment]
         master.config.buildbotURL = self.url
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
 
@@ -113,15 +117,15 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
             self.agent = client.Agent(reactor, pool=self.pool)
             self.addCleanup(self.pool.closeCachedConnections)
         else:
-            self.pool = None
+            self.pool = None  # type: ignore[assignment]
             self.agent = client.Agent(reactor)
 
     @defer.inlineCallbacks
-    def apiGet(self, url, expect200=True):
+    def apiGet(self, url: bytes, expect200: bool = True) -> InlineCallbacksType[None]:
         pg = yield self.agent.request(b'GET', url)
 
         # this is kind of obscene, but protocols are like that
-        d = defer.Deferred()
+        d: defer.Deferred[bytes] = defer.Deferred()
         bodyReader = BodyReader(d)
         pg.deliverBody(bodyReader)
         body = yield d
@@ -129,12 +133,12 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
         # check this *after* reading the body, otherwise Trial will
         # complain that the response is half-read
         if expect200 and pg.code != 200:
-            self.fail(f"did not get 200 response for '{url}'")
+            self.fail(f"did not get 200 response for '{url.decode()}'")
 
-        return json.loads(bytes2unicode(body))
+        return json.loads(bytes2unicode(body))  # type: ignore[arg-type]
 
-    def link(self, suffix):
-        return self.url + b'api/v2/' + suffix
+    def link(self, suffix: bytes) -> bytes:
+        return self.url + b'api/v2/' + suffix  # type: ignore[operator, return-value]
 
     # tests
 
@@ -143,8 +147,8 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
     # resources will be sufficient to demonstrate that.
 
     @defer.inlineCallbacks
-    def test_masters(self):
-        yield self.master.db.insert_test_data([
+    def test_masters(self) -> InlineCallbacksType[None]:
+        yield self.master.db.insert_test_data([  # type: ignore[union-attr]
             fakedb.Master(id=7, active=0, last_active=SOMETIME),
             fakedb.Master(id=8, active=1, last_active=OTHERTIME),
         ])
@@ -230,7 +234,7 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
         )
 
     @async_to_deferred
-    async def test_gzip_compression(self):
+    async def test_gzip_compression(self) -> None:
         await self._test_compression(
             b'gzip',
             decompress_fn=lambda body: zlib.decompress(
@@ -242,7 +246,7 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
         )
 
     @async_to_deferred
-    async def test_brotli_compression(self):
+    async def test_brotli_compression(self) -> None:
         try:
             import brotli  # noqa: PLC0415
         except ImportError as e:
@@ -250,13 +254,13 @@ class Www(www.RequiresWwwMixin, unittest.TestCase):
         await self._test_compression(b'br', decompress_fn=brotli.decompress)
 
     @async_to_deferred
-    async def test_zstandard_compression(self):
+    async def test_zstandard_compression(self) -> None:
         try:
             import zstandard  # noqa: PLC0415
         except ImportError as e:
             raise unittest.SkipTest("zstandard not installed, skip the test") from e
 
-        def _decompress(data):
+        def _decompress(data: bytes) -> bytes:
             # zstd cannot decompress data compressed with stream api with a non stream api
             decompressor = zstandard.ZstdDecompressor()
             decompressobj = decompressor.decompressobj()

@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
 
 from twisted.python import util
@@ -27,17 +29,17 @@ from buildbot.warnings import DeprecatedApiWarning
 
 
 class RealConfigs(dirs.DirsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpDirs('basedir')
         self.basedir = os.path.abspath('basedir')
         self.filename = os.path.abspath("test.cfg")
 
-    def test_sample_config(self):
+    def test_sample_config(self) -> None:
         filename = util.sibpath(runner.__file__, 'sample.cfg')
         with assertNotProducesWarnings(DeprecatedApiWarning):
             FileLoader(self.basedir, filename).loadConfig()
 
-    def test_0_9_0b5_api_renamed_config(self):
+    def test_0_9_0b5_api_renamed_config(self) -> None:
         with open(self.filename, "w", encoding='utf-8') as f:
             f.write(sample_0_9_0b5_api_renamed)
         FileLoader(self.basedir, self.filename).loadConfig()
