@@ -127,3 +127,11 @@ warnings.filterwarnings(
     r"'asyncio\.iscoroutinefunction'\ is\ deprecated\ and\ slated\ for\ removal\ in\ Python\ 3\.16;\ use\ inspect\.iscoroutinefunction\(\)\ instead",
     category=DeprecationWarning,
 )
+
+# Ignore twisted faulty warning in editable install
+# see: https://github.com/twisted/twisted/issues/11840
+warnings.filterwarnings(
+    "ignore",
+    r".* not in path importer cache \(PEP 302 violation - check your local configuration\)",
+    category=UserWarning,
+)

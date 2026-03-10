@@ -44,6 +44,9 @@ sandbox.*
 .idea/
 /.venv*/
 
+# created by setuptools-scm
+master/buildbot/_version.py
+
 # www
 */node_modules/
 node_modules
