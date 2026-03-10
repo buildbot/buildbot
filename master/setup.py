@@ -19,10 +19,11 @@
 Standard setup script.
 """
 
-from setuptools import setup  # isort:skip
 import os
 import sys
 
+from setuptools import setup
+from setuptools.command.egg_info import egg_info
 from setuptools.command.sdist import sdist
 from setuptools_scm import get_version
 
@@ -35,6 +36,23 @@ use_scm_version = {
 version = get_version(**use_scm_version)
 
 BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
+
+
+class our_egg_info(egg_info):
+    def run(self) -> None:
+        version = self.distribution.get_version()
+
+        # Pin bundle version
+
+        # has to recreate the dict as it's immutable
+        metadata = self.distribution.metadata
+        metadata.extras_require = dict(metadata.extras_require)
+
+        bundle_version = version.split("-", 1)[0]
+        metadata.extras_require['bundle'] = [
+            f"{package}=={bundle_version}" for package in metadata.extras_require['bundle']
+        ]
+        super().run()
 
 
 class our_sdist(sdist):
@@ -85,7 +103,7 @@ def define_plugin_entries(groups):
 
 
 setup_args = {
-    'cmdclass': {'sdist': our_sdist},
+    'cmdclass': {'egg_info': our_egg_info, 'sdist': our_sdist},
     'entry_points': concat_dicts(
         define_plugin_entries([
             (
@@ -512,85 +530,6 @@ setup_args = {
         },
     ),
     'use_scm_version': use_scm_version,
-}
-
-bundle_version = version.split("-")[0]
-
-# dependencies
-setup_args['install_requires'] = [
-    'setuptools >= 8.0',
-    'Twisted >= 24.7.0',
-    'treq >= 20.9',
-    'Jinja2 >= 2.1',
-    'msgpack >= 0.6.0',
-    "croniter >= 1.3.0",
-    # required for tests, but Twisted requires this anyway
-    'zope.interface >= 4.1.1',
-    'sqlalchemy >= 1.4.0',
-    'alembic >= 1.6.0',
-    'python-dateutil>=1.5',
-    "txaio >= 2.2.2",
-    "autobahn >= 0.16.0",
-    'packaging',
-    'PyJWT',
-    'pyyaml',
-    'unidiff >= 0.7.5',
-    # buildbot_windows_service needs pywin32
-    'pywin32; platform_system=="Windows"',
-]
-
-# Unit test dependencies.
-test_deps = [
-    # http client libraries
-    'treq',
-    'txrequests',
-    # pypugjs required for custom templates tests
-    'pypugjs',
-    # boto3 and moto required for running EC2 tests
-    'boto3',
-    'moto',
-    "Markdown>=3.0.0",
-    'parameterized',
-    'lz4',
-]
-
-setup_args['extras_require'] = {
-    'test': ["ruff", *test_deps],
-    'bundle': [
-        f"buildbot-www=={bundle_version}",
-        f"buildbot-worker=={bundle_version}",
-        f"buildbot-waterfall-view=={bundle_version}",
-        f"buildbot-console-view=={bundle_version}",
-        f"buildbot-grid-view=={bundle_version}",
-    ],
-    'tls': [
-        'Twisted[tls]',
-        # There are bugs with extras inside extras:
-        # <https://github.com/pypa/pip/issues/3516>
-        # so we explicitly include Twisted[tls] dependencies.
-        'pyopenssl >= 16.0.0',
-        'service_identity',
-        'idna >= 0.6',
-    ],
-    'docs': [
-        'docutils>=0.16.0',
-        'sphinx>=3.2.0',
-        'sphinx-rtd-theme>=0.5',
-        'sphinxcontrib-spelling',
-        'sphinxcontrib-websupport',
-        'pyenchant',
-        'sphinx-jinja',
-        'towncrier',
-    ],
-    'brotli': [
-        'Brotli>=1.1.0',
-    ],
-    'zstd': [
-        'zstandard>=0.23.0',
-    ],
-    'configurable': [
-        'evalidate >= 2.0.0',
-    ],
 }
 
 if __name__ == '__main__':
