@@ -20,11 +20,9 @@ Standard setup script.
 """
 
 from setuptools import setup  # isort:skip
-import inspect
 import os
 import sys
 
-from setuptools import find_packages
 from setuptools.command.sdist import sdist
 from setuptools_scm import get_version
 
@@ -86,30 +84,7 @@ def define_plugin_entries(groups):
     return result
 
 
-__file__ = inspect.getframeinfo(inspect.currentframe()).filename
-
-with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
-    long_description = long_d_f.read()
-
-packages = find_packages(
-    exclude=[
-        # skip tests for wheels (save 50% of the archive)
-        "buildbot.test.fuzz*",
-        "buildbot.test.integration*",
-        "buildbot.test.integration.interop*",
-        "buildbot.test.regressions*",
-        "buildbot.test.unit*",
-    ]
-    if BUILDING_WHEEL
-    else [],
-)
-packages.sort()
-
 setup_args = {
-    'packages': packages,
-    # mention data_files, even if empty, so install_data is called and
-    # VERSION gets copied
-    'data_files': [("buildbot", [])],
     'cmdclass': {'sdist': our_sdist},
     'entry_points': concat_dicts(
         define_plugin_entries([

@@ -49,6 +49,20 @@ test = "trial -m buildbot"
 [tool.setuptools]
 include-package-data = false
 
+[tool.setuptools.packages.find]
+include = [
+    "buildbot",
+    "buildbot.*",
+]
+exclude = [
+    # skip tests for wheels (save 50% of the archive)
+    "buildbot.test.fuzz*",
+    "buildbot.test.integration*",
+    "buildbot.test.integration.interop*",
+    "buildbot.test.regressions*",
+    "buildbot.test.unit*",
+]
+
 [tool.setuptools.package-data]
 "buildbot.reporters.templates" = ["*.txt"]
 "buildbot.db.migrations" = ["alembic.ini", "README"]
