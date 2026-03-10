@@ -1,0 +1,47 @@
+[build-system]
+requires = [
+    "setuptools>=80",
+    "setuptools-scm>=9",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "buildbot-badges"
+authors = [
+    { name = "Buildbot Team Members", email = "users@buildbot.net" },
+]
+description = "Buildbot badges"
+license = {text = "GPL-2.0-or-later"}
+dependencies = [
+    "klein",
+    "CairoSVG",
+    "cairocffi",
+    "Jinja2",
+]
+
+dynamic = [
+    "version",
+]
+
+[project.entry-points."buildbot.www"]
+badges = "buildbot_badges:ep"
+
+[project.urls]
+Homepage = "http://buildbot.net/"
+
+[tool.setuptools]
+include-package-data = false
+packages = [
+    "buildbot_badges",
+]
+
+[tool.setuptools.package-data]
+"buildbot_badges" = [
+    "templates/*.svg.j2",
+    "static/.placeholder",
+]
+
+[tool.setuptools_scm]
+root = "../.."
+version_file = "buildbot_badges/_version.py"
+local_scheme = "no-local-version"

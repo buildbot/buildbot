@@ -4,7 +4,9 @@ pkg=$1
 (
     cd ${pkg}
     rm -rf MANIFEST dist
-    if [ ${pkg} == "master" ] || [ ${pkg} == "www/base" ]; then
+    if [ ${pkg} == "master" ] || \
+        [ ${pkg} == "www/base" ] || \
+        [ ${pkg} == "www/badges" ]; then
         python -m build
     elif [ ${pkg} == "worker" ] || [ ${pkg} == "pkg" ]; then
         python -m build --no-isolation --sdist

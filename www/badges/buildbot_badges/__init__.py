@@ -24,6 +24,9 @@ from twisted.internet import defer
 from buildbot.process.results import Results
 from buildbot.util import bytes2unicode
 from buildbot.www.plugin import Application
+from buildbot_badges._version import version
+
+__version__ = version
 
 
 class Api:
