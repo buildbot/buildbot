@@ -18,11 +18,38 @@
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 MASTER_RUNNER=/usr/bin/buildbot
 
-. /lib/lsb/init-functions
 
 # Source buildmaster configuration
 [[ -r /etc/default/buildmaster ]] && . /etc/default/buildmaster
 #[[ -r /etc/sysconfig/buildmaster ]] && . /etc/sysconfig/buildmaster
+
+
+# Get some LSB-like functions
+if [ -r /lib/lsb/init-functions ]; then
+    . /lib/lsb/init-functions
+else
+    function log_success_msg() {
+        echo "$@"
+    }
+    function log_failure_msg() {
+        echo "$@"
+    }
+    function log_warning_msg() {
+        echo "$@"
+    }
+fi
+
+
+# Some systems don't have seq (e.g. Solaris)
+if type seq >/dev/null 2>&1; then
+    :
+else
+    function seq() {
+        for ((i=1; i<=$1; i+=1)); do
+            echo $i
+        done
+    }
+fi
 
 # Or define/override the configuration here
 #MASTER_ENABLED[1]=0                    # 1-enabled, 0-disabled
