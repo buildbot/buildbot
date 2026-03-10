@@ -36,8 +36,12 @@ dynamic = [
     "version",
     "dependencies",
     "optional-dependencies",
-    "scripts",
 ]
+
+[project.scripts]
+"buildbot-worker" = "buildbot_worker.scripts.runner:run"
+# this will also be shipped on non windows :-(
+"buildbot_worker_windows_service" = "buildbot_worker.scripts.windows_service:HandleCommandLine"
 
 [project.urls]
 Homepage = "http://buildbot.net/"
@@ -47,6 +51,18 @@ test = "trial -m buildbot_worker"
 
 [tool.setuptools]
 include-package-data = false
+
+[tool.setuptools.packages.find]
+exclude = [
+    # skip tests for wheels (save 40% of the archive)
+    "buildbot_worker.test",
+    "buildbot_worker.test.fake",
+    "buildbot_worker.test.unit",
+    "buildbot_worker.test.util",
+]
+
+[tool.setuptools.package-data]
+buildbot_worker = ["py.typed"]
 
 [tool.setuptools_scm]
 root = ".."
