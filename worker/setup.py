@@ -24,6 +24,7 @@ from __future__ import annotations
 import os
 import sys
 
+from setuptools import find_packages
 from setuptools import setup
 from setuptools.command.sdist import sdist
 
@@ -46,24 +47,21 @@ class our_sdist(sdist):
             f.write(src)
 
 
-setup_args = {
-    'packages': [
-        "buildbot_worker",
-        "buildbot_worker.util",
-        "buildbot_worker.commands",
-        "buildbot_worker.scripts",
-        "buildbot_worker.monkeypatches",
+packages = find_packages(
+    exclude=[
+        # skip tests for wheels (save 40% of the archive)
+        "buildbot_worker.test",
+        "buildbot_worker.test.fake",
+        "buildbot_worker.test.unit",
+        "buildbot_worker.test.util",
     ]
-    + (
-        []
-        if BUILDING_WHEEL
-        else [  # skip tests for wheels (save 40% of the archive)
-            "buildbot_worker.test",
-            "buildbot_worker.test.fake",
-            "buildbot_worker.test.unit",
-            "buildbot_worker.test.util",
-        ]
-    ),
+    if BUILDING_WHEEL
+    else [],
+)
+packages.sort()
+
+setup_args = {
+    'packages': packages,
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
     'data_files': [("buildbot_worker", [])],
