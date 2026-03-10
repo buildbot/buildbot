@@ -23,7 +23,7 @@ User=buildbot
 Group=buildbot
 WorkingDirectory=/var/lib/buildbot/
 StateDirectory=buildbot
-ExecStart=/usr/bin/buildbot-worker start --nodaemon %I
+ExecStart=/usr/bin/buildbot-worker start --nodaemon %i
 # if using EC2 Latent worker, you want to uncomment following line, and comment out the Restart line
 # ExecStopPost=shutdown now
 Restart=always
