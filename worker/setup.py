@@ -65,8 +65,4 @@ setup_args['extras_require'] = {
     'test': test_deps,
 }
 
-if os.getenv('NO_INSTALL_REQS'):
-    setup_args['install_requires'] = None
-    setup_args['extras_require'] = None
-
 setup(**setup_args)

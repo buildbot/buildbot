@@ -621,9 +621,5 @@ setup_args['extras_require'] = {
     ],
 }
 
-if os.getenv('NO_INSTALL_REQS'):
-    setup_args['install_requires'] = None
-    setup_args['extras_require'] = None
-
 if __name__ == '__main__':
     setup(**setup_args)
