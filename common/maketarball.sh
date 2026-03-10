@@ -9,6 +9,7 @@ pkg=$1
         [ ${pkg} == "www/console_view" ] || \
         [ ${pkg} == "www/grid_view" ] || \
         [ ${pkg} == "www/waterfall_view" ] || \
+        [ ${pkg} == "www/wsgi_dashboards" ] || \
         [ ${pkg} == "www/nestedexample" ] || \
         [ ${pkg} == "www/badges" ]; then
         python -m build

@@ -19,6 +19,9 @@ from twisted.web.wsgi import WSGIResource
 
 from buildbot.util import unicode2bytes
 from buildbot.www.plugin import Application
+from buildbot_wsgi_dashboards._version import version
+
+__version__ = version
 
 
 class WSGIDashboardsApplication(Application):

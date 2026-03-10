@@ -1,0 +1,40 @@
+[build-system]
+requires = [
+    "setuptools>=80",
+    "setuptools-scm>=9",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "buildbot-wsgi-dashboards"
+authors = [
+    { name = "Buildbot maintainers", email = "devel@buildbot.net" },
+]
+description = "Buildbot plugin to integrate flask or bottle dashboards to buildbot UI (React)"
+license = {text = "GPL-2.0-or-later"}
+
+dynamic = [
+    "version",
+]
+
+[project.entry-points."buildbot.www"]
+wsgi_dashboards = "buildbot_wsgi_dashboards:ep"
+
+[project.urls]
+Homepage = "http://buildbot.net/"
+
+[tool.setuptools]
+include-package-data = false
+packages = [
+    "buildbot_wsgi_dashboards",
+]
+
+[tool.setuptools.package-data]
+"buildbot_wsgi_dashboards" = [
+    "static/*",
+]
+
+[tool.setuptools_scm]
+root = "../.."
+version_file = "buildbot_wsgi_dashboards/_version.py"
+local_scheme = "no-local-version"
