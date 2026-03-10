@@ -19,23 +19,13 @@
 Standard setup script.
 """
 
+from __future__ import annotations
+
 import os
-import sys
 
 from setuptools import setup
 from setuptools.command.egg_info import egg_info
 from setuptools.command.sdist import sdist
-from setuptools_scm import get_version
-
-use_scm_version = {
-    "root": "..",
-    "relative_to": __file__,
-    "version_file": "buildbot/_version.py",
-    "local_scheme": "no-local-version",
-}
-version = get_version(**use_scm_version)
-
-BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
 
 
 class our_egg_info(egg_info):
@@ -56,13 +46,14 @@ class our_egg_info(egg_info):
 
 
 class our_sdist(sdist):
-    def make_release_tree(self, base_dir, files):
+    def make_release_tree(self, base_dir: str, files: list[str]) -> None:
         sdist.make_release_tree(self, base_dir, files)
         # ensure that NEWS has a copy of the latest release notes, with the
         # proper version substituted
         src_fn = os.path.join('docs', 'relnotes/index.rst')
         with open(src_fn) as f:
             src = f.read()
+        version = self.distribution.get_version()
         src = src.replace('|version|', version)
         dst_fn = os.path.join(base_dir, 'NEWS')
         with open(dst_fn, 'w') as f:
@@ -529,7 +520,6 @@ setup_args = {
             ]
         },
     ),
-    'use_scm_version': use_scm_version,
 }
 
 if __name__ == '__main__':

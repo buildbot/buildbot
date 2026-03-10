@@ -150,3 +150,8 @@ exclude = [
 "buildbot.test.unit.test_templates_dir.plugin" = ["*.*"]
 "buildbot.test.integration.pki" = ["*.*"]
 "buildbot.test.integration.pki.ca" = ["*.*"]
+
+[tool.setuptools_scm]
+root = ".."
+version_file = "buildbot/_version.py"
+local_scheme = "no-local-version"
