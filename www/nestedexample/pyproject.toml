@@ -1,0 +1,34 @@
+[build-system]
+requires = [
+    "setuptools>=80",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "buildbot-nestedexample"
+version='0.0.1'
+authors = [
+    { name = "Ion Alberdi", email = "ialberdi@intel.com" },
+]
+description = "An example of a custom nested parameter"
+license = {text = "GPL-2.0-or-later"}
+dependencies = [
+    "klein",
+]
+
+[project.entry-points."buildbot.www"]
+nestedexample = "buildbot_nestedexample:ep"
+
+[project.urls]
+Homepage = "http://buildbot.net/"
+
+[tool.setuptools]
+include-package-data = false
+packages = [
+    "buildbot_nestedexample",
+]
+
+[tool.setuptools.package-data]
+"buildbot_nestedexample" = [
+    "static/*",
+]

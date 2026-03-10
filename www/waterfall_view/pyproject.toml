@@ -1,0 +1,41 @@
+[build-system]
+requires = [
+    "setuptools>=80",
+    "setuptools-scm>=9",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "buildbot-waterfall-view"
+authors = [
+    { name = "Pierre Tardy", email = "tardyp@gmail.com" },
+]
+description = "Buildbot Waterfall View plugin"
+license = {text = "GPL-2.0-or-later"}
+
+dynamic = [
+    "version",
+]
+
+[project.entry-points."buildbot.www"]
+waterfall_view = "buildbot_waterfall_view:ep"
+
+[project.urls]
+Homepage = "http://buildbot.net/"
+
+[tool.setuptools]
+include-package-data = false
+packages = [
+    "buildbot_waterfall_view",
+]
+
+[tool.setuptools.package-data]
+"buildbot_waterfall_view" = [
+    "static/*",
+    "static/assets/*",
+]
+
+[tool.setuptools_scm]
+root = "../.."
+version_file = "buildbot_waterfall_view/_version.py"
+local_scheme = "no-local-version"

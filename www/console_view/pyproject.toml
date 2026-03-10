@@ -1,0 +1,41 @@
+[build-system]
+requires = [
+    "setuptools>=80",
+    "setuptools-scm>=9",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "buildbot-console-view"
+authors = [
+    { name = "Pierre Tardy", email = "tardyp@gmail.com" },
+]
+description = "Buildbot Console View plugin"
+license = {text = "GPL-2.0-or-later"}
+
+dynamic = [
+    "version",
+]
+
+[project.entry-points."buildbot.www"]
+console_view = "buildbot_console_view:ep"
+
+[project.urls]
+Homepage = "http://buildbot.net/"
+
+[tool.setuptools]
+include-package-data = false
+packages = [
+    "buildbot_console_view",
+]
+
+[tool.setuptools.package-data]
+"buildbot_console_view" = [
+    "static/*",
+    "static/assets/*",
+]
+
+[tool.setuptools_scm]
+root = "../.."
+version_file = "buildbot_console_view/_version.py"
+local_scheme = "no-local-version"

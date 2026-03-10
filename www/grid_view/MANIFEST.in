@@ -1,0 +1,9 @@
+exclude .git_archival.txt
+
+exclude eslint.config.js
+exclude package-lock.json
+exclude package.json
+exclude prettier.config.js
+exclude tsconfig.json
+exclude vite.config.ts
+exclude src/**

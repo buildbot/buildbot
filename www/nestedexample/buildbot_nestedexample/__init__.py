@@ -8,6 +8,8 @@ from buildbot.schedulers.forcesched import StringParameter
 from buildbot.schedulers.forcesched import ValidationError
 from buildbot.www.plugin import Application
 
+__version__ = "0.0.1"
+
 from .api import Api
 
 
