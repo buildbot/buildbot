@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 
 from buildbot.www.plugin import Application
+from buildbot_console_view._version import version
+
+__version__ = version
 
 # create the interface for the setuptools entry point
 ep = Application(__package__, "Buildbot Console View plugin")

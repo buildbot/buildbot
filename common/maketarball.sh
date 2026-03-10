@@ -6,6 +6,7 @@ pkg=$1
     rm -rf MANIFEST dist
     if [ ${pkg} == "master" ] || \
         [ ${pkg} == "www/base" ] || \
+        [ ${pkg} == "www/console_view" ] || \
         [ ${pkg} == "www/badges" ]; then
         python -m build
     elif [ ${pkg} == "worker" ] || [ ${pkg} == "pkg" ]; then
