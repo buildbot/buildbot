@@ -4,7 +4,7 @@ pkg=$1
 (
     cd ${pkg}
     rm -rf MANIFEST dist
-    if [ ${pkg} == "worker" ] || [ ${pkg} == "pkg" ]; then
+    if [ ${pkg} == "pkg" ]; then
         python -m build --no-isolation --sdist
         # wheels must be build separately in order to properly omit tests
         python -m build --no-isolation --wheel

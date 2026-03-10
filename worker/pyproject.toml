@@ -1,6 +1,7 @@
 [build-system]
 requires = [
     "setuptools>=61.2",
+    "setuptools-scm>=7.1.0",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -46,3 +47,9 @@ test = "trial -m buildbot_worker"
 
 [tool.setuptools]
 include-package-data = false
+
+[tool.setuptools_scm]
+root = ".."
+local_scheme = "no-local-version"
+# Enable this when worker stop supporting Python 3.7
+# version_file = "buildbot_worker/_version.py"

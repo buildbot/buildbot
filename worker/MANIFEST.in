@@ -4,3 +4,10 @@ include docs/buildbot-worker.1
 
 include contrib/windows/* contrib/os-x/* contrib/init-scripts/*
 include contrib/zsh/* contrib/bash/*
+
+exclude .git_archival.txt
+
+exclude ruff.toml tox.ini .mypy.ini Dockerfile
+exclude docker/**
+exclude contrib/systemd/buildbot-worker@.service
+exclude contrib/README.txt

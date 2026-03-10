@@ -19,47 +19,27 @@
 Standard setup script.
 """
 
+from __future__ import annotations
+
 import os
 import sys
 
-from setuptools import Command
 from setuptools import setup
 from setuptools.command.sdist import sdist
-
-from buildbot_worker import version
 
 BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
 
 
-class our_install_data(Command):
-    def initialize_options(self):
-        self.install_dir = None
-
-    def finalize_options(self):
-        self.set_undefined_options(
-            'install',
-            ('install_lib', 'install_dir'),
-        )
-
-    def run(self):
-        # ensure there's a buildbot_worker/VERSION file
-        fn = os.path.join(self.install_dir, 'buildbot_worker', 'VERSION')
-        with open(fn, 'w') as f:
-            f.write(version)
-
-
 class our_sdist(sdist):
-    def make_release_tree(self, base_dir, files):
+    def make_release_tree(self, base_dir: str, files: list[str]) -> None:
         sdist.make_release_tree(self, base_dir, files)
-        # ensure there's a buildbot_worker/VERSION file
-        fn = os.path.join(base_dir, 'buildbot_worker', 'VERSION')
-        open(fn, 'w').write(version)
 
         # ensure that NEWS has a copy of the latest release notes, copied from
         # the master tree, with the proper version substituted
         src_fn = os.path.join('..', 'master', 'docs', 'relnotes/index.rst')
         with open(src_fn) as f:
             src = f.read()
+        version = self.distribution.get_version()
         src = src.replace('|version|', version)
         dst_fn = os.path.join(base_dir, 'NEWS')
         with open(dst_fn, 'w') as f:
@@ -67,7 +47,6 @@ class our_sdist(sdist):
 
 
 setup_args = {
-    'version': version,
     'packages': [
         "buildbot_worker",
         "buildbot_worker.util",
@@ -96,7 +75,7 @@ setup_args = {
             'py.typed',
         ],
     },
-    'cmdclass': {'install_data': our_install_data, 'sdist': our_sdist},
+    'cmdclass': {'sdist': our_sdist},
     'entry_points': {
         'console_scripts': [
             'buildbot-worker=buildbot_worker.scripts.runner:run',
@@ -114,6 +93,7 @@ setup_args['install_requires'] = [
     'msgpack >= 0.6.0',
     # buildbot_worker_windows_service needs pywin32
     'pywin32; platform_system=="Windows"',
+    'importlib_metadata',
 ]
 
 # Unit test hard dependencies.
