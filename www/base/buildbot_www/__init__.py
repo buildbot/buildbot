@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 
 from buildbot.www.plugin import Application
+from buildbot_www._version import version
 
 # create the interface for the setuptools entry point
 ep = Application(__package__, "Buildbot UI (React)")
+
+__version__ = version

@@ -46,6 +46,7 @@ sandbox.*
 
 # created by setuptools-scm
 master/buildbot/_version.py
+www/base/buildbot_www/_version.py
 
 # www
 */node_modules/

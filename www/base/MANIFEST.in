@@ -1,0 +1,13 @@
+exclude .git_archival.txt
+
+exclude eslint.config.js
+exclude index.html
+exclude package-lock.json
+exclude package.json
+exclude prettier.config.js
+exclude tsconfig.json
+exclude vite.config.ts
+exclude vitest.setup.tsx
+exclude src/**
+exclude config/jest/**
+exclude public/**

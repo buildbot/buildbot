@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata
 import importlib.resources
 
 from twisted.web import static
@@ -25,8 +26,13 @@ from buildbot.util import bytes2unicode
 class Application:
     def __init__(self, package_name: str, description: str, ui: bool = True) -> None:
         self.description = description
+
         version_file = importlib.resources.files(package_name).joinpath("VERSION")
-        self.version = bytes2unicode(version_file.read_bytes())
+        if version_file.is_file():
+            self.version = bytes2unicode(version_file.read_bytes())
+        else:
+            self.version = importlib.metadata.version(package_name)
+
         self.static_dir = str(importlib.resources.files(package_name) / "static")
         self.resource = static.File(self.static_dir)
         self.ui = ui
