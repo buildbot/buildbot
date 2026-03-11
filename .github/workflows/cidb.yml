@@ -114,7 +114,6 @@ jobs:
             requirements-cidb.txt
             master/setup.py
             worker/setup.py
-            pkg/setup.py
 
       - run: pip install -r requirements-pip.txt
       - run: pip install -r requirements-ci.txt -r requirements-cidb.txt

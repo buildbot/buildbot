@@ -30,7 +30,7 @@ WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_
 WWW_EX_PKGS := www/nestedexample
 WWW_DEP_PKGS := www/plugin_support www/data-module www/ui
 WWW_PURE_DEP_PKGS := www/common-config
-ALL_PKGS := master worker pkg $(WWW_PKGS)
+ALL_PKGS := master worker $(WWW_PKGS)
 
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 WWW_PKGS_FOR_PRETTIER := $(filter-out www/plugin_support www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
@@ -85,16 +85,12 @@ frontend_build: frontend_deps
 
 # rebuild front-end from source
 frontend: frontend_build
-	for i in pkg $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
+	for i in $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
 
 # build frontend wheels for installation elsewhere
 frontend_wheels: frontend_build
-	for i in pkg $(WWW_PKGS); \
+	for i in $(WWW_PKGS); \
 		do (cd $$i; $(VENV_PYTHON) -m build --no-isolation --wheel || exit 1) || exit 1; done
-
-# do installation tests. Test front-end can build and install for all install methods
-frontend_install_tests: frontend_build
-	trial pkg/test_buildbot_pkg.py
 
 # upgrade FE dependencies
 frontend_npm_upgrade: check_for_npm
@@ -176,7 +172,7 @@ $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_build
 	. $(VENV_NAME)/$(VENV_BIN_DIR)/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
 
 cleanup_for_tarballs:
-	find master pkg worker www -name VERSION -exec rm {} \;
+	find master worker www -name VERSION -exec rm {} \;
 	rm -rf dist
 	mkdir dist
 .PHONY: cleanup_for_tarballs
