@@ -1,0 +1,71 @@
+[build-system]
+requires = [
+    "setuptools>=61.2",
+    "setuptools-scm>=7.1.0",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "buildbot-worker"
+authors = [
+    { name = "Brian Warner", email = "warner-buildbot@lothar.com" },
+]
+maintainers = [
+    { name = "Dustin J. Mitchell", email = "dustin@v.igoro.us" },
+]
+description = "Buildbot Worker Daemon"
+readme = { text = "See the 'buildbot' package for details", "content-type" = "text/plain" }
+license = {text = "GPL-2.0-or-later"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: No Input/Output (Daemon)",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Testing",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dynamic = [
+    "version",
+    "dependencies",
+    "optional-dependencies",
+]
+
+[project.scripts]
+"buildbot-worker" = "buildbot_worker.scripts.runner:run"
+# this will also be shipped on non windows :-(
+"buildbot_worker_windows_service" = "buildbot_worker.scripts.windows_service:HandleCommandLine"
+
+[project.urls]
+Homepage = "http://buildbot.net/"
+
+[tool.aliases]
+test = "trial -m buildbot_worker"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+exclude = [
+    # skip tests for wheels (save 40% of the archive)
+    "buildbot_worker.test",
+    "buildbot_worker.test.fake",
+    "buildbot_worker.test.unit",
+    "buildbot_worker.test.util",
+]
+
+[tool.setuptools.package-data]
+buildbot_worker = ["py.typed"]
+
+[tool.setuptools_scm]
+root = ".."
+local_scheme = "no-local-version"
+# Enable this when worker stop supporting Python 3.7
+# version_file = "buildbot_worker/_version.py"

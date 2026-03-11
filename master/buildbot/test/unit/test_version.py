@@ -47,7 +47,3 @@ class VersioningUtilsTests_PKG(unittest.SynchronousTestCase):
     def test_getVersionFromArchiveIdtag(self):
         version = self.m.getVersionFromArchiveId('1514808197 v1.0.0')
         self.assertEqual(version, "1.0.0")
-
-
-class VersioningUtilsTests_WORKER(VersioningUtilsTests_PKG):
-    module_under_test = "buildbot_worker"
