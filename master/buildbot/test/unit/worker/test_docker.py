@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 
 from packaging.version import parse as parse_version
 from twisted.internet import defer
@@ -29,24 +33,31 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.worker import docker as dockerworker
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
+    _client: docker.Client
+
     @defer.inlineCallbacks
-    def setupWorker(self, *args, **kwargs):
+    def setupWorker(
+        self, *args: Any, **kwargs: Any
+    ) -> InlineCallbacksType[dockerworker.DockerLatentWorker]:
         worker = dockerworker.DockerLatentWorker(*args, **kwargs)
         master = yield fakemaster.make_master(self, wantData=True)
-        fakemaster.master = master
+        fakemaster.master = master  # type: ignore[attr-defined]
         worker.setServiceParent(master)
         yield master.startService()
         self.addCleanup(master.stopService)
         return worker
 
-    def _create_client(self, *args, **kwargs):
+    def _create_client(self, *args: Any, **kwargs: Any) -> docker.Client:
         if self._client is None:
             self._client = docker.Client(*args, **kwargs)
         return self._client
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
         self.patch(dockerworker, 'docker', docker)
@@ -54,7 +65,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         # Patch factory function so that single test uses single client instance.
         self.patch(docker, "APIClient", self._create_client)
 
-        self._client = None
+        self._client = None  # type: ignore[assignment]
 
         self.build = Properties(image='busybox:latest', builder='docker_worker', distro='wheezy')
         self.build2 = Properties(image='busybox:latest', builder='docker_worker2', distro='wheezy')
@@ -62,12 +73,12 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         docker.Client.start_exception = None
 
     @defer.inlineCallbacks
-    def test_constructor_noimage_nodockerfile(self):
+    def test_constructor_noimage_nodockerfile(self) -> InlineCallbacksType[None]:
         with self.assertRaises(config.ConfigErrors):
             yield self.setupWorker('bot', 'pass', 'http://localhost:2375')
 
     @defer.inlineCallbacks
-    def test_constructor_noimage_dockerfile(self):
+    def test_constructor_noimage_dockerfile(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', 'http://localhost:2375', dockerfile="FROM ubuntu"
         )
@@ -75,13 +86,13 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(bs.image, None)
 
     @defer.inlineCallbacks
-    def test_constructor_image_nodockerfile(self):
+    def test_constructor_image_nodockerfile(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker('bot', 'pass', 'http://localhost:2375', image="myworker")
         self.assertEqual(bs.dockerfile, None)
         self.assertEqual(bs.image, 'myworker')
 
     @defer.inlineCallbacks
-    def test_constructor_minimal(self):
+    def test_constructor_minimal(self) -> InlineCallbacksType[None]:
         # Minimal set of parameters
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         self.assertEqual(bs.workername, 'bot')
@@ -92,19 +103,19 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(bs.command, [])
 
     @defer.inlineCallbacks
-    def test_builds_may_be_incompatible(self):
+    def test_builds_may_be_incompatible(self) -> InlineCallbacksType[None]:
         # Minimal set of parameters
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         self.assertEqual(bs.builds_may_be_incompatible, True)
 
     @defer.inlineCallbacks
-    def test_contruction_too_old_docker(self):
+    def test_contruction_too_old_docker(self) -> InlineCallbacksType[None]:
         self.patch(dockerworker, 'docker_py_version', parse_version("3.2"))
         with self.assertRaisesConfigError("The python module 'docker>=4.0'"):
             yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
 
     @defer.inlineCallbacks
-    def test_contruction_minimal_docker(self):
+    def test_contruction_minimal_docker(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         self.assertEqual(
@@ -112,14 +123,14 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_constructor_nopassword(self):
+    def test_constructor_nopassword(self) -> InlineCallbacksType[None]:
         # when no password, it is created automatically
         bs = yield self.setupWorker('bot', None, 'tcp://1234:2375', 'worker')
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(len(bs.password), 20)
 
     @defer.inlineCallbacks
-    def test_constructor_all_docker_parameters(self):
+    def test_constructor_all_docker_parameters(self) -> InlineCallbacksType[None]:
         # Volumes have their own tests
         bs = yield self.setupWorker(
             'bot',
@@ -149,7 +160,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(bs.encoding, 'gzip')
 
     @defer.inlineCallbacks
-    def test_constructor_host_config_build(self):
+    def test_constructor_host_config_build(self) -> InlineCallbacksType[None]:
         # Volumes have their own tests
         bs = yield self.setupWorker(
             'bot',
@@ -174,7 +185,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(self._client.call_args_create_host_config, [expected])
 
     @defer.inlineCallbacks
-    def test_constructor_host_config_build_set_init(self):
+    def test_constructor_host_config_build_set_init(self) -> InlineCallbacksType[None]:
         # Volumes have their own tests
         bs = yield self.setupWorker(
             'bot',
@@ -203,7 +214,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_start_instance_docker_host_renderable(self):
+    def test_start_instance_docker_host_renderable(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', docker_host=Interpolate('tcp://value-%(prop:builder)s'), image='worker'
         )
@@ -211,7 +222,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(self._client.base_url, 'tcp://value-docker_worker')
 
     @defer.inlineCallbacks
-    def test_start_instance_volume_renderable(self):
+    def test_start_instance_volume_renderable(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -229,7 +240,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_start_instance_hostconfig_renderable(self):
+    def test_start_instance_hostconfig_renderable(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -244,7 +255,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(self._client.call_args_create_host_config, [expected])
 
     @defer.inlineCallbacks
-    def test_interpolate_renderables_for_new_build(self):
+    def test_interpolate_renderables_for_new_build(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -263,7 +274,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertTrue((yield bs.isCompatibleWithBuild(self.build2)))
 
     @defer.inlineCallbacks
-    def test_reject_incompatible_build_while_running(self):
+    def test_reject_incompatible_build_while_running(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -278,7 +289,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertFalse((yield bs.isCompatibleWithBuild(self.build2)))
 
     @defer.inlineCallbacks
-    def test_volume_no_suffix(self):
+    def test_volume_no_suffix(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -296,7 +307,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_volume_ro_rw(self):
+    def test_volume_ro_rw(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -317,14 +328,14 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_volume_bad_format(self):
+    def test_volume_bad_format(self) -> InlineCallbacksType[None]:
         with self.assertRaises(config.ConfigErrors):
             yield self.setupWorker(
                 'bot', 'pass', 'http://localhost:2375', image="worker", volumes=['abcd=efgh']
             )
 
     @defer.inlineCallbacks
-    def test_volume_bad_format_renderable(self):
+    def test_volume_bad_format_renderable(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -338,13 +349,13 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
             yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
-    def test_start_instance_image_no_version(self):
+    def test_start_instance_image_no_version(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'busybox', ['bin/bash'])
         _, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox')
 
     @defer.inlineCallbacks
-    def test_start_instance_image_right_version(self):
+    def test_start_instance_image_right_version(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash']
         )
@@ -352,13 +363,13 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(name, 'busybox:latest')
 
     @defer.inlineCallbacks
-    def test_start_instance_image_wrong_version(self):
+    def test_start_instance_image_wrong_version(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'busybox:123', ['bin/bash'])
         with self.assertRaises(interfaces.LatentWorkerCannotSubstantiate):
             yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
-    def test_start_instance_image_renderable(self):
+    def test_start_instance_image_renderable(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', Property('image'), ['bin/bash']
         )
@@ -366,13 +377,13 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(name, 'busybox:latest')
 
     @defer.inlineCallbacks
-    def test_start_instance_noimage_nodockerfile(self):
+    def test_start_instance_noimage_nodockerfile(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'customworker', ['bin/bash'])
         with self.assertRaises(interfaces.LatentWorkerCannotSubstantiate):
             yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
-    def test_start_instance_image_and_dockefile(self):
+    def test_start_instance_image_and_dockefile(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'customworker', dockerfile='BUG'
         )
@@ -380,7 +391,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
             yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
-    def test_start_instance_noimage_gooddockerfile(self):
+    def test_start_instance_noimage_gooddockerfile(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'customworker', dockerfile='FROM debian:wheezy'
         )
@@ -388,7 +399,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(name, 'customworker')
 
     @defer.inlineCallbacks
-    def test_start_instance_noimage_pull(self):
+    def test_start_instance_noimage_pull(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'alpine:latest', autopull=True
         )
@@ -396,7 +407,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(name, 'alpine:latest')
 
     @defer.inlineCallbacks
-    def test_start_instance_image_pull(self):
+    def test_start_instance_image_pull(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'tester:latest', autopull=True
         )
@@ -405,7 +416,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(self._client._pullCount, 0)
 
     @defer.inlineCallbacks
-    def test_start_instance_image_alwayspull(self):
+    def test_start_instance_image_alwayspull(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'tester:latest', autopull=True, alwaysPull=True
         )
@@ -414,7 +425,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(self._client._pullCount, 1)
 
     @defer.inlineCallbacks
-    def test_start_instance_image_noauto_alwayspull(self):
+    def test_start_instance_image_noauto_alwayspull(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'tester:latest', autopull=False, alwaysPull=True
         )
@@ -423,7 +434,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(self._client._pullCount, 0)
 
     @defer.inlineCallbacks
-    def test_start_instance_noimage_renderabledockerfile(self):
+    def test_start_instance_noimage_renderabledockerfile(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -435,7 +446,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(name, 'customworker')
 
     @defer.inlineCallbacks
-    def test_start_instance_custom_context_and_buildargs(self):
+    def test_start_instance_custom_context_and_buildargs(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -449,7 +460,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(name, 'tester:latest')
 
     @defer.inlineCallbacks
-    def test_start_instance_custom_context_no_buildargs(self):
+    def test_start_instance_custom_context_no_buildargs(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -462,7 +473,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(name, 'tester:latest')
 
     @defer.inlineCallbacks
-    def test_start_instance_buildargs_no_custom_context(self):
+    def test_start_instance_buildargs_no_custom_context(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -475,7 +486,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(name, 'tester:latest')
 
     @defer.inlineCallbacks
-    def test_start_worker_but_already_created_with_same_name(self):
+    def test_start_worker_but_already_created_with_same_name(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'existing', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash']
         )
@@ -483,7 +494,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(name, 'busybox:latest')
 
     @defer.inlineCallbacks
-    def test_start_instance_client_start_exception(self):
+    def test_start_instance_client_start_exception(self) -> InlineCallbacksType[None]:
         msg = 'The container operating system does not match the host operating system'
         docker.Client.start_exception = docker.errors.APIError(msg)
 
@@ -494,7 +505,7 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
             yield bs.start_instance(self.build)
 
     @defer.inlineCallbacks
-    def test_constructor_hostname(self):
+    def test_constructor_hostname(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker(
             'bot',
             'pass',
@@ -505,13 +516,13 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual(bs.hostname, 'myworker_hostname')
 
     @defer.inlineCallbacks
-    def test_check_instance_running(self):
+    def test_check_instance_running(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         self.assertEqual((yield bs.check_instance()), (True, ""))
 
     @defer.inlineCallbacks
-    def test_check_instance_exited(self):
+    def test_check_instance_exited(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
         for c in self._client._containers.values():
@@ -528,22 +539,22 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
         self.assertEqual((yield bs.check_instance()), (False, expected_logs))
 
     @defer.inlineCallbacks
-    def test_stop_instance_stop_NotFound(self):
+    def test_stop_instance_stop_NotFound(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
 
-        def stop(_, params):
+        def stop(_: Any, params: Any) -> None:
             raise docker.errors.NotFound
 
         self.patch(docker.Client, "stop", stop)
         yield bs.stop_instance(self.build)
 
     @defer.inlineCallbacks
-    def test_stop_instance_remove_container_NotFound(self):
+    def test_stop_instance_remove_container_NotFound(self) -> InlineCallbacksType[None]:
         bs = yield self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
         yield bs.start_instance(self.build)
 
-        def remove_container(_, params, v=False, force=False):
+        def remove_container(_: Any, params: Any, v: bool = False, force: bool = False) -> None:
             raise docker.errors.NotFound
 
         self.patch(docker.Client, "remove_container", remove_container)
@@ -551,22 +562,22 @@ class TestDockerLatentWorker(ConfigErrorsMixin, TestReactorMixin, unittest.TestC
 
 
 class testDockerPyStreamLogs(unittest.TestCase):
-    def compare(self, result, log):
+    def compare(self, result: list[str], log: str) -> None:
         self.assertEqual(result, list(dockerworker._handle_stream_line(log)))
 
-    def testEmpty(self):
+    def testEmpty(self) -> None:
         self.compare([], '{"stream":"\\n"}\r\n')
 
-    def testOneLine(self):
+    def testOneLine(self) -> None:
         self.compare([" ---> Using cache"], '{"stream":" ---\\u003e Using cache\\n"}\r\n')
 
-    def testMultipleLines(self):
+    def testMultipleLines(self) -> None:
         self.compare(
             ["Fetched 8298 kB in 3s (2096 kB/s)", "Reading package lists..."],
             '{"stream": "Fetched 8298 kB in 3s (2096 kB/s)\\nReading package lists..."}\r\n',
         )
 
-    def testError(self):
+    def testError(self) -> None:
         self.compare(
             [
                 "ERROR: The command [/bin/sh -c apt-get update && apt-get install -y"
