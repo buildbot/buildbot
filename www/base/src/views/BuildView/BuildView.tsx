@@ -339,7 +339,7 @@ export const BuildView = observer(() => {
       },
       (reason) => {
         setIsRebuilding(false);
-        setErrorMsg(`Cannot rebuild: ${reason.error.message}`);
+        setErrorMsg(`Cannot rebuild: ${reason.response.data.error.message}`);
       },
     );
   };
@@ -351,7 +351,7 @@ export const BuildView = observer(() => {
       () => {},
       (reason) => {
         setIsStopping(false);
-        setErrorMsg(`Cannot Stop: ${reason.error.message}`);
+        setErrorMsg(`Cannot Stop: ${reason.response.data.error.message}`);
       },
     );
   };
