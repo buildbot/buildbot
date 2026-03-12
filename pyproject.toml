@@ -398,7 +398,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test",
       "buildbot.wamp.connector",
       "buildbot.warnings",
-      "buildbot.worker.kubernetes",
       "buildbot.worker.latent",
       "buildbot.worker.libvirt",
       "buildbot.worker.local",

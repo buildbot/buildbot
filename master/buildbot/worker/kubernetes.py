@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.logger import Logger
 
@@ -23,6 +28,14 @@ from buildbot.util import kubeclientservice
 from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.worker.docker import DockerBaseWorker
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.interfaces import IHttpResponse
+    from buildbot.process.properties import Properties
+    from buildbot.util.kubeclientservice import KubeConfigLoaderBase
+    from buildbot.util.twisted import InlineCallbacksType
+
 log = Logger()
 
 
@@ -31,7 +44,7 @@ class KubeError(RuntimeError):
 
 
 class KubeJsonError(KubeError):
-    def __init__(self, code, response_json):
+    def __init__(self, code: int, response_json: dict[str, Any]) -> None:
         super().__init__(response_json['message'])
         self.code = code
         self.json = response_json
@@ -39,19 +52,19 @@ class KubeJsonError(KubeError):
 
 
 class KubeTextError(KubeError):
-    def __init__(self, code, response):
+    def __init__(self, code: int, response: str) -> None:
         super().__init__(response)
         self.code = code
 
 
 class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
     instance = None
-    _namespace = None
+    _namespace: str | None = None
     _kube = None
-    _kube_config = None
+    _kube_config: KubeConfigLoaderBase | None = None
 
     @defer.inlineCallbacks
-    def getPodSpec(self, build):
+    def getPodSpec(self, build: Properties) -> InlineCallbacksType[dict[str, Any]]:
         image = yield build.render(self.image)
         env = yield self.createEnvironment(build)
 
@@ -77,54 +90,54 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             },
         }
 
-    def getBuildContainerResources(self, build):
+    def getBuildContainerResources(self, build: Properties) -> dict[str, Any]:
         # customization point to generate Build container resources
         return {}
 
-    def get_build_container_volume_mounts(self, build):
+    def get_build_container_volume_mounts(self, build: Properties) -> list[Any]:
         return []
 
-    def get_affinity(self, build):
+    def get_affinity(self, build: Properties) -> dict[str, Any]:
         return {}
 
-    def get_node_selector(self, build):
+    def get_node_selector(self, build: Properties) -> dict[str, Any]:
         return {}
 
-    def get_volumes(self, build):
+    def get_volumes(self, build: Properties) -> list[Any]:
         return []
 
-    def getServicesContainers(self, build):
+    def getServicesContainers(self, build: Properties) -> list[Any]:
         # customization point to create services containers around the build container
         # those containers will run within the same localhost as the build container (aka within
         # the same pod)
         return []
 
-    def renderWorkerProps(self, build_props):
+    def renderWorkerProps(self, build_props: Properties) -> Any:
         return self.getPodSpec(build_props)
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        name,
-        image='buildbot/buildbot-worker',
-        namespace=None,
-        masterFQDN=None,
-        master_protocol='pb',
-        kube_config=None,
-        **kwargs,
-    ):
+        name: str,
+        image: str = 'buildbot/buildbot-worker',
+        namespace: str | None = None,
+        masterFQDN: str | Callable[[], str] | None = None,
+        master_protocol: str = 'pb',
+        kube_config: KubeConfigLoaderBase | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().checkConfig(name, None, master_protocol=master_protocol, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        name,
-        image='buildbot/buildbot-worker',
-        namespace=None,
-        masterFQDN=None,
-        master_protocol='pb',
-        kube_config=None,
-        **kwargs,
-    ):
+        name: str,
+        image: str = 'buildbot/buildbot-worker',
+        namespace: str | None = None,
+        masterFQDN: str | Callable[[], str] | None = None,
+        master_protocol: str = 'pb',
+        kube_config: KubeConfigLoaderBase | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         # Set build_wait_timeout to 0 if not explicitly set: Starting a
         # container is almost immediate, we can afford doing so for each build.
         if 'build_wait_timeout' not in kwargs:
@@ -135,7 +148,8 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             masterFQDN = masterFQDN()
 
         self._http = yield httpclientservice.HTTPSession(
-            self.master.httpservice, kube_config.get_master_url()
+            self.master.httpservice,
+            kube_config.get_master_url(),  # type: ignore[union-attr]
         )
 
         if self.running and self._kube is not None:
@@ -147,57 +161,61 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         if self.running:
             yield self._kube.register(self, kube_config)
 
-        self._namespace = namespace or kube_config.getConfig()['namespace']
+        self._namespace = namespace or kube_config.getConfig()['namespace']  # type: ignore[union-attr]
 
         yield super().reconfigService(
             name, image=image, masterFQDN=masterFQDN, master_protocol=master_protocol, **kwargs
         )
 
     @defer.inlineCallbacks
-    def startService(self):
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield super().startService()
-        yield self._kube.register(self, self._kube_config)
+        yield self._kube.register(self, self._kube_config)  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
-    def stopService(self):
-        yield self._kube.unregister(self)
+    def stopService(self) -> InlineCallbacksType[None]:
+        yield self._kube.unregister(self)  # type: ignore[union-attr]
         yield super().stopService()
 
     @defer.inlineCallbacks
-    def start_instance(self, build):
+    def start_instance(self, build: Properties) -> InlineCallbacksType[bool]:
         try:
             yield self.stop_instance(reportFailure=False)
             pod_spec = yield self.renderWorkerPropsOnStart(build)
-            yield self._create_pod(self._namespace, pod_spec)
+            yield self._create_pod(self._namespace, pod_spec)  # type: ignore[arg-type]
         except KubeError as e:
             raise LatentWorkerFailedToSubstantiate(str(e)) from e
         return True
 
     @defer.inlineCallbacks
-    def stop_instance(self, fast=False, reportFailure=True):
+    def stop_instance(  # type: ignore[override]
+        self, fast: bool = False, reportFailure: bool = True
+    ) -> InlineCallbacksType[None]:
         self.current_pod_spec = None
         self.resetWorkerPropsOnStop()
         try:
-            yield self._delete_pod(self._namespace, self.getContainerName())
+            yield self._delete_pod(self._namespace, self.getContainerName())  # type: ignore[arg-type]
         except KubeJsonError as e:
             if reportFailure and e.reason != 'NotFound':
                 raise
         if fast:
             return
         yield self._wait_for_pod_deletion(
-            self._namespace, self.getContainerName(), timeout=self.missing_timeout
+            self._namespace,  # type: ignore[arg-type]
+            self.getContainerName(),
+            timeout=self.missing_timeout,  # type: ignore[arg-type]
         )
 
     @defer.inlineCallbacks
-    def _get_request_kwargs(self):
-        config = self._kube_config.getConfig()
+    def _get_request_kwargs(self) -> InlineCallbacksType[dict[str, Any]]:
+        config = self._kube_config.getConfig()  # type: ignore[union-attr]
 
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
 
         if config.get("headers"):
             kwargs.setdefault("headers", {}).update(config["headers"])
 
-        auth = yield self._kube_config.getAuthorization()
+        auth = yield self._kube_config.getAuthorization()  # type: ignore[union-attr]
         if auth is not None:
             kwargs.setdefault("headers", {})['Authorization'] = auth
 
@@ -209,13 +227,15 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         return kwargs
 
     @defer.inlineCallbacks
-    def _raise_decode_failure_error(self, res):
+    def _raise_decode_failure_error(self, res: IHttpResponse) -> InlineCallbacksType[None]:
         content = yield res.content()
         msg = "Failed to decode: " + content.decode("utf-8", errors="ignore")[0:200]
         raise KubeTextError(res.code, msg)
 
     @defer.inlineCallbacks
-    def _create_pod(self, namespace, spec):
+    def _create_pod(
+        self, namespace: str, spec: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any]]:
         url = f'/api/v1/namespaces/{namespace}/pods'
         res = yield self._http.post(url, json=spec, **(yield self._get_request_kwargs()))
 
@@ -229,7 +249,9 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         return res_json
 
     @defer.inlineCallbacks
-    def _delete_pod(self, namespace, name, graceperiod=0):
+    def _delete_pod(
+        self, namespace: str, name: str, graceperiod: int = 0
+    ) -> InlineCallbacksType[dict[str, Any]]:
         url = f'/api/v1/namespaces/{namespace}/pods/{name}'
         res = yield self._http.delete(
             url, params={'graceperiod': graceperiod}, **(yield self._get_request_kwargs())
@@ -245,7 +267,9 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         return res_json
 
     @defer.inlineCallbacks
-    def _wait_for_pod_deletion(self, namespace, name, timeout):
+    def _wait_for_pod_deletion(
+        self, namespace: str, name: str, timeout: int
+    ) -> InlineCallbacksType[None]:
         t1 = self.master.reactor.seconds()
         url = f'/api/v1/namespaces/{namespace}/pods/{name}/status'
         while True:
