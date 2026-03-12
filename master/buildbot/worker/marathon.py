@@ -12,7 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -22,6 +25,10 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util.httpclientservice import HTTPSession
 from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.worker.docker import DockerBaseWorker
+
+if TYPE_CHECKING:
+    from buildbot.process.build import Build
+    from buildbot.util.twisted import InlineCallbacksType
 
 log = Logger()
 
@@ -33,31 +40,31 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
     image = None
     _http = None
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        name,
-        marathon_url,
-        image,
-        marathon_auth=None,
-        marathon_extra_config=None,
-        marathon_app_prefix="buildbot-worker/",
-        masterFQDN=None,
-        **kwargs,
-    ):
+        name: str,
+        marathon_url: str,
+        image: str,
+        marathon_auth: tuple[str, str] | None = None,
+        marathon_extra_config: dict[str, Any] | None = None,
+        marathon_app_prefix: str = "buildbot-worker/",
+        masterFQDN: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().checkConfig(name, image=image, masterFQDN=masterFQDN, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        name,
-        marathon_url,
-        image,
-        marathon_auth=None,
-        marathon_extra_config=None,
-        marathon_app_prefix="buildbot-worker/",
-        masterFQDN=None,
-        **kwargs,
-    ):
+        name: str,
+        marathon_url: str,
+        image: str,
+        marathon_auth: tuple[str, str] | None = None,
+        marathon_extra_config: dict[str, Any] | None = None,
+        marathon_app_prefix: str = "buildbot-worker/",
+        masterFQDN: str | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         # Set build_wait_timeout to 0s if not explicitly set: Starting a
         # container is almost immediate, we can afford doing so for each build.
 
@@ -71,17 +78,17 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         self.marathon_extra_config = marathon_extra_config
         self.marathon_app_prefix = marathon_app_prefix
 
-    def getApplicationId(self):
+    def getApplicationId(self) -> str:
         return self.marathon_app_prefix + self.getContainerName()
 
-    def renderWorkerProps(self, build):
+    def renderWorkerProps(self, build: Build) -> defer.Deferred[Any]:  # type: ignore[override]
         return build.render((self.image, self.marathon_extra_config))
 
     @defer.inlineCallbacks
-    def start_instance(self, build):
+    def start_instance(self, build: Build) -> InlineCallbacksType[bool]:
         yield self.stop_instance(reportFailure=False)
 
-        image, marathon_extra_config = yield self.renderWorkerPropsOnStart(build)
+        image, marathon_extra_config = yield self.renderWorkerPropsOnStart(build)  # type: ignore[arg-type]
 
         marathon_config = {
             "container": {
@@ -96,7 +103,7 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             "env": self.createEnvironment(),
         }
         util.dictionary_merge(marathon_config, marathon_extra_config)
-        res = yield self._http.post("/v2/apps", json=marathon_config)
+        res = yield self._http.post("/v2/apps", json=marathon_config)  # type: ignore[union-attr]
         res_json = yield res.json()
         if res.code != 201:
             raise LatentWorkerFailedToSubstantiate(
@@ -107,8 +114,10 @@ class MarathonLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         return True
 
     @defer.inlineCallbacks
-    def stop_instance(self, fast=False, reportFailure=True):
-        res = yield self._http.delete(f"/v2/apps/{self.getApplicationId()}")
+    def stop_instance(  # type: ignore[override]
+        self, fast: bool = False, reportFailure: bool = True
+    ) -> InlineCallbacksType[None]:
+        res = yield self._http.delete(f"/v2/apps/{self.getApplicationId()}")  # type: ignore[union-attr]
         self.instance = None
         self.resetWorkerPropsOnStop()
 
