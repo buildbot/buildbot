@@ -14,8 +14,11 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2014 Longaccess private company
 
+from __future__ import annotations
+
 import os
 import warnings
+from typing import Any
 
 from twisted.trial import unittest
 
@@ -46,7 +49,7 @@ os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 # redefine the mock_aws decorator to skip the test if boto3 or moto
 # isn't installed
-def skip_ec2(f):
+def skip_ec2(f: Any) -> Any:
     f.skip = "boto3 or moto is not installed"
     return f
 
@@ -55,7 +58,7 @@ if boto3 is None:
     mock_aws = skip_ec2  # type: ignore[assignment]
 
 
-def anyImageId(c):
+def anyImageId(c: Any) -> str:
     for image in c.describe_images()['Images']:
         return image['ImageId']
     return 'foo'
@@ -64,13 +67,13 @@ def anyImageId(c):
 class TestEC2LatentWorker(unittest.TestCase):
     ec2_connection = None
 
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         if boto3 is None:
             raise unittest.SkipTest("moto not found")
         warnings.filterwarnings('ignore', message='Boto3 will no longer support Python 3')
 
-    def botoSetup(self, name='latent_buildbot_worker'):
+    def botoSetup(self, name: str = 'latent_buildbot_worker') -> tuple[Any, Any]:
         # the proxy system is also not properly mocked, so we need to delete environment variables
         for env in ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY']:
             if env in os.environ:
@@ -96,18 +99,20 @@ class TestEC2LatentWorker(unittest.TestCase):
         c.terminate_instances(InstanceIds=[instance.id])
         return c, r
 
-    def _patch_moto_describe_spot_price_history(self, bs, instance_type, price):
-        def fake_describe_price(*args, **kwargs):
+    def _patch_moto_describe_spot_price_history(
+        self, bs: Any, instance_type: str, price: float
+    ) -> None:
+        def fake_describe_price(*args: Any, **kwargs: Any) -> dict[str, list[dict[str, Any]]]:
             return {'SpotPriceHistory': [{'InstanceType': instance_type, 'SpotPrice': price}]}
 
         self.patch(bs.ec2.meta.client, "describe_spot_price_history", fake_describe_price)
 
-    def _patch_moto_describe_spot_instance_requests(self, c, r, bs):
+    def _patch_moto_describe_spot_instance_requests(self, c: Any, r: Any, bs: Any) -> None:
         this_call = [0]
 
         orig_describe_instance = bs.ec2.meta.client.describe_spot_instance_requests
 
-        def fake_describe_spot_instance_requests(*args, **kwargs):
+        def fake_describe_spot_instance_requests(*args: Any, **kwargs: Any) -> dict[str, Any]:
             curr_call = this_call[0]
             this_call[0] += 1
             if curr_call == 0:
@@ -135,7 +140,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         )
 
     @mock_aws
-    def test_constructor_minimal(self):
+    def test_constructor_minimal(self) -> None:
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         bs = ec2.EC2LatentWorker(
@@ -154,7 +159,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(bs.ami, amis[0].id)
 
     @mock_aws
-    def test_constructor_tags(self):
+    def test_constructor_tags(self) -> None:
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         tags = {'foo': 'bar'}
@@ -172,7 +177,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(bs.tags, tags)
 
     @mock_aws
-    def test_constructor_region(self):
+    def test_constructor_region(self) -> None:
         _, r = self.botoSetup()
         amis = list(r.images.all())
         bs = ec2.EC2LatentWorker(
@@ -189,11 +194,11 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(bs.session.region_name, 'us-west-1')
 
     @mock_aws
-    def test_fail_mixing_classic_and_vpc_ec2_settings(self):
+    def test_fail_mixing_classic_and_vpc_ec2_settings(self) -> None:
         _, r = self.botoSetup()
         amis = list(r.images.all())
 
-        def create_worker():
+        def create_worker() -> None:
             ec2.EC2LatentWorker(
                 'bot1',
                 'sekrit',
@@ -210,7 +215,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             create_worker()
 
     @mock_aws
-    def test_start_vpc_instance(self):
+    def test_start_vpc_instance(self) -> None:
         _, r = self.botoSetup()
 
         vpc = r.create_vpc(CidrBlock="192.168.0.0/24")
@@ -244,7 +249,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].key_name, 'latent_buildbot_worker')
 
     @mock_aws
-    def test_start_instance(self):
+    def test_start_instance(self) -> None:
         _, r = self.botoSetup()
         amis = list(r.images.all())
         bs = ec2.EC2LatentWorker(
@@ -272,7 +277,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].id, bs.properties.getProperty('instance'))
 
     @mock_aws
-    def test_start_instance_volumes(self):
+    def test_start_instance_volumes(self) -> None:
         _, r = self.botoSetup()
         block_device_map_arg = [
             {
@@ -330,7 +335,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(block_device_map_res, bs.block_device_map)
 
     @mock_aws
-    def test_start_instance_attach_volume(self):
+    def test_start_instance_attach_volume(self) -> None:
         _, r = self.botoSetup()
         vol = r.create_volume(Size=10, AvailabilityZone='us-east-1a')
         amis = list(r.images.all())
@@ -357,7 +362,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(vol.id, sdz['Ebs']['VolumeId'])
 
     @mock_aws
-    def test_start_instance_tags(self):
+    def test_start_instance_tags(self) -> None:
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         tags = {'foo': 'bar'}
@@ -383,7 +388,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].tags, [{'Value': 'bar', 'Key': 'foo'}])
 
     @mock_aws
-    def test_start_instance_ip(self):
+    def test_start_instance_ip(self) -> None:
         c, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         eip = c.allocate_address(Domain='vpc')
@@ -409,7 +414,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].id, addresses[0]['InstanceId'])
 
     @mock_aws
-    def test_start_vpc_spot_instance(self):
+    def test_start_vpc_spot_instance(self) -> None:
         c, r = self.botoSetup()
 
         vpc = r.create_vpc(CidrBlock="192.168.0.0/24")
@@ -452,7 +457,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         # self.assertEqual(instances[0].security_groups[0]['GroupId'], sg.id)
 
     @mock_aws
-    def test_start_spot_instance(self):
+    def test_start_spot_instance(self) -> None:
         c, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         product_description = 'Linux/Unix'
@@ -486,7 +491,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertIsNone(instances[0].tags)
 
     @mock_aws
-    def test_get_image_ami(self):
+    def test_get_image_ami(self) -> None:
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         ami = amis[0]
@@ -505,7 +510,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(image.id, ami.id)
 
     @mock_aws
-    def test_get_image_owners(self):
+    def test_get_image_owners(self) -> None:
         _, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         ami = amis[0]
@@ -524,7 +529,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(image.owner_id, ami.owner_id)
 
     @mock_aws
-    def test_get_image_location(self):
+    def test_get_image_location(self) -> None:
         self.botoSetup('latent_buildbot_slave')
         bs = ec2.EC2LatentWorker(
             'bot1',
@@ -541,8 +546,8 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertTrue(image.image_location.startswith("amazon/"))
 
     @mock_aws
-    def test_get_image_location_not_found(self):
-        def create_worker():
+    def test_get_image_location_not_found(self) -> None:
+        def create_worker() -> None:
             ec2.EC2LatentWorker(
                 'bot1',
                 'sekrit',
@@ -558,14 +563,14 @@ class TestEC2LatentWorker(unittest.TestCase):
             create_worker()
 
     @mock_aws
-    def test_fail_multiplier_and_max_are_none(self):
+    def test_fail_multiplier_and_max_are_none(self) -> None:
         """
         price_multiplier and max_spot_price may not be None at the same time.
         """
         _, r = self.botoSetup()
         amis = list(r.images.all())
 
-        def create_worker():
+        def create_worker() -> None:
             ec2.EC2LatentWorker(
                 'bot1',
                 'sekrit',
@@ -588,13 +593,13 @@ class TestEC2LatentWorker(unittest.TestCase):
 class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
     ec2_connection = None
 
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         if boto3 is None:
             raise unittest.SkipTest("moto not found")
         warnings.filterwarnings('ignore', message='Boto3 will no longer support Python 3')
 
-    def botoSetup(self):
+    def botoSetup(self) -> tuple[Any, Any]:
         c = boto3.client('ec2', region_name='us-east-1')
         r = boto3.resource('ec2', region_name='us-east-1')
         try:
@@ -612,7 +617,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
         return c, r
 
     @mock_aws
-    def test_no_default_security_warning_when_security_group_ids(self):
+    def test_no_default_security_warning_when_security_group_ids(self) -> None:
         _, r = self.botoSetup()
         amis = list(r.images.all())
 
@@ -629,7 +634,7 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
         self.assertEqual(bs.security_name, None)
 
     @mock_aws
-    def test_use_non_default_keypair_security(self):
+    def test_use_non_default_keypair_security(self) -> None:
         _, r = self.botoSetup()
         amis = list(r.images.all())
         with assertNotProducesWarnings(DeprecatedApiWarning):
