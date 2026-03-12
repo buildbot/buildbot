@@ -267,7 +267,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
     ) -> InlineCallbacksType[None]:
         old.parent = self.master
         if existingRegistration:
-            old.registration = bworkermanager.FakeWorkerRegistration(old)
+            old.registration = bworkermanager.FakeWorkerRegistration(old)  # type: ignore[assignment]
         old.missing_timer = mock.Mock(name='missing_timer')
 
         if not old.running:
@@ -969,7 +969,7 @@ class TestAbstractLatentWorker(TestReactorMixin, unittest.TestCase):
     ) -> InlineCallbacksType[None]:
         old.parent = self.master
         if existingRegistration:
-            old.registration = bworkermanager.FakeWorkerRegistration(old)
+            old.registration = bworkermanager.FakeWorkerRegistration(old)  # type: ignore[assignment]
         old.missing_timer = mock.Mock(name='missing_timer')
         yield old.startService()
 

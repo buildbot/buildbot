@@ -81,7 +81,7 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(old.notify_on_missing, ['her@me.com'])
         self.assertEqual(old.missing_timeout, 121)
         self.assertEqual(old.properties.getProperty('a'), 'c')
-        self.assertEqual(old.registration.updates, ['bot'])
+        self.assertEqual(old.registration.updates, ['bot'])  # type: ignore[union-attr]
         self.assertTrue(old.updateWorker.called)
         # make sure that we can provide an absolute path
         self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('custom'))
@@ -97,6 +97,6 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
             properties={'a': 'b'},
         )
         yield wrk.startService()
-        info = yield wrk.conn.remoteGetWorkerInfo()
+        info = yield wrk.conn.remoteGetWorkerInfo()  # type: ignore[union-attr]
         self.assertIn("worker_commands", info)
         yield wrk.stopService()

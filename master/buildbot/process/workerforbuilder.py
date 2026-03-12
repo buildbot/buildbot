@@ -122,7 +122,7 @@ class AbstractWorkerForBuilder:
         self._update_logger_ns()
         self._logger.info(f"Worker {worker.workername} attached to {self.builder_name}")
 
-        yield self.worker.conn.remotePrint(message="attached")
+        yield self.worker.conn.remotePrint(message="attached")  # type: ignore[union-attr]
 
     def substantiate_if_needed(self, build: Build) -> defer.Deferred[bool]:
         return defer.succeed(True)
