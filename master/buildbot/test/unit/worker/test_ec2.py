@@ -235,7 +235,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             ami=amis[0].id,
         )
         bs._poll_resolution = 0
-        instance_id, _, _ = bs._start_instance()
+        instance_id, _, _ = bs._start_instance()  # type: ignore[misc]
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}]
         )
@@ -263,7 +263,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             ami=amis[0].id,
         )
         bs._poll_resolution = 1
-        instance_id, image_id, start_time = bs._start_instance()
+        instance_id, image_id, start_time = bs._start_instance()  # type: ignore[misc]
         self.assertTrue(instance_id.startswith('i-'))
         self.assertTrue(image_id.startswith('ami-'))
         self.assertTrue(start_time > "00:00:00")
@@ -378,7 +378,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             ami=amis[0].id,
         )
         bs._poll_resolution = 0
-        id, _, _ = bs._start_instance()
+        id, _, _ = bs._start_instance()  # type: ignore[misc]
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}]
         )
