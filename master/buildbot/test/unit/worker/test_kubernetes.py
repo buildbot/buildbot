@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import base64
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -30,12 +34,15 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.kubeclientservice import KubeHardcodedConfig
 from buildbot.worker import kubernetes
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class FakeResult:
     code = 204
 
 
-def mock_delete(*args):
+def mock_delete(*args: Any) -> defer.Deferred[FakeResult]:
     return defer.succeed(FakeResult())
 
 
@@ -62,11 +69,13 @@ sys.exit(1)
 class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
     worker = None
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
     @defer.inlineCallbacks
-    def setupWorker(self, *args, config=None, **kwargs):
+    def setupWorker(
+        self, *args: Any, config: KubeHardcodedConfig | None = None, **kwargs: Any
+    ) -> InlineCallbacksType[kubernetes.KubeLatentWorker]:
         self.patch(kubernetes.KubeLatentWorker, "_generate_random_password", lambda _: "random_pw")
 
         if config is None:
@@ -86,10 +95,10 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.addCleanup(self.master.stopService)
         return worker
 
-    def get_expected_metadata(self):
+    def get_expected_metadata(self) -> dict[str, str]:
         return {"name": "buildbot-worker-87de7e"}
 
-    def get_expected_spec(self, image):
+    def get_expected_spec(self, image: str) -> dict[str, Any]:
         return {
             "affinity": {},
             "containers": [
@@ -112,32 +121,32 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             "volumes": [],
         }
 
-    def test_instantiate(self):
+    def test_instantiate(self) -> None:
         worker = kubernetes.KubeLatentWorker('worker')
         # class instantiation configures nothing
         self.assertEqual(getattr(worker, '_kube', None), None)
 
     @defer.inlineCallbacks
-    def test_wrong_arg(self):
+    def test_wrong_arg(self) -> InlineCallbacksType[None]:
         with self.assertRaises(TypeError):
             yield self.setupWorker('worker', wrong_param='wrong_param')
 
-    def test_service_arg(self):
+    def test_service_arg(self) -> defer.Deferred[kubernetes.KubeLatentWorker]:
         return self.setupWorker('worker')
 
     @defer.inlineCallbacks
-    def test_builds_may_be_incompatible(self):
+    def test_builds_may_be_incompatible(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker')
         # http is lazily created on worker substantiation
         self.assertEqual(worker.builds_may_be_incompatible, True)
 
     @defer.inlineCallbacks
-    def test_start_service(self):
+    def test_start_service(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker')
         # http is lazily created on worker substantiation
         self.assertNotEqual(worker._kube, None)
 
-    def expect_pod_delete_nonexisting(self):
+    def expect_pod_delete_nonexisting(self) -> None:
         self._http.expect(
             "delete",
             "/api/v1/namespaces/default/pods/buildbot-worker-87de7e",
@@ -146,7 +155,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             content_json={"message": "Pod not found", "reason": "NotFound"},
         )
 
-    def expect_pod_delete_existing(self, image):
+    def expect_pod_delete_existing(self, image: str) -> None:
         self._http.expect(
             "delete",
             "/api/v1/namespaces/default/pods/buildbot-worker-87de7e",
@@ -159,7 +168,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def expect_pod_status_not_found(self):
+    def expect_pod_status_not_found(self) -> None:
         self._http.expect(
             "get",
             "/api/v1/namespaces/default/pods/buildbot-worker-87de7e/status",
@@ -167,7 +176,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             content_json={"kind": "Status", "reason": "NotFound"},
         )
 
-    def expect_pod_status_exists(self, image):
+    def expect_pod_status_exists(self, image: str) -> None:
         self._http.expect(
             "get",
             "/api/v1/namespaces/default/pods/buildbot-worker-87de7e/status",
@@ -179,7 +188,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def expect_pod_startup(self, image):
+    def expect_pod_startup(self, image: str) -> None:
         self._http.expect(
             "post",
             "/api/v1/namespaces/default/pods",
@@ -197,7 +206,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def expect_pod_startup_error(self, image):
+    def expect_pod_startup_error(self, image: str) -> None:
         self._http.expect(
             "post",
             "/api/v1/namespaces/default/pods",
@@ -212,7 +221,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_start_worker(self):
+    def test_start_worker(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker')
         self.expect_pod_delete_nonexisting()
         self.expect_pod_status_not_found()
@@ -225,14 +234,14 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         yield d
 
     @defer.inlineCallbacks
-    def test_start_worker_but_error(self):
+    def test_start_worker_but_error(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker')
         self.expect_pod_delete_nonexisting()
         self.expect_pod_status_not_found()
         self.expect_pod_delete_nonexisting()
         self.expect_pod_status_not_found()
 
-        def create_pod(namespace, spec):
+        def create_pod(namespace: str, spec: dict[str, Any]) -> None:
             raise kubernetes.KubeJsonError(400, {'message': "yeah, but no"})
 
         with mock.patch.object(worker, '_create_pod', create_pod):
@@ -241,7 +250,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(worker.instance, None)
 
     @defer.inlineCallbacks
-    def test_start_worker_but_error_spec(self):
+    def test_start_worker_but_error_spec(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker')
 
         self.expect_pod_delete_nonexisting()
@@ -255,7 +264,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.assertEqual(worker.instance, None)
 
     @defer.inlineCallbacks
-    def test_interpolate_renderables_for_new_build(self):
+    def test_interpolate_renderables_for_new_build(self) -> InlineCallbacksType[None]:
         build1 = Properties(img_prop="image1")
         build2 = Properties(img_prop="image2")
         worker = yield self.setupWorker('worker', image=Interpolate("%(prop:img_prop)s"))
@@ -271,7 +280,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.assertTrue((yield worker.isCompatibleWithBuild(build2)))
 
     @defer.inlineCallbacks
-    def test_reject_incompatible_build_while_running(self):
+    def test_reject_incompatible_build_while_running(self) -> InlineCallbacksType[None]:
         build1 = Properties(img_prop="image1")
         build2 = Properties(img_prop="image2")
         worker = yield self.setupWorker('worker', image=Interpolate("%(prop:img_prop)s"))
@@ -287,7 +296,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         yield worker.stop_instance()
 
     @defer.inlineCallbacks
-    def test_start_worker_delete_non_json_response(self):
+    def test_start_worker_delete_non_json_response(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker')
         self._http.expect(
             "delete",
@@ -305,7 +314,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.assertIn("Failed to decode: not json", e.exception.args[0])
 
     @defer.inlineCallbacks
-    def test_start_worker_delete_timeout(self):
+    def test_start_worker_delete_timeout(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker', missing_timeout=4)
 
         self.expect_pod_delete_existing("rendered:buildbot/buildbot-worker")
@@ -321,7 +330,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
             yield d
 
     @defer.inlineCallbacks
-    def test_start_worker_create_non_json_response(self):
+    def test_start_worker_create_non_json_response(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker')
 
         self.expect_pod_delete_nonexisting()
@@ -370,7 +379,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         self.assertIn("Failed to decode: not json", e.exception.args[0])
 
     @defer.inlineCallbacks
-    def test_hardcoded_config_verify_is_forwarded(self):
+    def test_hardcoded_config_verify_is_forwarded(self) -> InlineCallbacksType[None]:
         config = KubeHardcodedConfig(
             master_url="https://kube.example.com", namespace="default", verify="/path/to/pem"
         )
@@ -395,7 +404,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         yield worker.stop_instance()
 
     @defer.inlineCallbacks
-    def test_hardcoded_config_verify_headers_is_forwarded(self):
+    def test_hardcoded_config_verify_headers_is_forwarded(self) -> InlineCallbacksType[None]:
         config = KubeHardcodedConfig(
             master_url="https://kube.example.com",
             namespace="default",
@@ -425,7 +434,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         yield worker.stop_instance()
 
     @defer.inlineCallbacks
-    def test_hardcoded_config_verify_bearer_token_is_rendered(self):
+    def test_hardcoded_config_verify_bearer_token_is_rendered(self) -> InlineCallbacksType[None]:
         config = KubeHardcodedConfig(
             master_url="https://kube.example.com",
             namespace="default",
@@ -455,7 +464,7 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         yield worker.stop_instance()
 
     @defer.inlineCallbacks
-    def test_hardcoded_config_verify_basicAuth_is_expanded(self):
+    def test_hardcoded_config_verify_basicAuth_is_expanded(self) -> InlineCallbacksType[None]:
         config = KubeHardcodedConfig(
             master_url="https://kube.example.com",
             namespace="default",

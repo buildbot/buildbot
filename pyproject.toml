@@ -346,7 +346,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.util.test_test_util_runprocess",
       "buildbot.test.unit.util.test_tuplematch",
       "buildbot.test.unit.util.test_watchdog",
-      "buildbot.test.unit.worker.test_kubernetes",
       "buildbot.test.unit.worker.test_libvirt",
       "buildbot.test.unit.worker.test_local",
       "buildbot.test.unit.worker.test_manager",
