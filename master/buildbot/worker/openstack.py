@@ -13,11 +13,13 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
-
+from __future__ import annotations
 
 import hashlib
 import math
 import time
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.internet import threads
@@ -28,6 +30,10 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import unicode2bytes
 from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.worker import AbstractLatentWorker
+
+if TYPE_CHECKING:
+    from buildbot.process.build import Build
+    from buildbot.util.twisted import InlineCallbacksType
 
 try:
     from keystoneauth1 import loading
@@ -53,28 +59,28 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
     instance = None
     _poll_resolution = 5  # hook point for tests
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
-        name,
-        password,
-        flavor,
-        os_username=None,
-        os_password=None,
-        os_tenant_name=None,
-        os_auth_url=None,
-        os_user_domain=None,
-        os_project_domain=None,
-        os_auth_args=None,
-        block_devices=None,
-        region=None,
-        image=None,
-        meta=None,
+        name: str,
+        password: str,
+        flavor: str | int,
+        os_username: str | None = None,
+        os_password: str | None = None,
+        os_tenant_name: str | None = None,
+        os_auth_url: str | None = None,
+        os_user_domain: str | None = None,
+        os_project_domain: str | None = None,
+        os_auth_args: dict[str, Any] | None = None,
+        block_devices: list[dict[str, Any]] | None = None,
+        region: str | None = None,
+        image: str | None = None,
+        meta: dict[str, str] | None = None,
         # Have a nova_args parameter to allow passing things directly
         # to novaclient.
-        nova_args=None,
-        client_version='2',
-        **kwargs,
-    ):
+        nova_args: dict[str, Any] | None = None,
+        client_version: str = '2',
+        **kwargs: Any,
+    ) -> None:
         if not client:
             config.error(
                 "The python module 'novaclient' is needed  "
@@ -109,28 +115,28 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         super().checkConfig(name, password, **kwargs)
 
     @defer.inlineCallbacks
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
-        name,
-        password,
-        flavor,
-        os_username=None,
-        os_password=None,
-        os_tenant_name=None,
-        os_auth_url=None,
-        os_user_domain=None,
-        os_project_domain=None,
-        os_auth_args=None,
-        block_devices=None,
-        region=None,
-        image=None,
-        meta=None,
+        name: str,
+        password: str,
+        flavor: str | int,
+        os_username: str | None = None,
+        os_password: str | None = None,
+        os_tenant_name: str | None = None,
+        os_auth_url: str | None = None,
+        os_user_domain: str | None = None,
+        os_project_domain: str | None = None,
+        os_auth_args: dict[str, Any] | None = None,
+        block_devices: list[dict[str, Any]] | None = None,
+        region: str | None = None,
+        image: str | None = None,
+        meta: dict[str, str] | None = None,
         # Have a nova_args parameter to allow passing things directly
         # to novaclient.
-        nova_args=None,
-        client_version='2',
-        **kwargs,
-    ):
+        nova_args: dict[str, Any] | None = None,
+        client_version: str = '2',
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(name, password, **kwargs)
 
         if os_auth_args is None:
@@ -155,7 +161,9 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
                 self.novaclient.client.region_name = region
 
         if block_devices is not None:
-            self.block_devices = [self._parseBlockDevice(bd) for bd in block_devices]
+            self.block_devices: list[dict[str, Any]] | None = [
+                self._parseBlockDevice(bd) for bd in block_devices
+            ]
         else:
             self.block_devices = None
         self.image = image
@@ -164,7 +172,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         masterName = unicode2bytes(self.master.name)
         self.masterhash = hashlib.sha1(masterName).hexdigest()[:6]
 
-    def _constructClient(self, client_version, auth_args):
+    def _constructClient(self, client_version: str, auth_args: dict[str, Any]) -> Any:
         """Return a novaclient from the given args."""
 
         auth_plugin = auth_args.pop('auth_type', 'password')
@@ -175,20 +183,8 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         sess = session.Session(auth=auth)
         return client.Client(client_version, session=sess)
 
-    def _parseBlockDevice(self, block_device):
-        """
-        Parse a higher-level view of the block device mapping into something
-        novaclient wants. This should be similar to how Horizon presents it.
-        Required keys:
-            device_name: The name of the device; e.g. vda or xda.
-            source_type: image, snapshot, volume, or blank/None.
-            destination_type: Destination of block device: volume or local.
-            delete_on_termination: True/False.
-            uuid: The image, snapshot, or volume id.
-            boot_index: Integer used for boot order.
-            volume_size: Size of the device in GiB.
-        """
-        client_block_device = {}
+    def _parseBlockDevice(self, block_device: dict[str, Any]) -> dict[str, Any]:
+        client_block_device: dict[str, Any] = {}
         client_block_device['device_name'] = block_device.get('device_name', 'vda')
         client_block_device['source_type'] = block_device.get('source_type', 'image')
         client_block_device['destination_type'] = block_device.get('destination_type', 'volume')
@@ -202,7 +198,9 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         return client_block_device
 
     @defer.inlineCallbacks
-    def _renderBlockDevice(self, block_device, build):
+    def _renderBlockDevice(
+        self, block_device: dict[str, Any], build: Build
+    ) -> InlineCallbacksType[dict[str, Any]]:
         """Render all of the block device's values."""
         rendered_block_device = yield build.render(block_device)
         if rendered_block_device['volume_size'] is None:
@@ -212,11 +210,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
             rendered_block_device['volume_size'] = volume_size
         return rendered_block_device
 
-    def _determineVolumeSize(self, source_type, source_uuid):
-        """
-        Determine the minimum size the volume needs to be for the source.
-        Returns the size in GiB.
-        """
+    def _determineVolumeSize(self, source_type: str, source_uuid: str) -> int | None:
         nova = self.novaclient
         if source_type == 'image':
             # The size returned for an image is in bytes. Round up to the next
@@ -239,7 +233,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         return None
 
     @defer.inlineCallbacks
-    def _getImage(self, build):
+    def _getImage(self, build: Build) -> InlineCallbacksType[str | None]:
         image_name = yield build.render(self.image)
         # There is images in block devices
         if image_name is None:
@@ -253,7 +247,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         return image.id
 
     @defer.inlineCallbacks
-    def _getFlavor(self, build):
+    def _getFlavor(self, build: Build) -> InlineCallbacksType[str]:
         flavor_uuid = yield build.render(self.flavor)
         # check if we got name instead of uuid
         for flavor in self.novaclient.flavors.list():
@@ -262,7 +256,7 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         return flavor_uuid
 
     @defer.inlineCallbacks
-    def renderWorkerProps(self, build):
+    def renderWorkerProps(self, build: Build) -> InlineCallbacksType[tuple[Any, ...]]:  # type: ignore[override]
         image = yield self._getImage(build)
         flavor = yield self._getFlavor(build)
         nova_args = yield build.render(self.nova_args)
@@ -287,17 +281,24 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
         return (image, flavor, block_devices, nova_args, meta)
 
     @defer.inlineCallbacks
-    def start_instance(self, build):
+    def start_instance(self, build: Build) -> InlineCallbacksType[Any]:
         if self.instance is not None:
             raise ValueError('instance active')
 
-        image, flavor, block_devices, nova_args, meta = yield self.renderWorkerPropsOnStart(build)
+        image, flavor, block_devices, nova_args, meta = yield self.renderWorkerPropsOnStart(build)  # type: ignore[arg-type]
         res = yield threads.deferToThread(
             self._start_instance, image, flavor, block_devices, nova_args, meta
         )
         return res
 
-    def _start_instance(self, image_uuid, flavor_uuid, block_devices, nova_args, meta):
+    def _start_instance(
+        self,
+        image_uuid: str | None,
+        flavor_uuid: str,
+        block_devices: list[dict[str, Any]] | None,
+        nova_args: dict[str, Any],
+        meta: dict[str, str],
+    ) -> list[str] | None:
         # ensure existing, potentially duplicated, workers are stopped
         self._stop_instance(None, True)
 
@@ -357,13 +358,13 @@ class OpenStackLatentWorker(CompatibleLatentWorkerMixin, AbstractLatentWorker):
             self.failed_to_start(instance.id, instance.status)
             return None  # This is just to silence warning, above line throws an exception
 
-    def stop_instance(self, fast=False):
+    def stop_instance(self, fast: bool = False) -> None:  # type: ignore[override]
         instance = self.instance
         self.instance = None
         self.resetWorkerPropsOnStop()
         self._stop_instance(instance, fast)
 
-    def _stop_instance(self, instance_param, fast):
+    def _stop_instance(self, instance_param: Any, fast: bool) -> None:
         instances = []
         try:
             if instance_param is None:
