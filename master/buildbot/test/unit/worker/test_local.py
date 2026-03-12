@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -23,6 +27,9 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker import local
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestLocalWorker(TestReactorMixin, unittest.TestCase):
     try:
@@ -31,20 +38,22 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
         skip = "buildbot-worker package is not installed"
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
         self.workers = self.master.workers
 
-    def createWorker(self, name='bot', attached=False, configured=True, **kwargs):
+    def createWorker(
+        self, name: str = 'bot', attached: bool = False, configured: bool = True, **kwargs: Any
+    ) -> local.LocalWorker:
         worker = local.LocalWorker(name, **kwargs)
         if configured:
             worker.setServiceParent(self.workers)
         return worker
 
     @defer.inlineCallbacks
-    def test_reconfigService_attrs(self):
+    def test_reconfigService_attrs(self) -> InlineCallbacksType[None]:
         old = self.createWorker(
             'bot',
             max_builds=2,
@@ -62,7 +71,7 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
             properties={'a': 'c'},
         )
 
-        old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))
+        old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))  # type: ignore[method-assign]
         yield old.startService()
         self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('basedir/workers/bot'))
 
@@ -79,7 +88,7 @@ class TestLocalWorker(TestReactorMixin, unittest.TestCase):
         yield old.stopService()
 
     @defer.inlineCallbacks
-    def test_workerinfo(self):
+    def test_workerinfo(self) -> InlineCallbacksType[None]:
         wrk = self.createWorker(
             'bot',
             max_builds=2,
