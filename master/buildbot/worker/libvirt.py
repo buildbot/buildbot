@@ -33,34 +33,36 @@ from buildbot.worker import AbstractLatentWorker
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from buildbot.util.twisted import InlineCallbacksType
+
 try:
     import libvirt
 except ImportError:
     libvirt = None
 
 
-def handle_connect_close(conn, reason, opaque):
+def handle_connect_close(conn: Any, reason: Any, opaque: ThreadWithQueue) -> None:
     opaque.close_connection()
 
 
 class ThreadWithQueue(ConnectableThreadQueue):
-    def __init__(self, pool, uri, *args, **kwargs):
+    def __init__(self, pool: ServerThreadPool, uri: str, *args: Any, **kwargs: Any) -> None:
         self.pool = pool  # currently used only for testing
         self.uri = uri
         super().__init__(*args, **kwargs)
 
-    def on_close_connection(self, conn):
+    def on_close_connection(self, conn: Any) -> None:
         self.close_connection()
 
-    def close_connection(self):
+    def close_connection(self) -> None:
         conn = self.conn
         super().close_connection()
-        conn.close()
+        conn.close()  # type: ignore[union-attr]
 
-    def libvirt_open(self):
+    def libvirt_open(self) -> Any:
         return libvirt.open(self.uri)
 
-    def create_connection(self):
+    def create_connection(self) -> Any:
         try:
             log.msg(f"Connecting to {self.uri}")
             conn = self.libvirt_open()
@@ -75,8 +77,8 @@ class ThreadWithQueue(ConnectableThreadQueue):
 class ServerThreadPool:
     ThreadClass = ThreadWithQueue
 
-    def __init__(self):
-        self.threads = {}
+    def __init__(self) -> None:
+        self.threads: dict[str, ThreadWithQueue] = {}
 
     def do(
         self, uri: str, func: Callable[..., Any], *args: Any, **kwargs: Any
@@ -85,7 +87,7 @@ class ServerThreadPool:
         if uri not in self.threads:
             self.threads[uri] = self.ThreadClass(self, uri)
 
-        def logging_func(conn, *args, **kwargs):
+        def logging_func(conn: Any, *args: Any, **kwargs: Any) -> Any:
             try:
                 return func(conn, *args, **kwargs)
             except Exception as e:
@@ -94,23 +96,23 @@ class ServerThreadPool:
 
         return self.threads[uri].execute_in_thread(logging_func, *args, **kwargs)
 
-    def is_connected(self, uri):
+    def is_connected(self, uri: str) -> bool:
         if uri in self.threads:
             return self.threads[uri].conn is not None
         return False
 
-    def is_connecting(self, uri):
+    def is_connecting(self, uri: str) -> bool:
         if uri in self.threads:
             return self.threads[uri].connecting
         return False
 
     @defer.inlineCallbacks
-    def get_or_create_connection(self, uri):
+    def get_or_create_connection(self, uri: str) -> InlineCallbacksType[Any]:
         if uri not in self.threads:
             yield self.do(uri, lambda: None)
         return self.threads[uri].conn
 
-    def reset_connection(self, uri):
+    def reset_connection(self, uri: str) -> None:
         if uri in self.threads:
             self.threads[uri].close_connection()
         else:
@@ -122,7 +124,7 @@ threadpool = ServerThreadPool()
 
 
 class Connection:
-    def __init__(self, uri):
+    def __init__(self, uri: str) -> None:
         self.uri = uri
 
 
@@ -134,15 +136,15 @@ class LibVirtWorker(AbstractLatentWorker):
 
     def __init__(
         self,
-        name,
-        password,
-        hd_image=None,
-        base_image=None,
-        uri="system:///",
-        xml=None,
-        masterFQDN=None,
-        **kwargs,
-    ):
+        name: str,
+        password: str,
+        hd_image: str | None = None,
+        base_image: str | None = None,
+        uri: str = "system:///",
+        xml: str | None = None,
+        masterFQDN: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(name, password, **kwargs)
         if not libvirt:
             config.error("The python module 'libvirt' is needed to use a LibVirtWorker")
@@ -163,7 +165,7 @@ class LibVirtWorker(AbstractLatentWorker):
         return self.pool.do(self.uri, func)
 
     @defer.inlineCallbacks
-    def _get_domain(self):
+    def _get_domain(self) -> InlineCallbacksType[Any]:
         try:
             domain = yield self._pool_do(lambda conn: conn.lookupByName(self.workername))
             return domain
@@ -176,7 +178,7 @@ class LibVirtWorker(AbstractLatentWorker):
             raise e
 
     @defer.inlineCallbacks
-    def _get_domain_id(self):
+    def _get_domain_id(self) -> InlineCallbacksType[int]:
         domain = yield self._get_domain()
         if domain is None:
             return -1
@@ -184,7 +186,7 @@ class LibVirtWorker(AbstractLatentWorker):
         return domain_id
 
     @defer.inlineCallbacks
-    def _prepare_base_image(self):
+    def _prepare_base_image(self) -> InlineCallbacksType[None]:
         """
         I am a private method for creating (possibly cheap) copies of a
         base_image for start_instance to boot.
@@ -220,7 +222,7 @@ class LibVirtWorker(AbstractLatentWorker):
             raise
 
     @defer.inlineCallbacks
-    def start_instance(self, build):
+    def start_instance(self, build: Any) -> InlineCallbacksType[bool]:
         """
         I start a new instance of a VM.
 
@@ -269,7 +271,7 @@ class LibVirtWorker(AbstractLatentWorker):
         return True
 
     @defer.inlineCallbacks
-    def stop_instance(self, fast=False):
+    def stop_instance(self, fast: bool = False) -> InlineCallbacksType[None]:  # type: ignore[override]
         """
         I attempt to stop a running VM.
         I make sure any connection to the worker is removed.
@@ -298,4 +300,4 @@ class LibVirtWorker(AbstractLatentWorker):
 
         if self.base_image:
             log.msg(f'{self}: Removing image {self.image}')
-            os.remove(self.image)
+            os.remove(self.image)  # type: ignore[arg-type]

@@ -50,11 +50,11 @@ class TestThreadWithQueue(libvirtworker.ThreadWithQueue):
         )
 
     def libvirt_open(self) -> libvirtfake.Connection:
-        return self.pool.case.libvirt_open(self.uri)
+        return self.pool.case.libvirt_open(self.uri)  # type: ignore[attr-defined]
 
 
 class TestServerThreadPool(libvirtworker.ServerThreadPool):
-    ThreadClass = TestThreadWithQueue
+    ThreadClass = TestThreadWithQueue  # type: ignore[assignment]
 
     def __init__(self, case: TestLibVirtWorker) -> None:
         super().__init__()
