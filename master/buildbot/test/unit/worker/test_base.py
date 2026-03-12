@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from pathlib import PurePath
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from parameterized import parameterized
@@ -38,95 +42,105 @@ from buildbot.test.util import logging
 from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class ConcreteWorker(base.AbstractWorker):
     pass
 
 
 class FakeBuilder:
-    def getBuilderId(self):
+    def getBuilderId(self) -> defer.Deferred[int]:
         return defer.succeed(1)
 
 
 class WorkerInterfaceTests(interfaces.InterfaceTests):
-    def test_attr_workername(self):
+    wrk: Any
+    assertTrue: Callable[..., None]
+    assertIsInstance: Callable[..., None]
+    callAttached: Callable[..., Any]
+
+    def test_attr_workername(self) -> None:
         self.assertTrue(hasattr(self.wrk, 'workername'))
 
-    def test_attr_properties(self):
+    def test_attr_properties(self) -> None:
         self.assertTrue(hasattr(self.wrk, 'properties'))
 
-    def test_attr_defaultProperties(self):
+    def test_attr_defaultProperties(self) -> None:
         self.assertTrue(hasattr(self.wrk, 'defaultProperties'))
 
     @defer.inlineCallbacks
-    def test_attr_worker_basedir(self):
+    def test_attr_worker_basedir(self) -> InlineCallbacksType[None]:
         yield self.callAttached()
         self.assertIsInstance(self.wrk.worker_basedir, str)
 
     @defer.inlineCallbacks
-    def test_attr_path_module(self):
+    def test_attr_path_module(self) -> InlineCallbacksType[None]:
         yield self.callAttached()
         self.assertTrue(hasattr(self.wrk, 'path_module'))
 
     @defer.inlineCallbacks
-    def test_attr_path_cls(self):
+    def test_attr_path_cls(self) -> InlineCallbacksType[None]:
         yield self.callAttached()
         path_cls = self.wrk.path_cls
         self.assertTrue(issubclass(path_cls, PurePath))
 
     @defer.inlineCallbacks
-    def test_attr_worker_system(self):
+    def test_attr_worker_system(self) -> InlineCallbacksType[None]:
         yield self.callAttached()
         self.assertTrue(hasattr(self.wrk, 'worker_system'))
 
-    def test_signature_acquireLocks(self):
+    def test_signature_acquireLocks(self) -> None:
         @self.assertArgSpecMatches(self.wrk.acquireLocks)
-        def acquireLocks(self):
+        def acquireLocks(self) -> None:  # type: ignore[no-untyped-def]
             pass
 
-    def test_signature_releaseLocks(self):
+    def test_signature_releaseLocks(self) -> None:
         @self.assertArgSpecMatches(self.wrk.releaseLocks)
-        def releaseLocks(self):
+        def releaseLocks(self) -> None:  # type: ignore[no-untyped-def]
             pass
 
-    def test_signature_attached(self):
+    def test_signature_attached(self) -> None:
         @self.assertArgSpecMatches(self.wrk.attached)
-        def attached(self, conn):
+        def attached(self, conn: Any) -> None:  # type: ignore[no-untyped-def]
             pass
 
-    def test_signature_detached(self):
+    def test_signature_detached(self) -> None:
         @self.assertArgSpecMatches(self.wrk.detached)
-        def detached(self):
+        def detached(self) -> None:  # type: ignore[no-untyped-def]
             pass
 
-    def test_signature_addWorkerForBuilder(self):
+    def test_signature_addWorkerForBuilder(self) -> None:
         @self.assertArgSpecMatches(self.wrk.addWorkerForBuilder)
-        def addWorkerForBuilder(self, wfb):
+        def addWorkerForBuilder(self, wfb: Any) -> None:  # type: ignore[no-untyped-def]
             pass
 
-    def test_signature_removeWorkerForBuilder(self):
+    def test_signature_removeWorkerForBuilder(self) -> None:
         @self.assertArgSpecMatches(self.wrk.removeWorkerForBuilder)
-        def removeWorkerForBuilder(self, wfb):
+        def removeWorkerForBuilder(self, wfb: Any) -> None:  # type: ignore[no-untyped-def]
             pass
 
-    def test_signature_buildFinished(self):
+    def test_signature_buildFinished(self) -> None:
         @self.assertArgSpecMatches(self.wrk.buildFinished)
-        def buildFinished(self, wfb):
+        def buildFinished(self, wfb: Any) -> None:  # type: ignore[no-untyped-def]
             pass
 
-    def test_signature_canStartBuild(self):
+    def test_signature_canStartBuild(self) -> None:
         @self.assertArgSpecMatches(self.wrk.canStartBuild)
-        def canStartBuild(self):
+        def canStartBuild(self) -> None:  # type: ignore[no-untyped-def]
             pass
 
 
 class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         self.wrk = ConcreteWorker('wrk', 'pa')
 
     @defer.inlineCallbacks
-    def callAttached(self):
+    def callAttached(self) -> InlineCallbacksType[None]:
         self.master = yield fakemaster.make_master(self, wantData=True)
         yield self.master.workers.disownServiceParent()
         self.workers = bworkermanager.FakeWorkerManager()
@@ -140,19 +154,19 @@ class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
 
 class FakeWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self.wrk = worker.FakeWorker(self.master)
 
-    def callAttached(self):
+    def callAttached(self) -> defer.Deferred[None]:
         self.conn = fakeprotocol.FakeConnection(self.wrk)
         return self.wrk.attached(self.conn)
 
 
 class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setUpLogging()
         self.master = yield fakemaster.make_master(self, wantDb=True, wantData=True)
@@ -162,7 +176,14 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield self.workers.setServiceParent(self.master)
 
     @defer.inlineCallbacks
-    def createWorker(self, name='bot', password='pass', attached=False, configured=True, **kwargs):
+    def createWorker(
+        self,
+        name: str = 'bot',
+        password: str = 'pass',
+        attached: bool = False,
+        configured: bool = True,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[ConcreteWorker]:
         worker = ConcreteWorker(name, password, **kwargs)
         if configured:
             yield worker.setServiceParent(self.workers)
@@ -171,14 +192,16 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         return worker
 
     @defer.inlineCallbacks
-    def createMachine(self, name, configured=True, **kwargs):
+    def createMachine(
+        self, name: str, configured: bool = True, **kwargs: Any
+    ) -> InlineCallbacksType[Machine]:
         machine = Machine(name)
         if configured:
             yield machine.setServiceParent(self.master.machine_manager)
         return machine
 
     @defer.inlineCallbacks
-    def test_constructor_minimal(self):
+    def test_constructor_minimal(self) -> InlineCallbacksType[None]:
         bs = yield self.createWorker('bot', 'pass')
         yield bs.startService()
         self.assertEqual(bs.workername, 'bot')
@@ -190,7 +213,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(bs.access, [])
 
     @defer.inlineCallbacks
-    def test_constructor_secrets(self):
+    def test_constructor_secrets(self) -> InlineCallbacksType[None]:
         fake_storage_service = FakeSecretStorage()
 
         secret_service = SecretManager()
@@ -204,7 +227,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(bs.password, '1234')
 
     @defer.inlineCallbacks
-    def test_constructor_full(self):
+    def test_constructor_full(self) -> InlineCallbacksType[None]:
         lock1 = locks.MasterLock('lock1')
         lock2 = locks.MasterLock('lock2')
         access1 = lock1.access('counting')
@@ -228,18 +251,20 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(bs.access, [access1, access2])
 
     @defer.inlineCallbacks
-    def test_constructor_notify_on_missing_not_list(self):
+    def test_constructor_notify_on_missing_not_list(self) -> InlineCallbacksType[None]:
         bs = yield self.createWorker('bot', 'pass', notify_on_missing='foo@foo.com')
         yield bs.startService()
         # turned into a list:
         self.assertEqual(bs.notify_on_missing, ['foo@foo.com'])
 
-    def test_constructor_notify_on_missing_not_string(self):
+    def test_constructor_notify_on_missing_not_string(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             ConcreteWorker('bot', 'pass', notify_on_missing=['a@b.com', 13])
 
     @defer.inlineCallbacks
-    def do_test_reconfigService(self, old, new, existingRegistration=True):
+    def do_test_reconfigService(
+        self, old: ConcreteWorker, new: ConcreteWorker, existingRegistration: bool = True
+    ) -> InlineCallbacksType[None]:
         old.parent = self.master
         if existingRegistration:
             old.registration = bworkermanager.FakeWorkerRegistration(old)
@@ -251,7 +276,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield old.reconfigServiceWithSibling(new)
 
     @defer.inlineCallbacks
-    def test_reconfigService_attrs(self):
+    def test_reconfigService_attrs(self) -> InlineCallbacksType[None]:
         old = yield self.createWorker(
             'bot',
             'pass',
@@ -282,14 +307,14 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertTrue(old.updateWorker.called)
 
     @defer.inlineCallbacks
-    def test_reconfigService_has_properties(self):
+    def test_reconfigService_has_properties(self) -> InlineCallbacksType[None]:
         old = yield self.createWorker(name="bot", password="pass")
 
         yield self.do_test_reconfigService(old, old)
         self.assertTrue(old.properties.getProperty('workername'), 'bot')
 
     @defer.inlineCallbacks
-    def test_setupProperties(self):
+    def test_setupProperties(self) -> InlineCallbacksType[None]:
         props = properties.Properties()
         props.setProperty('foo', 1, 'Scheduler')
         props.setProperty('bar', 'bleh', 'Change')
@@ -305,14 +330,14 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(props.getProperty('cuckoo'), 42)
 
     @defer.inlineCallbacks
-    def test_reconfigService_initial_registration(self):
+    def test_reconfigService_initial_registration(self) -> InlineCallbacksType[None]:
         old = yield self.createWorker('bot', 'pass')
         yield self.do_test_reconfigService(old, old, existingRegistration=False)
         self.assertIn('bot', self.master.workers.registrations)
         self.assertEqual(old.registration.updates, ['bot'])
 
     @defer.inlineCallbacks
-    def test_reconfigService_builder(self):
+    def test_reconfigService_builder(self) -> InlineCallbacksType[None]:
         old = yield self.createWorker('bot', 'pass')
         yield self.do_test_reconfigService(old, old)
 
@@ -338,7 +363,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(workers[0]['configured_on'][0]['builderid'], 1)
 
     @defer.inlineCallbacks
-    def test_reconfig_service_no_machine(self):
+    def test_reconfig_service_no_machine(self) -> InlineCallbacksType[None]:
         old = yield self.createWorker('bot', 'pass')
         self.assertIsNone(old.machine)
 
@@ -346,7 +371,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertIsNone(old.machine)
 
     @defer.inlineCallbacks
-    def test_reconfig_service_with_machine_initial(self):
+    def test_reconfig_service_with_machine_initial(self) -> InlineCallbacksType[None]:
         machine = yield self.createMachine('machine1')
         old = yield self.createWorker('bot', 'pass', machine_name='machine1')
         self.assertIsNone(old.machine)
@@ -355,7 +380,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertIs(old.machine, machine)
 
     @defer.inlineCallbacks
-    def test_reconfig_service_with_unknown_machine(self):
+    def test_reconfig_service_with_unknown_machine(self) -> InlineCallbacksType[None]:
         old = yield self.createWorker('bot', 'pass', machine_name='machine1')
         self.assertIsNone(old.machine)
 
@@ -375,13 +400,13 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
     @defer.inlineCallbacks
     def test_reconfig_service_machine(
         self,
-        test_name,
-        do_initial_self_reconfig,
-        old_machine_name,
-        expected_old_machine_name,
-        new_machine_name,
-        expected_new_machine_name,
-    ):
+        test_name: str,
+        do_initial_self_reconfig: bool,
+        old_machine_name: str | None,
+        expected_old_machine_name: str | None,
+        new_machine_name: str | None,
+        expected_new_machine_name: str | None,
+    ) -> InlineCallbacksType[None]:
         machine1 = yield self.createMachine('machine1')
         machine2 = yield self.createMachine('machine2')
 
@@ -408,7 +433,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertIs(old.machine, expected_new_machine)
 
     @defer.inlineCallbacks
-    def test_stopService(self):
+    def test_stopService(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker()
         yield worker.startService()
 
@@ -425,27 +450,27 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
     #   3) missing timer
     # in both the initial config and a reconfiguration.
 
-    def test_startMissingTimer_no_parent(self):
+    def test_startMissingTimer_no_parent(self) -> None:
         bs = ConcreteWorker('bot', 'pass', notify_on_missing=['abc'], missing_timeout=10)
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
-    def test_startMissingTimer_no_timeout(self):
+    def test_startMissingTimer_no_timeout(self) -> None:
         bs = ConcreteWorker('bot', 'pass', notify_on_missing=['abc'], missing_timeout=0)
-        bs.parent = mock.Mock()
+        bs.parent = mock.Mock()  # type: ignore[assignment]
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
-    def test_startMissingTimer_no_notify(self):
+    def test_startMissingTimer_no_notify(self) -> None:
         bs = ConcreteWorker('bot', 'pass', missing_timeout=3600)
-        bs.parent = mock.Mock()
+        bs.parent = mock.Mock()  # type: ignore[assignment]
         bs.running = True
         bs.startMissingTimer()
         self.assertNotEqual(bs.missing_timer, None)
 
-    def test_missing_timer(self):
+    def test_missing_timer(self) -> None:
         bs = ConcreteWorker('bot', 'pass', notify_on_missing=['abc'], missing_timeout=100)
-        bs.parent = mock.Mock()
+        bs.parent = mock.Mock()  # type: ignore[assignment]
         bs.running = True
         bs.startMissingTimer()
         self.assertNotEqual(bs.missing_timer, None)
@@ -453,7 +478,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(bs.missing_timer, None)
 
     @defer.inlineCallbacks
-    def test_setServiceParent_started(self):
+    def test_setServiceParent_started(self) -> InlineCallbacksType[None]:
         master = self.master
         bsmanager = master.workers
         yield master.startService()
@@ -465,7 +490,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(bs.master, master)
 
     @defer.inlineCallbacks
-    def test_setServiceParent_masterLocks(self):
+    def test_setServiceParent_masterLocks(self) -> InlineCallbacksType[None]:
         """
         http://trac.buildbot.net/ticket/2278
         """
@@ -477,7 +502,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks
-    def test_setServiceParent_workerLocks(self):
+    def test_setServiceParent_workerLocks(self) -> InlineCallbacksType[None]:
         """
         http://trac.buildbot.net/ticket/2278
         """
@@ -489,7 +514,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks
-    def test_startService_paused_true(self):
+    def test_startService_paused_true(self) -> InlineCallbacksType[None]:
         """Test that paused state is restored on a buildbot restart"""
         yield self.master.db.insert_test_data([fakedb.Worker(id=9292, name='bot', paused=1)])
 
@@ -501,7 +526,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertFalse(worker._graceful)
 
     @defer.inlineCallbacks
-    def test_startService_graceful_true(self):
+    def test_startService_graceful_true(self) -> InlineCallbacksType[None]:
         """Test that graceful state is NOT restored on a buildbot restart"""
         yield self.master.db.insert_test_data([fakedb.Worker(id=9292, name='bot', graceful=1)])
 
@@ -513,7 +538,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertFalse(worker._graceful)
 
     @defer.inlineCallbacks
-    def test_startService_getWorkerInfo_empty(self):
+    def test_startService_getWorkerInfo_empty(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker()
         yield worker.startService()
 
@@ -524,7 +549,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(bs.name, 'bot')
 
     @defer.inlineCallbacks
-    def test_startService_getWorkerInfo_fromDb(self):
+    def test_startService_getWorkerInfo_fromDb(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Worker(
                 id=9292,
@@ -554,15 +579,15 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         )
 
     @defer.inlineCallbacks
-    def test_attached_remoteGetWorkerInfo(self):
+    def test_attached_remoteGetWorkerInfo(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker()
         yield worker.startService()
 
-        ENVIRON = {}
-        COMMANDS = {'cmd1': '1', 'cmd2': '1'}
+        ENVIRON: dict[str, str] = {}
+        COMMANDS: dict[str, str] = {'cmd1': '1', 'cmd2': '1'}
 
         conn = fakeprotocol.FakeConnection(worker)
-        conn.info = {
+        info: dict[str, Any] = {
             'admin': 'TheAdmin',
             'host': 'TheHost',
             'access_uri': 'TheURI',
@@ -572,6 +597,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
             'version': 'TheVersion',
             'worker_commands': COMMANDS,
         }
+        conn.info = info
         yield worker.attached(conn)
 
         self.assertEqual(
@@ -592,7 +618,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(worker.worker_commands, COMMANDS)
 
     @defer.inlineCallbacks
-    def test_attached_callsMaybeStartBuildsForWorker(self):
+    def test_attached_callsMaybeStartBuildsForWorker(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker()
         yield worker.startService()
         yield worker.reconfigServiceWithSibling(worker)
@@ -604,7 +630,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(self.botmaster.buildsStartedForWorkers, ["bot"])
 
     @defer.inlineCallbacks
-    def test_attached_workerInfoUpdates(self):
+    def test_attached_workerInfoUpdates(self) -> InlineCallbacksType[None]:
         # put in stale info:
         yield self.master.db.insert_test_data([
             fakedb.Worker(
@@ -648,7 +674,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(db_worker.workerinfo['version'], 'TheVersion')
 
     @defer.inlineCallbacks
-    def test_double_attached(self):
+    def test_double_attached(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker()
         yield worker.startService()
 
@@ -661,7 +687,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
             yield worker.attached(conn)
 
     @defer.inlineCallbacks
-    def test_worker_shutdown(self):
+    def test_worker_shutdown(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=True)
         yield worker.startService()
 
@@ -671,7 +697,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         )
 
     @defer.inlineCallbacks
-    def test_worker_shutdown_not_connected(self):
+    def test_worker_shutdown_not_connected(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
 
@@ -679,7 +705,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         yield worker.shutdown()
 
     @defer.inlineCallbacks
-    def test_shutdownRequested(self):
+    def test_shutdownRequested(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
 
@@ -687,18 +713,18 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(worker._graceful, True)
 
     @defer.inlineCallbacks
-    def test_missing_timer_missing(self):
+    def test_missing_timer_missing(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False, missing_timeout=1)
         yield worker.startService()
         self.assertNotEqual(worker.missing_timer, None)
-        yield self.reactor.advance(1)
+        yield self.reactor.advance(1)  # type: ignore[func-returns-value]
         self.assertEqual(worker.missing_timer, None)
         self.assertEqual(
             [key for key, _ in self.master.mq.productions], [('workers', '1', 'missing')]
         )
 
     @defer.inlineCallbacks
-    def test_missing_timer_stopped(self):
+    def test_missing_timer_stopped(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False, missing_timeout=1)
         yield worker.startService()
         self.assertNotEqual(worker.missing_timer, None)
@@ -707,21 +733,21 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual([key for key, _ in self.master.mq.productions], [])
 
     @defer.inlineCallbacks
-    def test_worker_actions_stop(self):
+    def test_worker_actions_stop(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         worker.controlWorker(("worker", 1, "stop"), {'reason': "none"})
         self.assertEqual(worker._graceful, True)
 
     @defer.inlineCallbacks
-    def test_worker_actions_kill(self):
+    def test_worker_actions_kill(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         worker.controlWorker(("worker", 1, "kill"), {'reason': "none"})
         self.assertEqual(worker.conn, None)
 
     @defer.inlineCallbacks
-    def test_worker_actions_pause(self):
+    def test_worker_actions_pause(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         self.assertTrue(worker.canStartBuild())
@@ -735,7 +761,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertTrue(worker.canStartBuild())
 
     @defer.inlineCallbacks
-    def test_worker_quarantine_doesnt_affect_pause(self):
+    def test_worker_quarantine_doesnt_affect_pause(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         self.assertTrue(worker.canStartBuild())
@@ -762,7 +788,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertIsNone(worker.quarantine_timer)
 
     @defer.inlineCallbacks
-    def test_worker_quarantine_unpausing_exits_quarantine(self):
+    def test_worker_quarantine_unpausing_exits_quarantine(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         self.assertTrue(worker.canStartBuild())
@@ -791,7 +817,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertTrue(worker.canStartBuild())
 
     @defer.inlineCallbacks
-    def test_worker_quarantine_unpausing_doesnt_reset_timeout(self):
+    def test_worker_quarantine_unpausing_doesnt_reset_timeout(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         self.assertTrue(worker.canStartBuild())
@@ -828,7 +854,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertTrue(worker.canStartBuild())
 
     @defer.inlineCallbacks
-    def test_worker_quarantine_wait_times(self):
+    def test_worker_quarantine_wait_times(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         self.assertTrue(worker.canStartBuild())
@@ -851,7 +877,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
             self.assertIsNone(worker.quarantine_timer)
 
     @defer.inlineCallbacks
-    def test_worker_quarantine_reset(self):
+    def test_worker_quarantine_reset(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         self.assertTrue(worker.canStartBuild())
@@ -876,7 +902,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertIsNone(worker.quarantine_timer)
 
     @defer.inlineCallbacks
-    def test_worker_quarantine_whilst_quarantined(self):
+    def test_worker_quarantine_whilst_quarantined(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         self.assertTrue(worker.canStartBuild())
@@ -904,7 +930,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertIsNone(worker.quarantine_timer)
 
     @defer.inlineCallbacks
-    def test_worker_quarantine_stop_timer(self):
+    def test_worker_quarantine_stop_timer(self) -> InlineCallbacksType[None]:
         worker = yield self.createWorker(attached=False)
         yield worker.startService()
         self.assertTrue(worker.canStartBuild())
@@ -926,7 +952,7 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
 
 class TestAbstractLatentWorker(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True, wantData=True)
         self.botmaster = self.master.botmaster
@@ -935,7 +961,12 @@ class TestAbstractLatentWorker(TestReactorMixin, unittest.TestCase):
         yield self.workers.setServiceParent(self.master)
 
     @defer.inlineCallbacks
-    def do_test_reconfigService(self, old, new, existingRegistration=True):
+    def do_test_reconfigService(
+        self,
+        old: AbstractLatentWorker,
+        new: AbstractLatentWorker,
+        existingRegistration: bool = True,
+    ) -> InlineCallbacksType[None]:
         old.parent = self.master
         if existingRegistration:
             old.registration = bworkermanager.FakeWorkerRegistration(old)
@@ -945,7 +976,7 @@ class TestAbstractLatentWorker(TestReactorMixin, unittest.TestCase):
         yield old.reconfigServiceWithSibling(new)
 
     @defer.inlineCallbacks
-    def test_reconfigService(self):
+    def test_reconfigService(self) -> InlineCallbacksType[None]:
         old = AbstractLatentWorker("name", "password", build_wait_timeout=10)
         new = AbstractLatentWorker("name", "password", build_wait_timeout=30)
 
