@@ -195,7 +195,11 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     def checkConfig(self, name: str, _: Any, **kwargs: Any) -> None:  # type: ignore[override]
         AbstractLatentWorker.checkConfig(
-            self, name, None, build_wait_timeout=self._controller.build_wait_timeout, **kwargs
+            self,
+            name,
+            None,  # type: ignore[arg-type]
+            build_wait_timeout=self._controller.build_wait_timeout,
+            **kwargs,
         )
 
     def reconfigService(self, name: str, _: Any, **kwargs: Any) -> Any:  # type: ignore[override]

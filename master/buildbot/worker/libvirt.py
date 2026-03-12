@@ -14,8 +14,12 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2010 Isotoma Limited
 
+from __future__ import annotations
+
 import os
 import socket
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -25,6 +29,9 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import runprocess
 from buildbot.util.queue import ConnectableThreadQueue
 from buildbot.worker import AbstractLatentWorker
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 try:
     import libvirt
@@ -71,7 +78,9 @@ class ServerThreadPool:
     def __init__(self):
         self.threads = {}
 
-    def do(self, uri, func, *args, **kwargs):
+    def do(
+        self, uri: str, func: Callable[..., Any], *args: Any, **kwargs: Any
+    ) -> defer.Deferred[Any]:
         # returns a Deferred
         if uri not in self.threads:
             self.threads[uri] = self.ThreadClass(self, uri)
@@ -150,7 +159,7 @@ class LibVirtWorker(AbstractLatentWorker):
         self.cheap_copy = True
         self.graceful_shutdown = False
 
-    def _pool_do(self, func):
+    def _pool_do(self, func: Callable[..., Any]) -> defer.Deferred[Any]:
         return self.pool.do(self.uri, func)
 
     @defer.inlineCallbacks

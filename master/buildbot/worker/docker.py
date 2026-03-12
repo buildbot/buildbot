@@ -92,7 +92,7 @@ class DockerBaseWorker(AbstractLatentWorker):
             if not hasattr(image, 'getRenderingFor'):
                 config.error("image must be a string")
 
-        super().checkConfig(name, password, **kwargs)
+        super().checkConfig(name, password, **kwargs)  # type: ignore[arg-type]
 
     def reconfigService(  # type: ignore[override]
         self,
@@ -449,7 +449,7 @@ class DockerLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         docker_client.close()
         return [instance['Id'], image]
 
-    def check_instance(self) -> defer.Deferred[tuple[bool, str]]:  # type: ignore[override]
+    def check_instance(self) -> defer.Deferred[tuple[bool, str]]:
         if self.instance is None:
             return defer.succeed((True, ""))
         return threads.deferToThread(self._thd_check_instance, self._curr_client_args)

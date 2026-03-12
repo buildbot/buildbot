@@ -178,7 +178,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         yield super().stopService()
 
     @defer.inlineCallbacks
-    def start_instance(self, build: Properties) -> InlineCallbacksType[bool]:
+    def start_instance(self, build: Properties) -> InlineCallbacksType[bool]:  # type: ignore[override]
         try:
             yield self.stop_instance(reportFailure=False)
             pod_spec = yield self.renderWorkerPropsOnStart(build)
