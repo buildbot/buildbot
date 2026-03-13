@@ -1024,7 +1024,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         testcase = self
 
         class MyService(service.BuildbotService):
-            def reconfigService(self, foo: str | None = None) -> None:
+            def reconfigService(self, foo: str | None = None) -> None:  # type: ignore[override]
                 testcase.foo = foo  # type: ignore[attr-defined]
 
         myService = MyService(foo="bar", name="foo")
@@ -1054,7 +1054,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             class MyService(service.BuildbotService):
                 name = 'myservice'
 
-                def reconfigService(self, x: str | None = None) -> None:
+                def reconfigService(self, x: str | None = None) -> None:  # type: ignore[override]
                     self.x = x
 
             self.cfg.load_services(

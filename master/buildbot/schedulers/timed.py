@@ -592,7 +592,7 @@ class NightlyBase(Timed):
 
 
 class Nightly(NightlyBase):
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         *args: Any,
         reason: str = "The Nightly scheduler named '%(name)s' triggered this build",
@@ -616,7 +616,7 @@ class NightlyTriggerable(NightlyBase):
         super().__init__(*args, **kwargs)
         self._lastTrigger: tuple[Any, ...] | None = None
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         *args: Any,
         reason: str = "The NightlyTriggerable scheduler named '%(name)s' triggered this build",

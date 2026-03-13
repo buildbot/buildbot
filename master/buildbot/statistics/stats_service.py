@@ -37,7 +37,7 @@ class StatsService(service.BuildbotService):
         super().__init__(*args, **kwargs)
         self.consumers: list[Any] = []
 
-    def checkConfig(self, storage_backends: list[StatsStorageBase]) -> None:
+    def checkConfig(self, storage_backends: list[StatsStorageBase]) -> None:  # type: ignore[override]
         for wfb in storage_backends:
             if not isinstance(wfb, StatsStorageBase):
                 raise TypeError(

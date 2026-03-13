@@ -13,22 +13,30 @@
 #
 # Portions Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import protocol
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from twisted.python.failure import Failure
+
 
 class LineBuffer:
-    def __init__(self):
+    def __init__(self) -> None:
         self._buffer = b''
 
-    def add_data(self, data):
+    def add_data(self, data: bytes) -> Generator[bytes, None, None]:
         # returns lines that have been processed, if any
         lines = (self._buffer + data).split(b'\n')
         self._buffer = lines.pop(-1)
         for l in lines:
             yield l.rstrip(b'\r')
 
-    def get_trailing_line(self):
+    def get_trailing_line(self) -> list[bytes]:
         if self._buffer:
             ret = [self._buffer]
             self._buffer = b''
@@ -37,31 +45,31 @@ class LineBuffer:
 
 
 class LineProcessProtocol(protocol.ProcessProtocol):
-    def __init__(self):
+    def __init__(self) -> None:
         self._out_buffer = LineBuffer()
         self._err_buffer = LineBuffer()
 
-    def outReceived(self, data):
+    def outReceived(self, data: bytes) -> None:
         """
         Translates bytes into lines, and calls outLineReceived.
         """
         for line in self._out_buffer.add_data(data):
             self.outLineReceived(line)
 
-    def errReceived(self, data):
+    def errReceived(self, data: bytes) -> None:
         """
         Translates bytes into lines, and calls errLineReceived.
         """
         for line in self._err_buffer.add_data(data):
             self.errLineReceived(line)
 
-    def processEnded(self, reason):
+    def processEnded(self, reason: Failure) -> None:
         for line in self._out_buffer.get_trailing_line():
             self.outLineReceived(line)
         for line in self._err_buffer.get_trailing_line():
             self.errLineReceived(line)
 
-    def outLineReceived(self, line):
+    def outLineReceived(self, line: bytes) -> None:
         """
         Callback to which stdout lines will be sent.
         Any line that is not terminated by a newline will be processed once the next line comes,
@@ -69,7 +77,7 @@ class LineProcessProtocol(protocol.ProcessProtocol):
         """
         raise NotImplementedError
 
-    def errLineReceived(self, line):
+    def errLineReceived(self, line: bytes) -> None:
         """
         Callback to which stdout lines will be sent.
         Any line that is not terminated by a newline will be processed once the next line comes,

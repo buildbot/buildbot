@@ -84,7 +84,7 @@ class HTTPClientService(service.SharedService):
         assert not base_url.endswith("/"), "baseurl should not end with /"
         super().__init__()
         self._session = httpclientservice.HTTPSession(
-            self,
+            self,  # type: ignore[arg-type]
             base_url,
             auth=auth,
             headers=headers,
@@ -112,12 +112,12 @@ class HTTPClientService(service.SharedService):
         case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
 
         service = await super().getService(master, *args, **kwargs)
-        service.case = case
-        case.addCleanup(service.assertNoOutstanding)
+        service.case = case  # type: ignore[attr-defined]
+        case.addCleanup(service.assertNoOutstanding)  # type: ignore[attr-defined]
 
         master.httpservice = service
 
-        return service
+        return service  # type: ignore[return-value]
 
     def expect(
         self,

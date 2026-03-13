@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
-def render_description(description, format):
+
+def render_description(description: str | None, format: str | None) -> str | None:
     if format is None:
         return None
     if format == "markdown":

@@ -117,7 +117,7 @@ class Triggerable(base.ReconfigurableBaseScheduler):
         return idsDeferred, resultsDeferred
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield super().startService()
         self._updateWaiters.start()
 

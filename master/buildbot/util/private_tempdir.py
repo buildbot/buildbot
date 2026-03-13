@@ -13,11 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import shutil
 import stat
 import sys
 import tempfile
+from typing import TYPE_CHECKING
+from typing import Any
+
+if TYPE_CHECKING:
+    from types import TracebackType
 
 
 class PrivateTemporaryDirectory:
@@ -27,21 +34,32 @@ class PrivateTemporaryDirectory:
     Note, that Windows ignores the permissions.
     """
 
-    def __init__(self, suffix=None, prefix=None, dir=None, mode=0o700):
+    def __init__(
+        self,
+        suffix: str | None = None,
+        prefix: str | None = None,
+        dir: str | None = None,
+        mode: int = 0o700,
+    ) -> None:
         self.name = tempfile.mkdtemp(suffix, prefix, dir)
         self.mode = mode
         self._cleanup_needed = True
 
-    def __enter__(self):
+    def __enter__(self) -> str:
         return self.name
 
-    def __exit__(self, exc, value, tb):
+    def __exit__(
+        self,
+        exc: type[BaseException] | None,
+        value: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         self.cleanup()
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         if self._cleanup_needed:
 
-            def remove_readonly(func, path, _):
+            def remove_readonly(func: Any, path: Any, _: Any) -> None:
                 """Workaround Permission Error on Windows if any files in path are read-only.
 
                 See https://docs.python.org/3/library/shutil.html#rmtree-example

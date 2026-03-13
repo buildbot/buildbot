@@ -541,7 +541,7 @@ class IRC(service.BuildbotService):
     )
     secrets = ['password']
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         host: str,
         nick: str,

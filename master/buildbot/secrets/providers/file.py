@@ -65,7 +65,7 @@ class SecretInAFile(SecretProviderBase):
                     secrets[secretfile] = secretvalue
         return secrets
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self, dirname: str, suffixes: list[str] | None = None, strip: bool = True
     ) -> None:
         self._dirname = dirname

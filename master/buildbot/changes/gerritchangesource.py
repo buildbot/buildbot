@@ -156,7 +156,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
     external_property_whitelist = ['*']
     property_basename = 'event'
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         gitBaseURL: str | None = None,
         handled_events: tuple[str, ...] = ("patchset-created", "ref-updated"),
@@ -166,7 +166,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         if gitBaseURL is None:
             config.error("gitBaseURL must be specified")
 
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
         gitBaseURL: str | None = None,
         handled_events: tuple[str, ...] = ("patchset-created", "ref-updated"),
@@ -286,7 +286,7 @@ class GerritSshStreamEventsConnector:
             self._ended_deferred: defer.Deferred[None] = defer.Deferred()
 
         @defer.inlineCallbacks
-        def outLineReceived(self, line: bytes) -> InlineCallbacksType[None]:
+        def outLineReceived(self, line: bytes) -> InlineCallbacksType[None]:  # type: ignore[override]
             if self.connector.debug:
                 log.msg(
                     f"{self.connector.change_source.name} "

@@ -228,7 +228,7 @@ class CommandlineUserManager(service.AsyncMultiService):
         self.registration: Registration | None = None
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         # set up factory and register with buildbot.pbmanager
         def factory(mind: object, username: str) -> CommandlineUserManagerPerspective:
             return CommandlineUserManagerPerspective(self.master)

@@ -291,7 +291,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService, L
         return self._builders_byid.get(builderid)
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         # consume both 'new' and 'unclaimed' build requests events
         startConsuming = self.master.mq.startConsuming
         self.buildrequest_consumer_new = yield startConsuming(
