@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import textwrap
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -35,9 +39,13 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.misc import BuildDictLookAlike
 
+if TYPE_CHECKING:
+    from buildbot.reporters.message import MessageFormatterBase
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestMessageFormatting(unittest.TestCase):
-    def test_get_detected_status_text_failure(self):
+    def test_get_detected_status_text_failure(self) -> None:
         self.assertEqual(
             message.get_detected_status_text(['change'], FAILURE, FAILURE), 'failed build'
         )
@@ -57,7 +65,7 @@ class TestMessageFormatting(unittest.TestCase):
             message.get_detected_status_text(['problem'], FAILURE, None), 'failed build'
         )
 
-    def test_get_detected_status_text_warnings(self):
+    def test_get_detected_status_text_warnings(self) -> None:
         self.assertEqual(
             message.get_detected_status_text(['change'], WARNINGS, SUCCESS), 'problem in the build'
         )
@@ -65,7 +73,7 @@ class TestMessageFormatting(unittest.TestCase):
             message.get_detected_status_text(['change'], WARNINGS, None), 'problem in the build'
         )
 
-    def test_get_detected_status_text_success(self):
+    def test_get_detected_status_text_success(self) -> None:
         self.assertEqual(
             message.get_detected_status_text(['change'], SUCCESS, FAILURE), 'restored build'
         )
@@ -86,7 +94,7 @@ class TestMessageFormatting(unittest.TestCase):
             message.get_detected_status_text(['problem'], SUCCESS, None), 'passing build'
         )
 
-    def test_get_detected_status_text_exception(self):
+    def test_get_detected_status_text_exception(self) -> None:
         self.assertEqual(
             message.get_detected_status_text(['problem'], EXCEPTION, FAILURE), 'build exception'
         )
@@ -97,7 +105,7 @@ class TestMessageFormatting(unittest.TestCase):
             message.get_detected_status_text(['problem'], EXCEPTION, None), 'build exception'
         )
 
-    def test_get_detected_status_text_other(self):
+    def test_get_detected_status_text_other(self) -> None:
         self.assertEqual(
             message.get_detected_status_text(['problem'], SKIPPED, None), 'skipped build'
         )
@@ -106,13 +114,13 @@ class TestMessageFormatting(unittest.TestCase):
             message.get_detected_status_text(['problem'], CANCELLED, None), 'cancelled build'
         )
 
-    def test_get_message_summary_text_success(self):
+    def test_get_message_summary_text_success(self) -> None:
         self.assertEqual(
             message.get_message_summary_text({'state_string': 'mywarning'}, SUCCESS),
             'Build succeeded!',
         )
 
-    def test_get_message_summary_text_warnings(self):
+    def test_get_message_summary_text_warnings(self) -> None:
         self.assertEqual(
             message.get_message_summary_text({'state_string': 'mywarning'}, WARNINGS),
             'Build Had Warnings: mywarning',
@@ -121,13 +129,13 @@ class TestMessageFormatting(unittest.TestCase):
             message.get_message_summary_text({'state_string': None}, WARNINGS), 'Build Had Warnings'
         )
 
-    def test_get_message_summary_text_cancelled(self):
+    def test_get_message_summary_text_cancelled(self) -> None:
         self.assertEqual(
             message.get_message_summary_text({'state_string': 'mywarning'}, CANCELLED),
             'Build was cancelled',
         )
 
-    def test_get_message_summary_text_skipped(self):
+    def test_get_message_summary_text_skipped(self) -> None:
         self.assertEqual(
             message.get_message_summary_text({'state_string': 'mywarning'}, SKIPPED),
             'BUILD FAILED: mywarning',
@@ -136,10 +144,10 @@ class TestMessageFormatting(unittest.TestCase):
             message.get_message_summary_text({'state_string': None}, SKIPPED), 'BUILD FAILED'
         )
 
-    def test_get_message_source_stamp_text_empty(self):
+    def test_get_message_source_stamp_text_empty(self) -> None:
         self.assertEqual(message.get_message_source_stamp_text([]), '')
 
-    def test_get_message_source_stamp_text_multiple(self):
+    def test_get_message_source_stamp_text_multiple(self) -> None:
         stamps = [
             {'codebase': 'a', 'branch': None, 'revision': None, 'patch': None},
             {'codebase': 'b', 'branch': None, 'revision': None, 'patch': None},
@@ -149,7 +157,7 @@ class TestMessageFormatting(unittest.TestCase):
             "Build Source Stamp 'a': HEAD\nBuild Source Stamp 'b': HEAD\n",
         )
 
-    def test_get_message_source_stamp_text_with_props(self):
+    def test_get_message_source_stamp_text_with_props(self) -> None:
         stamps = [{'codebase': 'a', 'branch': 'br', 'revision': 'abc', 'patch': 'patch'}]
         self.assertEqual(
             message.get_message_source_stamp_text(stamps),
@@ -159,12 +167,18 @@ class TestMessageFormatting(unittest.TestCase):
 
 class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
-    def setup_db(self, results1, results2, with_steps=False, extra_build_properties=None):
+    def setup_db(
+        self,
+        results1: int,
+        results2: int,
+        with_steps: bool = False,
+        extra_build_properties: dict[str, str] | None = None,
+    ) -> InlineCallbacksType[None]:
         if extra_build_properties is None:
             extra_build_properties = {}
 
@@ -222,13 +236,13 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def do_one_test(
         self,
-        formatter,
-        lastresults,
-        results,
-        mode="all",
-        with_steps=False,
-        extra_build_properties=None,
-    ):
+        formatter: MessageFormatterBase,
+        lastresults: int,
+        results: int,
+        mode: str | tuple[str, ...] = "all",
+        with_steps: bool = False,
+        extra_build_properties: dict[str, str] | None = None,
+    ) -> InlineCallbacksType[dict[str, Any]]:
         yield self.setup_db(
             lastresults,
             results,
@@ -255,13 +269,13 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def do_one_test_buildset(
         self,
-        formatter,
-        lastresults,
-        results,
-        mode="all",
-        with_steps=False,
-        extra_build_properties=None,
-    ):
+        formatter: MessageFormatterBase,
+        lastresults: int,
+        results: int,
+        mode: str | tuple[str, ...] = "all",
+        with_steps: bool = False,
+        extra_build_properties: dict[str, str] | None = None,
+    ) -> InlineCallbacksType[dict[str, Any]]:
         yield self.setup_db(
             lastresults,
             results,
@@ -286,12 +300,12 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
 
 
 class TestMessageFormatter(MessageFormatterTestBase):
-    def test_unknown_template_type_for_default_message(self):
+    def test_unknown_template_type_for_default_message(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             message.MessageFormatter(template_type='unknown')
 
     @defer.inlineCallbacks
-    def test_message_success_plain_no_steps(self):
+    def test_message_success_plain_no_steps(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
 
@@ -321,7 +335,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_message_success_plain_with_steps(self):
+    def test_message_success_plain_with_steps(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(
             formatter,
@@ -366,7 +380,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_message_success_html(self):
+    def test_message_success_html(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter(template_type='html')
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(
@@ -397,7 +411,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_message_success_html_with_steps(self):
+    def test_message_success_html_with_steps(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter(template_type='html')
         res = yield self.do_one_test(
             formatter,
@@ -451,7 +465,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_inline_templates(self):
+    def test_inline_templates(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter(
             template="URL: {{ build_url }} -- {{ summary }}", subject="subject"
         )
@@ -467,7 +481,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_inline_templates_extra_info(self):
+    def test_inline_templates_extra_info(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter(
             template="URL: {{ build_url }} -- {{ summary }}",
             subject="subject",
@@ -485,7 +499,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_message_failure(self):
+    def test_message_failure(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, FAILURE)
         self.assertIn(
@@ -493,7 +507,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_message_failure_change(self):
+    def test_message_failure_change(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, FAILURE, "change")
         self.assertIn(
@@ -501,7 +515,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_message_success_change(self):
+    def test_message_success_change(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, FAILURE, SUCCESS, "change")
         self.assertIn(
@@ -509,7 +523,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_message_success_nochange(self):
+    def test_message_success_nochange(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS, "change")
         self.assertIn(
@@ -517,7 +531,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_message_failure_nochange(self):
+    def test_message_failure_nochange(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, FAILURE, FAILURE, "change")
         self.assertIn(
@@ -527,7 +541,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
 
 class TestMessageFormatterRenderable(MessageFormatterTestBase):
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         template = Interpolate('templ_%(prop:workername)s/%(prop:reason)s')
         subject = Interpolate('subj_%(prop:workername)s/%(prop:reason)s')
         formatter = message.MessageFormatterRenderable(template, subject)
@@ -545,7 +559,7 @@ class TestMessageFormatterRenderable(MessageFormatterTestBase):
 
 class TestMessageFormatterFunction(MessageFormatterTestBase):
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         function = mock.Mock(side_effect=lambda x: {'key': 'value'})
         formatter = message.MessageFormatterFunction(function, 'json')
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
@@ -569,7 +583,7 @@ class TestMessageFormatterFunction(MessageFormatterTestBase):
 
 class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         function = mock.Mock(
             side_effect=lambda master, ctx: {
                 "body": {"key": "value"},
@@ -592,7 +606,7 @@ class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
         )
 
     @defer.inlineCallbacks
-    def test_basic_buildset(self):
+    def test_basic_buildset(self) -> InlineCallbacksType[None]:
         function = mock.Mock(
             side_effect=lambda master, ctx: {
                 "body": {"key": "value"},
@@ -617,7 +631,7 @@ class TestMessageFormatterFunctionRaw(MessageFormatterTestBase):
 
 class TestMessageFormatterMissingWorker(MessageFormatterTestBase):
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatterMissingWorker()
         self.setup_db(SUCCESS, SUCCESS)
         workers = yield self.master.data.get(('workers',))
@@ -628,6 +642,6 @@ class TestMessageFormatterMissingWorker(MessageFormatterTestBase):
         text = res['body']
         self.assertIn("worker named wrkr went away", text)
 
-    def test_unknown_template_type_for_default_message(self):
+    def test_unknown_template_type_for_default_message(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             message.MessageFormatterMissingWorker(template_type='unknown')
