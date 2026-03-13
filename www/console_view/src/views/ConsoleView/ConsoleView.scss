@@ -1,7 +1,8 @@
 tr.bb-console-table-first-row {
-  background-color: #fff !important;
+  background-color: var(--bb-background-color) !important;
   th {
     border: none;
+    background-color: var(--bb-background-color) !important;
   }
 }
 

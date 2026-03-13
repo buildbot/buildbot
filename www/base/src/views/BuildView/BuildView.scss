@@ -24,8 +24,8 @@
 
 .bb-build-view-nav-button {
   padding: 5px 14px;
-  background-color: #fff;
-  border: 1px solid #ddd;
+  background-color: var(--bb-background-color);
+  border: 1px solid var(--bb-border-color);
   border-radius: 15px;
   display: block;
 }

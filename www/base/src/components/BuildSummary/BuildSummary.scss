@@ -2,9 +2,9 @@
 
 .bb-build-summary {
   .card-header {
-    color: #333333;
-    background-color: #f5f5f5;
-    border-color: #ddd;
+    color: var(--bb-card-header-text-color);
+    background-color: var(--bb-card-bg-color);
+    border-color: var(--bb-card-border-color);
     padding: 0.375rem 1rem;
     border-bottom: 1px solid transparent;
     border-top-left-radius: 3px;
@@ -29,9 +29,9 @@
   }
 
   .btn-default {
-    color: #333;
-    background-color: #fff;
-    border-color: #ccc;
+    color: var(--bb-text-color);
+    background-color: var(--bb-btn-background-color);
+    border-color: var(--bb-btn-border-color);
   }
 
   .group-results > li .bb-build-request-summary > div {
@@ -48,7 +48,7 @@
   }
 
   &.list-group-item.bb-anchor-target {
-    border: 2px solid #ffff00;
+    border: 2px solid var(--bb-highlight-border-color);
   }
   .bb-build-summary-step-anchor-link {
     display: none;

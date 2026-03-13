@@ -184,6 +184,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
         c['www']['ui_default_config'] = {
             'Builders.buildFetchLimit': 500,
+            'Appearance.theme': 'Dark',
         }
 
 ``ws_ping_interval``
@@ -206,18 +207,40 @@ This server is configured with the ``www`` configuration key, which specifies a 
     .. code-block:: python
 
         c["www"]["theme"] = {
+            "bb-avatar-bg-color": "#ccc",
+            "bb-background-color": "#fff",
+            "bb-border-color": "#ddd",
+            "bb-btn-background-color": "#fff",
+            "bb-btn-border-color": "#ccc",
+            "bb-btn-hover-background-color": "#e6e6e6",
+            "bb-btn-hover-border-color": "#adadad",
+            "bb-card-bg-color": "#f5f5f5",
+            "bb-card-border-color": "#ddd",
+            "bb-card-header-text-color": "#333",
+            "bb-dropdown-bg-color": "#f7f7f7",
+            "bb-dropdown-border-color": "#ebebeb",
+            "bb-dropdown-hover-bg-color": "#f5f5f5",
+            "bb-highlight-border-color": "#ffff00",
+            "bb-home-card-header-bg-color": "#337ab7",
+            "bb-link-color": "#337ab7",
+            "bb-muted-text-color": "#555",
+            "bb-navbar-separator-color": "#ccc",
+            "bb-panel-separator-bg-color": "#ddd",
             "bb-sidebar-background-color": "#30426a",
-            "bb-sidebar-header-background-color": "#273759",
-            "bb-sidebar-header-text-color": "#fff",
-            "bb-sidebar-title-text-color": "#627cb7",
-            "bb-sidebar-footer-background-color": "#273759",
-            "bb-sidebar-button-text-color": "#b2bfdc",
-            "bb-sidebar-button-hover-background-color": "#1b263d",
-            "bb-sidebar-button-hover-text-color": "#fff",
             "bb-sidebar-button-current-background-color": "#273759",
             "bb-sidebar-button-current-text-color": "#b2bfdc",
-            "bb-sidebar-stripe-hover-color": "#e99d1a",
+            "bb-sidebar-button-hover-background-color": "#1b263d",
+            "bb-sidebar-button-hover-text-color": "#fff",
+            "bb-sidebar-button-text-color": "#b2bfdc",
+            "bb-sidebar-footer-background-color": "#273759",
+            "bb-sidebar-header-background-color": "#273759",
+            "bb-sidebar-header-text-color": "#fff",
             "bb-sidebar-stripe-current-color": "#8c5e10",
+            "bb-sidebar-stripe-hover-color": "#e99d1a",
+            "bb-sidebar-title-text-color": "#627cb7",
+            "bb-tag-active-bg-color": "#5cb85c",
+            "bb-tag-bg-color": "#777",
+            "bb-text-color": "#333",
         }
 
 .. note::

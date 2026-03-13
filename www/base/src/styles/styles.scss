@@ -76,7 +76,7 @@ Firefox will insert newlines if the selection go over a no-select span, so we ne
 }
 
 img.avatar {
-  background-color: #ccc;
+  background-color: var(--bb-avatar-bg-color);
   border-radius: 50%;
   height: 40px;
   margin: -10px;
@@ -138,8 +138,14 @@ span:hover > .mouse-over-only {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 20px;
-  color: #333333;
-  background-color: #fff;
+  color: var(--bb-text-color);
+  background-color: var(--bb-background-color);
+
+  // Override Bootstrap's hardcoded a { color: #007bff } so links use our
+  // theme-aware color. Sidebar links are excluded — they have their own palette.
+  a:not([class*='bb-sidebar']) {
+    color: var(--bb-link-color);
+  }
 
   a:hover {
     text-decoration: none;
@@ -155,12 +161,184 @@ span:hover > .mouse-over-only {
   }
 
   .btn-light {
-    background-color: #fff;
-    border-color: #ccc;
+    background-color: var(--bb-btn-background-color);
+    border-color: var(--bb-btn-border-color);
+    color: var(--bb-text-color);
   }
 
   .btn-light:hover {
-    background-color: #e6e6e6;
-    border-color: #adadad;
+    background-color: var(--bb-btn-hover-background-color);
+    border-color: var(--bb-btn-hover-border-color);
+    color: var(--bb-text-color);
+  }
+
+  .nav-tabs {
+    border-bottom-color: var(--bb-border-color);
+  }
+
+  .nav-tabs .nav-link {
+    color: var(--bb-link-color);
+  }
+
+  .nav-tabs .nav-link.active {
+    background-color: var(--bb-background-color);
+    border-color: var(--bb-border-color) var(--bb-border-color) var(--bb-background-color);
+    color: var(--bb-text-color);
+  }
+
+  .nav-tabs .nav-link:hover {
+    border-color: var(--bb-border-color) var(--bb-border-color) var(--bb-border-color);
+  }
+
+  .card {
+    background-color: var(--bb-background-color);
+    border-color: var(--bb-card-border-color);
+  }
+
+  .card-header {
+    background-color: var(--bb-card-bg-color);
+    border-bottom-color: var(--bb-card-border-color);
+    color: var(--bb-card-header-text-color);
+  }
+
+  .card-body {
+    background-color: var(--bb-background-color);
+    color: var(--bb-text-color);
+  }
+
+  .form-control {
+    background-color: var(--bb-background-color);
+    border-color: var(--bb-btn-border-color);
+    color: var(--bb-text-color);
+  }
+
+  .form-control:focus {
+    background-color: var(--bb-background-color);
+    color: var(--bb-text-color);
+  }
+
+  .navbar {
+    background-color: var(--bb-card-bg-color) !important;
+    border-color: var(--bb-border-color);
+  }
+
+  .navbar-brand,
+  .navbar-text {
+    color: var(--bb-text-color) !important;
+  }
+
+  .navbar .nav-link {
+    // In light mode, falls back to Bootstrap's original rgba(0,0,0,.5).
+    // In dark mode, ThemeManager sets --bb-navbar-link-color to a readable value.
+    color: var(--bb-navbar-link-color, rgba(0, 0, 0, 0.5));
+  }
+
+  .breadcrumb {
+    background-color: var(--bb-card-bg-color);
+    color: var(--bb-text-color);
+  }
+
+  .list-group-item {
+    background-color: var(--bb-background-color);
+    border-color: var(--bb-card-border-color);
+    color: var(--bb-text-color);
+  }
+
+  .table {
+    color: var(--bb-text-color);
+  }
+
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--bb-card-bg-color);
+  }
+
+  .table td,
+  .table th {
+    border-color: var(--bb-border-color);
+  }
+
+  .table-hover tbody tr:hover {
+    color: var(--bb-text-color);
+    background-color: var(--bb-card-bg-color);
+  }
+
+  .table thead th {
+    color: var(--bb-text-color);
+    border-color: var(--bb-border-color);
+  }
+
+  .modal-content {
+    background-color: var(--bb-background-color);
+    border-color: var(--bb-border-color);
+    color: var(--bb-text-color);
+  }
+
+  .modal-header {
+    border-bottom-color: var(--bb-border-color);
+  }
+
+  .modal-footer {
+    border-top-color: var(--bb-border-color);
+  }
+
+  .form-check-label {
+    color: var(--bb-text-color);
+  }
+
+  select.form-control,
+  .custom-select {
+    background-color: var(--bb-background-color);
+    border-color: var(--bb-btn-border-color);
+    color: var(--bb-text-color);
+    color-scheme: light dark;
+  }
+
+  .dropdown-menu {
+    background-color: var(--bb-background-color);
+    border-color: var(--bb-border-color);
+  }
+
+  .dropdown-item {
+    color: var(--bb-text-color);
+  }
+
+  .dropdown-item:hover,
+  .dropdown-item:focus {
+    background-color: var(--bb-card-bg-color);
+    color: var(--bb-text-color);
+  }
+
+  pre:not(.log) {
+    color: var(--bb-text-color);
+    background-color: var(--bb-card-bg-color);
+    border-color: var(--bb-border-color);
+  }
+
+  code {
+    color: var(--bb-text-color);
+  }
+
+  .page-link {
+    background-color: var(--bb-background-color);
+    border-color: var(--bb-border-color);
+    color: var(--bb-link-color);
+  }
+
+  .page-link:hover {
+    background-color: var(--bb-card-bg-color);
+    border-color: var(--bb-border-color);
+    color: var(--bb-link-color);
+  }
+
+  .page-item.active .page-link {
+    background-color: var(--bb-link-color);
+    border-color: var(--bb-link-color);
+    color: #fff;
+  }
+
+  .page-item.disabled .page-link {
+    background-color: var(--bb-card-bg-color);
+    border-color: var(--bb-border-color);
+    color: var(--bb-muted-text-color);
   }
 }

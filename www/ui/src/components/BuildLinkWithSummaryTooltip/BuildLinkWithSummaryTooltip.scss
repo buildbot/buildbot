@@ -4,8 +4,8 @@
   border: 1.5px;
   padding: 1px;
   min-width: 600px;
-  color: #262626;
-  background-color: white;
+  color: var(--bb-text-color) !important;
+  background-color: var(--bb-background-color) !important;
   border-style: solid;
   font-size: 12px;
 }

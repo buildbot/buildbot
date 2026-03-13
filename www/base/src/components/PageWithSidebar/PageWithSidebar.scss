@@ -48,7 +48,7 @@ $gl-sidebar-width: 600px;
   &:not(.active) {
     .sidebar {
       ul.sidebar .sidebar-title.separator {
-        background: #273759;
+        background: var(--bb-sidebar-header-background-color);
       }
     }
     ul {
@@ -60,7 +60,7 @@ $gl-sidebar-width: 600px;
         margin: 13px 0;
       }
       .sidebar-list .bb-sidebar-button:hover span {
-        border-left: 3px solid #e99d1a;
+        border-left: 3px solid var(--bb-sidebar-stripe-hover-color);
         text-indent: 22px;
       }
     }
@@ -228,12 +228,12 @@ $gl-sidebar-width: 600px;
     }
 
     div .bb-sidebar-item {
-      color: #b2bfdc;
+      color: var(--bb-sidebar-button-text-color);
       font-size: 12px;
       line-height: 43px;
     }
     div .bb-sidebar-button:hover {
-      color: #ffffff;
+      color: var(--bb-sidebar-button-hover-text-color);
       text-decoration: none;
     }
   }

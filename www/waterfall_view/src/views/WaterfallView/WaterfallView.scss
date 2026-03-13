@@ -84,7 +84,7 @@ $main-color: #3498db;
                 }
 
                 polygon {
-                  fill: #fff;
+                  fill: var(--bb-background-color);
                 }
 
                 .buildstep {
