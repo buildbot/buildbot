@@ -10,7 +10,6 @@ exports[`makePagination > disable if unnecessary  1`] = `
     >
       <span
         class="page-link"
-        disabled=""
       >
         <span
           aria-hidden="true"
@@ -18,7 +17,7 @@ exports[`makePagination > disable if unnecessary  1`] = `
           «
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           First
         </span>
@@ -29,7 +28,6 @@ exports[`makePagination > disable if unnecessary  1`] = `
     >
       <span
         class="page-link"
-        disabled=""
       >
         <span
           aria-hidden="true"
@@ -37,7 +35,7 @@ exports[`makePagination > disable if unnecessary  1`] = `
           ‹
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           Previous
         </span>
@@ -51,7 +49,7 @@ exports[`makePagination > disable if unnecessary  1`] = `
       >
         1
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           (current)
         </span>
@@ -62,7 +60,6 @@ exports[`makePagination > disable if unnecessary  1`] = `
     >
       <span
         class="page-link"
-        disabled=""
       >
         <span
           aria-hidden="true"
@@ -70,7 +67,7 @@ exports[`makePagination > disable if unnecessary  1`] = `
           ›
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           Next
         </span>
@@ -81,7 +78,6 @@ exports[`makePagination > disable if unnecessary  1`] = `
     >
       <span
         class="page-link"
-        disabled=""
       >
         <span
           aria-hidden="true"
@@ -89,7 +85,7 @@ exports[`makePagination > disable if unnecessary  1`] = `
           »
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           Last
         </span>
@@ -121,6 +117,7 @@ exports[`makePagination > out of bounds 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         <span
           aria-hidden="true"
@@ -128,7 +125,7 @@ exports[`makePagination > out of bounds 1`] = `
           «
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           First
         </span>
@@ -141,6 +138,7 @@ exports[`makePagination > out of bounds 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         <span
           aria-hidden="true"
@@ -148,7 +146,7 @@ exports[`makePagination > out of bounds 1`] = `
           ‹
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           Previous
         </span>
@@ -161,6 +159,7 @@ exports[`makePagination > out of bounds 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         <span
           aria-hidden="true"
@@ -168,7 +167,7 @@ exports[`makePagination > out of bounds 1`] = `
           …
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           More
         </span>
@@ -181,6 +180,7 @@ exports[`makePagination > out of bounds 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         16
       </a>
@@ -192,6 +192,7 @@ exports[`makePagination > out of bounds 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         17
       </a>
@@ -204,7 +205,7 @@ exports[`makePagination > out of bounds 1`] = `
       >
         18
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           (current)
         </span>
@@ -215,7 +216,6 @@ exports[`makePagination > out of bounds 1`] = `
     >
       <span
         class="page-link"
-        disabled=""
       >
         <span
           aria-hidden="true"
@@ -223,7 +223,7 @@ exports[`makePagination > out of bounds 1`] = `
           ›
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           Next
         </span>
@@ -234,7 +234,6 @@ exports[`makePagination > out of bounds 1`] = `
     >
       <span
         class="page-link"
-        disabled=""
       >
         <span
           aria-hidden="true"
@@ -242,7 +241,7 @@ exports[`makePagination > out of bounds 1`] = `
           »
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           Last
         </span>
@@ -273,6 +272,7 @@ exports[`makePagination > paginate data 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         <span
           aria-hidden="true"
@@ -280,7 +280,7 @@ exports[`makePagination > paginate data 1`] = `
           «
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           First
         </span>
@@ -293,6 +293,7 @@ exports[`makePagination > paginate data 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         <span
           aria-hidden="true"
@@ -300,7 +301,7 @@ exports[`makePagination > paginate data 1`] = `
           ‹
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           Previous
         </span>
@@ -313,6 +314,7 @@ exports[`makePagination > paginate data 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         1
       </a>
@@ -325,7 +327,7 @@ exports[`makePagination > paginate data 1`] = `
       >
         2
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           (current)
         </span>
@@ -338,6 +340,7 @@ exports[`makePagination > paginate data 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         3
       </a>
@@ -349,6 +352,7 @@ exports[`makePagination > paginate data 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         4
       </a>
@@ -360,6 +364,7 @@ exports[`makePagination > paginate data 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         <span
           aria-hidden="true"
@@ -367,7 +372,7 @@ exports[`makePagination > paginate data 1`] = `
           …
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           More
         </span>
@@ -380,6 +385,7 @@ exports[`makePagination > paginate data 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         <span
           aria-hidden="true"
@@ -387,7 +393,7 @@ exports[`makePagination > paginate data 1`] = `
           ›
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           Next
         </span>
@@ -400,6 +406,7 @@ exports[`makePagination > paginate data 1`] = `
         class="page-link"
         href="#"
         role="button"
+        tabindex="0"
       >
         <span
           aria-hidden="true"
@@ -407,7 +414,7 @@ exports[`makePagination > paginate data 1`] = `
           »
         </span>
         <span
-          class="sr-only"
+          class="visually-hidden"
         >
           Last
         </span>

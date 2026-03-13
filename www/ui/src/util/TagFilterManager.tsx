@@ -162,8 +162,8 @@ export class TagFilterManager {
         id="bb-tag-filter-manager-help-popover"
         style={{display: 'block', minWidth: '600px', left: '-300px', top: '30px'}}
       >
-        <Popover.Title as="h5">Tags filtering</Popover.Title>
-        <Popover.Content>
+        <Popover.Header as="h5">Tags filtering</Popover.Header>
+        <Popover.Body>
           <p>
             <b>
               <pre>+{'{tag}'}</pre>
@@ -183,7 +183,7 @@ export class TagFilterManager {
             at least one of the filtered tag should be present
           </p>
           <p>url bar is updated with you filter configuration, so you can bookmark your filters!</p>
-        </Popover.Content>
+        </Popover.Body>
       </Popover>
     );
 
@@ -204,7 +204,7 @@ export class TagFilterManager {
       for (const tag of this.tags) {
         enabledTagsElements.push(
           <>
-            <Badge variant="success" onClick={() => this.toggleTag(tag)} className="clickable">
+            <Badge bg="success" onClick={() => this.toggleTag(tag)} className="clickable">
               {tag}
             </Badge>
             &nbsp;
@@ -212,11 +212,11 @@ export class TagFilterManager {
         );
       }
     } else {
-      enabledTagsElements.push(<Badge variant="success">{this.tags.length} tags</Badge>);
+      enabledTagsElements.push(<Badge bg="success">{this.tags.length} tags</Badge>);
     }
     if (this.tags.length > 0) {
       enabledTagsElements.push(
-        <Badge variant="danger" onClick={() => this.setTags([])} className="clickable">
+        <Badge bg="danger" onClick={() => this.setTags([])} className="clickable">
           x
         </Badge>,
       );
