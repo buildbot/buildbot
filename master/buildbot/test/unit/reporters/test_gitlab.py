@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -20,6 +23,7 @@ from twisted.trial import unittest
 
 from buildbot.process.builder import Builder
 from buildbot.process.properties import Interpolate
+from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -32,12 +36,15 @@ from buildbot.test.util import logging
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestGitLabStatusPush(
     TestReactorMixin, ConfigErrorsMixin, unittest.TestCase, ReporterTestMixin, logging.LoggingMixin
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
 
         self.setup_reporter_test()
@@ -60,7 +67,7 @@ class TestGitLabStatusPush(
         self.sp = GitLabStatusPush(Interpolate('XXYYZZ'))
         yield self.sp.setServiceParent(self.master)
 
-        def setup_properties(props):
+        def setup_properties(props: Properties) -> defer.Deferred[None]:
             props.setProperty("buildername", "Builder0", "Builder")
             return defer.succeed(None)
 
@@ -71,7 +78,7 @@ class TestGitLabStatusPush(
         self.master.botmaster.getBuilderById = mock.Mock(return_value=builder)
 
     @defer.inlineCallbacks
-    def test_buildrequest(self):
+    def test_buildrequest(self) -> InlineCallbacksType[None]:
         buildrequest = yield self.insert_buildrequest_new()
         self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         self._http.expect(
@@ -97,11 +104,11 @@ class TestGitLabStatusPush(
             },
         )
 
-        yield self.sp._got_event(('buildrequests', 11, 'new'), buildrequest)
-        yield self.sp._got_event(('buildrequests', 11, 'cancel'), buildrequest)
+        yield self.sp._got_event(('buildrequests', 11, 'new'), buildrequest)  # type: ignore[arg-type]
+        yield self.sp._got_event(('buildrequests', 11, 'cancel'), buildrequest)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new()
         self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         self._http.expect(
@@ -149,17 +156,17 @@ class TestGitLabStatusPush(
             },
         )
 
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = CANCELLED
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_sshurl(self):
+    def test_sshurl(self) -> InlineCallbacksType[None]:
         self.reporter_test_repo = 'git@gitlab:buildbot/buildbot.git'
         build = yield self.insert_build_new()
         self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
@@ -175,10 +182,10 @@ class TestGitLabStatusPush(
             },
         )
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_merge_request_forked(self):
+    def test_merge_request_forked(self) -> InlineCallbacksType[None]:
         self.reporter_test_repo = 'git@gitlab:buildbot/buildbot.git'
         self.reporter_test_props['source_project_id'] = 20922342342
         build = yield self.insert_build_new()
@@ -194,12 +201,12 @@ class TestGitLabStatusPush(
             },
         )
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         # Don't run these tests in parallel!
         del self.reporter_test_props['source_project_id']
 
     @defer.inlineCallbacks
-    def test_noproject(self):
+    def test_noproject(self) -> InlineCallbacksType[None]:
         self.reporter_test_repo = 'git@gitlab:buildbot/buildbot.git'
         self.setUpLogging()
         build = yield self.insert_build_new()
@@ -210,22 +217,22 @@ class TestGitLabStatusPush(
             code=404,
         )
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         self.assertLogged(
             r"Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot: project not found"
         )
 
     @defer.inlineCallbacks
-    def test_nourl(self):
+    def test_nourl(self) -> InlineCallbacksType[None]:
         self.reporter_test_repo = ''
         build = yield self.insert_build_new()
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         # implicit check that no http request is done
         # nothing is logged as well
 
     @defer.inlineCallbacks
-    def test_senderror(self):
+    def test_senderror(self) -> InlineCallbacksType[None]:
         self.setUpLogging()
         build = yield self.insert_build_new()
         self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
@@ -243,7 +250,7 @@ class TestGitLabStatusPush(
             code=404,
         )
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         self.assertLogged(
             "Could not send status \"running\" for"
             " http://gitlab/buildbot/buildbot at d34db33fd43db33f:"
@@ -251,12 +258,12 @@ class TestGitLabStatusPush(
         )
 
     @defer.inlineCallbacks
-    def test_badchange(self):
+    def test_badchange(self) -> InlineCallbacksType[None]:
         self.setUpLogging()
         build = yield self.insert_build_new()
         self._http.expect('get', '/api/v4/projects/buildbot%2Fbuildbot', content_json={"id": 1})
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         self.assertLogged(
             "Failed to send status \"running\" for"
             " http://gitlab/buildbot/buildbot at d34db33fd43db33f\n"
