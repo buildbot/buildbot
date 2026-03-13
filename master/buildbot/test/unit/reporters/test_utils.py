@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
 import textwrap
+from typing import TYPE_CHECKING
+from typing import Any
 
 from dateutil.tz import tzutc
 from parameterized import parameterized
@@ -30,8 +34,12 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import logging
 
+if TYPE_CHECKING:
+    from buildbot.db.changes import ChangeModel
+    from buildbot.util.twisted import InlineCallbacksType
 
-def sort_builds(builds):
+
+def sort_builds(builds: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(builds, key=lambda key: key['buildid'])
 
 
@@ -41,12 +49,12 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         line 1""")
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
-    def setupDb(self):
+    def setupDb(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
@@ -143,7 +151,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
             ])
 
         @defer.inlineCallbacks
-        def getChangesForBuild(buildid):
+        def getChangesForBuild(buildid: int) -> InlineCallbacksType[list[ChangeModel]]:
             assert buildid == 20
             ch = yield self.master.db.changes.getChange(13)
             if ch is None:
@@ -162,12 +170,14 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         ('name_no_match_step_match', 'log', 'step', ['step.log2'], False),
         ('name_match_step_match', 'log', 'step', ['step.log'], True),
     ])
-    def test_should_attach_log(self, name, log_name, step_name, log_config, expected):
+    def test_should_attach_log(
+        self, name: str, log_name: str, step_name: str, log_config: list[str] | bool, expected: bool
+    ) -> None:
         log = {'name': log_name, 'stepname': step_name}
         self.assertEqual(utils.should_attach_log(log_config, log), expected)
 
     @defer.inlineCallbacks
-    def test_getDetailsForBuildset(self):
+    def test_getDetailsForBuildset(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         res = yield utils.getDetailsForBuildset(
             self.master, 98, want_properties=True, want_steps=True, want_previous_build=True
@@ -197,7 +207,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(build2['prev_build']['buildid'], 20)
 
     @defer.inlineCallbacks
-    def test_getDetailsForBuild(self):
+    def test_getDetailsForBuild(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         build = yield self.master.data.get(("builds", 21))
         yield utils.getDetailsForBuild(
@@ -213,7 +223,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(build['parentbuilder'], None)
 
     @defer.inlineCallbacks
-    def test_getDetailsForBuildWithParent(self):
+    def test_getDetailsForBuildWithParent(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         build = yield self.master.data.get(("builds", 22))
         yield utils.getDetailsForBuild(
@@ -229,7 +239,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(build['parentbuilder']['name'], "Builder1")
 
     @defer.inlineCallbacks
-    def test_getDetailsForBuildsetWithLogs(self):
+    def test_getDetailsForBuildsetWithLogs(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         res = yield utils.getDetailsForBuildset(
             self.master,
@@ -251,7 +261,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         )
 
     @defer.inlineCallbacks
-    def test_get_details_for_buildset_all(self):
+    def test_get_details_for_buildset_all(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         self.maxDiff = None
         res = yield utils.getDetailsForBuildset(
@@ -551,25 +561,25 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         )
 
     @defer.inlineCallbacks
-    def test_getResponsibleUsers(self):
+    def test_getResponsibleUsers(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         res = yield utils.getResponsibleUsersForSourceStamp(self.master, 234)
         self.assertEqual(res, ["me@foo"])
 
     @defer.inlineCallbacks
-    def test_getResponsibleUsersFromPatch(self):
+    def test_getResponsibleUsersFromPatch(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         res = yield utils.getResponsibleUsersForSourceStamp(self.master, 235)
         self.assertEqual(res, ["him@foo"])
 
     @defer.inlineCallbacks
-    def test_getResponsibleUsersForBuild(self):
+    def test_getResponsibleUsersForBuild(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         res = yield utils.getResponsibleUsersForBuild(self.master, 20)
         self.assertEqual(sorted(res), sorted(["me@foo", "him"]))
 
     @defer.inlineCallbacks
-    def test_getResponsibleUsersForBuildWithBadOwner(self):
+    def test_getResponsibleUsersForBuildWithBadOwner(self) -> InlineCallbacksType[None]:
         self.setUpLogging()
         yield self.setupDb()
         yield self.master.db.insert_test_data([
@@ -580,7 +590,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(sorted(res), sorted(["me@foo", "him"]))
 
     @defer.inlineCallbacks
-    def test_getResponsibleUsersForBuildWithOwners(self):
+    def test_getResponsibleUsersForBuildWithOwners(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         yield self.master.db.insert_test_data([
             fakedb.BuildProperty(buildid=20, name="owners", value=["him", "her"]),
@@ -589,7 +599,7 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(sorted(res), sorted(["me@foo", "him", "her"]))
 
     @defer.inlineCallbacks
-    def test_get_responsible_users_for_buildset_with_owner(self):
+    def test_get_responsible_users_for_buildset_with_owner(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
 
         yield self.master.db.insert_test_data([
@@ -602,20 +612,20 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(sorted(res), sorted(["buildset_owner"]))
 
     @defer.inlineCallbacks
-    def test_get_responsible_users_for_buildset_no_owner(self):
+    def test_get_responsible_users_for_buildset_no_owner(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         res = yield utils.get_responsible_users_for_buildset(self.master, 99)
         self.assertEqual(sorted(res), sorted([]))
 
     @defer.inlineCallbacks
-    def test_getPreviousBuild(self):
+    def test_getPreviousBuild(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         build = yield self.master.data.get(("builds", 21))
         res = yield utils.getPreviousBuild(self.master, build)
         self.assertEqual(res['buildid'], 20)
 
     @defer.inlineCallbacks
-    def test_getPreviousBuildWithRetry(self):
+    def test_getPreviousBuildWithRetry(self) -> InlineCallbacksType[None]:
         yield self.setupDb()
         build = yield self.master.data.get(("builds", 20))
         res = yield utils.getPreviousBuild(self.master, build)
@@ -624,11 +634,11 @@ class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
 
 class TestURLUtils(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
 
-    def test_UrlForBuild(self):
+    def test_UrlForBuild(self) -> None:
         self.assertEqual(
             utils.getURLForBuild(self.master, 1, 3), 'http://localhost:8080/#/builders/1/builds/3'
         )
