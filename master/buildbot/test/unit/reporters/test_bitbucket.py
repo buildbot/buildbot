@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -32,12 +36,15 @@ from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.util import httpclientservice
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestBitbucketStatusPush(
     TestReactorMixin, unittest.TestCase, ConfigErrorsMixin, ReporterTestMixin, LoggingMixin
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
 
         self.setup_reporter_test()
@@ -47,12 +54,20 @@ class TestBitbucketStatusPush(
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(self.master, self, "")
         self.httpsession = httpclientservice.HTTPSession(
-            None, _BASE_URL, auth=None, debug=None, verify=None
+            None,  # type: ignore[arg-type]
+            _BASE_URL,
+            auth=None,
+            debug=None,
+            verify=None,
         )
         self.httpsession.update_headers({'Authorization': 'Bearer foo'})
 
         self.oauthsession = httpclientservice.HTTPSession(
-            None, _OAUTH_URL, auth=('key', 'secret'), debug=None, verify=None
+            None,  # type: ignore[arg-type]
+            _OAUTH_URL,
+            auth=('key', 'secret'),
+            debug=None,
+            verify=None,
         )
 
         self.bsp = BitbucketStatusPush(Interpolate('key'), Interpolate('secret'))
@@ -61,7 +76,7 @@ class TestBitbucketStatusPush(
         self.addCleanup(self.bsp.stopService)
 
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new()
 
         self._http.expect(
@@ -127,17 +142,17 @@ class TestBitbucketStatusPush(
             code=201,
         )
 
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        yield self.bsp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
 
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        yield self.bsp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
         build['results'] = FAILURE
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        yield self.bsp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_success_return_codes(self):
+    def test_success_return_codes(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished(SUCCESS)
 
         # make sure a 201 return code does not trigger an error
@@ -163,7 +178,7 @@ class TestBitbucketStatusPush(
         )
 
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        yield self.bsp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         self.assertNotLogged('201: unable to upload Bitbucket status')
 
         # make sure a 200 return code does not trigger an error
@@ -189,11 +204,11 @@ class TestBitbucketStatusPush(
         )
 
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        yield self.bsp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         self.assertNotLogged('200: unable to upload Bitbucket status')
 
     @defer.inlineCallbacks
-    def test_unable_to_authenticate(self):
+    def test_unable_to_authenticate(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new()
 
         self._http.expect(
@@ -208,11 +223,11 @@ class TestBitbucketStatusPush(
             code=400,
         )
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        yield self.bsp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         self.assertLogged('400: unable to authenticate to Bitbucket')
 
     @defer.inlineCallbacks
-    def test_unable_to_send_status(self):
+    def test_unable_to_send_status(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new()
 
         self._http.expect(
@@ -240,13 +255,13 @@ class TestBitbucketStatusPush(
             },
         )
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        yield self.bsp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         self.assertLogged('404: unable to upload Bitbucket status')
         self.assertLogged('This commit is unknown to us')
         self.assertLogged('invalid_commit')
 
     @defer.inlineCallbacks
-    def test_empty_repository(self):
+    def test_empty_repository(self) -> InlineCallbacksType[None]:
         self.reporter_test_repo = ''
         build = yield self.insert_build_new()
 
@@ -259,7 +274,7 @@ class TestBitbucketStatusPush(
         )
 
         self.setUpLogging()
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        yield self.bsp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         self.assertLogged('Empty repository URL for Bitbucket status')
 
 
@@ -267,7 +282,7 @@ class TestBitbucketStatusPushProperties(
     TestReactorMixin, unittest.TestCase, ConfigErrorsMixin, ReporterTestMixin, LoggingMixin
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
 
         self.setup_reporter_test()
@@ -281,12 +296,20 @@ class TestBitbucketStatusPushProperties(
             "",
         )
         self.httpsession = httpclientservice.HTTPSession(
-            None, _BASE_URL, auth=None, debug=None, verify=None
+            None,  # type: ignore[arg-type]
+            _BASE_URL,
+            auth=None,
+            debug=None,
+            verify=None,
         )
         self.httpsession.update_headers({'Authorization': 'Bearer foo'})
 
         self.oauthsession = httpclientservice.HTTPSession(
-            None, _OAUTH_URL, auth=('key', 'secret'), debug=None, verify=None
+            None,  # type: ignore[arg-type]
+            _OAUTH_URL,
+            auth=('key', 'secret'),
+            debug=None,
+            verify=None,
         )
 
         self.bsp = BitbucketStatusPush(
@@ -306,7 +329,7 @@ class TestBitbucketStatusPushProperties(
         self.addCleanup(self.bsp.stopService)
 
     @defer.inlineCallbacks
-    def test_properties(self):
+    def test_properties(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new()
 
         self._http.expect(
@@ -351,15 +374,15 @@ class TestBitbucketStatusPushProperties(
             code=201,
         )
 
-        yield self.bsp._got_event(('builds', 20, 'new'), build)
+        yield self.bsp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
 
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.bsp._got_event(('builds', 20, 'finished'), build)
+        yield self.bsp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
 
 class TestBitbucketStatusPushConfig(ConfigErrorsMixin, unittest.TestCase):
-    def test_auth_error(self):
+    def test_auth_error(self) -> None:
         with self.assertRaisesConfigError(
             "Either App Passwords or OAuth can be specified, not both"
         ):
@@ -368,7 +391,7 @@ class TestBitbucketStatusPushConfig(ConfigErrorsMixin, unittest.TestCase):
 
 class TestBitbucketStatusPushRepoParsing(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
@@ -377,14 +400,14 @@ class TestBitbucketStatusPushRepoParsing(TestReactorMixin, unittest.TestCase):
         yield self.bsp.startService()
         self.addCleanup(self.bsp.stopService)
 
-    def parse(self, repourl):
+    def parse(self, repourl: str) -> tuple[str, ...]:
         return tuple(self.bsp.get_owner_and_repo(repourl))
 
-    def test_parse_no_scheme(self):
+    def test_parse_no_scheme(self) -> None:
         self.assertEqual(('user', 'repo'), self.parse('git@bitbucket.com:user/repo.git'))
         self.assertEqual(('user', 'repo'), self.parse('git@bitbucket.com:user/repo'))
 
-    def test_parse_with_scheme(self):
+    def test_parse_with_scheme(self) -> None:
         self.assertEqual(('user', 'repo'), self.parse('https://bitbucket.com/user/repo.git'))
         self.assertEqual(('user', 'repo'), self.parse('https://bitbucket.com/user/repo'))
 
