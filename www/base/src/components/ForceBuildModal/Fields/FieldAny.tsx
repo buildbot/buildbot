@@ -25,6 +25,7 @@ import {
   ForceSchedulerFieldString,
   ForceSchedulerFieldText,
   ForceSchedulerFieldUserName,
+  ForceSchedulerFieldFile,
 } from 'buildbot-data-js';
 import {FieldNested} from './FieldNested';
 import {FieldString} from './FieldString';
@@ -33,6 +34,7 @@ import {FieldInt} from './FieldInt';
 import {FieldBoolean} from './FieldBoolean';
 import {FieldUserName} from './FieldUserName';
 import {FieldChoiceString} from './FieldChoiceString';
+import {FieldFile} from './FieldFile';
 
 type FieldAnyProps = {
   field: ForceSchedulerFieldBase;
@@ -65,6 +67,9 @@ export const FieldAny = observer(({field, fieldsState}: FieldAnyProps) => {
   }
   if (field.type === 'nested') {
     return <FieldNested field={field as ForceSchedulerFieldNested} fieldsState={fieldsState} />;
+  }
+  if (field.type === 'file') {
+    return <FieldFile field={field as ForceSchedulerFieldFile} fieldsState={fieldsState} />;
   }
   return <></>;
 });
