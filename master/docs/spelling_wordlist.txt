@@ -773,6 +773,7 @@ SchedulerModel
 schedulerName
 schedulerNames
 schemas
+scm
 scp
 sdist
 searchable

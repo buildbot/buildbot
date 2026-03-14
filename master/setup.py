@@ -19,34 +19,41 @@
 Standard setup script.
 """
 
-from setuptools import setup  # isort:skip
-import inspect
+from __future__ import annotations
+
 import os
-import sys
 
-from setuptools import find_packages
+from setuptools import setup
+from setuptools.command.egg_info import egg_info
 from setuptools.command.sdist import sdist
-from setuptools_scm import get_version
 
-use_scm_version = {
-    "root": "..",
-    "relative_to": __file__,
-    "version_file": "buildbot/_version.py",
-    "local_scheme": "no-local-version",
-}
-version = get_version(**use_scm_version)
 
-BUILDING_WHEEL = bool("bdist_wheel" in sys.argv)
+class our_egg_info(egg_info):
+    def run(self) -> None:
+        version = self.distribution.get_version()
+
+        # Pin bundle version
+
+        # has to recreate the dict as it's immutable
+        metadata = self.distribution.metadata
+        metadata.extras_require = dict(metadata.extras_require)
+
+        bundle_version = version.split("-", 1)[0]
+        metadata.extras_require['bundle'] = [
+            f"{package}=={bundle_version}" for package in metadata.extras_require['bundle']
+        ]
+        super().run()
 
 
 class our_sdist(sdist):
-    def make_release_tree(self, base_dir, files):
+    def make_release_tree(self, base_dir: str, files: list[str]) -> None:
         sdist.make_release_tree(self, base_dir, files)
         # ensure that NEWS has a copy of the latest release notes, with the
         # proper version substituted
         src_fn = os.path.join('docs', 'relnotes/index.rst')
         with open(src_fn) as f:
             src = f.read()
+        version = self.distribution.get_version()
         src = src.replace('|version|', version)
         dst_fn = os.path.join(base_dir, 'NEWS')
         with open(dst_fn, 'w') as f:
@@ -86,31 +93,8 @@ def define_plugin_entries(groups):
     return result
 
 
-__file__ = inspect.getframeinfo(inspect.currentframe()).filename
-
-with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
-    long_description = long_d_f.read()
-
-packages = find_packages(
-    exclude=[
-        # skip tests for wheels (save 50% of the archive)
-        "buildbot.test.fuzz*",
-        "buildbot.test.integration*",
-        "buildbot.test.integration.interop*",
-        "buildbot.test.regressions*",
-        "buildbot.test.unit*",
-    ]
-    if BUILDING_WHEEL
-    else [],
-)
-packages.sort()
-
 setup_args = {
-    'packages': packages,
-    # mention data_files, even if empty, so install_data is called and
-    # VERSION gets copied
-    'data_files': [("buildbot", [])],
-    'cmdclass': {'sdist': our_sdist},
+    'cmdclass': {'egg_info': our_egg_info, 'sdist': our_sdist},
     'entry_points': concat_dicts(
         define_plugin_entries([
             (
@@ -536,94 +520,7 @@ setup_args = {
             ]
         },
     ),
-    'use_scm_version': use_scm_version,
 }
-
-bundle_version = version.split("-")[0]
-
-# dependencies
-setup_args['install_requires'] = [
-    'setuptools >= 8.0',
-    'Twisted >= 24.7.0',
-    'treq >= 20.9',
-    'Jinja2 >= 2.1',
-    'msgpack >= 0.6.0',
-    "croniter >= 1.3.0",
-    # required for tests, but Twisted requires this anyway
-    'zope.interface >= 4.1.1',
-    'sqlalchemy >= 1.4.0',
-    'alembic >= 1.6.0',
-    'python-dateutil>=1.5',
-    "txaio >= 2.2.2",
-    "autobahn >= 0.16.0",
-    'packaging',
-    'PyJWT',
-    'pyyaml',
-    'unidiff >= 0.7.5',
-    # buildbot_windows_service needs pywin32
-    'pywin32; platform_system=="Windows"',
-]
-
-# Unit test dependencies.
-test_deps = [
-    # http client libraries
-    'treq',
-    'txrequests',
-    # pypugjs required for custom templates tests
-    'pypugjs',
-    # boto3 and moto required for running EC2 tests
-    'boto3',
-    'moto',
-    "Markdown>=3.0.0",
-    'parameterized',
-    # LZ4 fails to build on Windows:
-    # https://github.com/steeve/python-lz4/issues/27
-    # lz4 required for log compression tests.
-    'lz4; platform_system!="Windows"',
-]
-
-setup_args['extras_require'] = {
-    'test': ["ruff", *test_deps],
-    'bundle': [
-        f"buildbot-www=={bundle_version}",
-        f"buildbot-worker=={bundle_version}",
-        f"buildbot-waterfall-view=={bundle_version}",
-        f"buildbot-console-view=={bundle_version}",
-        f"buildbot-grid-view=={bundle_version}",
-    ],
-    'tls': [
-        'Twisted[tls]',
-        # There are bugs with extras inside extras:
-        # <https://github.com/pypa/pip/issues/3516>
-        # so we explicitly include Twisted[tls] dependencies.
-        'pyopenssl >= 16.0.0',
-        'service_identity',
-        'idna >= 0.6',
-    ],
-    'docs': [
-        'docutils>=0.16.0',
-        'sphinx>=3.2.0',
-        'sphinx-rtd-theme>=0.5',
-        'sphinxcontrib-spelling',
-        'sphinxcontrib-websupport',
-        'pyenchant',
-        'sphinx-jinja',
-        'towncrier',
-    ],
-    'brotli': [
-        'Brotli>=1.1.0',
-    ],
-    'zstd': [
-        'zstandard>=0.23.0',
-    ],
-    'configurable': [
-        'evalidate >= 2.0.0',
-    ],
-}
-
-if os.getenv('NO_INSTALL_REQS'):
-    setup_args['install_requires'] = None
-    setup_args['extras_require'] = None
 
 if __name__ == '__main__':
     setup(**setup_args)

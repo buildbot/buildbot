@@ -19,7 +19,6 @@ do
     pip install -r requirements-pip.txt
     pip install requests==2.32.3 flask==3.0.3
     pip install dist/buildbot-[0-9]*.$suffix
-    pip install dist/buildbot?pkg*.$suffix
     pip install dist/*.$suffix
     e2e/run.sh
 done
