@@ -173,14 +173,17 @@ This server is configured with the ``www`` configuration key, which specifies a 
     Settings in the settings page are stored per browser.
     This configuration parameter allows to override the default settings for all your users.
     If a user already has changed a value from the default, this will have no effect to them.
-    The settings page in the UI will tell you what to insert in your master.cfg to reproduce the configuration you have in your own browser.
+
+    Available values can be explored in the web UI Settings page.
+    The "Override defaults for all users" section at the end of the page will show what to insert in the master
+    configuration to reproduce Settings currently set in your browser.
+
     For example:
 
     .. code-block:: python
 
         c['www']['ui_default_config'] = {
             'Builders.buildFetchLimit': 500,
-            'Workers.showWorkerBuilders': True,
         }
 
 ``ws_ping_interval``
