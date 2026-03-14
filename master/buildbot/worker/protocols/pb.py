@@ -283,8 +283,8 @@ class Connection(base.Connection, pb.Avatar):
         def old_way() -> Deferred[None]:
             d = None
             for b in self.worker.workerforbuilders.values():
-                if b.remote:
-                    d = b.mind.callRemote("shutdown")
+                if b.remote:  # type: ignore[attr-defined]
+                    d = b.mind.callRemote("shutdown")  # type: ignore[attr-defined]
                     break
 
             if d:

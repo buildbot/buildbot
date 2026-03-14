@@ -36,6 +36,12 @@ from buildbot.worker.base import AbstractWorker
 if TYPE_CHECKING:
     from twisted.internet.base import DelayedCall
 
+    from buildbot.process.build import Build
+    from buildbot.process.builder import Builder
+    from buildbot.process.workerforbuilder import LatentWorkerForBuilder
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.protocols.base import Connection
+
 
 class States(enum.Enum):
     # Represents the states of AbstractLatentWorker
@@ -162,28 +168,38 @@ class AbstractLatentWorker(AbstractWorker):
         NOT_SUBSTANTIATED -> SHUT_DOWN
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._substantiation_notifier: Notifier[bool] = Notifier()
         self._start_stop_lock = defer.DeferredLock()
         self._check_instance_timer = None
 
-    def checkConfig(
-        self, name, password, build_wait_timeout=60 * 10, check_instance_interval=10, **kwargs
-    ):
+    def checkConfig(  # type: ignore[override]
+        self,
+        name: str,
+        password: str,
+        build_wait_timeout: int = 60 * 10,
+        check_instance_interval: int = 10,
+        **kwargs: Any,
+    ) -> None:
         super().checkConfig(name, password, **kwargs)
 
-    def reconfigService(
-        self, name, password, build_wait_timeout=60 * 10, check_instance_interval=10, **kwargs
-    ):
+    def reconfigService(  # type: ignore[override]
+        self,
+        name: str,
+        password: str,
+        build_wait_timeout: int = 60 * 10,
+        check_instance_interval: int = 10,
+        **kwargs: Any,
+    ) -> defer.Deferred[None]:
         self.build_wait_timeout = build_wait_timeout
         self.check_instance_interval = check_instance_interval
         return super().reconfigService(name, password, **kwargs)
 
-    def _generate_random_password(self):
+    def _generate_random_password(self) -> str:
         return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
 
-    def getRandomPass(self):
+    def getRandomPass(self) -> str:
         """
         Compute a random password. Latent workers are started by the master, so master can setup
         the password too. Backends should prefer to use this API as it handles edge cases.
@@ -205,18 +221,18 @@ class AbstractLatentWorker(AbstractWorker):
         return self._generate_random_password()
 
     @property
-    def building(self):
+    def building(self) -> set[Any]:
         # A LatentWorkerForBuilder will only be busy if it is building.
         return {wfb for wfb in self.workerforbuilders.values() if wfb.isBusy()}
 
-    def failed_to_start(self, instance_id, instance_state):
+    def failed_to_start(self, instance_id: str, instance_state: str) -> None:
         log.msg(
             f'{self.__class__.__name__} {self.workername} failed to start instance '
             f'{instance_id} ({instance_state})'
         )
         raise LatentWorkerFailedToSubstantiate(instance_id, instance_state)
 
-    def _log_start_stop_locked(self, action_str):
+    def _log_start_stop_locked(self, action_str: str) -> None:
         if self._start_stop_lock.locked:
             log.msg(
                 (
@@ -225,25 +241,25 @@ class AbstractLatentWorker(AbstractWorker):
                 ).format(action_str, self)
             )
 
-    def start_instance(self, build) -> defer.Deferred[bool]:
+    def start_instance(self, build: Build) -> defer.Deferred[bool]:
         # responsible for starting instance that will try to connect with this
         # master.  Should return deferred with either True (instance started)
         # or False (instance not started, so don't run a build here).  Problems
         # should use an errback.
         raise NotImplementedError
 
-    def stop_instance(self, fast=False) -> defer.Deferred[bool]:
+    def stop_instance(self, fast: bool = False) -> defer.Deferred[bool]:
         # responsible for shutting down instance.
         raise NotImplementedError
 
-    def check_instance(self) -> tuple[bool, str]:
+    def check_instance(self) -> defer.Deferred[tuple[bool, str]] | tuple[bool, str]:
         return (True, "")
 
     @property
     def substantiated(self) -> bool:
         return self.state == States.SUBSTANTIATED and self.conn is not None
 
-    def substantiate(self, wfb: Any, build: Any) -> defer.Deferred[bool]:
+    def substantiate(self, wfb: LatentWorkerForBuilder, build: Build) -> defer.Deferred[bool]:
         log.msg(f"substantiating worker {wfb}")
 
         if self.state == States.SHUT_DOWN:
@@ -283,7 +299,7 @@ class AbstractLatentWorker(AbstractWorker):
         return d
 
     @defer.inlineCallbacks
-    def _substantiate(self, build):
+    def _substantiate(self, build: Build) -> InlineCallbacksType[None]:
         assert self.state == States.SUBSTANTIATING
         try:
             # if build_wait_timeout is negative we don't ever disconnect the
@@ -338,7 +354,7 @@ class AbstractLatentWorker(AbstractWorker):
         self._substantiation_notifier.notify(result)
 
     @defer.inlineCallbacks
-    def attached(self, conn):
+    def attached(self, conn: Connection) -> InlineCallbacksType[None]:
         self._stop_check_instance_timer()
 
         if self.state != States.SUBSTANTIATING_STARTING and self.build_wait_timeout >= 0:
@@ -368,13 +384,13 @@ class AbstractLatentWorker(AbstractWorker):
             self.state = States.SUBSTANTIATED
         self._fireSubstantiationNotifier(True)
 
-    def attachBuilder(self, builder):
-        wfb = self.workerforbuilders.get(builder.name)
-        return wfb.attached(self, self.worker_commands)
+    def attachBuilder(self, builder: Builder) -> Any:
+        wfb = self.workerforbuilders.get(builder.name)  # type: ignore[arg-type]
+        return wfb.attached(self, self.worker_commands)  # type: ignore[union-attr]
 
-    def _missing_timer_fired(self):
+    def _missing_timer_fired(self) -> defer.Deferred[None] | None:  # type: ignore[override]
         self.missing_timer = None
-        return self._substantiation_failed(defer.TimeoutError())
+        return self._substantiation_failed(defer.TimeoutError())  # type: ignore[arg-type]
 
     def _substantiation_failed(self, failure: failure.Failure) -> defer.Deferred | None:
         if self.state in [States.SUBSTANTIATING, States.SUBSTANTIATING_STARTING]:
@@ -395,20 +411,20 @@ class AbstractLatentWorker(AbstractWorker):
             notify=self.notify_on_missing,
         )
 
-    def canStartBuild(self):
+    def canStartBuild(self) -> bool:
         # we were disconnected, but all the builds are not yet cleaned up.
         if self.conn is None and self.building:
             return False
         return super().canStartBuild()
 
-    def buildStarted(self, wfb):
+    def buildStarted(self, wfb: LatentWorkerForBuilder) -> None:
         assert wfb.isBusy()
         self._clearBuildWaitTimer()
 
         if ILatentMachine.providedBy(self.machine):
             self.machine.notifyBuildStarted()
 
-    def buildFinished(self, wfb):
+    def buildFinished(self, wfb: LatentWorkerForBuilder) -> None:
         assert not wfb.isBusy()
         if not self.building:
             if self.build_wait_timeout == 0:
@@ -427,13 +443,13 @@ class AbstractLatentWorker(AbstractWorker):
         if ILatentMachine.providedBy(self.machine):
             self.machine.notifyBuildFinished()
 
-    def _clearBuildWaitTimer(self):
+    def _clearBuildWaitTimer(self) -> None:
         if self.build_wait_timer is not None:
             if self.build_wait_timer.active():
                 self.build_wait_timer.cancel()
             self.build_wait_timer = None
 
-    def _setBuildWaitTimer(self):
+    def _setBuildWaitTimer(self) -> None:
         self._clearBuildWaitTimer()
         if self.build_wait_timeout <= 0:
             return
@@ -441,23 +457,23 @@ class AbstractLatentWorker(AbstractWorker):
             self.build_wait_timeout, self._soft_disconnect
         )
 
-    def _stop_check_instance_timer(self):
+    def _stop_check_instance_timer(self) -> None:
         if self._check_instance_timer is not None:
             if self._check_instance_timer.active():
                 self._check_instance_timer.cancel()
             self._check_instance_timer = None
 
-    def _start_check_instance_timer(self):
+    def _start_check_instance_timer(self) -> None:
         self._stop_check_instance_timer()
         self._check_instance_timer = self.master.reactor.callLater(
             self.check_instance_interval, self._check_instance_timer_fired
         )
 
-    def _check_instance_timer_fired(self):
+    def _check_instance_timer_fired(self) -> None:
         self._deferwaiter.add(self._check_instance_timer_fired_impl())
 
     @defer.inlineCallbacks
-    def _check_instance_timer_fired_impl(self):
+    def _check_instance_timer_fired_impl(self) -> InlineCallbacksType[None]:
         self._check_instance_timer = None
         if self.state != States.SUBSTANTIATING_STARTING:
             # The only case when we want to recheck whether the instance has not failed is
@@ -482,7 +498,7 @@ class AbstractLatentWorker(AbstractWorker):
 
             if not is_good:
                 yield self._substantiation_failed(
-                    LatentWorkerFailedToSubstantiate(self.name, message)
+                    LatentWorkerFailedToSubstantiate(self.name, message)  # type: ignore[arg-type]
                 )
                 return
         finally:
@@ -492,7 +508,9 @@ class AbstractLatentWorker(AbstractWorker):
         self._start_check_instance_timer()
 
     @defer.inlineCallbacks
-    def insubstantiate(self, fast=False, force_substantiation_build=None):
+    def insubstantiate(
+        self, fast: bool = False, force_substantiation_build: Build | None = None
+    ) -> InlineCallbacksType[None]:
         # If force_substantiation_build is not None, we'll try to substantiate the given build
         # after insubstantiation concludes. This parameter allows to go directly to the
         # SUBSTANTIATING state without going through NOT_SUBSTANTIATED state.
@@ -559,10 +577,12 @@ class AbstractLatentWorker(AbstractWorker):
         finally:
             self._start_stop_lock.release()
 
-        self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.botmaster.maybeStartBuildsForWorker(self.name)  # type: ignore[union-attr,arg-type]
 
     @defer.inlineCallbacks
-    def _soft_disconnect(self, fast=False, stopping_service=False):
+    def _soft_disconnect(
+        self, fast: bool = False, stopping_service: bool = False
+    ) -> InlineCallbacksType[None]:
         # a negative build_wait_timeout means the worker should never be shut
         # down, so just disconnect.
         if not stopping_service and self.build_wait_timeout < 0:
@@ -582,14 +602,14 @@ class AbstractLatentWorker(AbstractWorker):
             fireOnOneErrback=True,
         )
 
-    def disconnect(self):
+    def disconnect(self) -> None:  # type: ignore[override]
         self._deferwaiter.add(self._soft_disconnect())
         # this removes the worker from all builders.  It won't come back
         # without a restart (or maybe a sighup)
-        self.botmaster.workerLost(self)
+        self.botmaster.workerLost(self)  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         # stops the service. Waits for any pending substantiations, insubstantiations or builds
         # that are running or about to start to complete.
         while self.state not in [States.NOT_SUBSTANTIATED, States.SHUT_DOWN]:
@@ -621,14 +641,14 @@ class AbstractLatentWorker(AbstractWorker):
         res = yield super().stopService()
         return res
 
-    def updateWorker(self):
+    def updateWorker(self) -> defer.Deferred[None]:
         """Called to add or remove builders after the worker has connected.
 
         Also called after botmaster's builders are initially set.
 
         @return: a Deferred that indicates when an attached worker has
         accepted the new builders and/or released the old ones."""
-        for b in self.botmaster.getBuildersForWorker(self.name):
+        for b in self.botmaster.getBuildersForWorker(self.name):  # type: ignore[union-attr]
             if b.name not in self.workerforbuilders:
                 b.addLatentWorker(self)
         return super().updateWorker()
@@ -642,8 +662,8 @@ class LocalLatentWorker(AbstractLatentWorker):
 
     starts_without_substantiate = True
 
-    def checkConfig(self, name, password, **kwargs):
-        super().checkConfig(self, name, password, build_wait_timeout=-1, **kwargs)
+    def checkConfig(self, name: str, password: str, **kwargs: Any) -> None:  # type: ignore[override]
+        super().checkConfig(self, name, password, build_wait_timeout=-1, **kwargs)  # type: ignore[arg-type,misc]
 
-    def reconfigService(self, name, password, **kwargs):
+    def reconfigService(self, name: str, password: str, **kwargs: Any) -> defer.Deferred[None]:  # type: ignore[override]
         return super().reconfigService(name, password, build_wait_timeout=-1, **kwargs)
