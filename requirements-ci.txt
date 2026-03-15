@@ -43,7 +43,7 @@ hyperlink==21.0.0
 idna==3.11
 incremental==24.7.2
 Jinja2==3.1.6
-jmespath==1.0.1
+jmespath==1.1.0
 lz4==4.4.5
 zstandard==0.25.0
 Brotli==1.2.0
