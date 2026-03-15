@@ -23,7 +23,7 @@ mock==5.2.0
 parameterized==0.9.0
 pbr==7.0.3
 PyHamcrest==2.1.0
-psutil==7.0.0
+psutil==7.2.2
 pycparser==2.21;  python_version < "3.8" # pyup: ignore
 pycparser==2.22;  python_version >= "3.8" and python_version < "3.10"  # pyup: ignore
 pycparser==3.0;  python_version >= "3.10"
