@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -26,15 +30,18 @@ from buildbot.test.fake.fakeprotocol import FakeTrivialConnection as FakeBot
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker.marathon import MarathonLatentWorker
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestMarathonLatentWorker(TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         self.build = Properties(image="busybox:latest", builder="docker_worker")
-        self.worker = None
-        self.master = None
+        self.worker: MarathonLatentWorker | None = None
+        self.master: Any = None
 
-        def cleanup():
+        def cleanup() -> None:
             if self.worker is not None:
 
                 class FakeResult:
@@ -44,16 +51,16 @@ class TestMarathonLatentWorker(TestReactorMixin, unittest.TestCase):
 
         self.addCleanup(cleanup)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
 
-    def test_constructor_normal(self):
+    def test_constructor_normal(self) -> None:
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', 'foo', 'bar', 'debian:wheezy')
         # class instantiation configures nothing
         self.assertEqual(worker._http, None)
 
     @defer.inlineCallbacks
-    def makeWorker(self, **kwargs):
+    def makeWorker(self, **kwargs: Any) -> InlineCallbacksType[MarathonLatentWorker]:
         kwargs.setdefault('image', 'debian:wheezy')
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', **kwargs)
         self.worker = worker
@@ -62,7 +69,7 @@ class TestMarathonLatentWorker(TestReactorMixin, unittest.TestCase):
             self.master, self, 'tcp://marathon.local', auth=kwargs.get('auth')
         )
         yield worker.setServiceParent(self.master)
-        worker.reactor = self.reactor
+        worker.reactor = self.reactor  # type: ignore[attr-defined]
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
@@ -70,19 +77,19 @@ class TestMarathonLatentWorker(TestReactorMixin, unittest.TestCase):
         return worker
 
     @defer.inlineCallbacks
-    def test_builds_may_be_incompatible(self):
+    def test_builds_may_be_incompatible(self) -> InlineCallbacksType[None]:
         worker = self.worker = yield self.makeWorker()
         # http is lazily created on worker substantiation
         self.assertEqual(worker.builds_may_be_incompatible, True)
 
     @defer.inlineCallbacks
-    def test_start_service(self):
+    def test_start_service(self) -> InlineCallbacksType[None]:
         worker = self.worker = yield self.makeWorker()
         # http is lazily created on worker substantiation
         self.assertNotEqual(worker._http, None)
 
     @defer.inlineCallbacks
-    def test_start_worker(self):
+    def test_start_worker(self) -> InlineCallbacksType[None]:
         # http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
         worker = yield self.makeWorker()
         worker.password = "pass"
@@ -121,7 +128,7 @@ class TestMarathonLatentWorker(TestReactorMixin, unittest.TestCase):
         yield worker.insubstantiate()
 
     @defer.inlineCallbacks
-    def test_start_worker_but_no_connection_and_shutdown(self):
+    def test_start_worker_but_no_connection_and_shutdown(self) -> InlineCallbacksType[None]:
         worker = yield self.makeWorker()
         worker.password = "pass"
         worker.masterFQDN = "master"
@@ -157,7 +164,7 @@ class TestMarathonLatentWorker(TestReactorMixin, unittest.TestCase):
             yield d
 
     @defer.inlineCallbacks
-    def test_start_worker_but_error(self):
+    def test_start_worker_but_error(self) -> InlineCallbacksType[None]:
         worker = yield self.makeWorker()
         self._http.expect(method='delete', ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
@@ -190,7 +197,7 @@ class TestMarathonLatentWorker(TestReactorMixin, unittest.TestCase):
         # teardown makes sure all containers are cleaned up
 
     @defer.inlineCallbacks
-    def test_start_worker_with_params(self):
+    def test_start_worker_with_params(self) -> InlineCallbacksType[None]:
         # http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
         worker = yield self.makeWorker(
             marathon_extra_config={

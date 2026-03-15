@@ -536,12 +536,12 @@ class Build(properties.PropertiesMixin):
         # properties
         self.setupWorkerProperties(workerforbuilder)
         self.setupWorkerForBuilder(workerforbuilder)
-        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
+        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)  # type: ignore[union-attr]
 
         # tell the remote that it's starting a build, too
         try:
             assert self.builder.name is not None
-            yield self.conn.remoteStartBuild(self.builder.name)
+            yield self.conn.remoteStartBuild(self.builder.name)  # type: ignore[union-attr]
         except Exception:
             yield self.buildPreparationFailure(Failure(), "start_build")
             yield self.buildFinished(["worker", "not", "building"], RETRY)

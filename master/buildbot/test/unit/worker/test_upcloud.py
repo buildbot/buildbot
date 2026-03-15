@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import hashlib
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -27,6 +31,9 @@ from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
 from buildbot.test.fake.fakeprotocol import FakeTrivialConnection as FakeBot
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.worker import upcloud
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 # Please see https://developers.upcloud.com/ for details
 upcloudStorageTemplatePayload = {
@@ -81,11 +88,13 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
     worker = None
     master = None
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
     @defer.inlineCallbacks
-    def setupWorker(self, *args, **kwargs):
+    def setupWorker(
+        self, *args: Any, **kwargs: Any
+    ) -> InlineCallbacksType[upcloud.UpcloudLatentWorker]:
         worker = upcloud.UpcloudLatentWorker(
             *args, api_username='test-api-user', api_password='test-api-password', **kwargs
         )
@@ -104,7 +113,7 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
         self.worker = worker
         return worker
 
-    def test_instantiate(self):
+    def test_instantiate(self) -> None:
         worker = upcloud.UpcloudLatentWorker(
             'test-worker',
             image='test-image',
@@ -113,7 +122,7 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
         )
         self.failUnlessIsInstance(worker, upcloud.UpcloudLatentWorker)
 
-    def test_missing_config(self):
+    def test_missing_config(self) -> None:
         worker = None
         with self.assertRaises(ConfigErrors):
             worker = upcloud.UpcloudLatentWorker('test-worker')
@@ -126,7 +135,7 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
         self.assertTrue(worker is None)
 
     @defer.inlineCallbacks
-    def test_missing_image(self):
+    def test_missing_image(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker', image='no-such-image')
         self._http.expect(
             method='get', ep='/storage/template', content_json=upcloudStorageTemplatePayload
@@ -135,7 +144,7 @@ class TestUpcloudWorker(TestReactorMixin, unittest.TestCase):
             yield worker.substantiate(None, FakeBuild())
 
     @defer.inlineCallbacks
-    def test_start_worker(self):
+    def test_start_worker(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker', image='test-image')
         # resolve image to storage uuid
         self._http.expect(
