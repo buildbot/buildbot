@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import warnings
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest.mock import Mock
 from unittest.mock import call
 
@@ -48,10 +52,17 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
+if TYPE_CHECKING:
+    from twisted.internet.protocol import ProcessProtocol
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 warnings.filterwarnings('error', message='.*Gerrit status')
 
 
-def sampleReviewCB(builderName, build, result, status, arg):
+def sampleReviewCB(
+    builderName: str, build: dict[str, Any], result: int, status: Any, arg: Any
+) -> dict[str, Any]:
     verified = 1 if result == SUCCESS else -1
     return makeReviewResult(
         str({'name': builderName, 'result': result}), (GERRIT_LABEL_VERIFIED, verified)
@@ -59,25 +70,31 @@ def sampleReviewCB(builderName, build, result, status, arg):
 
 
 @defer.inlineCallbacks
-def sampleReviewCBDeferred(builderName, build, result, status, arg):
+def sampleReviewCBDeferred(
+    builderName: str, build: dict[str, Any], result: int, status: Any, arg: Any
+) -> InlineCallbacksType[dict[str, Any]]:
     verified = 1 if result == SUCCESS else -1
-    result = yield makeReviewResult(
+    review_result = yield makeReviewResult(
         str({'name': builderName, 'result': result}), (GERRIT_LABEL_VERIFIED, verified)
     )
-    return result
+    return review_result
 
 
-def sampleStartCB(builderName, build, arg):
+def sampleStartCB(builderName: str, build: dict[str, Any], arg: Any) -> dict[str, Any]:
     return makeReviewResult(str({'name': builderName}), (GERRIT_LABEL_REVIEWED, 0))
 
 
 @defer.inlineCallbacks
-def sampleStartCBDeferred(builderName, build, arg):
+def sampleStartCBDeferred(
+    builderName: str, build: dict[str, Any], arg: Any
+) -> InlineCallbacksType[dict[str, Any]]:
     result = yield makeReviewResult(str({'name': builderName}), (GERRIT_LABEL_REVIEWED, 0))
     return result
 
 
-def sampleSummaryCB(buildInfoList, results, status, arg):
+def sampleSummaryCB(
+    buildInfoList: list[dict[str, Any]], results: str, status: Any, arg: Any
+) -> dict[str, Any]:
     success = False
     failure = False
 
@@ -98,7 +115,9 @@ def sampleSummaryCB(buildInfoList, results, status, arg):
 
 
 @defer.inlineCallbacks
-def sampleSummaryCBDeferred(buildInfoList, results, master, arg):
+def sampleSummaryCBDeferred(
+    buildInfoList: list[dict[str, Any]], results: str, master: Any, arg: Any
+) -> InlineCallbacksType[dict[str, Any]]:
     success = False
     failure = False
 
@@ -121,13 +140,15 @@ def sampleSummaryCBDeferred(buildInfoList, results, master, arg):
 
 class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
-    def setupGerritStatusPushSimple(self, *args, **kwargs):
+    def setupGerritStatusPushSimple(
+        self, *args: Any, **kwargs: Any
+    ) -> InlineCallbacksType[GerritStatusPush]:
         serv = kwargs.pop("server", "serv")
         username = kwargs.pop("username", "user")
         gsp = GerritStatusPush(serv, username, *args, **kwargs)
@@ -136,20 +157,24 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         return gsp
 
     @defer.inlineCallbacks
-    def setupGerritStatusPush(self, *args, **kwargs):
+    def setupGerritStatusPush(
+        self, *args: Any, **kwargs: Any
+    ) -> InlineCallbacksType[GerritStatusPush]:
         gsp = yield self.setupGerritStatusPushSimple(*args, **kwargs)
         gsp.send_code_review = Mock()
         return gsp
 
     @defer.inlineCallbacks
-    def setupBuildResults(self, buildResults, finalResult):
+    def setupBuildResults(
+        self, buildResults: list[int | None], finalResult: int | None
+    ) -> InlineCallbacksType[Any]:
         yield self.insert_test_data(buildResults, finalResult)
         res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
         builds = res['builds']
         buildset = res['buildset']
 
         @defer.inlineCallbacks
-        def getChangesForBuild(buildid):
+        def getChangesForBuild(buildid: int) -> InlineCallbacksType[Any]:
             assert buildid == 20
             ch = yield self.master.db.changes.getChange(13)
             return [ch]
@@ -157,7 +182,12 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         self.master.db.changes.getChangesForBuild = getChangesForBuild
         return (buildset, builds)
 
-    def makeBuildInfo(self, buildResults, resultText, builds):
+    def makeBuildInfo(
+        self,
+        buildResults: list[int | None],
+        resultText: list[str],
+        builds: list[dict[str, Any] | None],
+    ) -> list[dict[str, Any]]:
         info = []
         for i, buildResult in enumerate(buildResults):
             info.append({
@@ -171,9 +201,16 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         return info
 
     @defer.inlineCallbacks
-    def run_fake_summary_build(self, gsp, buildResults, finalResult, resultText, expWarning=False):
+    def run_fake_summary_build(
+        self,
+        gsp: GerritStatusPush,
+        buildResults: list[int | None],
+        finalResult: int | None,
+        resultText: list[str],
+        expWarning: bool = False,
+    ) -> InlineCallbacksType[str]:
         buildset, builds = yield self.setupBuildResults(buildResults, finalResult)
-        yield gsp._got_event(("buildsets", 98, "complete"), buildset)
+        yield gsp._got_event(("buildsets", 98, "complete"), buildset)  # type: ignore[arg-type]
 
         info = self.makeBuildInfo(buildResults, resultText, builds)
         if expWarning:
@@ -188,7 +225,13 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         return str(info)
 
     @defer.inlineCallbacks
-    def check_summary_build_deferred(self, buildResults, finalResult, resultText, verifiedScore):
+    def check_summary_build_deferred(
+        self,
+        buildResults: list[int | None],
+        finalResult: int | None,
+        resultText: list[str],
+        verifiedScore: int,
+    ) -> InlineCallbacksType[None]:
         gsp = yield self.setupGerritStatusPush(
             generators=[
                 GerritBuildSetStatusGenerator(
@@ -211,7 +254,13 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         )
 
     @defer.inlineCallbacks
-    def check_summary_build(self, buildResults, finalResult, resultText, verifiedScore):
+    def check_summary_build(
+        self,
+        buildResults: list[int | None],
+        finalResult: int | None,
+        resultText: list[str],
+        verifiedScore: int,
+    ) -> InlineCallbacksType[None]:
         gsp = yield self.setupGerritStatusPush(
             generators=[
                 GerritBuildSetStatusGenerator(
@@ -234,7 +283,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         )
 
     @defer.inlineCallbacks
-    def test_gerrit_ssh_cmd(self):
+    def test_gerrit_ssh_cmd(self) -> InlineCallbacksType[None]:
         kwargs = {
             'server': 'example.com',
             'username': 'buildbot',
@@ -268,7 +317,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         ]
         self.assertEqual(expected2, with_identity._gerritCmd('foo'))
 
-    def test_buildsetComplete_success_sends_summary_review_deferred(self):
+    def test_buildsetComplete_success_sends_summary_review_deferred(self) -> defer.Deferred[None]:
         d = self.check_summary_build_deferred(
             buildResults=[SUCCESS, SUCCESS],
             finalResult=SUCCESS,
@@ -277,7 +326,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         )
         return d
 
-    def test_buildsetComplete_success_sends_summary_review(self):
+    def test_buildsetComplete_success_sends_summary_review(self) -> defer.Deferred[None]:
         d = self.check_summary_build(
             buildResults=[SUCCESS, SUCCESS],
             finalResult=SUCCESS,
@@ -286,7 +335,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         )
         return d
 
-    def test_buildsetComplete_failure_sends_summary_review(self):
+    def test_buildsetComplete_failure_sends_summary_review(self) -> defer.Deferred[None]:
         d = self.check_summary_build(
             buildResults=[FAILURE, FAILURE],
             finalResult=FAILURE,
@@ -295,7 +344,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         )
         return d
 
-    def test_buildsetComplete_mixed_sends_summary_review(self):
+    def test_buildsetComplete_mixed_sends_summary_review(self) -> defer.Deferred[None]:
         d = self.check_summary_build(
             buildResults=[SUCCESS, FAILURE],
             finalResult=FAILURE,
@@ -309,7 +358,9 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         ("not_matched", ["foo"], False),
     ])
     @defer.inlineCallbacks
-    def test_buildset_complete_filtered_builder(self, name, builders, should_call):
+    def test_buildset_complete_filtered_builder(
+        self, name: str, builders: list[str], should_call: bool
+    ) -> InlineCallbacksType[None]:
         gsp = yield self.setupGerritStatusPush(
             generators=[
                 GerritBuildSetStatusGenerator(
@@ -326,7 +377,9 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         self.assertEqual(gsp.send_code_review.called, should_call)
 
     @defer.inlineCallbacks
-    def run_fake_single_build(self, gsp, buildResult, expWarning=False):
+    def run_fake_single_build(
+        self, gsp: GerritStatusPush, buildResult: int | None, expWarning: bool = False
+    ) -> InlineCallbacksType[Any]:
         _, builds = yield self.setupBuildResults([None], None)
 
         yield gsp._got_event(('builds', builds[0]['buildid'], 'new'), builds[0])
@@ -353,7 +406,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
 
     # same goes for check_single_build
     @defer.inlineCallbacks
-    def check_single_build(self, buildResult, verifiedScore):
+    def check_single_build(self, buildResult: int, verifiedScore: int) -> InlineCallbacksType[None]:
         gsp = yield self.setupGerritStatusPush(
             generators=[
                 GerritBuildEndStatusGenerator(
@@ -390,10 +443,10 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         ]
         gsp.send_code_review.assert_has_calls(calls)
 
-    def test_buildComplete_success_sends_review(self):
+    def test_buildComplete_success_sends_review(self) -> defer.Deferred[None]:
         return self.check_single_build(SUCCESS, 1)
 
-    def test_buildComplete_failure_sends_review(self):
+    def test_buildComplete_failure_sends_review(self) -> defer.Deferred[None]:
         return self.check_single_build(FAILURE, -1)
 
     # same goes for check_single_build
@@ -402,7 +455,9 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         ("not_matched", ["foo"], False),
     ])
     @defer.inlineCallbacks
-    def test_single_build_filtered(self, name, builders, should_call):
+    def test_single_build_filtered(
+        self, name: str, builders: list[str], should_call: bool
+    ) -> InlineCallbacksType[None]:
         gsp = yield self.setupGerritStatusPush(
             generators=[
                 GerritBuildEndStatusGenerator(
@@ -430,7 +485,9 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         ("failure", FAILURE, -1),
     ])
     @defer.inlineCallbacks
-    def test_single_build_generators(self, name, build_result, verified_score):
+    def test_single_build_generators(
+        self, name: str, build_result: int, verified_score: int
+    ) -> InlineCallbacksType[None]:
         gsp = yield self.setupGerritStatusPush(generators=[BuildStartEndStatusGenerator()])
 
         yield self.run_fake_single_build(gsp, build_result)
@@ -455,14 +512,16 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         ("failure", FAILURE, -1),
     ])
     @defer.inlineCallbacks
-    def test_single_buildset_generators(self, name, build_result, verified_score):
+    def test_single_buildset_generators(
+        self, name: str, build_result: int, verified_score: int
+    ) -> InlineCallbacksType[None]:
         gsp = yield self.setupGerritStatusPush(
             generators=[
-                BuildSetStatusGenerator(message_formatter=MessageFormatterRenderable("Build done."))
+                BuildSetStatusGenerator(message_formatter=MessageFormatterRenderable("Build done."))  # type: ignore[arg-type]
             ]
         )
 
-        yield self.run_fake_summary_build(gsp, [build_result], build_result, "text")
+        yield self.run_fake_summary_build(gsp, [build_result], build_result, "text")  # type: ignore[arg-type]
         calls = [
             call(
                 self.reporter_test_project,
@@ -474,7 +533,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         gsp.send_code_review.assert_has_calls(calls)
 
     @defer.inlineCallbacks
-    def test_single_buildset_generators_override_label(self):
+    def test_single_buildset_generators_override_label(self) -> InlineCallbacksType[None]:
         formatter = MessageFormatterFunctionRaw(
             lambda _, __: {
                 "body": "text1",
@@ -485,10 +544,10 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         )
 
         gsp = yield self.setupGerritStatusPush(
-            generators=[BuildSetStatusGenerator(message_formatter=formatter)]
+            generators=[BuildSetStatusGenerator(message_formatter=formatter)]  # type: ignore[arg-type]
         )
 
-        yield self.run_fake_summary_build(gsp, [SUCCESS], SUCCESS, "text")
+        yield self.run_fake_summary_build(gsp, [SUCCESS], SUCCESS, "text")  # type: ignore[arg-type]
         calls = [
             call(
                 self.reporter_test_project,
@@ -499,13 +558,13 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         ]
         gsp.send_code_review.assert_has_calls(calls)
 
-    def test_defaultReviewCBSuccess(self):
+    def test_defaultReviewCBSuccess(self) -> None:
         res = defaultReviewCB("builderName", {}, SUCCESS, None, None)
         self.assertEqual(res['labels'], {'Verified': 1})
         res = defaultReviewCB("builderName", {}, RETRY, None, None)
         self.assertEqual(res['labels'], {})
 
-    def test_defaultSummaryCB(self):
+    def test_defaultSummaryCB(self) -> None:
         info = self.makeBuildInfo([SUCCESS, FAILURE], ["yes", "no"], [None, None])
         res = defaultSummaryCB(info, SUCCESS, None, None)
         self.assertEqual(res['labels'], {'Verified': -1})
@@ -514,7 +573,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         self.assertEqual(res['labels'], {'Verified': 1})
 
     @defer.inlineCallbacks
-    def testBuildGerritCommand(self):
+    def testBuildGerritCommand(self) -> InlineCallbacksType[None]:
         gsp = yield self.setupGerritStatusPushSimple()
         spawnSkipFirstArg = Mock()
         gsp.spawnProcess = lambda _, *a, **k: spawnSkipFirstArg(*a, **k)
@@ -644,11 +703,11 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         )
 
     @defer.inlineCallbacks
-    def test_callWithVersion_bytes_output(self):
+    def test_callWithVersion_bytes_output(self) -> InlineCallbacksType[None]:
         gsp = yield self.setupGerritStatusPushSimple()
         exp_argv = ['ssh', '-o', 'BatchMode=yes', 'user@serv', '-p', '29418', 'gerrit', 'version']
 
-        def spawnProcess(pp, cmd, argv, env):
+        def spawnProcess(pp: ProcessProtocol, cmd: str, argv: list[str], env: None) -> None:
             self.assertEqual([cmd, argv], [exp_argv[0], exp_argv])
             pp.errReceived(b'test stderr\n')
             pp.outReceived(b'gerrit version 2.14\n')
@@ -659,23 +718,23 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         self.patch(reactor, 'spawnProcess', spawnProcess)
         gsp.callWithVersion(lambda: self.assertEqual(gsp.gerrit_version, parse_version('2.14')))
 
-    def test_name_as_class_attribute(self):
+    def test_name_as_class_attribute(self) -> None:
         class FooStatusPush(GerritStatusPush):
             name = 'foo'
 
         reporter = FooStatusPush('gerrit.server.com', 'password')
         self.assertEqual(reporter.name, 'foo')
 
-    def test_name_as_kwarg(self):
+    def test_name_as_kwarg(self) -> None:
         reporter = GerritStatusPush('gerrit.server.com', 'password', name='foo')
         self.assertEqual(reporter.name, 'foo')
 
-    def test_default_name(self):
+    def test_default_name(self) -> None:
         reporter = GerritStatusPush('gerrit.server.com', 'password')
         self.assertEqual(reporter.name, 'GerritStatusPush')
 
     @defer.inlineCallbacks
-    def test_extract_project_revision(self):
+    def test_extract_project_revision(self) -> InlineCallbacksType[None]:
         yield self.insert_test_data([SUCCESS], SUCCESS)
         res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
         report = {"builds": res["builds"], "buildset": res["buildset"]}
@@ -685,7 +744,7 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         self.assertEqual(revision, "d34db33fd43db33f")
 
     @defer.inlineCallbacks
-    def test_extract_project_revision_no_build(self):
+    def test_extract_project_revision_no_build(self) -> InlineCallbacksType[None]:
         yield self.insert_test_data([], SUCCESS)
         yield self.master.db.insert_test_data([
             fakedb.BuildsetProperty(

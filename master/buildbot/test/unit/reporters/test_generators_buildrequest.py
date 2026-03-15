@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest.mock import Mock
 
 from parameterized import parameterized
@@ -28,6 +32,9 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestBuildRequestGenerator(
     ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin
@@ -35,7 +42,7 @@ class TestBuildRequestGenerator(
     all_messages = ('failing', 'passing', 'warnings', 'exception', 'cancelled')
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
@@ -54,13 +61,15 @@ class TestBuildRequestGenerator(
         ('branches', 'branch'),
         ('branches', 1),
     ])
-    def test_list_params_check_raises(self, arg_name, arg_value):
+    def test_list_params_check_raises(self, arg_name: str, arg_value: str | int) -> None:
         kwargs = {arg_name: arg_value}
-        g = BuildRequestGenerator(**kwargs)
+        g = BuildRequestGenerator(**kwargs)  # type: ignore[arg-type]
         with self.assertRaisesConfigError('must be a list or None'):
             g.check()
 
-    def setup_generator(self, message=None, **kwargs):
+    def setup_generator(
+        self, message: dict[str, Any] | None = None, **kwargs: Any
+    ) -> BuildRequestGenerator:
         if message is None:
             message = {
                 "body": "start body",
@@ -78,7 +87,7 @@ class TestBuildRequestGenerator(
         return g
 
     @defer.inlineCallbacks
-    def test_build_message_start_no_result(self):
+    def test_build_message_start_no_result(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator()
         buildrequest = yield self.insert_buildrequest_new()
         buildset = yield self.get_inserted_buildset()
@@ -106,7 +115,7 @@ class TestBuildRequestGenerator(
         )
 
     @defer.inlineCallbacks
-    def test_build_message_add_patch(self):
+    def test_build_message_add_patch(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator(add_patch=True)
         buildrequest = yield self.insert_buildrequest_new(insert_patch=True)
         build = yield g.partial_build_dict(self.master, buildrequest)
@@ -123,7 +132,7 @@ class TestBuildRequestGenerator(
         self.assertEqual(report['patches'], [patch_dict])
 
     @defer.inlineCallbacks
-    def test_build_message_add_patch_no_patch(self):
+    def test_build_message_add_patch_no_patch(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator(add_patch=True)
         buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
         build = yield g.partial_build_dict(self.master, buildrequest)
@@ -131,7 +140,7 @@ class TestBuildRequestGenerator(
         self.assertEqual(report['patches'], [])
 
     @defer.inlineCallbacks
-    def test_generate_new(self):
+    def test_generate_new(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator(add_patch=True)
         buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
         buildset = yield self.get_inserted_buildset()
@@ -155,7 +164,7 @@ class TestBuildRequestGenerator(
         )
 
     @defer.inlineCallbacks
-    def test_generate_cancel(self):
+    def test_generate_cancel(self) -> InlineCallbacksType[None]:
         self.maxDiff = None
         g = yield self.setup_generator(add_patch=True)
         buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
@@ -183,7 +192,7 @@ class TestBuildRequestGenerator(
         )
 
     @defer.inlineCallbacks
-    def test_generate_none(self):
+    def test_generate_none(self) -> InlineCallbacksType[None]:
         g = BuildRequestGenerator(builders=['not_existing_builder'])
         buildrequest = yield self.insert_buildrequest_new()
         report = yield g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)

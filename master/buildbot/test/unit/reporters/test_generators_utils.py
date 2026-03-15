@@ -14,7 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import copy
+from typing import TYPE_CHECKING
+from typing import Any
 
 from parameterized import parameterized
 from twisted.internet import defer
@@ -32,36 +36,41 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
-    def insert_build_finished_get_props(self, results, **kwargs):
+    def insert_build_finished_get_props(
+        self, results: int, **kwargs: Any
+    ) -> InlineCallbacksType[dict[str, Any]]:
         build = yield self.insert_build_finished(results, **kwargs)
         yield utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
     def create_generator(
         self,
-        mode=("failing", "passing", "warnings"),
-        tags=None,
-        builders=None,
-        schedulers=None,
-        branches=None,
-        subject="Some subject",
-        add_logs=None,
-        add_patch=False,
-    ):
+        mode: str | tuple[str, ...] = ("failing", "passing", "warnings"),
+        tags: list[str] | None = None,
+        builders: list[str] | None = None,
+        schedulers: list[str] | None = None,
+        branches: list[str] | None = None,
+        subject: str | None = "Some subject",
+        add_logs: Any = None,
+        add_patch: bool = False,
+    ) -> BuildStatusGeneratorMixin:
         return BuildStatusGeneratorMixin(
             mode, tags, builders, schedulers, branches, subject, add_logs, add_patch
         )
 
-    def test_generate_name(self):
+    def test_generate_name(self) -> None:
         g = self.create_generator(
             tags=['tag1', 'tag2'],
             builders=['b1', 'b2'],
@@ -84,9 +93,9 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         ('branches', 'branch'),
         ('branches', 1),
     ])
-    def test_list_params_check_raises(self, arg_name, arg_value):
+    def test_list_params_check_raises(self, arg_name: str, arg_value: str | int) -> None:
         kwargs = {arg_name: arg_value}
-        g = self.create_generator(**kwargs)
+        g = self.create_generator(**kwargs)  # type: ignore[arg-type]
         with self.assertRaisesConfigError('must be a list or None'):
             g.check()
 
@@ -96,18 +105,20 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         ('unknown_list_two', ['unknown', 'failing'], 'not a valid mode'),
         ('all_in_list', ['all', 'failing'], 'must be passed in as a separate string'),
     ])
-    def test_tag_check_raises(self, name, mode, expected_exception):
-        g = self.create_generator(mode=mode)
+    def test_tag_check_raises(
+        self, name: str, mode: str | list[str], expected_exception: str
+    ) -> None:
+        g = self.create_generator(mode=mode)  # type: ignore[arg-type]
         with self.assertRaisesConfigError(expected_exception):
             g.check()
 
-    def test_subject_newlines_not_allowed(self):
+    def test_subject_newlines_not_allowed(self) -> None:
         g = self.create_generator(subject='subject\nwith\nnewline')
         with self.assertRaisesConfigError('Newlines are not allowed'):
             g.check()
 
     @defer.inlineCallbacks
-    def test_is_message_needed_ignores_unspecified_tags(self):
+    def test_is_message_needed_ignores_unspecified_tags(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(SUCCESS)
 
         # force tags
@@ -116,7 +127,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
-    def test_is_message_needed_tags(self):
+    def test_is_message_needed_tags(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(SUCCESS)
 
         # force tags
@@ -125,105 +136,111 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
-    def test_is_message_needed_schedulers_sends_mail(self):
+    def test_is_message_needed_schedulers_sends_mail(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(SUCCESS)
         g = self.create_generator(schedulers=['checkin'])
         self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
-    def test_is_message_needed_schedulers_doesnt_send_mail(self):
+    def test_is_message_needed_schedulers_doesnt_send_mail(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(SUCCESS)
         g = self.create_generator(schedulers=['some-random-scheduler'])
         self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
-    def test_is_message_needed_branches_sends_mail(self):
+    def test_is_message_needed_branches_sends_mail(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(SUCCESS)
         g = self.create_generator(branches=['refs/pull/34/merge'])
         self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
-    def test_is_message_needed_branches_doesnt_send_mail(self):
+    def test_is_message_needed_branches_doesnt_send_mail(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(SUCCESS)
         g = self.create_generator(branches=['some-random-branch'])
         self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
-    def run_simple_test_sends_message_for_mode(self, mode, result, should_send=True):
+    def run_simple_test_sends_message_for_mode(
+        self, mode: str, result: int, should_send: bool = True
+    ) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(result)
 
         g = self.create_generator(mode=mode)
 
         self.assertEqual(g.is_message_needed_by_results(build), should_send)
 
-    def run_simple_test_ignores_message_for_mode(self, mode, result):
+    def run_simple_test_ignores_message_for_mode(
+        self, mode: str, result: int
+    ) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode(mode, result, False)
 
-    def test_is_message_needed_mode_all_for_success(self):
+    def test_is_message_needed_mode_all_for_success(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("all", SUCCESS)
 
-    def test_is_message_needed_mode_all_for_failure(self):
+    def test_is_message_needed_mode_all_for_failure(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("all", FAILURE)
 
-    def test_is_message_needed_mode_all_for_warnings(self):
+    def test_is_message_needed_mode_all_for_warnings(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("all", WARNINGS)
 
-    def test_is_message_needed_mode_all_for_exception(self):
+    def test_is_message_needed_mode_all_for_exception(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("all", EXCEPTION)
 
-    def test_is_message_needed_mode_all_for_cancelled(self):
+    def test_is_message_needed_mode_all_for_cancelled(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("all", CANCELLED)
 
-    def test_is_message_needed_mode_failing_for_success(self):
+    def test_is_message_needed_mode_failing_for_success(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("failing", SUCCESS)
 
-    def test_is_message_needed_mode_failing_for_failure(self):
+    def test_is_message_needed_mode_failing_for_failure(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("failing", FAILURE)
 
-    def test_is_message_needed_mode_failing_for_warnings(self):
+    def test_is_message_needed_mode_failing_for_warnings(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("failing", WARNINGS)
 
-    def test_is_message_needed_mode_failing_for_exception(self):
+    def test_is_message_needed_mode_failing_for_exception(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("failing", EXCEPTION)
 
-    def test_is_message_needed_mode_exception_for_success(self):
+    def test_is_message_needed_mode_exception_for_success(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("exception", SUCCESS)
 
-    def test_is_message_needed_mode_exception_for_failure(self):
+    def test_is_message_needed_mode_exception_for_failure(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("exception", FAILURE)
 
-    def test_is_message_needed_mode_exception_for_warnings(self):
+    def test_is_message_needed_mode_exception_for_warnings(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("exception", WARNINGS)
 
-    def test_is_message_needed_mode_exception_for_exception(self):
+    def test_is_message_needed_mode_exception_for_exception(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("exception", EXCEPTION)
 
-    def test_is_message_needed_mode_warnings_for_success(self):
+    def test_is_message_needed_mode_warnings_for_success(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("warnings", SUCCESS)
 
-    def test_is_message_needed_mode_warnings_for_failure(self):
+    def test_is_message_needed_mode_warnings_for_failure(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("warnings", FAILURE)
 
-    def test_is_message_needed_mode_warnings_for_warnings(self):
+    def test_is_message_needed_mode_warnings_for_warnings(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("warnings", WARNINGS)
 
-    def test_is_message_needed_mode_warnings_for_exception(self):
+    def test_is_message_needed_mode_warnings_for_exception(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("warnings", EXCEPTION)
 
-    def test_is_message_needed_mode_passing_for_success(self):
+    def test_is_message_needed_mode_passing_for_success(self) -> defer.Deferred[None]:
         return self.run_simple_test_sends_message_for_mode("passing", SUCCESS)
 
-    def test_is_message_needed_mode_passing_for_failure(self):
+    def test_is_message_needed_mode_passing_for_failure(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("passing", FAILURE)
 
-    def test_is_message_needed_mode_passing_for_warnings(self):
+    def test_is_message_needed_mode_passing_for_warnings(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("passing", WARNINGS)
 
-    def test_is_message_needed_mode_passing_for_exception(self):
+    def test_is_message_needed_mode_passing_for_exception(self) -> defer.Deferred[None]:
         return self.run_simple_test_ignores_message_for_mode("passing", EXCEPTION)
 
     @defer.inlineCallbacks
-    def run_sends_message_for_problems(self, mode, results1, results2, should_send=True):
+    def run_sends_message_for_problems(
+        self, mode: str, results1: int | None, results2: int, should_send: bool = True
+    ) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(results2)
 
         g = self.create_generator(mode=mode)
@@ -235,31 +252,37 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
             build['prev_build'] = None
         self.assertEqual(g.is_message_needed_by_results(build), should_send)
 
-    def test_is_message_needed_mode_problem_sends_on_problem(self):
+    def test_is_message_needed_mode_problem_sends_on_problem(self) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("problem", SUCCESS, FAILURE, True)
 
-    def test_is_message_needed_mode_problem_ignores_successful_build(self):
+    def test_is_message_needed_mode_problem_ignores_successful_build(self) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("problem", SUCCESS, SUCCESS, False)
 
-    def test_is_message_needed_mode_problem_ignores_two_failed_builds_in_sequence(self):
+    def test_is_message_needed_mode_problem_ignores_two_failed_builds_in_sequence(
+        self,
+    ) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("problem", FAILURE, FAILURE, False)
 
-    def test_is_message_needed_mode_change_sends_on_change(self):
+    def test_is_message_needed_mode_change_sends_on_change(self) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("change", FAILURE, SUCCESS, True)
 
-    def test_is_message_needed_mode_change_sends_on_failure(self):
+    def test_is_message_needed_mode_change_sends_on_failure(self) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("change", SUCCESS, FAILURE, True)
 
-    def test_is_message_needed_mode_change_ignores_first_build(self):
+    def test_is_message_needed_mode_change_ignores_first_build(self) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("change", None, FAILURE, False)
 
-    def test_is_message_needed_mode_change_ignores_first_build2(self):
+    def test_is_message_needed_mode_change_ignores_first_build2(self) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("change", None, SUCCESS, False)
 
-    def test_is_message_needed_mode_change_ignores_same_result_in_sequence(self):
+    def test_is_message_needed_mode_change_ignores_same_result_in_sequence(
+        self,
+    ) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("change", SUCCESS, SUCCESS, False)
 
-    def test_is_message_needed_mode_change_ignores_same_result_in_sequence2(self):
+    def test_is_message_needed_mode_change_ignores_same_result_in_sequence2(
+        self,
+    ) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("change", FAILURE, FAILURE, False)
 
     @parameterized.expand([
@@ -269,7 +292,9 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         ('same', 'type', 'type', ('type', True)),
         ('different', 'type1', 'type2', ('type1', False)),
     ])
-    def test_merge_msgtype(self, name, old, new, expected_result):
+    def test_merge_msgtype(
+        self, name: str, old: str | None, new: str | None, expected_result: tuple[str | None, bool]
+    ) -> None:
         g = self.create_generator()
         self.assertEqual(g._merge_msgtype(old, new), expected_result)
 
@@ -280,7 +305,9 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         ('same', 'sub', 'sub', 'sub'),
         ('different', 'sub1', 'sub2', 'sub1'),
     ])
-    def test_merge_subject(self, name, old, new, expected_result):
+    def test_merge_subject(
+        self, name: str, old: str | None, new: str | None, expected_result: str | None
+    ) -> None:
         g = self.create_generator()
         self.assertEqual(g._merge_subject(old, new), expected_result)
 
@@ -293,7 +320,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         ('both_dict', {'v': 'body1'}, {'v': 'body2'}, ({'v': 'body1'}, False)),
         ('str_list', ['body1'], 'body2', (['body1'], False)),
     ])
-    def test_merge_body(self, name, old, new, expected_result):
+    def test_merge_body(self, name: str, old: Any, new: Any, expected_result: Any) -> None:
         g = self.create_generator()
         self.assertEqual(g._merge_body(old, new), expected_result)
 
@@ -314,6 +341,12 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
             ({"k": {"kk1": "vv1"}}, True),
         ),
     ])
-    def test_merge_info(self, name, old, new, expected_result):
+    def test_merge_info(
+        self,
+        name: str,
+        old: dict[str, dict[str, str]] | None,
+        new: dict[str, dict[str, str]] | None,
+        expected_result: tuple[dict[str, dict[str, str]] | None, bool],
+    ) -> None:
         g = self.create_generator()
         self.assertEqual(g._merge_extra_info(old, new), expected_result)

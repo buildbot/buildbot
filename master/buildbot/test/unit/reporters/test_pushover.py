@@ -16,6 +16,8 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import SkipTest
 
 from twisted.internet import defer
@@ -30,23 +32,26 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.util import httpclientservice
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     # returns a Deferred
-    def setupFakeHttp(self):
+    def setupFakeHttp(self) -> Any:
         return fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'https://api.pushover.net'
         )
 
     @defer.inlineCallbacks
     def setupPushoverNotifier(
-        self, user_key="1234", api_token: Interpolate | None = None, **kwargs
-    ):
+        self, user_key: str = "1234", api_token: Interpolate | None = None, **kwargs: Any
+    ) -> InlineCallbacksType[PushoverNotifier]:
         if api_token is None:
             api_token = Interpolate("abcd")
         pn = PushoverNotifier(user_key, api_token, **kwargs)
@@ -55,7 +60,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
         return pn
 
     @defer.inlineCallbacks
-    def test_sendMessage(self):
+    def test_sendMessage(self) -> InlineCallbacksType[None]:
         _http = yield self.setupFakeHttp()
         pn = yield self.setupPushoverNotifier(priorities={'passing': 2})
         _http.expect(
@@ -78,7 +83,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
         self.assertEqual(j['request'], '98765')
 
     @defer.inlineCallbacks
-    def test_sendNotification(self):
+    def test_sendNotification(self) -> InlineCallbacksType[None]:
         _http = yield self.setupFakeHttp()
         pn = yield self.setupPushoverNotifier(otherParams={'sound': "silent"})
         _http.expect(
@@ -93,7 +98,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
         self.assertEqual(j['request'], '98765')
 
     @defer.inlineCallbacks
-    def test_sendRealNotification(self):
+    def test_sendRealNotification(self) -> InlineCallbacksType[None]:
         creds = os.environ.get('TEST_PUSHOVER_CREDENTIALS')
         if creds is None:
             raise SkipTest(
@@ -101,7 +106,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCas
             )
         user, token = creds.split(':')
         _http = httpclientservice.HTTPSession(self.master.httpservice, 'https://api.pushover.net')
-        pn = yield self.setupPushoverNotifier(user_key=user, api_token=token)
+        pn = yield self.setupPushoverNotifier(user_key=user, api_token=token)  # type: ignore[arg-type]
         n = yield pn.sendNotification({'message': "Buildbot Pushover test passed!"})
         j = yield n.json()
         self.assertEqual(j['status'], 1)

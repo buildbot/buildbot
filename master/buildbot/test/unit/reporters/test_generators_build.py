@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest.mock import Mock
 
 from parameterized import parameterized
@@ -31,18 +35,25 @@ from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def insert_build_finished_get_props(
-        self, results, add_logs=None, want_logs_content=False, **kwargs
-    ):
+        self,
+        results: int | None,
+        add_logs: list[str] | bool | None = None,
+        want_logs_content: bool | list[str] = False,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[dict[str, Any]]:
         build = yield self.insert_build_finished(results, **kwargs)
         yield utils.getDetailsForBuild(
             self.master,
@@ -56,13 +67,13 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
     @defer.inlineCallbacks
     def setup_generator(
         self,
-        results=SUCCESS,
-        message=None,
-        db_args=None,
-        add_logs=None,
-        want_logs_content=False,
-        **kwargs,
-    ):
+        results: int | None = SUCCESS,
+        message: dict[str, Any] | None = None,
+        db_args: dict[str, Any] | None = None,
+        add_logs: list[str] | bool | None = None,
+        want_logs_content: bool | list[str] = False,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[tuple[BuildStatusGenerator, dict[str, Any], dict[str, Any]]]:
         if message is None:
             message = {
                 "body": "body",
@@ -87,7 +98,9 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         return g, build, buildset
 
     @defer.inlineCallbacks
-    def build_message(self, g, build, results=SUCCESS):
+    def build_message(
+        self, g: BuildStatusGenerator, build: dict[str, Any], results: int | None = SUCCESS
+    ) -> InlineCallbacksType[Any]:
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
@@ -95,7 +108,9 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         return report
 
     @defer.inlineCallbacks
-    def generate(self, g, key, build):
+    def generate(
+        self, g: BuildStatusGenerator, key: tuple[str, int, str], build: dict[str, Any]
+    ) -> InlineCallbacksType[Any]:
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
@@ -103,7 +118,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         return report
 
     @defer.inlineCallbacks
-    def test_build_message_nominal(self):
+    def test_build_message_nominal(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator(mode=("change",))
         report = yield self.build_message(g, build)
 
@@ -128,7 +143,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_build_message_no_result(self):
+    def test_build_message_no_result(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator(results=None, mode=("change",))
         report = yield self.build_message(g, build, results=None)
 
@@ -153,7 +168,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_build_message_no_result_formatter_no_subject(self):
+    def test_build_message_no_result_formatter_no_subject(self) -> InlineCallbacksType[None]:
         message = {
             "body": "body",
             "type": "text",
@@ -187,7 +202,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_build_message_addLogs(self):
+    def test_build_message_addLogs(self) -> InlineCallbacksType[None]:
         with assertProducesWarnings(
             DeprecatedApiWarning,
             message_pattern=".*argument add_logs have been deprecated.*",
@@ -199,7 +214,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         self.assertIn("log with", report['logs'][0]['content']['content'])
 
     @defer.inlineCallbacks
-    def test_build_message_want_logs_content(self):
+    def test_build_message_want_logs_content(self) -> InlineCallbacksType[None]:
         g, build, _ = yield self.setup_generator(mode=("change",), want_logs_content=True)
         report = yield self.build_message(g, build)
 
@@ -207,7 +222,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         self.assertIn("log with", report['logs'][0]['content']['content'])
 
     @defer.inlineCallbacks
-    def test_build_message_add_patch(self):
+    def test_build_message_add_patch(self) -> InlineCallbacksType[None]:
         g, build, _ = yield self.setup_generator(
             mode=("change",), add_patch=True, db_args={"insert_patch": True}
         )
@@ -224,7 +239,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         self.assertEqual(report['patches'], [patch_dict])
 
     @defer.inlineCallbacks
-    def test_build_message_add_patch_no_patch(self):
+    def test_build_message_add_patch_no_patch(self) -> InlineCallbacksType[None]:
         g, build, _ = yield self.setup_generator(
             mode=("change",), add_patch=True, db_args={'insert_patch': False}
         )
@@ -232,7 +247,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         self.assertEqual(report['patches'], [])
 
     @defer.inlineCallbacks
-    def test_generate_finished(self):
+    def test_generate_finished(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator()
         report = yield self.generate(g, ('builds', 123, 'finished'), build)
 
@@ -253,21 +268,21 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         )
 
     @defer.inlineCallbacks
-    def test_generate_finished_non_matching_builder(self):
+    def test_generate_finished_non_matching_builder(self) -> InlineCallbacksType[None]:
         g, build, _ = yield self.setup_generator(builders=['non-matched'])
         report = yield self.generate(g, ('builds', 123, 'finished'), build)
 
         self.assertIsNone(report)
 
     @defer.inlineCallbacks
-    def test_generate_finished_non_matching_result(self):
+    def test_generate_finished_non_matching_result(self) -> InlineCallbacksType[None]:
         g, build, _ = yield self.setup_generator(mode=('failing',))
         report = yield self.generate(g, ('builds', 123, 'finished'), build)
 
         self.assertIsNone(report)
 
     @defer.inlineCallbacks
-    def test_generate_new(self):
+    def test_generate_new(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator(
             results=None, mode=("failing",), report_new=True
         )
@@ -296,15 +311,19 @@ class TestBuildStartEndGenerator(
     all_messages = ('failing', 'passing', 'warnings', 'exception', 'cancelled')
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def insert_build_finished_get_props(
-        self, results, add_logs=None, want_logs_content=False, **kwargs
-    ):
+        self,
+        results: int | None,
+        add_logs: list[str] | bool | None = None,
+        want_logs_content: bool | list[str] = False,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[dict[str, Any]]:
         build = yield self.insert_build_finished(results, **kwargs)
         yield utils.getDetailsForBuild(
             self.master,
@@ -325,20 +344,20 @@ class TestBuildStartEndGenerator(
         ('branches', 'branch'),
         ('branches', 1),
     ])
-    def test_list_params_check_raises(self, arg_name, arg_value):
+    def test_list_params_check_raises(self, arg_name: str, arg_value: str | int) -> None:
         kwargs = {arg_name: arg_value}
-        g = BuildStartEndStatusGenerator(**kwargs)
+        g = BuildStartEndStatusGenerator(**kwargs)  # type: ignore[arg-type]
         with self.assertRaisesConfigError('must be a list or None'):
             g.check()
 
     def setup_generator(
         self,
-        results=SUCCESS,
-        start_message=None,
-        end_message=None,
-        want_logs_content=False,
-        **kwargs,
-    ):
+        results: int | None = SUCCESS,
+        start_message: dict[str, Any] | None = None,
+        end_message: dict[str, Any] | None = None,
+        want_logs_content: bool | list[str] = False,
+        **kwargs: Any,
+    ) -> BuildStartEndStatusGenerator:
         if start_message is None:
             start_message = {
                 "body": "start body",
@@ -367,7 +386,12 @@ class TestBuildStartEndGenerator(
         return g
 
     @defer.inlineCallbacks
-    def build_message(self, g, build, results=SUCCESS):
+    def build_message(
+        self,
+        g: BuildStartEndStatusGenerator,
+        build: dict[str, Any],
+        results: int | None = SUCCESS,
+    ) -> InlineCallbacksType[Any]:
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
@@ -375,7 +399,9 @@ class TestBuildStartEndGenerator(
         return report
 
     @defer.inlineCallbacks
-    def generate(self, g, key, build):
+    def generate(
+        self, g: BuildStartEndStatusGenerator, key: tuple[str, int, str], build: dict[str, Any]
+    ) -> InlineCallbacksType[Any]:
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
@@ -383,7 +409,7 @@ class TestBuildStartEndGenerator(
         return report
 
     @defer.inlineCallbacks
-    def test_build_message_start(self):
+    def test_build_message_start(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator()
         build = yield self.insert_build_finished_get_props(SUCCESS)
         buildset = yield self.get_inserted_buildset()
@@ -410,7 +436,7 @@ class TestBuildStartEndGenerator(
         )
 
     @defer.inlineCallbacks
-    def test_build_message_start_no_result(self):
+    def test_build_message_start_no_result(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator(results=None)
         build = yield self.insert_build_new()
         buildset = yield self.get_inserted_buildset()
@@ -438,7 +464,7 @@ class TestBuildStartEndGenerator(
         )
 
     @defer.inlineCallbacks
-    def test_is_message_needed_ignores_unspecified_tags(self):
+    def test_is_message_needed_ignores_unspecified_tags(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(SUCCESS)
 
         # force tags
@@ -447,7 +473,7 @@ class TestBuildStartEndGenerator(
         self.assertFalse(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
-    def test_is_message_needed_tags(self):
+    def test_is_message_needed_tags(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_finished_get_props(SUCCESS)
 
         # force tags
@@ -456,7 +482,7 @@ class TestBuildStartEndGenerator(
         self.assertTrue(g.is_message_needed_by_props(build))
 
     @defer.inlineCallbacks
-    def test_build_message_add_logs(self):
+    def test_build_message_add_logs(self) -> InlineCallbacksType[None]:
         with assertProducesWarnings(
             DeprecatedApiWarning,
             message_pattern=".*argument add_logs have been deprecated.*",
@@ -469,7 +495,7 @@ class TestBuildStartEndGenerator(
         self.assertIn("log with", report['logs'][0]['content']['content'])
 
     @defer.inlineCallbacks
-    def test_build_message_want_logs_content(self):
+    def test_build_message_want_logs_content(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator(want_logs_content=True)
         build = yield self.insert_build_finished_get_props(SUCCESS, want_logs_content=True)
         report = yield self.build_message(g, build)
@@ -478,7 +504,7 @@ class TestBuildStartEndGenerator(
         self.assertIn("log with", report['logs'][0]['content']['content'])
 
     @defer.inlineCallbacks
-    def test_build_message_add_patch(self):
+    def test_build_message_add_patch(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator(add_patch=True)
         build = yield self.insert_build_finished_get_props(SUCCESS, insert_patch=True)
         report = yield self.build_message(g, build)
@@ -494,14 +520,14 @@ class TestBuildStartEndGenerator(
         self.assertEqual(report['patches'], [patch_dict])
 
     @defer.inlineCallbacks
-    def test_build_message_add_patch_no_patch(self):
+    def test_build_message_add_patch_no_patch(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator(add_patch=True)
         build = yield self.insert_build_finished_get_props(SUCCESS, insert_patch=False)
         report = yield self.build_message(g, build)
         self.assertEqual(report['patches'], [])
 
     @defer.inlineCallbacks
-    def test_generate_new(self):
+    def test_generate_new(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator()
         build = yield self.insert_build_new()
         buildset = yield self.get_inserted_buildset()
@@ -524,7 +550,7 @@ class TestBuildStartEndGenerator(
         )
 
     @defer.inlineCallbacks
-    def test_generate_finished(self):
+    def test_generate_finished(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator()
         build = yield self.insert_build_finished_get_props(SUCCESS)
         buildset = yield self.get_inserted_buildset()
@@ -547,7 +573,7 @@ class TestBuildStartEndGenerator(
         )
 
     @defer.inlineCallbacks
-    def test_generate_none(self):
+    def test_generate_none(self) -> InlineCallbacksType[None]:
         g = yield self.setup_generator(builders=['other builder'])
         build = yield self.insert_build_new()
         build["buildset"] = yield self.get_inserted_buildset()
