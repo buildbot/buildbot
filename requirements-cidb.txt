@@ -8,4 +8,4 @@ pg8000==1.31.5
 # while to remove no longer needed dependencies.
 
 asn1crypto==1.5.1
-scramp==1.4.5
+scramp==1.4.8
