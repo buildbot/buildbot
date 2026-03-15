@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 
@@ -37,7 +38,7 @@ def forceScheduler2Data(sched: forcesched.ForceScheduler) -> dict[str, Any]:
         "name": str(sched.name),
         "button_name": str(sched.buttonName),
         "label": str(sched.label),
-        "builder_names": [str(name) for name in sched.builderNames],
+        "builder_names": [str(name) for name in cast(list[str], sched.builderNames)],
         "enabled": sched.enabled,
     }
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
@@ -101,7 +102,7 @@ class ForceSchedulersEndpoint(base.Endpoint):
             bdict = yield self.master.db.builders.getBuilder(builderid)
         for sched in self.master.allSchedulers():
             if isinstance(sched, forcesched.ForceScheduler):
-                if builderid is not None and bdict.name not in sched.builderNames:  # type: ignore[union-attr]
+                if builderid is not None and bdict.name not in cast(list[str], sched.builderNames):  # type: ignore[union-attr]
                     continue
                 ret.append(forceScheduler2Data(sched))
         return ret
