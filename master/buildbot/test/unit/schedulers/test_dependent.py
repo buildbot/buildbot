@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -28,6 +32,9 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
 from buildbot.test.util.state import StateTestMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 SUBMITTED_AT_TIME = 111111111
 COMPLETE_AT_TIME = 222222222
 OBJECTID = 33
@@ -37,15 +44,17 @@ UPSTREAM_NAME = 'uppy'
 
 class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpScheduler()
 
     @defer.inlineCallbacks
-    def makeScheduler(self, upstream=None):
+    def makeScheduler(
+        self, upstream: base.ReconfigurableBaseScheduler | None = None
+    ) -> InlineCallbacksType[dependent.Dependent]:
         # build a fake upstream scheduler
         class Upstream(base.ReconfigurableBaseScheduler):
-            def __init__(self, name):
+            def __init__(self, name: str) -> None:
                 super().__init__(name=name, builderNames=['a'])
 
         if not upstream:
@@ -59,7 +68,9 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
         return sched
 
     @defer.inlineCallbacks
-    def assertBuildsetSubscriptions(self, bsids=None):
+    def assertBuildsetSubscriptions(
+        self, bsids: list[int] | None = None
+    ) -> InlineCallbacksType[None]:
         yield self.assert_state(OBJECTID, upstream_bsids=bsids)
 
     # tests
@@ -70,12 +81,12 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
     # method returns.
 
     @defer.inlineCallbacks
-    def test_constructor_string_arg(self):
+    def test_constructor_string_arg(self) -> InlineCallbacksType[None]:
         with self.assertRaises(config.ConfigErrors):
-            yield self.makeScheduler(upstream='foo')
+            yield self.makeScheduler(upstream='foo')  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_activate(self):
+    def test_activate(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler()
         yield self.master.startService()
 
@@ -102,7 +113,9 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
             [q.filter for q in sched.master.mq.qrefs], [('schedulers', '133', 'updated')]
         )
 
-    def sendBuildsetMessage(self, scheduler_name=None, results=-1, complete=False):
+    def sendBuildsetMessage(
+        self, scheduler_name: str | None = None, results: int = -1, complete: bool = False
+    ) -> None:
         """Call callConsumer with a buildset message.  Most of the values here
         are hard-coded to correspond to those in do_test."""
         msg = {
@@ -122,7 +135,9 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
         self.master.mq.callConsumer(('buildsets', '44', 'complete' if complete else 'new'), msg)
 
     @defer.inlineCallbacks
-    def do_test(self, scheduler_name, expect_subscription, results, expect_buildset):
+    def do_test(
+        self, scheduler_name: str, expect_subscription: bool, results: int, expect_buildset: bool
+    ) -> InlineCallbacksType[None]:
         """Test the dependent scheduler by faking a buildset and subsequent
         completion from an upstream scheduler.
 
@@ -196,20 +211,20 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
         else:
             self.assertEqual(self.addBuildsetCalls, [])
 
-    def test_related_buildset_SUCCESS(self):
+    def test_related_buildset_SUCCESS(self) -> defer.Deferred[None]:
         return self.do_test(UPSTREAM_NAME, True, SUCCESS, True)
 
-    def test_related_buildset_WARNINGS(self):
+    def test_related_buildset_WARNINGS(self) -> defer.Deferred[None]:
         return self.do_test(UPSTREAM_NAME, True, WARNINGS, True)
 
-    def test_related_buildset_FAILURE(self):
+    def test_related_buildset_FAILURE(self) -> defer.Deferred[None]:
         return self.do_test(UPSTREAM_NAME, True, FAILURE, False)
 
-    def test_unrelated_buildset(self):
+    def test_unrelated_buildset(self) -> defer.Deferred[None]:
         return self.do_test('unrelated', False, SUCCESS, False)
 
     @defer.inlineCallbacks
-    def test_getUpstreamBuildsets_missing(self):
+    def test_getUpstreamBuildsets_missing(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler()
 
         # insert some state, with more bsids than exist
@@ -231,7 +246,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
         yield self.assert_state(OBJECTID, upstream_bsids=[11, 13])
 
     @defer.inlineCallbacks
-    def test_enabled_callback(self):
+    def test_enabled_callback(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler()
         expectedValue = not sched.enabled
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
@@ -241,7 +256,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
         self.assertEqual(sched.enabled, expectedValue)
 
     @defer.inlineCallbacks
-    def test_disabled_activate(self):
+    def test_disabled_activate(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler()
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
@@ -249,7 +264,7 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
         self.assertEqual(r, None)
 
     @defer.inlineCallbacks
-    def test_disabled_deactivate(self):
+    def test_disabled_deactivate(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler()
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
