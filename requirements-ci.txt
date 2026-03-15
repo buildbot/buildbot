@@ -30,7 +30,7 @@ Automat==25.4.16
 boto==2.49.0
 boto3==1.42.56
 botocore==1.42.56
-certifi==2025.10.5
+certifi==2026.2.25
 cffi==2.0.0
 charset-normalizer==3.4.2
 constantly==23.10.4
