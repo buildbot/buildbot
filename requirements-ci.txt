@@ -41,7 +41,7 @@ evalidate==2.0.5
 greenlet==3.2.3
 hyperlink==21.0.0
 idna==3.11
-incremental==24.7.2
+incremental==24.11.0
 Jinja2==3.1.6
 jmespath==1.0.1
 lz4==4.4.5
