@@ -42,7 +42,6 @@ jobs:
             requirements-cidb.txt
             master/setup.py
             worker/setup.py
-            pkg/setup.py
 
       - name: "Install dependencies"
         run: |
@@ -86,7 +85,6 @@ jobs:
             requirements-ci-pyinstaller.txt
             master/setup.py
             worker/setup.py
-            pkg/setup.py
 
       - name: "Install dependencies"
         run: |

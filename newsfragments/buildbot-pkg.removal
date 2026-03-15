@@ -1,0 +1,2 @@
+The buildbot-pkg package was removed.
+It was used for version definition from Git data (replaced with setuptools-scm) and JS build dependency, which was unavailable in sdist since Buildbot's JS projects have dependencies on each other locally.

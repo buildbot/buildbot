@@ -47,26 +47,4 @@ setup_args = {
     'cmdclass': {'sdist': our_sdist},
 }
 
-setup_args['install_requires'] = [
-    'twisted >= 21.2.0',
-    'autobahn >= 0.16.0',
-    'msgpack >= 0.6.0',
-    # buildbot_worker_windows_service needs pywin32
-    'pywin32; platform_system=="Windows"',
-    'importlib_metadata',
-]
-
-# Unit test hard dependencies.
-test_deps = [
-    'psutil',
-]
-
-setup_args['extras_require'] = {
-    'test': test_deps,
-}
-
-if os.getenv('NO_INSTALL_REQS'):
-    setup_args['install_requires'] = None
-    setup_args['extras_require'] = None
-
 setup(**setup_args)

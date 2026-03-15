@@ -1,0 +1,2 @@
+The environment variable ``NO_INSTALL_REQS`` (which if set, would remove all required dependencies from the Buildbot packages) was removed.
+If your workflow used it, do report an issue to explore workaround or re-establishment.
