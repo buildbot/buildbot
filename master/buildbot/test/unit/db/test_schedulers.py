@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -21,6 +24,11 @@ from buildbot.db import schedulers
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
+
+if TYPE_CHECKING:
+    import sqlalchemy as sa
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Tests(TestReactorMixin, unittest.TestCase):
@@ -41,13 +49,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
     scheduler25master = fakedb.SchedulerMaster(schedulerid=25, masterid=14)
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_enable(self):
+    def test_enable(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([self.scheduler24, self.master13, self.scheduler24master])
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertIsInstance(sch, schedulers.SchedulerModel)
@@ -70,14 +78,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_classifyChanges(self):
+    def test_classifyChanges(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([self.ss92, self.change3, self.change4, self.scheduler24])
         yield self.db.schedulers.classifyChanges(24, {3: False, 4: True})
         res = yield self.db.schedulers.getChangeClassifications(24)
         self.assertEqual(res, {3: False, 4: True})
 
     @defer.inlineCallbacks
-    def test_classifyChanges_again(self):
+    def test_classifyChanges_again(self) -> InlineCallbacksType[None]:
         # test reclassifying changes, which may happen during some timing
         # conditions.  It's important that this test uses multiple changes,
         # only one of which already exists
@@ -95,7 +103,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(res, {3: True, 4: False, 5: True, 6: False})
 
     @defer.inlineCallbacks
-    def test_flushChangeClassifications(self):
+    def test_flushChangeClassifications(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.ss92,
             self.change3,
@@ -111,7 +119,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(res, {})
 
     @defer.inlineCallbacks
-    def test_flushChangeClassifications_less_than(self):
+    def test_flushChangeClassifications_less_than(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.ss92,
             self.change3,
@@ -125,7 +133,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(res, {5: True})
 
     @defer.inlineCallbacks
-    def test_getChangeClassifications(self):
+    def test_getChangeClassifications(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.ss92,
             self.change3,
@@ -139,7 +147,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(res, {3: True, 4: False, 5: True, 6: True})
 
     @defer.inlineCallbacks
-    def test_getChangeClassifications_branch(self):
+    def test_getChangeClassifications_branch(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.ss92,
             self.change3,
@@ -153,26 +161,26 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(res, {6: True})
 
     @defer.inlineCallbacks
-    def test_findSchedulerId_new(self):
+    def test_findSchedulerId_new(self) -> InlineCallbacksType[None]:
         id = yield self.db.schedulers.findSchedulerId('schname')
         sch = yield self.db.schedulers.getScheduler(id)
         self.assertEqual(sch.name, 'schname')
 
     @defer.inlineCallbacks
-    def test_findSchedulerId_existing(self):
+    def test_findSchedulerId_existing(self) -> InlineCallbacksType[None]:
         id = yield self.db.schedulers.findSchedulerId('schname')
         id2 = yield self.db.schedulers.findSchedulerId('schname')
         self.assertEqual(id, id2)
 
     @defer.inlineCallbacks
-    def test_setSchedulerMaster_fresh(self):
+    def test_setSchedulerMaster_fresh(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([self.scheduler24, self.master13])
         yield self.db.schedulers.setSchedulerMaster(24, 13)
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertEqual(sch.masterid, 13)
 
     @defer.inlineCallbacks
-    def test_setSchedulerMaster_inactive_but_linked(self):
+    def test_setSchedulerMaster_inactive_but_linked(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.master13,
             self.scheduler25,
@@ -183,7 +191,9 @@ class Tests(TestReactorMixin, unittest.TestCase):
             yield self.db.schedulers.setSchedulerMaster(25, 13)
 
     @defer.inlineCallbacks
-    def test_setSchedulerMaster_inactive_but_linked_to_this_master(self):
+    def test_setSchedulerMaster_inactive_but_linked_to_this_master(
+        self,
+    ) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.scheduler25,
             self.master14,
@@ -192,7 +202,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         yield self.db.schedulers.setSchedulerMaster(25, 14)
 
     @defer.inlineCallbacks
-    def test_setSchedulerMaster_active(self):
+    def test_setSchedulerMaster_active(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
@@ -202,7 +212,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             yield self.db.schedulers.setSchedulerMaster(24, 14)
 
     @defer.inlineCallbacks
-    def test_setSchedulerMaster_None(self):
+    def test_setSchedulerMaster_None(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.scheduler25,
             self.master14,
@@ -213,14 +223,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sch.masterid, None)
 
     @defer.inlineCallbacks
-    def test_setSchedulerMaster_None_unowned(self):
+    def test_setSchedulerMaster_None_unowned(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([self.scheduler25])
         yield self.db.schedulers.setSchedulerMaster(25, None)
         sch = yield self.db.schedulers.getScheduler(25)
         self.assertEqual(sch.masterid, None)
 
     @defer.inlineCallbacks
-    def test_getScheduler(self):
+    def test_getScheduler(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([self.scheduler24])
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertIsInstance(sch, schedulers.SchedulerModel)
@@ -229,12 +239,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getScheduler_missing(self):
+    def test_getScheduler_missing(self) -> InlineCallbacksType[None]:
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertEqual(sch, None)
 
     @defer.inlineCallbacks
-    def test_getScheduler_active(self):
+    def test_getScheduler_active(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([self.scheduler24, self.master13, self.scheduler24master])
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertIsInstance(sch, schedulers.SchedulerModel)
@@ -243,7 +253,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getScheduler_inactive_but_linked(self):
+    def test_getScheduler_inactive_but_linked(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([self.scheduler25, self.master14, self.scheduler25master])
         sch = yield self.db.schedulers.getScheduler(25)
         self.assertIsInstance(sch, schedulers.SchedulerModel)
@@ -252,7 +262,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )  # row exists, but marked inactive
 
     @defer.inlineCallbacks
-    def test_getSchedulers(self):
+    def test_getSchedulers(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
@@ -260,7 +270,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             self.scheduler25,
         ])
 
-        def schKey(sch):
+        def schKey(sch: schedulers.SchedulerModel) -> int:
             return sch.id
 
         schlist = yield self.db.schedulers.getSchedulers()
@@ -280,7 +290,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getSchedulers_masterid(self):
+    def test_getSchedulers_masterid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
@@ -300,7 +310,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getSchedulers_active(self):
+    def test_getSchedulers_active(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
@@ -320,7 +330,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getSchedulers_active_masterid(self):
+    def test_getSchedulers_active_masterid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
@@ -347,7 +357,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted(schlist), [])
 
     @defer.inlineCallbacks
-    def test_getSchedulers_inactive(self):
+    def test_getSchedulers_inactive(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
@@ -367,7 +377,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getSchedulers_inactive_masterid(self):
+    def test_getSchedulers_inactive_masterid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             self.scheduler24,
             self.master13,
@@ -389,8 +399,10 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted(schlist), [])  # always returns [] by spec!
 
     @defer.inlineCallbacks
-    def addClassifications(self, schedulerid, *classifications):
-        def thd(conn):
+    def addClassifications(
+        self, schedulerid: int, *classifications: tuple[int, int]
+    ) -> InlineCallbacksType[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             q = self.db.model.scheduler_changes.insert()
             conn.execute(
                 q,
