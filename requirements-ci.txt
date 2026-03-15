@@ -34,7 +34,7 @@ certifi==2025.10.5
 cffi==2.0.0
 charset-normalizer==3.4.2
 constantly==23.10.4
-croniter==6.0.0
+croniter==6.2.2
 cryptography==46.0.5
 dill==0.4.1
 evalidate==2.0.5
