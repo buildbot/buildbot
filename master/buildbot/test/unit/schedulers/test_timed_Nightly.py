@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import time
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -26,6 +30,11 @@ from buildbot.test import fakedb
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
 from buildbot.test.util.state import StateTestMixin
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unittest.TestCase):
@@ -45,7 +54,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
     long_ago_time = 86400
 
     @defer.inlineCallbacks
-    def makeScheduler(self, **kwargs):
+    def makeScheduler(self, **kwargs: Any) -> InlineCallbacksType[timed.Nightly]:
         sched = yield self.attachScheduler(
             timed.Nightly(**kwargs), self.OBJECTID, self.SCHEDULERID, overrideBuildsetMethods=True
         )
@@ -56,10 +65,13 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
 
         self.reactor.advance(self.time_offset)
 
-        self.addBuildsetCallTimes = []
+        self.addBuildsetCallTimes: list[float] = []
 
-        def recordTimes(timeList, method):
-            def timedMethod(**kw):
+        def recordTimes(
+            timeList: list[float],
+            method: Callable[..., defer.Deferred[tuple[int, dict[int, int]]]],
+        ) -> Callable[..., defer.Deferred[tuple[int, dict[int, int]]]]:
+            def timedMethod(**kw: Any) -> defer.Deferred[tuple[int, dict[int, int]]]:
                 timeList.append(self.reactor.seconds() - self.time_offset)
                 return method(**kw)
 
@@ -75,7 +87,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         # see self.assertConsumingChanges
         self.consumingChanges = None
 
-        def startConsumingChanges(**kwargs):
+        def startConsumingChanges(**kwargs: Any) -> defer.Deferred[None]:
             self.consumingChanges = kwargs
             return defer.succeed(None)
 
@@ -83,7 +95,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
 
         return sched
 
-    def mkbs(self, **kwargs):
+    def mkbs(self, **kwargs: Any) -> dict[str, Any]:
         # create buildset for expected_buildset in assertBuildset.
         bs = {
             "reason": "The Nightly scheduler named 'test' triggered this build",
@@ -94,16 +106,16 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         bs.update(kwargs)
         return bs
 
-    def mkss(self, **kwargs):
+    def mkss(self, **kwargs: Any) -> dict[str, Any]:
         # create sourcestamp for expected_sourcestamps in assertBuildset.
         ss = {"branch": 'master', "project": '', "repository": '', "sourcestampsetid": 100}
         ss.update(kwargs)
         return ss
 
     @defer.inlineCallbacks
-    def mkch(self, **kwargs):
+    def mkch(self, **kwargs: Any) -> InlineCallbacksType[scheduler.SchedulerMixin.FakeChange]:
         # create changeset and insert in database.
-        chd = {"branch": 'master', "project": '', "repository": ''}
+        chd: dict[str, Any] = {"branch": 'master', "project": '', "repository": ''}
         chd.update(kwargs)
         ch = self.makeFakeChange(**chd)
         # fakedb.Change requires changeid instead of number
@@ -116,23 +128,23 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         return ch
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpScheduler()
 
-    def assertConsumingChanges(self, **kwargs):
+    def assertConsumingChanges(self, **kwargs: Any) -> None:
         self.assertEqual(self.consumingChanges, kwargs)
 
     # Tests
 
     @defer.inlineCallbacks
-    def test_constructor_no_reason(self):
+    def test_constructor_no_reason(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         yield sched.configureService()
         self.assertEqual(sched.reason, "The Nightly scheduler named 'test' triggered this build")
 
     @defer.inlineCallbacks
-    def test_constructor_reason(self):
+    def test_constructor_reason(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', reason="hourly"
         )
@@ -140,7 +152,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         self.assertEqual(sched.reason, "hourly")
 
     @defer.inlineCallbacks
-    def test_constructor_change_filter(self):
+    def test_constructor_change_filter(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -151,7 +163,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         assert sched.change_filter
 
     @defer.inlineCallbacks
-    def test_constructor_month(self):
+    def test_constructor_month(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', month='1'
         )
@@ -159,7 +171,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         self.assertEqual(sched.month, "1")
 
     @defer.inlineCallbacks
-    def test_constructor_priority_none(self):
+    def test_constructor_priority_none(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', priority=None
         )
@@ -167,7 +179,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         self.assertEqual(sched.priority, None)
 
     @defer.inlineCallbacks
-    def test_constructor_priority_int(self):
+    def test_constructor_priority_int(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='default', priority=8
         )
@@ -175,8 +187,10 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         self.assertEqual(sched.priority, 8)
 
     @defer.inlineCallbacks
-    def test_constructor_priority_function(self):
-        def sched_priority(builderNames, changesByCodebase):
+    def test_constructor_priority_function(self) -> InlineCallbacksType[None]:
+        def sched_priority(
+            builderNames: list[str] | None, changesByCodebase: dict[str, list[Any]]
+        ) -> int:
             return 0
 
         sched = yield self.makeScheduler(
@@ -186,7 +200,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         self.assertEqual(sched.priority, sched_priority)
 
     @defer.inlineCallbacks
-    def test_enabled_callback(self):
+    def test_enabled_callback(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         yield sched.configureService()
         expectedValue = not sched.enabled
@@ -197,7 +211,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         self.assertEqual(sched.enabled, expectedValue)
 
     @defer.inlineCallbacks
-    def test_disabled_activate(self):
+    def test_disabled_activate(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
@@ -205,7 +219,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         self.assertEqual(r, None)
 
     @defer.inlineCallbacks
-    def test_disabled_deactivate(self):
+    def test_disabled_deactivate(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
@@ -213,7 +227,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         self.assertEqual(r, None)
 
     @defer.inlineCallbacks
-    def test_disabled_start_build(self):
+    def test_disabled_start_build(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(name='test', builderNames=['test'], branch='default')
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, False)
@@ -223,7 +237,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
     # end-to-end tests: let's see the scheduler in action
 
     @defer.inlineCallbacks
-    def test_iterations_simple(self):
+    def test_iterations_simple(self) -> InlineCallbacksType[None]:
         # note that Nightly works in local time, but the TestReactor always
         # starts at midnight UTC, so be careful not to use times that are
         # timezone dependent -- stick to minutes-past-the-half-hour, as some
@@ -287,7 +301,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.assert_state_by_class('test', 'Nightly', last_build=1260 + self.time_offset)
 
     @defer.inlineCallbacks
-    def test_iterations_simple_with_branch(self):
+    def test_iterations_simple_with_branch(self) -> InlineCallbacksType[None]:
         # see timezone warning above
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], branch='master', minute=[5, 35]
@@ -320,8 +334,12 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
 
     @defer.inlineCallbacks
     def do_test_iterations_onlyIfChanged(
-        self, changes_at, last_only_if_changed, is_new_scheduler=False, **kwargs
-    ):
+        self,
+        changes_at: list[tuple[int, scheduler.SchedulerMixin.FakeChange, bool]],
+        last_only_if_changed: bool | None,
+        is_new_scheduler: bool = False,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         fII = mock.Mock(name='fII')
         yield self.makeScheduler(
             name='test',
@@ -342,7 +360,11 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         return (yield self.do_test_iterations_onlyIfChanged_test(fII, changes_at))
 
     @defer.inlineCallbacks
-    def do_test_iterations_onlyIfChanged_test(self, fII, changes_at):
+    def do_test_iterations_onlyIfChanged_test(
+        self,
+        fII: mock.Mock,
+        changes_at: list[tuple[int, scheduler.SchedulerMixin.FakeChange, bool]],
+    ) -> InlineCallbacksType[None]:
         yield self.master.startService()
 
         # check that the scheduler has started to consume changes
@@ -361,7 +383,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
             self.reactor.advance(60)
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_new_scheduler(self):
+    def test_iterations_onlyIfChanged_no_changes_new_scheduler(self) -> InlineCallbacksType[None]:
         yield self.do_test_iterations_onlyIfChanged(
             [], last_only_if_changed=None, is_new_scheduler=True
         )
@@ -385,14 +407,18 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_existing_scheduler(self):
+    def test_iterations_onlyIfChanged_no_changes_existing_scheduler(
+        self,
+    ) -> InlineCallbacksType[None]:
         yield self.do_test_iterations_onlyIfChanged([], last_only_if_changed=True)
         self.assertEqual(self.addBuildsetCalls, [])
         yield self.assert_state_by_class('test', 'Nightly', last_build=1500 + self.time_offset)
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_existing_scheduler_setting_changed(self):
+    def test_iterations_onlyIfChanged_no_changes_existing_scheduler_setting_changed(
+        self,
+    ) -> InlineCallbacksType[None]:
         # When onlyIfChanged==False, builds are run every time on the time set
         # (changes or no changes). Changes are being recognized but do not have any effect on
         # starting builds.
@@ -422,7 +448,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_existing_scheduler_update_to_v3_5_0(self):
+    def test_iterations_onlyIfChanged_no_changes_existing_scheduler_update_to_v3_5_0(
+        self,
+    ) -> InlineCallbacksType[None]:
         # v3.4.0 have not had a variable last_only_if_changed yet therefore this case is tested
         # separately
         yield self.do_test_iterations_onlyIfChanged([], last_only_if_changed=None)
@@ -432,7 +460,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_no_changes_force_at(self):
+    def test_iterations_onlyIfChanged_no_changes_force_at(self) -> InlineCallbacksType[None]:
         yield self.do_test_iterations_onlyIfChanged(
             [], last_only_if_changed=True, force_at_minute=[23, 25, 27]
         )
@@ -458,7 +486,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_calls_for_new_scheduler(self):
+    def test_iterations_onlyIfChanged_unimp_changes_calls_for_new_scheduler(
+        self,
+    ) -> InlineCallbacksType[None]:
         yield self.do_test_iterations_onlyIfChanged(
             [
                 (60, self.makeFakeChange(number=500, branch=None), False),
@@ -490,7 +520,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_existing_sched_changed_only_if_changed(self):
+    def test_iterations_onlyIfChanged_unimp_changes_existing_sched_changed_only_if_changed(
+        self,
+    ) -> InlineCallbacksType[None]:
         yield self.do_test_iterations_onlyIfChanged(
             [
                 (60, self.makeFakeChange(number=500, branch=None), False),
@@ -520,7 +552,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_existing_sched_same_only_if_changed(self):
+    def test_iterations_onlyIfChanged_unimp_changes_existing_sched_same_only_if_changed(
+        self,
+    ) -> InlineCallbacksType[None]:
         yield self.do_test_iterations_onlyIfChanged(
             [
                 (60, self.makeFakeChange(number=500, branch=None), False),
@@ -535,7 +569,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_changes_existing_scheduler_update_to_v3_5_0(self):
+    def test_iterations_onlyIfChanged_changes_existing_scheduler_update_to_v3_5_0(
+        self,
+    ) -> InlineCallbacksType[None]:
         # v3.4.0 have not had a variable last_only_if_changed yet therefore this case is tested
         # separately
         yield self.do_test_iterations_onlyIfChanged(
@@ -569,7 +605,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_unimp_changes_force_at(self):
+    def test_iterations_onlyIfChanged_unimp_changes_force_at(self) -> InlineCallbacksType[None]:
         yield self.do_test_iterations_onlyIfChanged(
             [
                 (60, self.makeFakeChange(number=500, branch=None), False),
@@ -601,7 +637,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_off_branch_changes(self):
+    def test_iterations_onlyIfChanged_off_branch_changes(self) -> InlineCallbacksType[None]:
         yield self.do_test_iterations_onlyIfChanged(
             [
                 (60, self.makeFakeChange(number=500, branch='testing'), True),
@@ -615,7 +651,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_mixed_changes(self):
+    def test_iterations_onlyIfChanged_mixed_changes(self) -> InlineCallbacksType[None]:
         yield self.do_test_iterations_onlyIfChanged(
             [
                 (120, self.makeFakeChange(number=500, branch=None), False),
@@ -652,7 +688,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged(self):
+    def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged(
+        self,
+    ) -> InlineCallbacksType[None]:
         # Test createAbsoluteSourceStamps=True when only one codebase has
         # changed
         yield self.do_test_iterations_onlyIfChanged(
@@ -697,7 +735,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged_loadOther(self):
+    def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged_loadOther(
+        self,
+    ) -> InlineCallbacksType[None]:
         # Test createAbsoluteSourceStamps=True when only one codebase has changed,
         # but the other was previously changed
         fII = mock.Mock(name='fII')
@@ -773,7 +813,9 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         yield self.sched.deactivate()
 
     @defer.inlineCallbacks
-    def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_bothChanged(self):
+    def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_bothChanged(
+        self,
+    ) -> InlineCallbacksType[None]:
         # Test createAbsoluteSourceStamps=True when both codebases have changed
         yield self.do_test_iterations_onlyIfChanged(
             [
