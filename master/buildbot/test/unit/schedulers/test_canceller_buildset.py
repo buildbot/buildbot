@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -24,22 +28,25 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.ssfilter import SourceStampFilter
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
 
         yield self.insert_test_data()
-        self._cancelled_build_ids = []
+        self._cancelled_build_ids: list[int] = []
 
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
-    def insert_test_data(self):
+    def insert_test_data(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
@@ -94,7 +101,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
             ),
         ])
 
-    def assert_cancelled(self, cancellations):
+    def assert_cancelled(self, cancellations: list[tuple[str, int]]) -> None:
         expected_productions = []
         reason = 'Build has been cancelled because another build in the same buildset failed'
 
@@ -113,14 +120,14 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.master.mq.assertProductions(expected_productions)
 
     @defer.inlineCallbacks
-    def send_build_finished(self, id, results):
+    def send_build_finished(self, id: int, results: int) -> InlineCallbacksType[None]:
         build = yield self.master.data.get(('builds', str(id)))
         build['results'] = results
         self.master.mq.callConsumer(('builds', str(id), 'finished'), build)
         yield self.master.mq.wait_consumed()
 
     @defer.inlineCallbacks
-    def test_cancel_buildrequests_ss_filter_does_not_match(self):
+    def test_cancel_buildrequests_ss_filter_does_not_match(self) -> InlineCallbacksType[None]:
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
@@ -136,7 +143,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([])
 
     @defer.inlineCallbacks
-    def test_cancel_buildrequests_builder_filter_does_not_match(self):
+    def test_cancel_buildrequests_builder_filter_does_not_match(self) -> InlineCallbacksType[None]:
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
@@ -152,7 +159,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([])
 
     @defer.inlineCallbacks
-    def test_cancel_buildrequests_not_failure(self):
+    def test_cancel_buildrequests_not_failure(self) -> InlineCallbacksType[None]:
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
@@ -168,7 +175,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([])
 
     @defer.inlineCallbacks
-    def test_cancel_buildrequests_matches(self):
+    def test_cancel_buildrequests_matches(self) -> InlineCallbacksType[None]:
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
@@ -186,7 +193,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([('breq', 401), ('breq', 402)])
 
     @defer.inlineCallbacks
-    def test_cancel_buildrequests_matches_any_builder(self):
+    def test_cancel_buildrequests_matches_any_builder(self) -> InlineCallbacksType[None]:
         self.canceller = FailingBuildsetCanceller(
             'canceller',
             [
