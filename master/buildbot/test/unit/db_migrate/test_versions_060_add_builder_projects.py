@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import hashlib
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from twisted.trial import unittest
@@ -21,14 +24,17 @@ from twisted.trial import unittest
 from buildbot.test.util import migration
 from buildbot.util import sautils
 
+if TYPE_CHECKING:
+    from sqlalchemy.engine.base import Connection
+    from twisted.internet.defer import Deferred
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> Deferred[None]:  # type: ignore[override]
         return self.setUpMigrateTest()
 
-    def create_tables_thd(self, conn):
+    def create_tables_thd(self, conn: Connection) -> None:
         metadata = sa.MetaData()
-        metadata.bind = conn
 
         builders = sautils.Table(
             'builders',
@@ -53,13 +59,12 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         )
         conn.commit()
 
-    def test_update(self):
-        def setup_thd(conn):
+    def test_update(self) -> Deferred[None]:
+        def setup_thd(conn: Connection) -> None:
             self.create_tables_thd(conn)
 
-        def verify_thd(conn):
+        def verify_thd(conn: Connection) -> None:
             metadata = sa.MetaData()
-            metadata.bind = conn
 
             # check that projects table has been added
             projects = sautils.Table('projects', metadata, autoload_with=conn)
