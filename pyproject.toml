@@ -157,7 +157,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot.test.unit.db_migrate.test_versions_061_add_builder_description_format",
       "buildbot.test.unit.db_migrate.test_versions_062_add_project_description_format",
       "buildbot.test.unit.db_migrate.test_versions_063_add_steps_locks_acquired_at",
       "buildbot.test.unit.db_migrate.test_versions_064_add_worker_pause_reason",
