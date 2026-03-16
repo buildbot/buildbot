@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -21,6 +25,11 @@ from buildbot.db import build_data
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
+
+if TYPE_CHECKING:
+    from sqlalchemy import Connection
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Tests(TestReactorMixin, unittest.TestCase):
@@ -39,13 +48,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_add_data_get_data(self):
+    def test_add_data_get_data(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data)
         yield self.db.build_data.setBuildData(
             buildid=30, name='mykey', value=b'myvalue', source='mysource'
@@ -64,13 +73,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_data_non_existing(self):
+    def test_get_data_non_existing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data)
         data_dict = yield self.db.build_data.getBuildData(buildid=30, name='mykey')
         self.assertIsNone(data_dict)
 
     @defer.inlineCallbacks
-    def test_add_data_replace_value(self):
+    def test_add_data_replace_value(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data)
         yield self.db.build_data.setBuildData(
             buildid=30, name='mykey', value=b'myvalue', source='mysource'
@@ -93,10 +102,10 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_add_data_insert_race(self):
+    def test_add_data_insert_race(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data)
 
-        def hook(conn):
+        def hook(conn: Connection) -> None:
             value = b'myvalue_old'
             insert_values = {
                 'buildid': 30,
@@ -128,7 +137,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_add_data_get_data_no_value(self):
+    def test_add_data_get_data_no_value(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data)
         yield self.db.build_data.setBuildData(
             buildid=30, name='mykey', value=b'myvalue', source='mysource'
@@ -143,13 +152,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_data_no_values_non_existing(self):
+    def test_get_data_no_values_non_existing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data)
         data_dict = yield self.db.build_data.getBuildDataNoValue(buildid=30, name='mykey')
         self.assertIsNone(data_dict)
 
     @defer.inlineCallbacks
-    def test_get_all_build_data_no_values(self):
+    def test_get_all_build_data_no_values(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.common_data,
             fakedb.BuildData(id=91, buildid=30, name='name1', value=b'value1', source='source1'),
@@ -185,8 +194,8 @@ class Tests(TestReactorMixin, unittest.TestCase):
     ])
     @defer.inlineCallbacks
     def test_remove_old_build_data(
-        self, older_than_timestamp, exp_num_deleted, exp_remaining_names
-    ):
+        self, older_than_timestamp: int, exp_num_deleted: int, exp_remaining_names: list[str]
+    ) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.common_data,
             fakedb.Build(
@@ -236,7 +245,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         num_deleted = yield self.db.build_data.deleteOldBuildData(older_than_timestamp)
         self.assertEqual(num_deleted, exp_num_deleted)
 
-        remaining_names = []
+        remaining_names: list[str] = []
         for buildid in [50, 51, 52, 53]:
             data_dicts = yield self.db.build_data.getAllBuildDataNoValues(buildid)
             remaining_names.extend(d.name for d in data_dicts)
