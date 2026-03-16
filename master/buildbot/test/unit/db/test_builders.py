@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -23,6 +25,9 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.twisted import async_to_deferred
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 def builderKey(builder: builders.BuilderModel) -> int:
@@ -37,13 +42,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_updateBuilderInfo(self):
+    def test_updateBuilderInfo(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Project(id=123, name="fake_project123"),
             fakedb.Project(id=124, name="fake_project124"),
@@ -81,7 +86,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_update_builder_info_tags_case(self):
+    def test_update_builder_info_tags_case(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Project(id=107, name='fake_project'),
             fakedb.Builder(id=7, name='some:builder7', projectid=107),
@@ -101,7 +106,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_findBuilderId_new(self):
+    def test_findBuilderId_new(self) -> InlineCallbacksType[None]:
         id = yield self.db.builders.findBuilderId('some:builder')
         builderdict = yield self.db.builders.getBuilder(id)
         self.assertEqual(
@@ -113,12 +118,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_findBuilderId_new_no_autoCreate(self):
+    def test_findBuilderId_new_no_autoCreate(self) -> InlineCallbacksType[None]:
         id = yield self.db.builders.findBuilderId('some:builder', autoCreate=False)
         self.assertIsNone(id)
 
     @defer.inlineCallbacks
-    def test_findBuilderId_exists(self):
+    def test_findBuilderId_exists(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Builder(id=7, name='some:builder'),
         ])
@@ -126,7 +131,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(id, 7)
 
     @defer.inlineCallbacks
-    def test_addBuilderMaster(self):
+    def test_addBuilderMaster(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Builder(id=7),
             fakedb.Master(id=9, name='abc'),
@@ -145,7 +150,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_addBuilderMaster_already_present(self):
+    def test_addBuilderMaster_already_present(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Builder(id=7),
             fakedb.Master(id=9, name='abc'),
@@ -164,7 +169,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_removeBuilderMaster(self):
+    def test_removeBuilderMaster(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Builder(id=7),
             fakedb.Master(id=9),
@@ -184,7 +189,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilder_no_masters(self):
+    def test_getBuilder_no_masters(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Builder(id=7),
         ])
@@ -198,7 +203,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilder_with_masters(self):
+    def test_getBuilder_with_masters(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Builder(id=7),
             fakedb.Master(id=3, name='m1'),
@@ -217,12 +222,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilder_missing(self):
+    def test_getBuilder_missing(self) -> InlineCallbacksType[None]:
         builderdict = yield self.db.builders.getBuilder(7)
         self.assertEqual(builderdict, None)
 
     @defer.inlineCallbacks
-    def test_getBuilders(self):
+    def test_getBuilders(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Builder(id=7, name='some:builder'),
             fakedb.Builder(id=8, name='other:builder'),
@@ -258,7 +263,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilders_masterid(self):
+    def test_getBuilders_masterid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Builder(id=7, name='some:builder'),
             fakedb.Builder(id=8, name='other:builder'),
@@ -290,7 +295,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilders_projectid(self):
+    def test_getBuilders_projectid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Project(id=201, name="p201"),
             fakedb.Project(id=202, name="p202"),
@@ -328,7 +333,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @async_to_deferred
-    async def test_getBuilders_workerid(self):
+    async def test_getBuilders_workerid(self) -> None:
         await self.db.insert_test_data([
             fakedb.Builder(id=101, name="b101"),
             fakedb.Builder(id=102, name="b102"),
@@ -365,6 +370,6 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilders_empty(self):
+    def test_getBuilders_empty(self) -> InlineCallbacksType[None]:
         builderlist = yield self.db.builders.getBuilders()
         self.assertEqual(sorted(builderlist), [])

@@ -157,7 +157,6 @@ plugins = "mypy_zope:plugin"
 
     [[tool.mypy.overrides]]
     module = [
-      "buildbot.test.unit.db.test_builders",
       "buildbot.test.unit.db.test_buildrequests",
       "buildbot.test.unit.db.test_builds",
       "buildbot.test.unit.db.test_buildsets",
