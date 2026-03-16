@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import hashlib
 from typing import TYPE_CHECKING
+from typing import Callable
+from typing import NoReturn
 from unittest import mock
 
 import sqlalchemy as sa
@@ -30,11 +32,16 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import sautils
 
 if TYPE_CHECKING:
+    from unittest.mock import Mock
+
     from sqlalchemy.future.engine import Connection
+    from twisted.internet.defer import Deferred
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class TestBase(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         meta = sa.MetaData()
         self.tbl = sautils.Table(
             'tbl', meta, sa.Column('str32', sa.String(length=32)), sa.Column('txt', sa.Text)
@@ -43,27 +50,27 @@ class TestBase(unittest.TestCase):
         self.db.pool.engine.dialect.name = 'mysql'
         self.comp = base.DBConnectorComponent(self.db)
 
-    def test_checkLength_ok(self):
+    def test_checkLength_ok(self) -> None:
         self.comp.checkLength(self.tbl.c.str32, "short string")
 
-    def test_checkLength_long(self):
+    def test_checkLength_long(self) -> None:
         with self.assertRaises(RuntimeError):
             self.comp.checkLength(self.tbl.c.str32, ("long string" * 5))
 
-    def test_ensureLength_ok(self):
+    def test_ensureLength_ok(self) -> None:
         v = self.comp.ensureLength(self.tbl.c.str32, "short string")
         self.assertEqual(v, "short string")
 
-    def test_ensureLength_long(self):
+    def test_ensureLength_long(self) -> None:
         v = self.comp.ensureLength(self.tbl.c.str32, "short string" * 5)
         self.assertEqual(v, "short stringshordacf5a81f8ae3873")
         self.comp.checkLength(self.tbl.c.str32, v)
 
-    def test_checkLength_text(self):
+    def test_checkLength_text(self) -> None:
         with self.assertRaises(AssertionError):
             self.comp.checkLength(self.tbl.c.txt, ("long string" * 5))
 
-    def test_checkLength_long_not_mysql(self):
+    def test_checkLength_long_not_mysql(self) -> None:
         self.db.pool.engine.dialect.name = 'sqlite'
         self.comp.checkLength(self.tbl.c.str32, "long string" * 5)
         # run that again since the method gets stubbed out
@@ -72,17 +79,17 @@ class TestBase(unittest.TestCase):
 
 class TestBaseAsConnectorComponent(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_findSomethingId_race(self):
+    def test_findSomethingId_race(self) -> InlineCallbacksType[None]:
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
 
-        def race_thd(conn: Connection):
+        def race_thd(conn: Connection) -> None:
             conn.execute(
                 tbl.insert().values(
                     id=5, name='somemaster', name_hash=hash, active=1, last_active=1
@@ -104,7 +111,7 @@ class TestBaseAsConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(id, 5)
 
     @defer.inlineCallbacks
-    def test_findSomethingId_new(self):
+    def test_findSomethingId_new(self) -> InlineCallbacksType[None]:
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
         id = yield self.db.masters.findSomethingId(
@@ -115,7 +122,7 @@ class TestBaseAsConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(id, 1)
 
     @defer.inlineCallbacks
-    def test_findSomethingId_existing(self):
+    def test_findSomethingId_existing(self) -> InlineCallbacksType[None]:
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
 
@@ -131,7 +138,7 @@ class TestBaseAsConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(id, 7)
 
     @defer.inlineCallbacks
-    def test_findSomethingId_new_noCreate(self):
+    def test_findSomethingId_new_noCreate(self) -> InlineCallbacksType[None]:
         tbl = self.db.model.masters
         hash = hashlib.sha1(b'somemaster').hexdigest()
         id = yield self.db.masters.findSomethingId(
@@ -144,27 +151,27 @@ class TestBaseAsConnectorComponent(TestReactorMixin, unittest.TestCase):
 
 
 class TestCachedDecorator(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         # set this to True to check that cache.get isn't called (for
         # no_cache=1)
         self.cache_get_raises_exception = False
 
     class TestConnectorComponent(base.DBConnectorComponent):
-        invocations = None
+        invocations: list[str] | None = None
 
         @base.cached("mycache")
-        def getThing(self, key):
+        def getThing(self, key: str) -> Deferred[str]:
             if self.invocations is None:
                 self.invocations = []
             self.invocations.append(key)
             return defer.succeed(key * 2)
 
-    def get_cache(self, cache_name, miss_fn):
+    def get_cache(self, cache_name: str, miss_fn: Callable) -> Mock:
         self.assertEqual(cache_name, "mycache")
         cache = mock.Mock(name="mycache")
         if self.cache_get_raises_exception:
 
-            def ex(key):
+            def ex(key: str) -> NoReturn:
                 raise RuntimeError("cache.get called unexpectedly")
 
             cache.get = ex
@@ -175,7 +182,7 @@ class TestCachedDecorator(unittest.TestCase):
     # tests
 
     @defer.inlineCallbacks
-    def test_cached(self):
+    def test_cached(self) -> InlineCallbacksType[None]:
         # attach it to the connector
         connector = mock.Mock(name="connector")
         connector.master.caches.get_cache = self.get_cache
@@ -191,7 +198,7 @@ class TestCachedDecorator(unittest.TestCase):
         self.assertEqual((res1, res2, comp.invocations), ('foofoo', 'barbar', ['foo', 'bar']))
 
     @defer.inlineCallbacks
-    def test_cached_no_cache(self):
+    def test_cached_no_cache(self) -> InlineCallbacksType[None]:
         # attach it to the connector
         connector = mock.Mock(name="connector")
         connector.master.caches.get_cache = self.get_cache
