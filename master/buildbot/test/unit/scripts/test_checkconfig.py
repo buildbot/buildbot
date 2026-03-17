@@ -13,11 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import re
 import sys
 import textwrap
 from io import StringIO
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.trial import unittest
@@ -26,16 +29,27 @@ from buildbot.scripts import base
 from buildbot.scripts import checkconfig
 from buildbot.test.util import dirs
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from twisted.internet.defer import Deferred
+
 
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> Deferred[None]:  # type: ignore[override]
         # config dir must be unique so that the python runtime does not optimize its list of module
         self.configdir = self.mktemp()
         return self.setUpDirs(self.configdir)
 
     # tests
 
-    def do_test_load(self, config='', other_files=None, stdout_re=None, stderr_re=None):
+    def do_test_load(
+        self,
+        config: str = '',
+        other_files: Mapping[str, str] | Mapping[tuple[str, str], str] | None = None,
+        stdout_re: re.Pattern[str] | None = None,
+        stderr_re: re.Pattern[str] | None = None,
+    ) -> None:
         if other_files is None:
             other_files = {}
         configFile = os.path.join(self.configdir, 'master.cfg')
@@ -48,7 +62,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 if not os.path.isdir(dn):
                     os.makedirs(dn)
             else:
-                fn = os.path.join(self.configdir, filename)
+                fn = os.path.join(self.configdir, filename)  # type: ignore[arg-type]
             with open(fn, "w", encoding='utf-8') as f:
                 f.write(contents)
 
@@ -62,13 +76,11 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
             sys.stdout = old_stdout
             sys.stderr = old_stderr
         if stdout_re:
-            stdout = stdout.getvalue()
-            self.assertTrue(stdout_re.search(stdout), stdout)
+            self.assertTrue(stdout_re.search(stdout.getvalue()), stdout)
         if stderr_re:
-            stderr = stderr.getvalue()
-            self.assertTrue(stderr_re.search(stderr), stderr)
+            self.assertTrue(stderr_re.search(stderr.getvalue()), stderr)
 
-    def test_success(self):
+    def test_success(self) -> None:
         len_sys_path = len(sys.path)
         config = textwrap.dedent("""\
                 c = BuildmasterConfig = {}
@@ -91,7 +103,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         # (regression) check that sys.path hasn't changed
         self.assertEqual(len(sys.path), len_sys_path)
 
-    def test_failure_ImportError(self):
+    def test_failure_ImportError(self) -> None:
         config = textwrap.dedent("""\
                 import test_scripts_checkconfig_does_not_exist
                 """)
@@ -108,14 +120,14 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         )
         self.flushLoggedErrors()
 
-    def test_failure_no_workers(self):
+    def test_failure_no_workers(self) -> None:
         config = textwrap.dedent("""\
                 BuildmasterConfig={}
                 """)
         self.do_test_load(config=config, stderr_re=re.compile('no workers'))
         self.flushLoggedErrors()
 
-    def test_success_imports(self):
+    def test_success_imports(self) -> None:
         config = textwrap.dedent("""\
                 from othermodule import port
                 c = BuildmasterConfig = {}
@@ -127,7 +139,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         other_files = {'othermodule.py': 'port = 9989'}
         self.do_test_load(config=config, other_files=other_files)
 
-    def test_success_import_package(self):
+    def test_success_import_package(self) -> None:
         config = textwrap.dedent("""\
                 from otherpackage.othermodule import port
                 c = BuildmasterConfig = {}
@@ -144,32 +156,32 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
 
 class TestCheckconfig(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.loadConfig = mock.Mock(spec=checkconfig._loadConfig, return_value=3)
         # checkconfig is decorated with @in_reactor, so strip that decoration
         # since the reactor is already running
-        self.patch(checkconfig, 'checkconfig', checkconfig.checkconfig._orig)
+        self.patch(checkconfig, 'checkconfig', checkconfig.checkconfig._orig)  # type: ignore[attr-defined]
         self.patch(checkconfig, '_loadConfig', self.loadConfig)
 
-    def test_checkconfig_default(self):
+    def test_checkconfig_default(self) -> None:
         self.assertEqual(checkconfig.checkconfig({}), 3)
         self.loadConfig.assert_called_with(basedir=os.getcwd(), configFile='master.cfg', quiet=None)
 
-    def test_checkconfig_given_dir(self):
+    def test_checkconfig_given_dir(self) -> None:
         self.assertEqual(checkconfig.checkconfig({"configFile": '.'}), 3)
         self.loadConfig.assert_called_with(basedir='.', configFile='master.cfg', quiet=None)
 
-    def test_checkconfig_given_file(self):
+    def test_checkconfig_given_file(self) -> None:
         config = {"configFile": 'master.cfg'}
         self.assertEqual(checkconfig.checkconfig(config), 3)
         self.loadConfig.assert_called_with(basedir=os.getcwd(), configFile='master.cfg', quiet=None)
 
-    def test_checkconfig_quiet(self):
+    def test_checkconfig_quiet(self) -> None:
         config = {"configFile": 'master.cfg', "quiet": True}
         self.assertEqual(checkconfig.checkconfig(config), 3)
         self.loadConfig.assert_called_with(basedir=os.getcwd(), configFile='master.cfg', quiet=True)
 
-    def test_checkconfig_syntaxError_quiet(self):
+    def test_checkconfig_syntaxError_quiet(self) -> None:
         """
         When C{base.getConfigFileFromTac} raises L{SyntaxError},
         C{checkconfig.checkconfig} return an error.
