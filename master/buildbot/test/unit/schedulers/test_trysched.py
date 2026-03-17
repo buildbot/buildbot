@@ -13,10 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import os
 import shutil
 from io import StringIO
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -28,35 +32,41 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import IO
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     OBJECTID = 26
     SCHEDULERID = 6
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpScheduler()
 
-    def makeScheduler(self, **kwargs):
+    def makeScheduler(self, **kwargs: Any) -> defer.Deferred[trysched.Try_Userpass]:
         return self.attachScheduler(
             trysched.Try_Userpass(**kwargs), self.OBJECTID, self.SCHEDULERID
         )
 
-    def test_filterBuilderList_ok(self):
+    def test_filterBuilderList_ok(self) -> None:
         sched = trysched.TryBase(name='tsched', builderNames=['a', 'b', 'c'], properties={})
         self.assertEqual(sched.filterBuilderList(['b', 'c']), ['b', 'c'])
 
-    def test_filterBuilderList_bad(self):
+    def test_filterBuilderList_bad(self) -> None:
         sched = trysched.TryBase(name='tsched', builderNames=['a', 'b'], properties={})
         self.assertEqual(sched.filterBuilderList(['b', 'c']), [])
 
-    def test_filterBuilderList_empty(self):
+    def test_filterBuilderList_empty(self) -> None:
         sched = trysched.TryBase(name='tsched', builderNames=['a', 'b'], properties={})
         self.assertEqual(sched.filterBuilderList([]), ['a', 'b'])
 
     @defer.inlineCallbacks
-    def test_enabled_callback(self):
+    def test_enabled_callback(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
@@ -69,7 +79,7 @@ class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(sched.enabled, expectedValue)
 
     @defer.inlineCallbacks
-    def test_disabled_activate(self):
+    def test_disabled_activate(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
@@ -79,7 +89,7 @@ class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(r, None)
 
     @defer.inlineCallbacks
-    def test_disabled_deactivate(self):
+    def test_disabled_deactivate(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
@@ -90,18 +100,18 @@ class TryBase(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
 
 class JobdirService(dirs.DirsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.jobdir = 'jobdir'
         self.newdir = os.path.join(self.jobdir, 'new')
         self.curdir = os.path.join(self.jobdir, 'cur')
         self.tmpdir = os.path.join(self.jobdir, 'tmp')
         self.setUpDirs(self.jobdir, self.newdir, self.curdir, self.tmpdir)
 
-    def test_messageReceived(self):
+    def test_messageReceived(self) -> None:
         # stub out svc.scheduler.handleJobFile and .jobdir
         scheduler = mock.Mock()
 
-        def handleJobFile(filename, f):
+        def handleJobFile(filename: str, f: IO[str]) -> None:
             self.assertEqual(filename, 'jobdata')
             self.assertEqual(f.read(), 'JOBDATA')
 
@@ -124,19 +134,19 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     SCHEDULERID = 3
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpScheduler()
-        self.jobdir = None
+        self.jobdir: str | None = None
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if self.jobdir:
             shutil.rmtree(self.jobdir)
 
     # tests
 
     @defer.inlineCallbacks
-    def setup_test_startService(self, jobdir, exp_jobdir):
+    def setup_test_startService(self, jobdir: str, exp_jobdir: str) -> InlineCallbacksType[None]:
         # set up jobdir
         self.jobdir = os.path.abspath('jobdir')
         if os.path.exists(self.jobdir):
@@ -144,7 +154,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         os.mkdir(self.jobdir)
 
         # build scheduler
-        kwargs = {"name": 'tsched', "builderNames": ['a'], "jobdir": self.jobdir}
+        kwargs: dict[str, Any] = {"name": 'tsched', "builderNames": ['a'], "jobdir": self.jobdir}
         sched = yield self.attachScheduler(
             trysched.Try_Jobdir(**kwargs),
             self.OBJECTID,
@@ -157,7 +167,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         sched.watcher.stopService = mock.Mock()
 
     @defer.inlineCallbacks
-    def do_test_startService(self):
+    def do_test_startService(self) -> InlineCallbacksType[None]:
         # start it
         yield self.sched.startService()
 
@@ -172,22 +182,24 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(1, self.sched.watcher.stopService.call_count)
 
     @defer.inlineCallbacks
-    def test_startService_reldir(self):
+    def test_startService_reldir(self) -> InlineCallbacksType[None]:
         yield self.setup_test_startService('jobdir', os.path.abspath('basedir/jobdir'))
         yield self.do_test_startService()
 
     @defer.inlineCallbacks
-    def test_startService_reldir_subdir(self):
+    def test_startService_reldir_subdir(self) -> InlineCallbacksType[None]:
         yield self.setup_test_startService('jobdir', os.path.abspath('basedir/jobdir/cur'))
         yield self.do_test_startService()
 
     @defer.inlineCallbacks
-    def test_startService_absdir(self):
+    def test_startService_absdir(self) -> InlineCallbacksType[None]:
         yield self.setup_test_startService(os.path.abspath('jobdir'), os.path.abspath('jobdir'))
         yield self.do_test_startService()
 
     @defer.inlineCallbacks
-    def do_test_startService_but_not_active(self, jobdir, exp_jobdir):
+    def do_test_startService_but_not_active(
+        self, jobdir: str, exp_jobdir: str
+    ) -> InlineCallbacksType[None]:
         """Same as do_test_startService, but the master wont activate this service"""
         yield self.setup_test_startService('jobdir', os.path.abspath('basedir/jobdir'))
 
@@ -206,12 +218,12 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
 
     # parseJob
 
-    def test_parseJob_empty(self):
+    def test_parseJob_empty(self) -> None:
         sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
         with self.assertRaises(trysched.BadJobfile):
             sched.parseJob(StringIO(''))
 
-    def test_parseJob_longer_than_netstring_MAXLENGTH(self):
+    def test_parseJob_longer_than_netstring_MAXLENGTH(self) -> None:
         self.patch(basic.NetstringReceiver, 'MAX_LENGTH', 100)
         sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
         jobstr = self.makeNetstring(
@@ -231,20 +243,20 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         with self.assertRaises(trysched.BadJobfile):
             sched.parseJob(test_temp_file)
 
-    def test_parseJob_invalid(self):
+    def test_parseJob_invalid(self) -> None:
         sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
         with self.assertRaises(trysched.BadJobfile):
             sched.parseJob(StringIO('this is not a netstring'))
 
-    def test_parseJob_invalid_version(self):
+    def test_parseJob_invalid_version(self) -> None:
         sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
         with self.assertRaises(trysched.BadJobfile):
             sched.parseJob(StringIO('1:9,'))
 
-    def makeNetstring(self, *strings):
+    def makeNetstring(self, *strings: str) -> str:
         return ''.join([f'{len(s)}:{s},' for s in strings])
 
-    def test_parseJob_v1(self):
+    def test_parseJob_v1(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -276,7 +288,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def test_parseJob_v1_empty_branch_rev(self):
+    def test_parseJob_v1_empty_branch_rev(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -295,7 +307,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(parsedjob['branch'], None)
         self.assertEqual(parsedjob['baserev'], None)
 
-    def test_parseJob_v1_no_builders(self):
+    def test_parseJob_v1_no_builders(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -303,7 +315,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['builderNames'], [])
 
-    def test_parseJob_v1_no_properties(self):
+    def test_parseJob_v1_no_properties(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -311,7 +323,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['properties'], {})
 
-    def test_parseJob_v2(self):
+    def test_parseJob_v2(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -345,7 +357,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def test_parseJob_v2_empty_branch_rev(self):
+    def test_parseJob_v2_empty_branch_rev(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -366,7 +378,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(parsedjob['branch'], None)
         self.assertEqual(parsedjob['baserev'], None)
 
-    def test_parseJob_v2_no_builders(self):
+    def test_parseJob_v2_no_builders(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -383,7 +395,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['builderNames'], [])
 
-    def test_parseJob_v2_no_properties(self):
+    def test_parseJob_v2_no_properties(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -400,7 +412,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['properties'], {})
 
-    def test_parseJob_v3(self):
+    def test_parseJob_v3(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -435,7 +447,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def test_parseJob_v3_empty_branch_rev(self):
+    def test_parseJob_v3_empty_branch_rev(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -458,7 +470,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(parsedjob['baserev'], None)
 
     @defer.inlineCallbacks
-    def test_parseJob_v3_no_builders(self):
+    def test_parseJob_v3_no_builders(self) -> InlineCallbacksType[None]:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -479,7 +491,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(parsedjob['builderNames'], [])
 
     @defer.inlineCallbacks
-    def test_parseJob_v3_no_properties(self):
+    def test_parseJob_v3_no_properties(self) -> InlineCallbacksType[None]:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -499,7 +511,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['properties'], {})
 
-    def test_parseJob_v4(self):
+    def test_parseJob_v4(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -535,7 +547,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def test_parseJob_v4_empty_branch_rev(self):
+    def test_parseJob_v4_empty_branch_rev(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -558,7 +570,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(parsedjob['branch'], None)
         self.assertEqual(parsedjob['baserev'], None)
 
-    def test_parseJob_v4_no_builders(self):
+    def test_parseJob_v4_no_builders(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -577,7 +589,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['builderNames'], [])
 
-    def test_parseJob_v4_no_properties(self):
+    def test_parseJob_v4_no_properties(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -596,7 +608,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['properties'], {})
 
-    def test_parseJob_v5(self):
+    def test_parseJob_v5(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -634,7 +646,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def test_parseJob_v5_empty_branch_rev(self):
+    def test_parseJob_v5_empty_branch_rev(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -657,7 +669,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(parsedjob['branch'], None)
         self.assertEqual(parsedjob['baserev'], None)
 
-    def test_parseJob_v5_no_builders(self):
+    def test_parseJob_v5_no_builders(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -680,7 +692,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['builderNames'], [])
 
-    def test_parseJob_v5_no_properties(self):
+    def test_parseJob_v5_no_properties(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -703,7 +715,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         parsedjob = sched.parseJob(StringIO(jobstr))
         self.assertEqual(parsedjob['properties'], {})
 
-    def test_parseJob_v5_invalid_json(self):
+    def test_parseJob_v5_invalid_json(self) -> None:
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'
         )
@@ -714,7 +726,9 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     # handleJobFile
 
     @defer.inlineCallbacks
-    def call_handleJobFile(self, parseJob):
+    def call_handleJobFile(
+        self, parseJob: Callable[[IO[Any]], dict[str, Any]]
+    ) -> InlineCallbacksType[None]:
         sched = yield self.attachScheduler(
             trysched.Try_Jobdir(name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo'),
             self.OBJECTID,
@@ -725,14 +739,14 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         yield self.master.startService()
         fakefile = mock.Mock()
 
-        def parseJob_(f):
+        def parseJob_(f: IO[Any]) -> dict[str, Any]:
             assert f is fakefile
             return parseJob(f)
 
         sched.parseJob = parseJob_
         yield sched.handleJobFile('fakefile', fakefile)
 
-    def makeSampleParsedJob(self, **overrides):
+    def makeSampleParsedJob(self, **overrides: Any) -> dict[str, Any]:
         pj = {
             "baserev": '1234',
             "branch": 'trunk',
@@ -750,7 +764,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         return pj
 
     @defer.inlineCallbacks
-    def test_handleJobFile(self):
+    def test_handleJobFile(self) -> InlineCallbacksType[None]:
         yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob())
 
         self.assertEqual(
@@ -783,8 +797,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_handleJobFile_exception(self):
-        def parseJob(f):
+    def test_handleJobFile_exception(self) -> InlineCallbacksType[None]:
+        def parseJob(f: IO[Any]) -> dict[str, Any]:
             raise trysched.BadJobfile
 
         yield self.call_handleJobFile(parseJob)
@@ -793,13 +807,13 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(1, len(self.flushLoggedErrors(trysched.BadJobfile)))
 
     @defer.inlineCallbacks
-    def test_handleJobFile_bad_builders(self):
+    def test_handleJobFile_bad_builders(self) -> InlineCallbacksType[None]:
         yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob(builderNames=['xxx']))
 
         self.assertEqual(self.addBuildsetCalls, [])
 
     @defer.inlineCallbacks
-    def test_handleJobFile_subset_builders(self):
+    def test_handleJobFile_subset_builders(self) -> InlineCallbacksType[None]:
         yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob(builderNames=['buildera']))
 
         self.assertEqual(
@@ -832,7 +846,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_handleJobFile_with_try_properties(self):
+    def test_handleJobFile_with_try_properties(self) -> InlineCallbacksType[None]:
         yield self.call_handleJobFile(lambda f: self.makeSampleParsedJob(properties={'foo': 'bar'}))
 
         self.assertEqual(
@@ -865,7 +879,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_handleJobFile_with_invalid_try_properties(self):
+    def test_handleJobFile_with_invalid_try_properties(self) -> InlineCallbacksType[None]:
         with self.assertRaises(AttributeError):
             yield self.call_handleJobFile(
                 lambda f: self.makeSampleParsedJob(properties=['foo', 'bar'])
@@ -877,11 +891,11 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
     SCHEDULERID = 6
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpScheduler()
 
-    def makeScheduler(self, **kwargs):
+    def makeScheduler(self, **kwargs: Any) -> defer.Deferred[trysched.Try_Userpass]:
         return self.attachScheduler(
             trysched.Try_Userpass(**kwargs),
             self.OBJECTID,
@@ -891,7 +905,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
         )
 
     @defer.inlineCallbacks
-    def call_perspective_try(self, *args, **kwargs):
+    def call_perspective_try(self, *args: Any, **kwargs: Any) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='tsched',
             builderNames=['a', 'b'],
@@ -902,7 +916,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
 
         # patch out all of the handling after addBuildsetForSourceStamp
-        def getBuildset(bsid):
+        def getBuildset(bsid: int) -> dict[str, int]:
             return {"bsid": bsid}
 
         self.master.db.buildsets.getBuildset = getBuildset
@@ -914,7 +928,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
         self.assertIsInstance(rbss, trysched.RemoteBuildSetStatus)
 
     @defer.inlineCallbacks
-    def test_perspective_try(self):
+    def test_perspective_try(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_try(
             'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['a'], properties={'pr': 'op'}
         )
@@ -950,7 +964,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
         )
 
     @defer.inlineCallbacks
-    def test_perspective_try_bytes(self):
+    def test_perspective_try_bytes(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_try(
             'default', 'abcdef', (1, b'-- ++\xf8'), 'repo', 'proj', ['a'], properties={'pr': 'op'}
         )
@@ -985,7 +999,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
         )
 
     @defer.inlineCallbacks
-    def test_perspective_try_who(self):
+    def test_perspective_try_who(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_try(
             'default',
             'abcdef',
@@ -1028,7 +1042,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
         )
 
     @defer.inlineCallbacks
-    def test_perspective_try_bad_builders(self):
+    def test_perspective_try_bad_builders(self) -> InlineCallbacksType[None]:
         yield self.call_perspective_try(
             'default', 'abcdef', (1, '-- ++'), 'repo', 'proj', ['xxx'], properties={'pr': 'op'}
         )
@@ -1036,7 +1050,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unitt
         self.assertEqual(self.addBuildsetCalls, [])
 
     @defer.inlineCallbacks
-    def test_getAvailableBuilderNames(self):
+    def test_getAvailableBuilderNames(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='tsched', builderNames=['a', 'b'], port='xxx', userpass=[('a', 'b')]
         )
@@ -1051,19 +1065,19 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
     SCHEDULERID = 5
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpScheduler()
 
     @defer.inlineCallbacks
-    def makeScheduler(self, **kwargs):
+    def makeScheduler(self, **kwargs: Any) -> InlineCallbacksType[trysched.Try_Userpass]:
         sched = yield self.attachScheduler(
             trysched.Try_Userpass(**kwargs), self.OBJECTID, self.SCHEDULERID
         )
         return sched
 
     @defer.inlineCallbacks
-    def test_service(self):
+    def test_service(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )
@@ -1073,7 +1087,12 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
         registration.unregister = lambda: defer.succeed(None)
         sched.master.pbmanager = mock.Mock()
 
-        def register(portstr, user, passwd, factory):
+        def register(
+            portstr: str,
+            user: str,
+            passwd: str,
+            factory: Callable[[Any, str], trysched.Try_Userpass_Perspective],
+        ) -> defer.Deferred[mock.Mock]:
             self.assertEqual([portstr, user, passwd], ['tcp:9999', 'fred', 'derf'])
             self.got_factory = factory
             return defer.succeed(registration)
@@ -1088,7 +1107,7 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
         yield sched.stopService()
 
     @defer.inlineCallbacks
-    def test_service_but_not_active(self):
+    def test_service_but_not_active(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
         )

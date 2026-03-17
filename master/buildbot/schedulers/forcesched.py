@@ -20,6 +20,7 @@ import traceback
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
+from typing import cast
 
 from twisted.internet import defer
 from twisted.python.reflect import accumulateClassList
@@ -890,9 +891,11 @@ class ForceScheduler(base.ReconfigurableBaseScheduler):
                 builder = yield self.master.data.get(('builders', str(builderid)))
                 builderNames = [builder['name']]
             else:
-                builderNames = self.builderNames
+                builderNames = cast(list[str], self.builderNames)
         else:
-            builderNames = sorted(set(builderNames).intersection(self.builderNames))
+            builderNames = sorted(
+                set(builderNames).intersection(cast(list[str], self.builderNames))
+            )
         return builderNames
 
     @defer.inlineCallbacks

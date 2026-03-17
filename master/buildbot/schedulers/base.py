@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 
     from buildbot.changes.changes import Change
     from buildbot.changes.filter import ChangeFilter
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -53,7 +54,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     def __init__(
         self,
         name: str,
-        builderNames: Any,
+        builderNames: IMaybeRenderableType[list[str]],
         properties: dict[str, Any] | None = None,
         codebases: dict[str, dict[str, str]] | list[str] | None = None,
         priority: int | Callable[..., int] | None = None,
@@ -291,7 +292,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         sourcestamps: list[dict[str, Any]] | None = None,
         waited_for: bool = False,
         properties: Properties | None = None,
-        builderNames: Any = None,
+        builderNames: IMaybeRenderableType[list[str]] | None = None,
         priority: int | None = None,
         **kw: Any,
     ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
@@ -362,7 +363,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         reason: str = '',
         external_idstring: str | None = None,
         changeids: list[int] | None = None,
-        builderNames: Any = None,
+        builderNames: IMaybeRenderableType[list[str]] | None = None,
         properties: Properties | None = None,
         priority: int | Callable[..., int] | None = None,
         **kw: Any,
@@ -428,7 +429,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         reason: str = '',
         external_idstring: str | None = None,
         properties: Properties | None = None,
-        builderNames: Any = None,
+        builderNames: IMaybeRenderableType[list[str]] | None = None,
         priority: int | None = None,
         **kw: Any,
     ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
@@ -466,7 +467,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             builderNames = self.builderNames
 
         # dynamically get the builder list to schedule
-        builderNames = yield properties.render(builderNames)
+        rendered_builderNames: list[str] = yield properties.render(builderNames)
 
         # Get the builder ids
         # Note that there is a data.updates.findBuilderId(name)
@@ -475,7 +476,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         # several db requests needed.
         builderids = []
         for bldr in (yield self.master.data.get(('builders',))):
-            if bldr['name'] in builderNames:
+            if bldr['name'] in rendered_builderNames:
                 builderids.append(bldr['builderid'])
 
         # translate properties object into a dict as required by the
@@ -519,7 +520,7 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
 
     def checkConfig(  # type: ignore[override]
         self,
-        builderNames: Any,
+        builderNames: IMaybeRenderableType[list[str]],
         properties: dict[str, Any] | None = None,
         codebases: dict[str, dict[str, str]] | list[str] | None = None,
         priority: int | Callable[..., int] | None = None,
@@ -576,7 +577,7 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def reconfigService(  # type: ignore[override]
         self,
-        builderNames: Any,
+        builderNames: IMaybeRenderableType[list[str]],
         properties: dict[str, Any] | None = None,
         codebases: dict[str, dict[str, str]] | list[str] | None = None,
         priority: int | Callable[..., int] | None = None,
@@ -762,7 +763,7 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
         sourcestamps: list[dict[str, Any]] | None = None,
         waited_for: bool = False,
         properties: Properties | None = None,
-        builderNames: Any = None,
+        builderNames: IMaybeRenderableType[list[str]] | None = None,
         priority: int | None = None,
         **kw: Any,
     ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
@@ -833,7 +834,7 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
         reason: str = '',
         external_idstring: str | None = None,
         changeids: list[int] | None = None,
-        builderNames: Any = None,
+        builderNames: IMaybeRenderableType[list[str]] | None = None,
         properties: Properties | None = None,
         priority: int | Callable[..., int] | None = None,
         **kw: Any,
@@ -899,7 +900,7 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
         reason: str = '',
         external_idstring: str | None = None,
         properties: Properties | None = None,
-        builderNames: Any = None,
+        builderNames: IMaybeRenderableType[list[str]] | None = None,
         priority: int | None = None,
         **kw: Any,
     ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
@@ -937,7 +938,7 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
             builderNames = self.builderNames
 
         # dynamically get the builder list to schedule
-        builderNames = yield properties.render(builderNames)
+        rendered_builderNames: list[str] = yield properties.render(builderNames)
 
         # Get the builder ids
         # Note that there is a data.updates.findBuilderId(name)
@@ -946,7 +947,7 @@ class ReconfigurableBaseScheduler(ClusteredBuildbotService, StateMixin):
         # several db requests needed.
         builderids = []
         for bldr in (yield self.master.data.get(('builders',))):
-            if bldr['name'] in builderNames:
+            if bldr['name'] in rendered_builderNames:
                 builderids.append(bldr['builderid'])
 
         # translate properties object into a dict as required by the

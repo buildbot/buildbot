@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -23,6 +28,9 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import scheduler
 from buildbot.test.util.state import StateTestMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class NightlyTriggerable(
     scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unittest.TestCase
@@ -31,7 +39,9 @@ class NightlyTriggerable(
     OBJECTID = 1327
 
     @defer.inlineCallbacks
-    def makeScheduler(self, firstBuildDuration=0, **kwargs):
+    def makeScheduler(
+        self, firstBuildDuration: int = 0, **kwargs: Any
+    ) -> InlineCallbacksType[timed.NightlyTriggerable]:
         sched = yield self.attachScheduler(
             timed.NightlyTriggerable(**kwargs),
             self.OBJECTID,
@@ -42,15 +52,19 @@ class NightlyTriggerable(
         return sched
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpScheduler()
 
     # utilities
 
-    def assertBuildsetAdded(self, sourcestamps=None, properties=None):
+    def assertBuildsetAdded(
+        self,
+        sourcestamps: list[dict[str, Any]] | None = None,
+        properties: dict[str, tuple[Any, str]] | None = None,
+    ) -> None:
         if sourcestamps is None:
-            sourcestamps = {}
+            sourcestamps = []
         if properties is None:
             properties = {}
         properties['scheduler'] = ('test', 'Scheduler')
@@ -72,13 +86,13 @@ class NightlyTriggerable(
         )
         self.addBuildsetCalls = []
 
-    def assertNoBuildsetAdded(self):
+    def assertNoBuildsetAdded(self) -> None:
         self.assertEqual(self.addBuildsetCalls, [])
 
     # tests
 
     @defer.inlineCallbacks
-    def test_constructor_no_reason(self):
+    def test_constructor_no_reason(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(name='test', builderNames=['test'])
         yield sched.configureService()
         self.assertEqual(
@@ -86,7 +100,7 @@ class NightlyTriggerable(
         )
 
     @defer.inlineCallbacks
-    def test_constructor_reason(self):
+    def test_constructor_reason(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test', builderNames=['test'], reason="hourlytriggerable"
         )
@@ -94,13 +108,13 @@ class NightlyTriggerable(
         self.assertEqual(sched.reason, "hourlytriggerable")
 
     @defer.inlineCallbacks
-    def test_constructor_month(self):
+    def test_constructor_month(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(name='test', builderNames=['test'], month='1')
         yield sched.configureService()
         self.assertEqual(sched.month, "1")
 
     @defer.inlineCallbacks
-    def test_timer_noBuilds(self):
+    def test_timer_noBuilds(self) -> InlineCallbacksType[None]:
         yield self.makeScheduler(name='test', builderNames=['test'], minute=[5])
         yield self.master.startService()
 
@@ -109,7 +123,7 @@ class NightlyTriggerable(
         self.assertEqual(self.addBuildsetCalls, [])
 
     @defer.inlineCallbacks
-    def test_timer_oneTrigger(self):
+    def test_timer_oneTrigger(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -147,7 +161,7 @@ class NightlyTriggerable(
         )
 
     @defer.inlineCallbacks
-    def test_timer_twoTriggers(self):
+    def test_timer_twoTriggers(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -200,7 +214,7 @@ class NightlyTriggerable(
         )
 
     @defer.inlineCallbacks
-    def test_timer_oneTrigger_then_noBuild(self):
+    def test_timer_oneTrigger_then_noBuild(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -244,7 +258,7 @@ class NightlyTriggerable(
         self.assertNoBuildsetAdded()
 
     @defer.inlineCallbacks
-    def test_timer_oneTriggers_then_oneTrigger(self):
+    def test_timer_oneTriggers_then_oneTrigger(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -311,7 +325,7 @@ class NightlyTriggerable(
         )
 
     @defer.inlineCallbacks
-    def test_savedTrigger(self):
+    def test_savedTrigger(self) -> InlineCallbacksType[None]:
         yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -348,7 +362,7 @@ class NightlyTriggerable(
         )
 
     @defer.inlineCallbacks
-    def test_savedTrigger_dict(self):
+    def test_savedTrigger_dict(self) -> InlineCallbacksType[None]:
         yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -384,7 +398,7 @@ class NightlyTriggerable(
         )
 
     @defer.inlineCallbacks
-    def test_saveTrigger(self):
+    def test_saveTrigger(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -431,7 +445,7 @@ class NightlyTriggerable(
         )
 
     @defer.inlineCallbacks
-    def test_saveTrigger_noTrigger(self):
+    def test_saveTrigger_noTrigger(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -464,7 +478,7 @@ class NightlyTriggerable(
         yield self.assert_state(self.SCHEDULERID, lastTrigger=None)
 
     @defer.inlineCallbacks
-    def test_triggerProperties(self):
+    def test_triggerProperties(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(
             name='test',
             builderNames=['test'],
@@ -525,7 +539,7 @@ class NightlyTriggerable(
         )
 
     @defer.inlineCallbacks
-    def test_savedProperties(self):
+    def test_savedProperties(self) -> InlineCallbacksType[None]:
         yield self.makeScheduler(
             name='test',
             builderNames=['test'],

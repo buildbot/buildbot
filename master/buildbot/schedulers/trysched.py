@@ -21,6 +21,7 @@ import os
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
+from typing import cast
 
 from twisted.internet import defer
 from twisted.protocols import basic
@@ -59,14 +60,15 @@ class TryBase(base.ReconfigurableBaseScheduler):
         # available for try.  If the user supplies a list of builders,
         # it must be restricted to the configured list.  If not, build
         # on all of the configured builders.
+        configured_names = cast(list[str], self.builderNames)
         if builderNames:
             for b in builderNames:
-                if b not in self.builderNames:
+                if b not in configured_names:
                     log.msg(f"{self} got with builder {b}")
-                    log.msg(f" but that wasn't in our list: {self.builderNames}")
+                    log.msg(f" but that wasn't in our list: {configured_names}")
                     return []
         else:
-            builderNames = self.builderNames
+            builderNames = configured_names
         return builderNames
 
 
