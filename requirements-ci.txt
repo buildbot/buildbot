@@ -54,7 +54,7 @@ msgpack==1.1.2
 mypy-extensions==1.1.0
 packaging==25.0
 parameterized==0.9.0
-pyasn1==0.6.2
+pyasn1==0.6.3
 pyasn1-modules==0.4.2
 pycparser==2.22; python_version < "3.10"  # pyup: ignore
 pycparser==3.0; python_version >= "3.10"
