@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -25,6 +29,14 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import epoch2datetime
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from twisted.internet.defer import Deferred
+
+    from buildbot.test.fakedb.row import Row
+    from buildbot.util.twisted import InlineCallbacksType
 
 SOMETIME = 20398573
 OTHERTIME = 937239287
@@ -97,13 +109,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
     )
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_addChange_getChange(self):
+    def test_addChange_getChange(self) -> InlineCallbacksType[None]:
         self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
             author='dustin',
@@ -141,7 +153,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
                 repository='repo://',
                 revision='2d6caa52',
                 revlink=None,
-                sourcestampid=sourcestamps.SourceStampModel(
+                sourcestampid=sourcestamps.SourceStampModel(  # type: ignore[arg-type]
                     branch='master',
                     codebase='cb',
                     patch=None,
@@ -156,7 +168,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_addChange_withParent(self):
+    def test_addChange_withParent(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.change14_rows)
 
         self.reactor.advance(SOMETIME)
@@ -196,7 +208,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
                 repository='git://warner',
                 revision='50adad56',
                 revlink=None,
-                sourcestampid=sourcestamps.SourceStampModel(
+                sourcestampid=sourcestamps.SourceStampModel(  # type: ignore[arg-type]
                     branch='warnerdb',
                     codebase='mainapp',
                     created_at=epoch2datetime(SOMETIME),
@@ -211,7 +223,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getChange_chdict(self):
+    def test_getChange_chdict(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.change14_rows)
 
         chdict = yield self.db.changes.getChange(14)
@@ -220,19 +232,19 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(chdict, self.change14_dict)
 
     @defer.inlineCallbacks
-    def test_getChange_missing(self):
+    def test_getChange_missing(self) -> InlineCallbacksType[None]:
         chdict = yield self.db.changes.getChange(14)
 
         self.assertTrue(chdict is None)
 
     @defer.inlineCallbacks
-    def test_getChangeUids_missing(self):
+    def test_getChangeUids_missing(self) -> InlineCallbacksType[None]:
         res = yield self.db.changes.getChangeUids(1)
 
         self.assertEqual(res, [])
 
     @defer.inlineCallbacks
-    def test_getChangeUids_found(self):
+    def test_getChangeUids_found(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.change14_rows,
             fakedb.SourceStamp(id=92),
@@ -244,7 +256,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(res, [1])
 
     @defer.inlineCallbacks
-    def test_getChangeUids_multi(self):
+    def test_getChangeUids_multi(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(
             self.change14_rows
             + self.change13_rows
@@ -261,7 +273,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(sorted(res), [1, 2])
 
-    def insert7Changes(self):
+    def insert7Changes(self) -> Deferred:
         return self.db.insert_test_data([
             fakedb.SourceStamp(id=922),
             fakedb.Change(changeid=8, sourcestampid=922),
@@ -274,7 +286,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_getChanges_subset(self):
+    def test_getChanges_subset(self) -> InlineCallbacksType[None]:
         yield self.insert7Changes()
         rs = resultspec.ResultSpec(order=['-changeid'], limit=5)
         rs.fieldMapping = FixerMixin.fieldMapping
@@ -283,14 +295,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(changeids, [10, 11, 12, 13, 14])
 
     @defer.inlineCallbacks
-    def test_getChangesCount(self):
+    def test_getChangesCount(self) -> InlineCallbacksType[None]:
         yield self.insert7Changes()
         n = yield self.db.changes.getChangesCount()
 
         self.assertEqual(n, 7)
 
     @defer.inlineCallbacks
-    def test_getChangesHugeCount(self):
+    def test_getChangesHugeCount(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(
             [
                 fakedb.SourceStamp(id=92),
@@ -302,7 +314,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(n, 100)
 
     @defer.inlineCallbacks
-    def test_getChanges_empty(self):
+    def test_getChanges_empty(self) -> InlineCallbacksType[None]:
         rs = resultspec.ResultSpec(order=['-changeid'], limit=5)
         changes = yield self.db.changes.getChanges(resultSpec=rs)
 
@@ -314,10 +326,10 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(changeids, [])
 
     @defer.inlineCallbacks
-    def test_getChanges_missing(self):
+    def test_getChanges_missing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.change13_rows + self.change14_rows)
 
-        def check(changes):
+        def check(changes: list[changes.ChangeModel]) -> None:
             # requested all, but only got 2
             # sort by changeid, since we assert on change 13 at index 0
             changes.sort(key=lambda c: c.changeid)
@@ -337,7 +349,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         check(changes)
 
     @defer.inlineCallbacks
-    def test_getLatestChangeid(self):
+    def test_getLatestChangeid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.change13_rows)
 
         changeid = yield self.db.changes.getLatestChangeid()
@@ -345,13 +357,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(changeid, 13)
 
     @defer.inlineCallbacks
-    def test_getLatestChangeid_empty(self):
+    def test_getLatestChangeid_empty(self) -> InlineCallbacksType[None]:
         changeid = yield self.db.changes.getLatestChangeid()
 
         self.assertEqual(changeid, None)
 
     @defer.inlineCallbacks
-    def test_getParentChangeIds(self):
+    def test_getParentChangeIds(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.change14_rows + self.change13_rows)
 
         changeid = yield self.db.changes.getParentChangeIds(
@@ -360,7 +372,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(changeid, [14])
 
     @defer.inlineCallbacks
-    def test_addChange(self):
+    def test_addChange(self) -> InlineCallbacksType[None]:
         self.reactor.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
             author='dustin',
@@ -379,59 +391,56 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
         # check all of the columns of the four relevant tables
 
-        def thd_change(conn):
+        def thd_change(conn: sa.Connection) -> None:
             self.assertEqual(changeid, 1)
-            r = conn.execute(self.db.model.changes.select())
-            r = r.fetchall()
+            r = conn.execute(self.db.model.changes.select()).fetchall()
             self.assertEqual(len(r), 1)
-            self.assertEqual(r[0].changeid, changeid)
-            self.assertEqual(r[0].author, 'dustin')
-            self.assertEqual(r[0].committer, 'justin')
-            self.assertEqual(r[0].comments, 'fix spelling')
-            self.assertEqual(r[0].branch, 'master')
-            self.assertEqual(r[0].revision, '2d6caa52')
-            self.assertEqual(r[0].when_timestamp, 266738400)
-            self.assertEqual(r[0].category, None)
-            self.assertEqual(r[0].repository, '')
-            self.assertEqual(r[0].codebase, 'cb')
-            self.assertEqual(r[0].project, '')
-            self.assertEqual(r[0].sourcestampid, 1)
+            change = r[0]
+            self.assertEqual(change.changeid, changeid)
+            self.assertEqual(change.author, 'dustin')
+            self.assertEqual(change.committer, 'justin')
+            self.assertEqual(change.comments, 'fix spelling')
+            self.assertEqual(change.branch, 'master')
+            self.assertEqual(change.revision, '2d6caa52')
+            self.assertEqual(change.when_timestamp, 266738400)
+            self.assertEqual(change.category, None)
+            self.assertEqual(change.repository, '')
+            self.assertEqual(change.codebase, 'cb')
+            self.assertEqual(change.project, '')
+            self.assertEqual(change.sourcestampid, 1)
 
         yield self.db.pool.do(thd_change)
 
-        def thd_change_files(conn):
+        def thd_change_files(conn: sa.Connection) -> None:
             query = self.db.model.change_files.select()
             query.where(self.db.model.change_files.c.changeid == 1)
             query.order_by(self.db.model.change_files.c.filename)
-            r = conn.execute(query)
-            r = r.fetchall()
+            r = conn.execute(query).fetchall()
             self.assertEqual(len(r), 2)
             self.assertEqual(r[0].filename, 'master/LICENSING.txt')
             self.assertEqual(r[1].filename, 'worker/LICENSING.txt')
 
         yield self.db.pool.do(thd_change_files)
 
-        def thd_change_properties(conn):
+        def thd_change_properties(conn: sa.Connection) -> None:
             query = self.db.model.change_properties.select()
             query.where(self.db.model.change_properties.c.changeid == 1)
             query.order_by(self.db.model.change_properties.c.property_name)
-            r = conn.execute(query)
-            r = r.fetchall()
+            r = conn.execute(query).fetchall()
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0].property_name, 'platform')
             self.assertEqual(r[0].property_value, '["linux", "Change"]')
 
         yield self.db.pool.do(thd_change_properties)
 
-        def thd_change_users(conn):
+        def thd_change_users(conn: sa.Connection) -> None:
             query = self.db.model.change_users.select()
-            r = conn.execute(query)
-            r = r.fetchall()
+            r = conn.execute(query).fetchall()
             self.assertEqual(len(r), 0)
 
         yield self.db.pool.do(thd_change_users)
 
-        def thd_change_sourcestamps(conn):
+        def thd_change_sourcestamps(conn: sa.Connection) -> None:
             query = self.db.model.sourcestamps.select()
             r = conn.execute(query).mappings()
             self.assertEqual(
@@ -454,7 +463,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd_change_sourcestamps)
 
     @defer.inlineCallbacks
-    def test_addChange_when_timestamp_None(self):
+    def test_addChange_when_timestamp_None(self) -> InlineCallbacksType[None]:
         self.reactor.advance(OTHERTIME)
         changeid = yield self.db.changes.addChange(
             author='dustin',
@@ -473,41 +482,37 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
         # check all of the columns of the four relevant tables
 
-        def thd(conn):
-            r = conn.execute(self.db.model.changes.select())
-            r = r.fetchall()
+        def thd(conn: sa.Connection) -> None:
+            r = conn.execute(self.db.model.changes.select()).fetchall()
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0].changeid, changeid)
             self.assertEqual(r[0].when_timestamp, OTHERTIME)
 
         yield self.db.pool.do(thd)
 
-        def thd_change(conn):
+        def thd_change(conn: sa.Connection) -> None:
             query = self.db.model.change_files.select()
-            r = conn.execute(query)
-            r = r.fetchall()
+            r = conn.execute(query).fetchall()
             self.assertEqual(len(r), 0)
 
         yield self.db.pool.do(thd_change)
 
-        def thd_change_file(conn):
+        def thd_change_file(conn: sa.Connection) -> None:
             query = self.db.model.change_properties.select()
-            r = conn.execute(query)
-            r = r.fetchall()
+            r = conn.execute(query).fetchall()
             self.assertEqual(len(r), 0)
 
         yield self.db.pool.do(thd_change_file)
 
-        def thd_change_properties(conn):
+        def thd_change_properties(conn: sa.Connection) -> None:
             query = self.db.model.change_users.select()
-            r = conn.execute(query)
-            r = r.fetchall()
+            r = conn.execute(query).fetchall()
             self.assertEqual(len(r), 0)
 
         yield self.db.pool.do(thd_change_properties)
 
     @defer.inlineCallbacks
-    def test_addChange_with_uid(self):
+    def test_addChange_with_uid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.User(uid=1, identifier="one"),
         ])
@@ -529,35 +534,31 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
         # check all of the columns of the five relevant tables
 
-        def thd_change(conn):
-            r = conn.execute(self.db.model.changes.select())
-            r = r.fetchall()
+        def thd_change(conn: sa.Connection) -> None:
+            r = conn.execute(self.db.model.changes.select()).fetchall()
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0].changeid, changeid)
             self.assertEqual(r[0].when_timestamp, OTHERTIME)
 
         yield self.db.pool.do(thd_change)
 
-        def thd_change_files(conn):
+        def thd_change_files(conn: sa.Connection) -> None:
             query = self.db.model.change_files.select()
-            r = conn.execute(query)
-            r = r.fetchall()
+            r = conn.execute(query).fetchall()
             self.assertEqual(len(r), 0)
 
         yield self.db.pool.do(thd_change_files)
 
-        def thd_change_properties(conn):
+        def thd_change_properties(conn: sa.Connection) -> None:
             query = self.db.model.change_properties.select()
-            r = conn.execute(query)
-            r = r.fetchall()
+            r = conn.execute(query).fetchall()
             self.assertEqual(len(r), 0)
 
         yield self.db.pool.do(thd_change_properties)
 
-        def thd_change_users(conn):
+        def thd_change_users(conn: sa.Connection) -> None:
             query = self.db.model.change_users.select()
-            r = conn.execute(query)
-            r = r.fetchall()
+            r = conn.execute(query).fetchall()
             self.assertEqual(len(r), 1)
             self.assertEqual(r[0].changeid, 1)
             self.assertEqual(r[0].uid, 1)
@@ -565,7 +566,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd_change_users)
 
     @defer.inlineCallbacks
-    def test_pruneChanges(self):
+    def test_pruneChanges(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Scheduler(id=29),
             fakedb.SourceStamp(id=234, branch="aa"),
@@ -583,7 +584,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         # pruning with a horizon of 2 should delete changes 11, 12 and 13
         yield self.db.changes.pruneChanges(2)
 
-        def thd(conn):
+        def thd(conn: sa.Connection) -> None:
             results = {}
             for tbl_name in ('scheduler_changes', 'change_files', 'change_properties', 'changes'):
                 tbl = self.db.model.metadata.tables[tbl_name]
@@ -602,7 +603,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_pruneChanges_lots(self):
+    def test_pruneChanges_lots(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(
             [
                 fakedb.SourceStamp(id=29),
@@ -612,12 +613,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         yield self.db.changes.pruneChanges(1)
 
-        def thd(conn):
+        def thd(conn: sa.Connection) -> None:
             results = {}
             for tbl_name in ('scheduler_changes', 'change_files', 'change_properties', 'changes'):
                 tbl = self.db.model.metadata.tables[tbl_name]
                 res = conn.execute(sa.select(sa.func.count()).select_from(tbl))
-                results[tbl_name] = res.fetchone()[0]
+                results[tbl_name] = res.fetchone()[0]  # type: ignore[index]
                 res.close()
             self.assertEqual(
                 results,
@@ -632,12 +633,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_pruneChanges_None(self):
+    def test_pruneChanges_None(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.change13_rows)
 
         yield self.db.changes.pruneChanges(None)
 
-        def thd(conn):
+        def thd(conn: sa.Connection) -> None:
             tbl = self.db.model.changes
             res = conn.execute(tbl.select())
             self.assertEqual([row.changeid for row in res.fetchall()], [13])
@@ -645,8 +646,8 @@ class Tests(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_getChangesForBuild(self):
-        rows = [
+    def test_getChangesForBuild(self) -> InlineCallbacksType[None]:
+        rows: list[Row] = [
             fakedb.Master(id=88, name="bar"),
             fakedb.Worker(id=13, name='one'),
             fakedb.Builder(id=77, name='A'),
@@ -660,20 +661,20 @@ class Tests(TestReactorMixin, unittest.TestCase):
             "buildid": 0,
         }
 
-        codebase_ss = {}  # shared state between addChange and addBuild
-        codebase_prev_change = {}
+        codebase_ss: dict[str, int] = {}  # shared state between addChange and addBuild
+        codebase_prev_change: dict[str, int] = {}
 
         def addChange(
-            codebase,
-            revision,
-            author,
-            committer,
-            comments,
-            branch='master',
-            category='cat',
-            project='proj',
-            repository='repo',
-        ):
+            codebase: str,
+            revision: str | None,
+            author: str,
+            committer: str | None,
+            comments: str,
+            branch: str = 'master',
+            category: str = 'cat',
+            project: str = 'proj',
+            repository: str = 'repo',
+        ) -> list[Row]:
             lastID["sourcestampid"] += 1
             lastID["changeid"] += 1
             parent_changeids = codebase_prev_change.get(codebase)
@@ -702,12 +703,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
             ]
             return changeRows
 
-        def addBuild(codebase_ss, results=0):
+        def addBuild(codebase_ss: dict[str, int], results: int = 0) -> list[Row]:
             lastID["buildid"] += 1
             lastID["buildsetid"] += 1
             lastID["buildrequestid"] += 1
 
-            buildRows = [
+            buildRows: list[Row] = [
                 fakedb.Buildset(
                     id=lastID["buildsetid"], reason='foo', submitted_at=1300305012, results=-1
                 )
@@ -747,42 +748,42 @@ class Tests(TestReactorMixin, unittest.TestCase):
             return buildRows
 
         # Build1 has 1 change per code base
-        rows.extend(addChange('A', 1, 'franck', 'franck', '1st commit'))
-        rows.extend(addChange('B', 1, 'alice', 'alice', '2nd commit'))
-        rows.extend(addChange('C', 1, 'bob', 'bob', '3rd commit'))
+        rows.extend(addChange('A', "1", 'franck', 'franck', '1st commit'))
+        rows.extend(addChange('B', "1", 'alice', 'alice', '2nd commit'))
+        rows.extend(addChange('C', "1", 'bob', 'bob', '3rd commit'))
         rows.extend(addBuild(codebase_ss))
         # Build 2 has only one change for codebase A
-        rows.extend(addChange('A', 2, 'delanne', 'delanne', '4th commit'))
+        rows.extend(addChange('A', "2", 'delanne', 'delanne', '4th commit'))
         rows.extend(addBuild(codebase_ss))
         # Build 3 has only one change for codebase B
-        rows.extend(addChange('B', 2, 'bob', 'bob', '6th commit'))
+        rows.extend(addChange('B', "2", 'bob', 'bob', '6th commit'))
         rows.extend(addBuild(codebase_ss))
         # Build 4 has no change
         rows.extend(addBuild(codebase_ss))
         # Build 5 has 2 changes for codebase A and 1 change for codebase C
-        rows.extend(addChange('A', 3, 'franck', 'franck', '7th commit'))
-        rows.extend(addChange('A', 4, 'alice', 'alice', '8th commit'))
-        rows.extend(addChange('B', 3, 'bob', 'bob', '9th commit'))
+        rows.extend(addChange('A', "3", 'franck', 'franck', '7th commit'))
+        rows.extend(addChange('A', "4", 'alice', 'alice', '8th commit'))
+        rows.extend(addChange('B', "3", 'bob', 'bob', '9th commit'))
         rows.extend(addBuild(codebase_ss))
         # Build 6 has only one change for codebase C
-        rows.extend(addChange('C', 2, 'bob', 'bob', '10th commit'))
+        rows.extend(addChange('C', "2", 'bob', 'bob', '10th commit'))
         rows.extend(addBuild(codebase_ss, 2))
         # Build 7 has only one change for codebase C
-        rows.extend(addChange('C', 3, 'bob', 'bob', '11th commit'))
+        rows.extend(addChange('C', "3", 'bob', 'bob', '11th commit'))
         rows.extend(addBuild(codebase_ss, 2))
         # Build 8 has only one change for codebase C, and succeed
-        rows.extend(addChange('C', 4, 'bob', 'bob', '12th commit'))
+        rows.extend(addChange('C', "4", 'bob', 'bob', '12th commit'))
         rows.extend(addBuild(codebase_ss))
         # Build 9 has only one change for codebase C, and fails
-        rows.extend(addChange('C', 5, 'bob', 'bob', '13th commit'))
+        rows.extend(addChange('C', "5", 'bob', 'bob', '13th commit'))
         rows.extend(addBuild(codebase_ss, 2))
         # Build 10 has only one change for codebase C, and fails
-        rows.extend(addChange('C', 6, 'bob', 'bob', '14th commit'))
+        rows.extend(addChange('C', "6", 'bob', 'bob', '14th commit'))
         rows.extend(addBuild(codebase_ss, 2))
         yield self.db.insert_test_data(rows)
 
         @defer.inlineCallbacks
-        def expect(buildid, commits):
+        def expect(buildid: int, commits: Iterable[str]) -> InlineCallbacksType[None]:
             got = yield self.db.changes.getChangesForBuild(buildid)
             got_commits = [c.comments for c in got]
             self.assertEqual(sorted(got_commits), sorted(commits))
