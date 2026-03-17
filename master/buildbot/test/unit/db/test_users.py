@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import sqlalchemy
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -22,10 +26,13 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
@@ -77,12 +84,12 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
     # tests
 
     @defer.inlineCallbacks
-    def test_addUser_new(self):
+    def test_addUser_new(self) -> InlineCallbacksType[None]:
         uid = yield self.db.users.findUserByAttr(
             identifier='soap', attr_type='subspace_net_handle', attr_data='Durden0924'
         )
 
-        def thd(conn):
+        def thd(conn: sqlalchemy.Connection) -> None:
             users_tbl = self.db.model.users
             users_info_tbl = self.db.model.users_info
             users = conn.execute(users_tbl.select()).fetchall()
@@ -98,7 +105,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_addUser_existing(self):
+    def test_addUser_existing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
         uid = yield self.db.users.findUserByAttr(
             identifier='soapy', attr_type='IPv9', attr_data='0578cc6.8db024'
@@ -106,7 +113,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(uid, 1)
 
-        def thd(conn):
+        def thd(conn: sqlalchemy.Connection) -> None:
             users_tbl = self.db.model.users
             users_info_tbl = self.db.model.users_info
             users = conn.execute(users_tbl.select()).fetchall()
@@ -122,7 +129,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_findUser_existing(self):
+    def test_findUser_existing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows + self.user2_rows + self.user3_rows)
         uid = yield self.db.users.findUserByAttr(
             identifier='lye', attr_type='git', attr_data='Tyler Durden <tyler@mayhem.net>'
@@ -130,7 +137,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(uid, 2)
 
-        def thd(conn):
+        def thd(conn: sqlalchemy.Connection) -> None:
             users_tbl = self.db.model.users
             users_info_tbl = self.db.model.users_info
             users = conn.execute(users_tbl.select()).fetchall()
@@ -154,8 +161,8 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_addUser_race(self):
-        def race_thd(conn):
+    def test_addUser_race(self) -> InlineCallbacksType[None]:
+        def race_thd(conn: sqlalchemy.Connection) -> None:
             # note that this assumes that both inserts can happen "at once".
             # This is the case for DB engines that support transactions, but
             # not for MySQL.  so this test does not detect the potential MySQL
@@ -179,7 +186,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(uid, 99)
 
-        def thd(conn):
+        def thd(conn: sqlalchemy.Connection) -> None:
             users_tbl = self.db.model.users
             users_info_tbl = self.db.model.users_info
             users = conn.execute(users_tbl.select()).fetchall()
@@ -195,7 +202,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_addUser_existing_identifier(self):
+    def test_addUser_existing_identifier(self) -> InlineCallbacksType[None]:
         # see http://trac.buildbot.net/ticket/2587
         yield self.db.insert_test_data(self.user1_rows)
         uid = yield self.db.users.findUserByAttr(
@@ -207,7 +214,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         # creates a new user
         self.assertNotEqual(uid, 1)
 
-        def thd(conn):
+        def thd(conn: sqlalchemy.Connection) -> None:
             users_tbl = self.db.model.users
             users_info_tbl = self.db.model.users_info
             users = conn.execute(users_tbl.select().order_by(users_tbl.c.identifier)).fetchall()
@@ -224,7 +231,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_getUser(self):
+    def test_getUser(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         usdict = yield self.db.users.getUser(1)
@@ -232,7 +239,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict, self.user1_model)
 
     @defer.inlineCallbacks
-    def test_getUser_bb(self):
+    def test_getUser_bb(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user3_rows)
 
         usdict = yield self.db.users.getUser(3)
@@ -240,7 +247,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict, self.user3_model)
 
     @defer.inlineCallbacks
-    def test_getUser_multi_attr(self):
+    def test_getUser_multi_attr(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user2_rows)
 
         usdict = yield self.db.users.getUser(2)
@@ -248,7 +255,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict, self.user2_model)
 
     @defer.inlineCallbacks
-    def test_getUser_no_match(self):
+    def test_getUser_no_match(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         none = yield self.db.users.getUser(3)
@@ -256,13 +263,13 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(none, None)
 
     @defer.inlineCallbacks
-    def test_getUsers_none(self):
+    def test_getUsers_none(self) -> InlineCallbacksType[None]:
         res = yield self.db.users.getUsers()
 
         self.assertEqual(res, [])
 
     @defer.inlineCallbacks
-    def test_getUsers(self):
+    def test_getUsers(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         res = yield self.db.users.getUsers()
@@ -270,7 +277,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(res, [users.UserModel(uid=1, identifier='soap')])
 
     @defer.inlineCallbacks
-    def test_getUsers_multiple(self):
+    def test_getUsers_multiple(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows + self.user2_rows)
 
         res = yield self.db.users.getUsers()
@@ -281,7 +288,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getUserByUsername(self):
+    def test_getUserByUsername(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user3_rows)
 
         res = yield self.db.users.getUserByUsername("marla")
@@ -289,7 +296,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(res, self.user3_model)
 
     @defer.inlineCallbacks
-    def test_getUserByUsername_no_match(self):
+    def test_getUserByUsername_no_match(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user3_rows)
 
         none = yield self.db.users.getUserByUsername("tyler")
@@ -297,7 +304,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(none, None)
 
     @defer.inlineCallbacks
-    def test_updateUser_existing_type(self):
+    def test_updateUser_existing_type(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=1, attr_type='IPv9', attr_data='abcd.1234')
@@ -308,7 +315,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict.identifier, 'soap')  # no change
 
     @defer.inlineCallbacks
-    def test_updateUser_new_type(self):
+    def test_updateUser_new_type(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=1, attr_type='IPv4', attr_data='123.134.156.167')
@@ -320,7 +327,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict.identifier, 'soap')  # no change
 
     @defer.inlineCallbacks
-    def test_updateUser_identifier(self):
+    def test_updateUser_identifier(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=1, identifier='lye')
@@ -331,7 +338,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
     @defer.inlineCallbacks
-    def test_updateUser_bb(self):
+    def test_updateUser_bb(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user3_rows)
 
         yield self.db.users.updateUser(uid=3, bb_username='boss', bb_password='fired')
@@ -343,7 +350,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict.identifier, 'marla')  # no change
 
     @defer.inlineCallbacks
-    def test_updateUser_all(self):
+    def test_updateUser_all(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(
@@ -372,7 +379,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_updateUser_race(self):
+    def test_updateUser_race(self) -> InlineCallbacksType[None]:
         # called from the db thread, this opens a *new* connection (to avoid
         # the existing transaction) and executes a conflicting insert in that
         # connection.  This will cause the insert in the db method to fail, and
@@ -388,7 +395,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
             # TODO: This probably can be supported.
             raise unittest.SkipTest("It's hard to test race condition with not in-memory SQLite")
 
-        def race_thd(conn):
+        def race_thd(conn: sqlalchemy.Connection) -> None:
             conn = self.db.pool.engine.connect()
             try:
                 r = conn.execute(
@@ -424,7 +431,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
     @defer.inlineCallbacks
-    def test_update_NoMatch_identifier(self):
+    def test_update_NoMatch_identifier(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=3, identifier='abcd')
@@ -434,7 +441,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict.identifier, 'soap')  # no change
 
     @defer.inlineCallbacks
-    def test_update_NoMatch_attribute(self):
+    def test_update_NoMatch_attribute(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=3, attr_type='abcd', attr_data='efgh')
@@ -444,7 +451,7 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
     @defer.inlineCallbacks
-    def test_update_NoMatch_bb(self):
+    def test_update_NoMatch_bb(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.updateUser(uid=3, attr_type='marla', attr_data='cancer')
@@ -454,32 +461,31 @@ class TestUsersConnectorComponent(TestReactorMixin, unittest.TestCase):
         self.assertEqual(usdict.attributes['IPv9'], '0578cc6.8db024')  # no change
 
     @defer.inlineCallbacks
-    def test_removeUser_uid(self):
+    def test_removeUser_uid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.removeUser(1)
 
-        def thd(conn):
-            r = conn.execute(self.db.model.users.select())
-            r = r.fetchall()
+        def thd(conn: sqlalchemy.Connection) -> None:
+            r = conn.execute(self.db.model.users.select()).fetchall()
             self.assertEqual(len(r), 0)
 
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_removeNoMatch(self):
+    def test_removeNoMatch(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         yield self.db.users.removeUser(uid=3)
 
     @defer.inlineCallbacks
-    def test_identifierToUid_NoMatch(self):
+    def test_identifierToUid_NoMatch(self) -> InlineCallbacksType[None]:
         res = yield self.db.users.identifierToUid(identifier="soap")
 
         self.assertEqual(res, None)
 
     @defer.inlineCallbacks
-    def test_identifierToUid_match(self):
+    def test_identifierToUid_match(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.user1_rows)
 
         res = yield self.db.users.identifierToUid(identifier="soap")
