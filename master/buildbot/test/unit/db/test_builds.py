@@ -533,7 +533,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_getBuilds_resultSpecOrder(self) -> InlineCallbacksType[None]:
 
-        rs = resultspec.ResultSpec(order=['-started_at'])  # type: ignore[arg-type]
+        rs = resultspec.ResultSpec(order=['-started_at'])
         rs.fieldMapping = {'started_at': 'builds.started_at'}
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
@@ -543,23 +543,19 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(rs.order, None)
         # assert applying the same order at the data layer will give the same
         # results
-        rs = resultspec.ResultSpec(order=['-started_at'])  # type: ignore[arg-type]
+        rs = resultspec.ResultSpec(order=['-started_at'])
         ordered_bdicts = rs.apply(bdicts)
         self.assertEqual(ordered_bdicts, bdicts)
 
         # assert applying an opposite order at the data layer will give different
         # results
-        rs = resultspec.ResultSpec(order=['started_at'])  # type: ignore[arg-type]
+        rs = resultspec.ResultSpec(order=['started_at'])
         ordered_bdicts = rs.apply(bdicts)
         self.assertNotEqual(ordered_bdicts, bdicts)
 
     @defer.inlineCallbacks
     def test_getBuilds_limit(self) -> InlineCallbacksType[None]:
-        rs = resultspec.ResultSpec(
-            order=['-started_at'],  # type: ignore[arg-type]
-            limit=1,
-            offset=2,
-        )
+        rs = resultspec.ResultSpec(order=['-started_at'], limit=1, offset=2)
         rs.fieldMapping = {'started_at': 'builds.started_at'}
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
@@ -570,11 +566,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         # assert applying the same filter at the data layer will give the same
         # results
-        rs = resultspec.ResultSpec(
-            order=['-started_at'],  # type: ignore[arg-type]
-            limit=1,
-            offset=2,
-        )
+        rs = resultspec.ResultSpec(order=['-started_at'], limit=1, offset=2)
         bdicts2 = yield self.db.builds.getBuilds()
         ordered_bdicts = rs.apply(bdicts2)
         self.assertEqual(ordered_bdicts, bdicts)
