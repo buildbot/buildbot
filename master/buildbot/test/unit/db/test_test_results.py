@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -20,6 +24,9 @@ from buildbot.db import test_results
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Tests(TestReactorMixin, unittest.TestCase):
@@ -44,13 +51,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_add_set_results(self):
+    def test_add_set_results(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data)
 
         result_values = [
@@ -154,7 +161,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_names(self):
+    def test_get_names(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.common_data,
             fakedb.TestName(id=103, builderid=88, name='name103'),
@@ -179,7 +186,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(name_dicts, ['name116', 'name117'])
 
     @defer.inlineCallbacks
-    def test_get_code_paths(self):
+    def test_get_code_paths(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.common_data,
             fakedb.TestCodePath(id=103, builderid=88, path='path103'),
