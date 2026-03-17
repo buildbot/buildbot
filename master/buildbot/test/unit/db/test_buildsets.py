@@ -14,8 +14,12 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import datetime
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -29,10 +33,18 @@ from buildbot.util import UTC
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    from sqlalchemy import Connection
+    from twisted.internet.defer import Deferred
+
+    from buildbot.test.fakedb.buildsets import Buildset
+    from buildbot.test.fakedb.buildsets import BuildsetProperty
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class Tests(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
@@ -48,7 +60,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_addBuildset_getBuildset(self):
+    def test_addBuildset_getBuildset(self) -> InlineCallbacksType[None]:
         bsid, _ = yield self.db.buildsets.addBuildset(
             sourcestamps=[234],
             reason='because',
@@ -74,7 +86,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_addBuildset_getBuildset_explicit_submitted_at(self):
+    def test_addBuildset_getBuildset_explicit_submitted_at(self) -> InlineCallbacksType[None]:
         bsid_brids = yield self.db.buildsets.addBuildset(
             sourcestamps=[234],
             reason='because',
@@ -100,13 +112,18 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def do_test_getBuildsetProperties(self, buildsetid, rows, expected):
+    def do_test_getBuildsetProperties(
+        self,
+        buildsetid: int,
+        rows: list[Buildset | BuildsetProperty | Any],
+        expected: dict[str, tuple[str, str]],
+    ) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(rows)
         props = yield self.db.buildsets.getBuildsetProperties(buildsetid)
 
         self.assertEqual(props, expected)
 
-    def test_getBuildsetProperties_multiple(self):
+    def test_getBuildsetProperties_multiple(self) -> Deferred:
         return self.do_test_getBuildsetProperties(
             91,
             [
@@ -121,7 +138,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             {"prop1": ('one', 'fake1'), "prop2": ('two', 'fake2')},
         )
 
-    def test_getBuildsetProperties_empty(self):
+    def test_getBuildsetProperties_empty(self) -> Deferred:
         return self.do_test_getBuildsetProperties(
             91,
             [
@@ -130,12 +147,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
             {},
         )
 
-    def test_getBuildsetProperties_nosuch(self):
+    def test_getBuildsetProperties_nosuch(self) -> Deferred:
         "returns an empty dict even if no such buildset exists"
         return self.do_test_getBuildsetProperties(91, [], {})
 
     @defer.inlineCallbacks
-    def test_getBuildset_incomplete_zero(self):
+    def test_getBuildset_incomplete_zero(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Buildset(
                 id=91,
@@ -166,7 +183,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuildset_complete(self):
+    def test_getBuildset_complete(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Buildset(
                 id=91,
@@ -197,12 +214,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuildset_nosuch(self):
+    def test_getBuildset_nosuch(self) -> InlineCallbacksType[None]:
         bsdict = yield self.db.buildsets.getBuildset(91)
 
         self.assertEqual(bsdict, None)
 
-    def insert_test_getBuildsets_data(self):
+    def insert_test_getBuildsets_data(self) -> Deferred:
         return self.db.insert_test_data([
             fakedb.Buildset(
                 id=91,
@@ -227,23 +244,23 @@ class Tests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_getBuildsets_empty(self):
+    def test_getBuildsets_empty(self) -> InlineCallbacksType[None]:
         bsdictlist = yield self.db.buildsets.getBuildsets()
 
         self.assertEqual(bsdictlist, [])
 
     @defer.inlineCallbacks
-    def test_getBuildsets_all(self):
+    def test_getBuildsets_all(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getBuildsets_data()
         bsdictlist = yield self.db.buildsets.getBuildsets()
 
-        def bsdictKey(bsdict):
+        def bsdictKey(bsdict: buildsets.BuildSetModel) -> str | None:
             return bsdict.reason
 
         for bsdict in bsdictlist:
             self.assertIsInstance(bsdict, buildsets.BuildSetModel)
         self.assertEqual(
-            sorted(bsdictlist, key=bsdictKey),
+            sorted(bsdictlist, key=bsdictKey),  # type: ignore[arg-type]
             sorted(
                 [
                     buildsets.BuildSetModel(
@@ -267,12 +284,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
                         results=7,
                     ),
                 ],
-                key=bsdictKey,
+                key=bsdictKey,  # type: ignore[arg-type]
             ),
         )
 
     @defer.inlineCallbacks
-    def test_getBuildsets_complete(self):
+    def test_getBuildsets_complete(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getBuildsets_data()
         bsdictlist = yield self.db.buildsets.getBuildsets(complete=True)
 
@@ -295,7 +312,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuildsets_incomplete(self):
+    def test_getBuildsets_incomplete(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getBuildsets_data()
         bsdictlist = yield self.db.buildsets.getBuildsets(complete=False)
 
@@ -318,19 +335,19 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_completeBuildset_already_completed(self):
+    def test_completeBuildset_already_completed(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getBuildsets_data()
         with self.assertRaises(buildsets.AlreadyCompleteError):
             yield self.db.buildsets.completeBuildset(bsid=92, results=6)
 
     @defer.inlineCallbacks
-    def test_completeBuildset_missing(self):
+    def test_completeBuildset_missing(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getBuildsets_data()
         with self.assertRaises(buildsets.AlreadyCompleteError):
             yield self.db.buildsets.completeBuildset(bsid=93, results=6)
 
     @defer.inlineCallbacks
-    def test_completeBuildset(self):
+    def test_completeBuildset(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getBuildsets_data()
         yield self.db.buildsets.completeBuildset(bsid=91, results=6)
         bsdicts = yield self.db.buildsets.getBuildsets()
@@ -347,7 +364,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted(bsdicts), sorted([(91, 1, self.now, 6), (92, 1, 298297876, 7)]))
 
     @defer.inlineCallbacks
-    def test_completeBuildset_explicit_complete_at(self):
+    def test_completeBuildset_explicit_complete_at(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getBuildsets_data()
         yield self.db.buildsets.completeBuildset(
             bsid=91, results=6, complete_at=epoch2datetime(72759)
@@ -365,7 +382,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         ]
         self.assertEqual(sorted(bsdicts), sorted([(91, 1, 72759, 6), (92, 1, 298297876, 7)]))
 
-    def insert_test_getRecentBuildsets_data(self):
+    def insert_test_getRecentBuildsets_data(self) -> Deferred:
         return self.db.insert_test_data([
             fakedb.SourceStamp(id=91, branch='branch_a', repository='repo_a'),
             fakedb.Buildset(
@@ -401,7 +418,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_getRecentBuildsets_all(self):
+    def test_getRecentBuildsets_all(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getRecentBuildsets_data()
         bsdictlist = yield self.db.buildsets.getRecentBuildsets(
             2, branch='branch_a', repository='repo_a'
@@ -434,7 +451,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getRecentBuildsets_one(self):
+    def test_getRecentBuildsets_one(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getRecentBuildsets_data()
         bsdictlist = yield self.db.buildsets.getRecentBuildsets(
             1, branch='branch_a', repository='repo_a'
@@ -457,7 +474,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getRecentBuildsets_zero(self):
+    def test_getRecentBuildsets_zero(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getRecentBuildsets_data()
         bsdictlist = yield self.db.buildsets.getRecentBuildsets(
             0, branch='branch_a', repository='repo_a'
@@ -466,7 +483,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(bsdictlist, [])
 
     @defer.inlineCallbacks
-    def test_getRecentBuildsets_noBranchMatch(self):
+    def test_getRecentBuildsets_noBranchMatch(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getRecentBuildsets_data()
         bsdictlist = yield self.db.buildsets.getRecentBuildsets(
             2, branch='bad_branch', repository='repo_a'
@@ -475,7 +492,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(bsdictlist, [])
 
     @defer.inlineCallbacks
-    def test_getRecentBuildsets_noRepoMatch(self):
+    def test_getRecentBuildsets_noRepoMatch(self) -> InlineCallbacksType[None]:
         yield self.insert_test_getRecentBuildsets_data()
         bsdictlist = yield self.db.buildsets.getRecentBuildsets(
             2, branch='branch_a', repository='bad_repo'
@@ -484,7 +501,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(bsdictlist, [])
 
     @defer.inlineCallbacks
-    def test_addBuildset_simple(self):
+    def test_addBuildset_simple(self) -> InlineCallbacksType[None]:
         (bsid, brids) = yield self.db.buildsets.addBuildset(
             sourcestamps=[234],
             reason='because',
@@ -494,7 +511,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             waited_for=True,
         )
 
-        def thd(conn):
+        def thd(conn: Connection) -> None:
             # we should only have one brid
             self.assertEqual(len(brids), 1)
 
@@ -540,7 +557,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_addBuildset_bigger(self):
+    def test_addBuildset_bigger(self) -> InlineCallbacksType[None]:
         props = {"prop": (['list'], 'test')}
         yield defer.succeed(None)
         xxx_todo_changeme1 = yield self.db.buildsets.addBuildset(
@@ -553,7 +570,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         (bsid, brids) = xxx_todo_changeme1
 
-        def thd(conn):
+        def thd(conn: Connection) -> None:
             self.assertEqual(len(brids), 2)
 
             # should see one buildset row
@@ -573,18 +590,18 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
             # one property row
             r = conn.execute(self.db.model.buildset_properties.select())
-            rows = [(row.buildsetid, row.property_name, row.property_value) for row in r.fetchall()]
+            rows = [(row.buildsetid, row.property_name, row.property_value) for row in r.fetchall()]  # type: ignore[misc]
             self.assertEqual(rows, [(bsid, 'prop', json.dumps([['list'], 'test']))])
 
             # one buildset_sourcestamps row
             r = conn.execute(self.db.model.buildset_sourcestamps.select())
-            rows = [(row.buildsetid, row.sourcestampid) for row in r.fetchall()]
+            rows = [(row.buildsetid, row.sourcestampid) for row in r.fetchall()]  # type: ignore[misc]
             self.assertEqual(rows, [(bsid, 234)])
 
             # and two buildrequests rows (and don't re-check the default
             # columns)
             r = conn.execute(self.db.model.buildrequests.select())
-            rows = [(row.buildsetid, row.id, row.builderid) for row in r.fetchall()]
+            rows = [(row.buildsetid, row.id, row.builderid) for row in r.fetchall()]  # type: ignore[misc]
 
             # we don't know which of the brids is assigned to which
             # buildername, but either one will do
@@ -593,7 +610,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def test_addBuildset_properties_cache(self):
+    def test_addBuildset_properties_cache(self) -> InlineCallbacksType[None]:
         """
         Test that `addChange` properly seeds the `getChange` cache.
         """
