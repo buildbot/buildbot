@@ -258,13 +258,13 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.master.db.buildrequests.completeBuildRequests([44], 1)
         res = yield self.callGet(
             ('buildrequests',),
-            resultSpec=resultspec.ResultSpec(order=['results'], limit=2),  # type: ignore[arg-type]
+            resultSpec=resultspec.ResultSpec(order=['results'], limit=2),
         )
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0]['results'], -1)
         res = yield self.callGet(
             ('buildrequests',),
-            resultSpec=resultspec.ResultSpec(order=['-results'], limit=2),  # type: ignore[arg-type]
+            resultSpec=resultspec.ResultSpec(order=['-results'], limit=2),
         )
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0]['results'], 1)

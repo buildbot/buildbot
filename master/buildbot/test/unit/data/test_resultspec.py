@@ -165,8 +165,8 @@ class ResultSpecTestMixin(_Base):
         data = self.mkdata('name', 'albert', 'bruce', 'cedric', 'dwayne')
         exp = self.mkdata('name', 'albert', 'bruce', 'cedric', 'dwayne')
         random.shuffle(data)
-        self.assertEqual(resultspec.ResultSpec(order=['name']).apply(data), exp)  # type: ignore[arg-type]
-        self.assertEqual(resultspec.ResultSpec(order=['-name']).apply(data), list(reversed(exp)))  # type: ignore[arg-type]
+        self.assertEqual(resultspec.ResultSpec(order=['name']).apply(data), exp)
+        self.assertEqual(resultspec.ResultSpec(order=['-name']).apply(data), list(reversed(exp)))
 
     def test_apply_ordering_multi(self) -> None:
         data = self.mkdata(
@@ -187,7 +187,7 @@ class ResultSpecTestMixin(_Base):
             total=4,
         )
         random.shuffle(data)
-        self.assertListResultEqual(resultspec.ResultSpec(order=['ln', 'fn']).apply(data), exp)  # type: ignore[arg-type]
+        self.assertListResultEqual(resultspec.ResultSpec(order=['ln', 'fn']).apply(data), exp)
         exp = base.ListResult(
             self.mkdata(
                 ('fn', 'ln'),
@@ -198,7 +198,7 @@ class ResultSpecTestMixin(_Base):
             ),
             total=4,
         )
-        self.assertListResultEqual(resultspec.ResultSpec(order=['-ln', '-fn']).apply(data), exp)  # type: ignore[arg-type]
+        self.assertListResultEqual(resultspec.ResultSpec(order=['-ln', '-fn']).apply(data), exp)
 
     def test_apply_filter(self) -> None:
         data = self.mkdata('name', 'albert', 'bruce', 'cedric', 'dwayne')
@@ -221,7 +221,7 @@ class ResultSpecTestMixin(_Base):
             ('bruce', 'willis'),
             ('dwayne', 'montague'),
         )
-        resultspec.ResultSpec(fields=['fn'], order=['ln']).apply(data)  # type: ignore[arg-type]
+        resultspec.ResultSpec(fields=['fn'], order=['ln']).apply(data)
 
     def test_sort_null_datetimefields(self) -> None:
         data = self.mkdata(('fn', 'ln'), ('albert', datetime.datetime(1, 1, 1)), ('cedric', None))
@@ -229,7 +229,7 @@ class ResultSpecTestMixin(_Base):
         exp = self.mkdata(('fn', 'ln'), ('cedric', None), ('albert', datetime.datetime(1, 1, 1)))
 
         self.assertListResultEqual(
-            resultspec.ResultSpec(order=['ln']).apply(data),  # type: ignore[arg-type]
+            resultspec.ResultSpec(order=['ln']).apply(data),
             base.ListResult(exp, total=2),
         )
 
@@ -367,7 +367,7 @@ class ResultSpecTestMixin(_Base):
             rs.popIntegerFilter('foo')
 
     def test_removeOrder(self) -> None:
-        rs = resultspec.ResultSpec(order=['foo', '-bar'])  # type: ignore[arg-type]
+        rs = resultspec.ResultSpec(order=['foo', '-bar'])
         rs.removeOrder()
         self.assertEqual(rs.order, None)
 
