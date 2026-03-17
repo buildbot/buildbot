@@ -27,14 +27,19 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import epoch2datetime
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from datetime import datetime
 
+    from twisted.internet.defer import Deferred
+
+    from buildbot.db.sourcestamps import SourceStampModel
     from buildbot.test.fakedb import FakeDBConnector
+    from buildbot.test.fakedb.row import Row
+    from buildbot.util.twisted import InlineCallbacksType
 
 CREATED_AT = 927845299
 
 
-def sourceStampKey(sourceStamp: sourcestamps.SourceStampModel):
+def sourceStampKey(sourceStamp: sourcestamps.SourceStampModel) -> tuple[str, str | None, datetime]:
     return (sourceStamp.repository, sourceStamp.branch, sourceStamp.created_at)
 
 
@@ -42,13 +47,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
     db: FakeDBConnector
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_findSourceStampId_simple(self):
+    def test_findSourceStampId_simple(self) -> InlineCallbacksType[None]:
         self.reactor.advance(CREATED_AT)
         ssid = yield self.db.sourcestamps.findSourceStampId(
             branch='production',
@@ -73,7 +78,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_findSourceStampId_simple_unique(self):
+    def test_findSourceStampId_simple_unique(self) -> InlineCallbacksType[None]:
         ssid1 = yield self.db.sourcestamps.findSourceStampId(
             branch='production',
             revision='abdef',
@@ -99,14 +104,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertNotEqual(ssid1, ssid2)
 
     @defer.inlineCallbacks
-    def test_findSourceStampId_simple_unique_patch(self):
+    def test_findSourceStampId_simple_unique_patch(self) -> InlineCallbacksType[None]:
         ssid1 = yield self.db.sourcestamps.findSourceStampId(
             branch='production',
             revision='abdef',
             repository='test://repo',
             codebase='cb',
             project='stamper',
-            patch_body=b'++ --',
+            patch_body=b'++ --',  # type: ignore[arg-type]
             patch_level=1,
             patch_author='me',
             patch_comment='hi',
@@ -118,7 +123,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             repository='test://repo',
             codebase='cb',
             project='stamper',
-            patch_body=b'++ --',
+            patch_body=b'++ --',  # type: ignore[arg-type]
             patch_level=1,
             patch_author='me',
             patch_comment='hi',
@@ -128,7 +133,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertNotEqual(ssid1, ssid2)
 
     @defer.inlineCallbacks
-    def test_findSourceStampId_patch(self):
+    def test_findSourceStampId_patch(self) -> InlineCallbacksType[None]:
         self.reactor.advance(CREATED_AT)
         ssid = yield self.db.sourcestamps.findSourceStampId(
             branch='production',
@@ -136,7 +141,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             repository='test://repo',
             codebase='cb',
             project='stamper',
-            patch_body=b'my patch',
+            patch_body=b'my patch',  # type: ignore[arg-type]
             patch_level=3,
             patch_subdir='master/',
             patch_author='me',
@@ -165,7 +170,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getSourceStamp_simple(self):
+    def test_getSourceStamp_simple(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.SourceStamp(
                 id=234,
@@ -194,7 +199,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getSourceStamp_simple_None(self):
+    def test_getSourceStamp_simple_None(self) -> InlineCallbacksType[None]:
         "check that NULL branch and revision are handled correctly"
         yield self.db.insert_test_data([
             fakedb.SourceStamp(
@@ -207,7 +212,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual((ssdict.branch, ssdict.revision), (None, None))
 
     @defer.inlineCallbacks
-    def test_getSourceStamp_patch(self) -> Generator[defer.Deferred, None, None]:
+    def test_getSourceStamp_patch(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Patch(
                 id=99,
@@ -232,13 +237,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(ssdict.patch.subdir, '/foo')
 
     @defer.inlineCallbacks
-    def test_getSourceStamp_nosuch(self):
+    def test_getSourceStamp_nosuch(self) -> InlineCallbacksType[None]:
         ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
         self.assertEqual(ssdict, None)
 
     @defer.inlineCallbacks
-    def test_getSourceStamps(self):
+    def test_getSourceStamps(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Patch(
                 id=99,
@@ -308,13 +313,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getSourceStamps_empty(self):
+    def test_getSourceStamps_empty(self) -> InlineCallbacksType[None]:
         sourcestamps = yield self.db.sourcestamps.getSourceStamps()
 
         self.assertEqual(sourcestamps, [])
 
     @defer.inlineCallbacks
-    def test_get_sourcestamps_for_buildset_one_codebase(self):
+    def test_get_sourcestamps_for_buildset_one_codebase(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=88, name="bar"),
             fakedb.Worker(id=13, name="one"),
@@ -344,7 +349,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_sourcestamps_for_buildset_three_codebases(self):
+    def test_get_sourcestamps_for_buildset_three_codebases(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=88, name="bar"),
             fakedb.Worker(id=13, name="one"),
@@ -398,7 +403,9 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def do_test_getSourceStampsForBuild(self, rows, buildid, expected):
+    def do_test_getSourceStampsForBuild(
+        self, rows: list[Row], buildid: int, expected: list[SourceStampModel]
+    ) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(rows)
 
         sourcestamps = yield self.db.sourcestamps.getSourceStampsForBuild(buildid)
@@ -407,7 +414,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             sorted(sourcestamps, key=sourceStampKey), sorted(expected, key=sourceStampKey)
         )
 
-    def test_getSourceStampsForBuild_OneCodeBase(self):
+    def test_getSourceStampsForBuild_OneCodeBase(self) -> Deferred[None]:
         rows = [
             fakedb.Master(id=88, name="bar"),
             fakedb.Worker(id=13, name='one'),
@@ -446,7 +453,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         return self.do_test_getSourceStampsForBuild(rows, 50, expected)
 
-    def test_getSourceStampsForBuild_3CodeBases(self):
+    def test_getSourceStampsForBuild_3CodeBases(self) -> Deferred[None]:
         rows = [
             fakedb.Master(id=88, name="bar"),
             fakedb.Worker(id=13, name='one'),
