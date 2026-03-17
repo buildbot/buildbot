@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
+from typing import Any
 
 from twisted.trial import unittest
 
@@ -24,14 +27,14 @@ from buildbot.test.util import dirs
 from buildbot.test.util import misc
 
 
-def mkconfig(**kwargs):
+def mkconfig(**kwargs: Any) -> dict[str, Any]:
     config = {"quiet": False, "basedir": os.path.abspath('basedir')}
     config.update(kwargs)
     return config
 
 
 class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpDirs('basedir')
         with open(os.path.join('basedir', 'buildbot.tac'), "w", encoding='utf-8') as f:
             f.write("Application('buildmaster')")
@@ -39,32 +42,32 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     # tests
 
-    def test_restart_not_basedir(self):
+    def test_restart_not_basedir(self) -> None:
         self.assertEqual(restart.restart(mkconfig(basedir='doesntexist')), 1)
         self.assertInStdout('invalid buildmaster directory')
 
-    def test_restart_stop_fails(self):
+    def test_restart_stop_fails(self) -> None:
         self.patch(stop, 'stop', lambda config, wait: 1)
         self.assertEqual(restart.restart(mkconfig()), 1)
 
-    def test_restart_stop_succeeds_start_fails(self):
+    def test_restart_stop_succeeds_start_fails(self) -> None:
         self.patch(stop, 'stop', lambda config, wait: 0)
         self.patch(start, 'start', lambda config: 1)
         self.assertEqual(restart.restart(mkconfig()), 1)
 
-    def test_restart_succeeds(self):
+    def test_restart_succeeds(self) -> None:
         self.patch(stop, 'stop', lambda config, wait: 0)
         self.patch(start, 'start', lambda config: 0)
         self.assertEqual(restart.restart(mkconfig()), 0)
         self.assertInStdout('now restarting')
 
-    def test_restart_succeeds_quiet(self):
+    def test_restart_succeeds_quiet(self) -> None:
         self.patch(stop, 'stop', lambda config, wait: 0)
         self.patch(start, 'start', lambda config: 0)
         self.assertEqual(restart.restart(mkconfig(quiet=True)), 0)
         self.assertWasQuiet()
 
-    def test_restart_clean(self):
+    def test_restart_clean(self) -> None:
         self.patch(stop, 'stop', lambda config, wait: 0)
         self.patch(start, 'start', lambda config: 0)
         self.assertEqual(restart.restart(mkconfig(quiet=True, clean=True)), 0)
