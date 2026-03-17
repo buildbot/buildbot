@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -23,8 +25,11 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
-def changeSourceKey(changeSource: changesources.ChangeSourceModel):
+
+def changeSourceKey(changeSource: changesources.ChangeSourceModel) -> int:
     return changeSource.id
 
 
@@ -41,27 +46,27 @@ class Tests(TestReactorMixin, unittest.TestCase):
     cs87master14 = fakedb.ChangeSourceMaster(changesourceid=87, masterid=14)
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_findChangeSourceId_new(self):
+    def test_findChangeSourceId_new(self) -> InlineCallbacksType[None]:
         """findChangeSourceId for a new changesource creates it"""
         id = yield self.db.changesources.findChangeSourceId('csname')
         cs = yield self.db.changesources.getChangeSource(id)
         self.assertEqual(cs.name, 'csname')
 
     @defer.inlineCallbacks
-    def test_findChangeSourceId_existing(self):
+    def test_findChangeSourceId_existing(self) -> InlineCallbacksType[None]:
         """findChangeSourceId gives the same answer for the same inputs"""
         id1 = yield self.db.changesources.findChangeSourceId('csname')
         id2 = yield self.db.changesources.findChangeSourceId('csname')
         self.assertEqual(id1, id2)
 
     @defer.inlineCallbacks
-    def test_setChangeSourceMaster_fresh(self):
+    def test_setChangeSourceMaster_fresh(self) -> InlineCallbacksType[None]:
         """setChangeSourceMaster with a good pair"""
         yield self.db.insert_test_data([self.cs42, self.master13])
         yield self.db.changesources.setChangeSourceMaster(42, 13)
@@ -69,7 +74,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(cs.masterid, 13)
 
     @defer.inlineCallbacks
-    def test_setChangeSourceMaster_inactive_but_linked(self):
+    def test_setChangeSourceMaster_inactive_but_linked(self) -> InlineCallbacksType[None]:
         """Inactive changesource but already claimed by an active master"""
         yield self.db.insert_test_data([
             self.cs87,
@@ -81,7 +86,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             yield self.db.changesources.setChangeSourceMaster(87, 13)
 
     @defer.inlineCallbacks
-    def test_setChangeSourceMaster_active(self):
+    def test_setChangeSourceMaster_active(self) -> InlineCallbacksType[None]:
         """Active changesource already claimed by an active master"""
         yield self.db.insert_test_data([
             self.cs42,
@@ -92,7 +97,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             yield self.db.changesources.setChangeSourceMaster(42, 14)
 
     @defer.inlineCallbacks
-    def test_setChangeSourceMaster_None(self):
+    def test_setChangeSourceMaster_None(self) -> InlineCallbacksType[None]:
         """A 'None' master disconnects the changesource"""
         yield self.db.insert_test_data([
             self.cs87,
@@ -104,7 +109,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(cs.masterid, None)
 
     @defer.inlineCallbacks
-    def test_setChangeSourceMaster_None_unowned(self):
+    def test_setChangeSourceMaster_None_unowned(self) -> InlineCallbacksType[None]:
         """A 'None' master for a disconnected changesource"""
         yield self.db.insert_test_data([self.cs87])
         yield self.db.changesources.setChangeSourceMaster(87, None)
@@ -112,7 +117,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(cs.masterid, None)
 
     @defer.inlineCallbacks
-    def test_getChangeSource(self):
+    def test_getChangeSource(self) -> InlineCallbacksType[None]:
         """getChangeSource for a changesource that exists"""
         yield self.db.insert_test_data([self.cs87])
         cs = yield self.db.changesources.getChangeSource(87)
@@ -120,13 +125,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(cs, changesources.ChangeSourceModel(id=87, name='lame_source'))
 
     @defer.inlineCallbacks
-    def test_getChangeSource_missing(self):
+    def test_getChangeSource_missing(self) -> InlineCallbacksType[None]:
         """getChangeSource for a changesource that doesn't exist"""
         cs = yield self.db.changesources.getChangeSource(87)
         self.assertEqual(cs, None)
 
     @defer.inlineCallbacks
-    def test_getChangeSource_active(self):
+    def test_getChangeSource_active(self) -> InlineCallbacksType[None]:
         """getChangeSource for a changesource that exists and is active"""
         yield self.db.insert_test_data([self.cs42, self.master13, self.cs42master13])
         cs = yield self.db.changesources.getChangeSource(42)
@@ -136,7 +141,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getChangeSource_inactive_but_linked(self):
+    def test_getChangeSource_inactive_but_linked(self) -> InlineCallbacksType[None]:
         """getChangeSource for a changesource that is assigned but is inactive"""
         yield self.db.insert_test_data([self.cs87, self.master14, self.cs87master14])
         cs = yield self.db.changesources.getChangeSource(87)
@@ -147,7 +152,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         # row exists, but marked inactive
 
     @defer.inlineCallbacks
-    def test_getChangeSources(self):
+    def test_getChangeSources(self) -> InlineCallbacksType[None]:
         """getChangeSources returns all changesources"""
         yield self.db.insert_test_data([
             self.cs42,
@@ -172,7 +177,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getChangeSources_masterid(self):
+    def test_getChangeSources_masterid(self) -> InlineCallbacksType[None]:
         """getChangeSources returns all changesources for a given master"""
         yield self.db.insert_test_data([
             self.cs42,
@@ -196,7 +201,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getChangeSources_active(self):
+    def test_getChangeSources_active(self) -> InlineCallbacksType[None]:
         """getChangeSources for (active changesources, all masters)"""
         yield self.db.insert_test_data([self.cs42, self.master13, self.cs42master13, self.cs87])
         cslist = yield self.db.changesources.getChangeSources(active=True)
@@ -212,7 +217,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getChangeSources_active_masterid(self):
+    def test_getChangeSources_active_masterid(self) -> InlineCallbacksType[None]:
         """getChangeSources returns (active changesources, given masters)"""
         yield self.db.insert_test_data([self.cs42, self.master13, self.cs42master13, self.cs87])
         cslist = yield self.db.changesources.getChangeSources(active=True, masterid=13)
@@ -235,7 +240,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted(cslist), [])
 
     @defer.inlineCallbacks
-    def test_getChangeSources_inactive(self):
+    def test_getChangeSources_inactive(self) -> InlineCallbacksType[None]:
         """getChangeSources returns (inactive changesources, all masters)"""
         yield self.db.insert_test_data([self.cs42, self.master13, self.cs42master13, self.cs87])
         cslist = yield self.db.changesources.getChangeSources(active=False)
@@ -251,7 +256,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getChangeSources_inactive_masterid(self):
+    def test_getChangeSources_inactive_masterid(self) -> InlineCallbacksType[None]:
         """getChangeSources returns (active changesources, given masters)"""
         yield self.db.insert_test_data([self.cs42, self.master13, self.cs42master13, self.cs87])
         cslist = yield self.db.changesources.getChangeSources(active=False, masterid=13)
