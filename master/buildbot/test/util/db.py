@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import os
 
@@ -77,7 +77,7 @@ def resolve_test_index_in_db_url(db_url: str) -> str:
     return db_url
 
 
-def resolve_test_db_url(db_url: str, sqlite_memory: bool) -> str:
+def resolve_test_db_url(db_url: str | None, sqlite_memory: bool) -> str:
     default_sqlite = 'sqlite://'
     if db_url is None:
         db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
