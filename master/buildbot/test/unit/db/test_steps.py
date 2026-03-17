@@ -14,7 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import time
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -24,6 +27,9 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import epoch2datetime
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 TIME1 = 1304262222
 TIME2 = 1304262223
@@ -115,56 +121,56 @@ class Tests(TestReactorMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_getStep(self):
+    def test_getStep(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[0]])
         stepdict = yield self.db.steps.getStep(70)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict, self.stepDicts[0])
 
     @defer.inlineCallbacks
-    def test_getStep_missing(self):
+    def test_getStep_missing(self) -> InlineCallbacksType[None]:
         stepdict = yield self.db.steps.getStep(50)
         self.assertEqual(stepdict, None)
 
     @defer.inlineCallbacks
-    def test_getStep_number(self):
+    def test_getStep_number(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[1]])
         stepdict = yield self.db.steps.getStep(buildid=30, number=1)
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict.id, 71)
 
     @defer.inlineCallbacks
-    def test_getStep_number_missing(self):
+    def test_getStep_number_missing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[1]])
         stepdict = yield self.db.steps.getStep(buildid=30, number=9)
         self.assertEqual(stepdict, None)
 
     @defer.inlineCallbacks
-    def test_getStep_name(self):
+    def test_getStep_name(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[2]])
         stepdict = yield self.db.steps.getStep(buildid=30, name='three')
         self.assertIsInstance(stepdict, steps.StepModel)
         self.assertEqual(stepdict.id, 72)
 
     @defer.inlineCallbacks
-    def test_getStep_name_missing(self):
+    def test_getStep_name_missing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[2]])
         stepdict = yield self.db.steps.getStep(buildid=30, name='five')
         self.assertEqual(stepdict, None)
 
     @defer.inlineCallbacks
-    def test_getStep_invalid(self):
+    def test_getStep_invalid(self) -> InlineCallbacksType[None]:
         with self.assertRaises(RuntimeError):
             yield self.db.steps.getStep(buildid=30)
 
     @defer.inlineCallbacks
-    def test_getSteps(self):
+    def test_getSteps(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.stepRows)
         stepdicts = yield self.db.steps.getSteps(buildid=30)
 
@@ -174,13 +180,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(stepdicts, self.stepDicts[:3])
 
     @defer.inlineCallbacks
-    def test_getSteps_none(self):
+    def test_getSteps_none(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.stepRows)
         stepdicts = yield self.db.steps.getSteps(buildid=33)
         self.assertEqual(stepdicts, [])
 
     @defer.inlineCallbacks
-    def test_addStep_getStep(self):
+    def test_addStep_getStep(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData)
         stepid, number, name = yield self.db.steps.addStep(
             buildid=30, name='new', state_string='new'
@@ -207,7 +213,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_addStep_getStep_locks_acquired_already(self):
+    def test_addStep_getStep_locks_acquired_already(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData)
         stepid, number, name = yield self.db.steps.addStep(
             buildid=30, name='new', state_string='new'
@@ -234,7 +240,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_addStep_getStep_locks_acquired_later(self):
+    def test_addStep_getStep_locks_acquired_later(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData)
         stepid, number, name = yield self.db.steps.addStep(
             buildid=30, name='new', state_string='new'
@@ -262,7 +268,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_addStep_getStep_existing_step(self):
+    def test_addStep_getStep_existing_step(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[0]])
         stepid, number, name = yield self.db.steps.addStep(
             buildid=30, name='new', state_string='new'
@@ -275,7 +281,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(stepdict.name, name)
 
     @defer.inlineCallbacks
-    def test_addStep_getStep_name_collisions(self):
+    def test_addStep_getStep_name_collisions(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.backgroundData,
             fakedb.Step(id=73, number=0, name='new', buildid=30),
@@ -294,14 +300,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(stepdict.name, name)
 
     @defer.inlineCallbacks
-    def test_setStepStateString(self):
+    def test_setStepStateString(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[2]])
         yield self.db.steps.setStepStateString(stepid=72, state_string='aaa')
         stepdict = yield self.db.steps.getStep(stepid=72)
         self.assertEqual(stepdict.state_string, 'aaa')
 
     @defer.inlineCallbacks
-    def test_addURL(self):
+    def test_addURL(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[2]])
         yield self.db.steps.addURL(stepid=72, name='foo', url='bar')
 
@@ -309,7 +315,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(stepdict.urls, [steps.UrlModel(name='foo', url='bar')])
 
     @defer.inlineCallbacks
-    def test_addURL_race(self):
+    def test_addURL_race(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[2]])
         yield defer.gatherResults(
             [
@@ -324,7 +330,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         stepdict = yield self.db.steps.getStep(stepid=72)
 
-        def urlKey(url):
+        def urlKey(url: steps.UrlModel) -> str:
             return url.name
 
         # order is not guaranteed though
@@ -337,7 +343,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_addURL_no_duplicate(self):
+    def test_addURL_no_duplicate(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[2]])
         yield defer.gatherResults(
             [
@@ -352,7 +358,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(stepdict.urls, [steps.UrlModel(name='foo', url='bar')])
 
     @defer.inlineCallbacks
-    def test_finishStep(self):
+    def test_finishStep(self) -> InlineCallbacksType[None]:
         self.reactor.advance(TIME2)
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[2]])
         yield self.db.steps.finishStep(stepid=72, results=11, hidden=False)
@@ -362,14 +368,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(stepdict.hidden, False)
 
     @defer.inlineCallbacks
-    def test_finishStep_hidden(self):
+    def test_finishStep_hidden(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.stepRows[2]])
         yield self.db.steps.finishStep(stepid=72, results=11, hidden=True)
         stepdict = yield self.db.steps.getStep(stepid=72)
         self.assertEqual(stepdict.hidden, True)
 
     @defer.inlineCallbacks
-    def test_addStep_getStep_name_collisions_too_long(self):
+    def test_addStep_getStep_name_collisions_too_long(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.backgroundData,
             fakedb.Step(id=73, number=0, name='a' * 49, buildid=30),
@@ -386,7 +392,9 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(stepdict.name, name)
 
     @defer.inlineCallbacks
-    def test_addStep_getStep_name_collisions_too_long_extra_digits(self):
+    def test_addStep_getStep_name_collisions_too_long_extra_digits(
+        self,
+    ) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(
             self.backgroundData
             + [
