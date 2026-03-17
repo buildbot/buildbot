@@ -13,10 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class DBConnector_Basic(unittest.TestCase):
@@ -25,18 +32,18 @@ class DBConnector_Basic(unittest.TestCase):
     """
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.master = yield fakemaster.make_master(
             self, wantRealReactor=True, wantDb=True, auto_upgrade=False, check_version=False
         )
 
     @defer.inlineCallbacks
-    def test_is_current_empty(self):
+    def test_is_current_empty(self) -> InlineCallbacksType[None]:
         res = yield self.master.db.model.is_current()
         self.assertFalse(res)
 
     @defer.inlineCallbacks
-    def test_is_current_full(self):
+    def test_is_current_full(self) -> InlineCallbacksType[None]:
         yield self.master.db.model.upgrade()
         res = yield self.master.db.model.is_current()
         self.assertTrue(res)
