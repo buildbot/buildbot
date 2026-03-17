@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -22,41 +27,51 @@ from buildbot.clients import usersclient
 from buildbot.process.users import users
 from buildbot.scripts import user
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestUsersClient(unittest.TestCase):
     class FakeUsersClient:
-        def __init__(self, master, username="user", passwd="userpw", port=0):
+        def __init__(
+            self, master: str, username: str = "user", passwd: str = "userpw", port: int = 0
+        ) -> None:
             self.master = master
             self.port = port
             self.username = username
             self.passwd = passwd
             self.fail = False
 
-        def send(self, op, bb_username, bb_password, ids, info):
+        def send(
+            self, op: Any, bb_username: Any, bb_password: Any, ids: Any, info: Any
+        ) -> Deferred[None]:
             self.op = op
             self.bb_username = bb_username
             self.bb_password = bb_password
             self.ids = ids
             self.info = info
-            d = defer.Deferred()
+            d: Deferred[None] = defer.Deferred()
             if self.fail:
-                reactor.callLater(0, d.errback, RuntimeError("oh noes"))
+                cast("IReactorTime", reactor).callLater(0, d.errback, RuntimeError("oh noes"))
             else:
-                reactor.callLater(0, d.callback, None)
+                cast("IReactorTime", reactor).callLater(0, d.callback, None)
             return d
 
-    def setUp(self):
-        def fake_UsersClient(*args):
+    def setUp(self) -> None:
+        def fake_UsersClient(*args: Any) -> TestUsersClient.FakeUsersClient:
             self.usersclient = self.FakeUsersClient(*args)
             return self.usersclient
 
         self.patch(usersclient, 'UsersClient', fake_UsersClient)
 
         # un-do the effects of @in_reactor
-        self.patch(user, 'user', user.user._orig)
+        self.patch(user, 'user', user.user._orig)  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_usersclient_send_ids(self):
+    def test_usersclient_send_ids(self) -> InlineCallbacksType[None]:
         yield user.user({
             "master": 'a:9990',
             "username": "x",
@@ -75,8 +90,8 @@ class TestUsersClient(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_usersclient_send_update_info(self):
-        def _fake_encrypt(passwd):
+    def test_usersclient_send_update_info(self) -> InlineCallbacksType[None]:
+        def _fake_encrypt(passwd: str) -> str:
             assert passwd == 'day'
             return 'ENCRY'
 
@@ -120,7 +135,7 @@ class TestUsersClient(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_usersclient_send_add_info(self):
+    def test_usersclient_send_add_info(self) -> InlineCallbacksType[None]:
         yield user.user({
             "master": 'a:9990',
             "username": "x",
