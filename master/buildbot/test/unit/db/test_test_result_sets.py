@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -21,6 +25,9 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.twisted import async_to_deferred
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Tests(TestReactorMixin, unittest.TestCase):
@@ -70,13 +77,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_add_set_get_set(self):
+    def test_add_set_get_set(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data)
         set_id = yield self.db.test_result_sets.addTestResultSet(
             builderid=88,
@@ -105,7 +112,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_sets(self):
+    def test_get_sets(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.common_data,
             fakedb.TestResultSet(
@@ -193,7 +200,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual([d.id for d in set_dicts], [91, 95])
 
     @defer.inlineCallbacks
-    def test_get_set_from_data(self):
+    def test_get_set_from_data(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data + self.common_test_result_set_data)
 
         set_dict = yield self.db.test_result_sets.getTestResultSet(91)
@@ -214,12 +221,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_non_existing_set(self):
+    def test_get_non_existing_set(self) -> InlineCallbacksType[None]:
         set_dict = yield self.db.test_result_sets.getTestResultSet(91)
         self.assertEqual(set_dict, None)
 
     @defer.inlineCallbacks
-    def test_complete_already_completed_set(self):
+    def test_complete_already_completed_set(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data + self.common_test_result_set_data)
         with self.assertRaises(test_result_sets.TestResultSetAlreadyCompleted):
             yield self.db.test_result_sets.completeTestResultSet(92)
@@ -291,7 +298,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted([set.id for set in sets]), [10000, 10010, 10020, 10021, 10040])
 
     @defer.inlineCallbacks
-    def test_complete_set_with_test_counts(self):
+    def test_complete_set_with_test_counts(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data + self.common_test_result_set_data)
 
         yield self.db.test_result_sets.completeTestResultSet(91, tests_passed=12, tests_failed=2)
@@ -314,7 +321,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_complete_set_without_test_counts(self):
+    def test_complete_set_without_test_counts(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.common_data + self.common_test_result_set_data)
 
         yield self.db.test_result_sets.completeTestResultSet(91)
