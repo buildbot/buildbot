@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import sys
 from io import StringIO
@@ -24,12 +26,12 @@ from buildbot.test.util import dirs
 
 
 class TestStatusLog(dirs.DirsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.newdir = os.path.join('jobdir', 'new')
         self.tmpdir = os.path.join('jobdir', 'tmp')
         self.setUpDirs("jobdir", self.newdir, self.tmpdir)
 
-    def test_trycmd(self):
+    def test_trycmd(self) -> None:
         config = {"jobdir": 'jobdir'}
         inputfile = StringIO('this is my try job')
         self.patch(sys, 'stdin', inputfile)
