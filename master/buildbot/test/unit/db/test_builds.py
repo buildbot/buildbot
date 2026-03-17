@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -26,6 +29,13 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import UTC
 from buildbot.util import epoch2datetime
+
+if TYPE_CHECKING:
+    from sqlalchemy import Connection
+    from twisted.internet.defer import Deferred
+
+    from buildbot.test.fakedb.row import Row
+    from buildbot.util.twisted import InlineCallbacksType
 
 TIME1 = 1304262222
 TIME2 = 1304262223
@@ -128,13 +138,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
     }
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_getBuild(self):
+    def test_getBuild(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         bdict = yield self.db.builds.getBuild(50)
         self.assertIsInstance(bdict, builds.BuildModel)
@@ -156,19 +166,19 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuild_missing(self):
+    def test_getBuild_missing(self) -> InlineCallbacksType[None]:
         bdict = yield self.db.builds.getBuild(50)
         self.assertEqual(bdict, None)
 
     @defer.inlineCallbacks
-    def test_getBuildByNumber(self):
+    def test_getBuildByNumber(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         bdict = yield self.db.builds.getBuildByNumber(builderid=77, number=5)
         self.assertIsInstance(bdict, builds.BuildModel)
         self.assertEqual(bdict.id, 50)
 
     @defer.inlineCallbacks
-    def test_getBuilds(self):
+    def test_getBuilds(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds()
         for bdict in bdicts:
@@ -179,7 +189,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilds_builderid(self):
+    def test_getBuilds_builderid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(builderid=88)
         for bdict in bdicts:
@@ -187,7 +197,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[51]])
 
     @defer.inlineCallbacks
-    def test_getBuilds_buildrequestid(self):
+    def test_getBuilds_buildrequestid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(buildrequestid=42)
         for bdict in bdicts:
@@ -197,7 +207,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilds_workerid(self):
+    def test_getBuilds_workerid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(workerid=13)
         for bdict in bdicts:
@@ -207,14 +217,16 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def do_test_getBuildsForChange(self, rows, changeid, expected):
+    def do_test_getBuildsForChange(
+        self, rows: list[Row], changeid: int, expected: list[BuildModel]
+    ) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(rows)
 
         builds = yield self.db.builds.getBuildsForChange(changeid)
 
         self.assertEqual(sorted(builds), sorted(expected))
 
-    def test_getBuildsForChange_OneCodebase(self):
+    def test_getBuildsForChange_OneCodebase(self) -> Deferred:
         rows = [
             fakedb.Master(id=88, name="bar"),
             fakedb.Worker(id=13, name='one'),
@@ -265,7 +277,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         return self.do_test_getBuildsForChange(rows, 14, expected)
 
     @defer.inlineCallbacks
-    def test_getBuilds_complete(self):
+    def test_getBuilds_complete(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(complete=True)
         for bdict in bdicts:
@@ -273,7 +285,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[52]])
 
     @defer.inlineCallbacks
-    def test_addBuild_first(self):
+    def test_addBuild_first(self) -> InlineCallbacksType[None]:
         self.reactor.advance(TIME1)
         yield self.db.insert_test_data(self.backgroundData)
         id, number = yield self.db.builds.addBuild(
@@ -299,7 +311,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_addBuild_existing(self):
+    def test_addBuild_existing(self) -> InlineCallbacksType[None]:
         self.reactor.advance(TIME1)
         yield self.db.insert_test_data([
             *self.backgroundData,
@@ -329,7 +341,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_setBuildStateString(self):
+    def test_setBuildStateString(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         yield self.db.builds.setBuildStateString(buildid=50, state_string='test test2')
         bdict = yield self.db.builds.getBuild(50)
@@ -352,7 +364,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_add_build_locks_duration(self):
+    def test_add_build_locks_duration(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         yield self.db.builds.add_build_locks_duration(buildid=50, duration_s=12)
         bdict = yield self.db.builds.getBuild(50)
@@ -375,7 +387,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_finishBuild(self):
+    def test_finishBuild(self) -> InlineCallbacksType[None]:
         self.reactor.advance(TIME4)
         yield self.db.insert_test_data([*self.backgroundData, self.threeBuilds[0]])
         yield self.db.builds.finishBuild(buildid=50, results=7)
@@ -399,14 +411,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def testgetBuildPropertiesEmpty(self):
+    def testgetBuildPropertiesEmpty(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         for buildid in (50, 51, 52):
             props = yield self.db.builds.getBuildProperties(buildid)
             self.assertEqual(0, len(props))
 
     @defer.inlineCallbacks
-    def test_testgetBuildProperties_resultSpecFilter(self):
+    def test_testgetBuildProperties_resultSpecFilter(self) -> InlineCallbacksType[None]:
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('name', 'eq', ["prop", "prop2"])])
         rs.fieldMapping = {'name': 'build_properties.name'}
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
@@ -427,14 +439,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def testsetandgetProperties(self):
+    def testsetandgetProperties(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         yield self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
         props = yield self.db.builds.getBuildProperties(50)
         self.assertEqual(props, {'prop': (42, 'test')})
 
     @defer.inlineCallbacks
-    def testsetgetsetProperties(self):
+    def testsetgetsetProperties(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         props = yield self.db.builds.getBuildProperties(50)
         self.assertEqual(props, {})
@@ -455,14 +467,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(props, {'prop': (45, 'test_source')})
 
     @defer.inlineCallbacks
-    def test_addBuild_existing_race(self):
+    def test_addBuild_existing_race(self) -> InlineCallbacksType[None]:
         self.reactor.advance(TIME1)
         yield self.db.insert_test_data(self.backgroundData)
 
         # add new builds at *just* the wrong time, repeatedly
         numbers = list(range(1, 8))
 
-        def raceHook(conn):
+        def raceHook(conn: Connection) -> None:
             if not numbers:
                 return
             conn.execute(
@@ -509,7 +521,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilter(self):
+    def test_getBuilds_resultSpecFilter(self) -> InlineCallbacksType[None]:
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('complete_at', 'ne', [None])])
         rs.fieldMapping = {'complete_at': 'builds.complete_at'}
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
@@ -519,8 +531,9 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[52]])
 
     @defer.inlineCallbacks
-    def test_getBuilds_resultSpecOrder(self):
-        rs = resultspec.ResultSpec(order=['-started_at'])
+    def test_getBuilds_resultSpecOrder(self) -> InlineCallbacksType[None]:
+
+        rs = resultspec.ResultSpec(order=['-started_at'])  # type: ignore[arg-type]
         rs.fieldMapping = {'started_at': 'builds.started_at'}
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
@@ -530,19 +543,23 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(rs.order, None)
         # assert applying the same order at the data layer will give the same
         # results
-        rs = resultspec.ResultSpec(order=['-started_at'])
+        rs = resultspec.ResultSpec(order=['-started_at'])  # type: ignore[arg-type]
         ordered_bdicts = rs.apply(bdicts)
         self.assertEqual(ordered_bdicts, bdicts)
 
         # assert applying an opposite order at the data layer will give different
         # results
-        rs = resultspec.ResultSpec(order=['started_at'])
+        rs = resultspec.ResultSpec(order=['started_at'])  # type: ignore[arg-type]
         ordered_bdicts = rs.apply(bdicts)
         self.assertNotEqual(ordered_bdicts, bdicts)
 
     @defer.inlineCallbacks
-    def test_getBuilds_limit(self):
-        rs = resultspec.ResultSpec(order=['-started_at'], limit=1, offset=2)
+    def test_getBuilds_limit(self) -> InlineCallbacksType[None]:
+        rs = resultspec.ResultSpec(
+            order=['-started_at'],  # type: ignore[arg-type]
+            limit=1,
+            offset=2,
+        )
         rs.fieldMapping = {'started_at': 'builds.started_at'}
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
@@ -553,13 +570,17 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         # assert applying the same filter at the data layer will give the same
         # results
-        rs = resultspec.ResultSpec(order=['-started_at'], limit=1, offset=2)
+        rs = resultspec.ResultSpec(
+            order=['-started_at'],  # type: ignore[arg-type]
+            limit=1,
+            offset=2,
+        )
         bdicts2 = yield self.db.builds.getBuilds()
         ordered_bdicts = rs.apply(bdicts2)
         self.assertEqual(ordered_bdicts, bdicts)
 
     @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilterEqTwoValues(self):
+    def test_getBuilds_resultSpecFilterEqTwoValues(self) -> InlineCallbacksType[None]:
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('number', 'eq', [6, 7])])
         rs.fieldMapping = {'number': 'builds.number'}
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
@@ -571,7 +592,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilterNeTwoValues(self):
+    def test_getBuilds_resultSpecFilterNeTwoValues(self) -> InlineCallbacksType[None]:
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('number', 'ne', [6, 7])])
         rs.fieldMapping = {'number': 'builds.number'}
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
@@ -581,7 +602,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[50]])
 
     @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilterContainsOneValue(self):
+    def test_getBuilds_resultSpecFilterContainsOneValue(self) -> InlineCallbacksType[None]:
         rs = resultspec.ResultSpec(filters=[resultspec.Filter('state_string', 'contains', ['7'])])
         rs.fieldMapping = {'state_string': 'builds.state_string'}
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
@@ -591,7 +612,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted(bdicts, key=lambda bd: bd.id), [self.threeBdicts[52]])
 
     @defer.inlineCallbacks
-    def test_getBuilds_resultSpecFilterContainsTwoValues(self):
+    def test_getBuilds_resultSpecFilterContainsTwoValues(self) -> InlineCallbacksType[None]:
         rs = resultspec.ResultSpec(
             filters=[resultspec.Filter('state_string', 'contains', ['build 5', 'build 6'])]
         )
@@ -605,7 +626,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_triggered_builds(self):
+    def test_get_triggered_builds(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(
             self.backgroundData
             + self.threeBuilds
