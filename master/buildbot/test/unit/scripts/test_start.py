@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import sys
 import time
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -27,8 +31,13 @@ from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
 
-def mkconfig(**kwargs):
+    from buildbot.util.twisted import InlineCallbacksType
+
+
+def mkconfig(**kwargs: Any) -> dict[str, Any]:
     config = {
         'quiet': False,
         'basedir': os.path.abspath('basedir'),
@@ -55,7 +64,7 @@ app.setServiceParent(application)
 
 
 class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         # On slower machines with high CPU oversubscription this test may take longer to run than
         # the default timeout.
         self.timeout = 20
@@ -67,11 +76,11 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     # tests
 
-    def test_start_not_basedir(self):
+    def test_start_not_basedir(self) -> None:
         self.assertEqual(start.start(mkconfig(basedir='doesntexist')), 1)
         self.assertInStdout('invalid buildmaster directory')
 
-    def runStart(self, **config):
+    def runStart(self, **config: Any) -> Deferred[tuple[str, str, int]]:
         args = [
             '-c',
             'from buildbot.scripts.start import start; import sys; '
@@ -81,7 +90,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         env['PYTHONPATH'] = os.pathsep.join(sys.path)
         return getProcessOutputAndValue(sys.executable, args=args, env=env)
 
-    def assert_stderr_ok(self, err):
+    def assert_stderr_ok(self, err: bytes) -> None:
         lines = err.split(b'\n')
         good_warning_parts = [b'32-bit Python on a 64-bit', b'cryptography.hazmat.bindings']
         for line in lines:
@@ -97,13 +106,13 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
                 self.assertEqual(err, b'')  # not valid warning
 
     @defer.inlineCallbacks
-    def test_start_no_daemon(self):
+    def test_start_no_daemon(self) -> InlineCallbacksType[None]:
         (_, err, rc) = yield self.runStart(nodaemon=True)
         self.assert_stderr_ok(err)
         self.assertEqual(rc, 0)
 
     @defer.inlineCallbacks
-    def test_start_quiet(self):
+    def test_start_quiet(self) -> InlineCallbacksType[None]:
         res = yield self.runStart(quiet=True)
 
         self.assertEqual(res[0], b'')
@@ -112,7 +121,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
-    def test_start_timeout_nonnumber(self):
+    def test_start_timeout_nonnumber(self) -> InlineCallbacksType[None]:
         (out, err, rc) = yield self.runStart(start_timeout='a')
 
         self.assertEqual((rc, err), (1, b''))
@@ -120,7 +129,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
-    def test_start_timeout_number_string(self):
+    def test_start_timeout_number_string(self) -> InlineCallbacksType[None]:
         # integer values from command-line options come in as strings
         res = yield self.runStart(start_timeout='10')
 
@@ -128,7 +137,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
-    def test_start(self):
+    def test_start(self) -> InlineCallbacksType[None]:
         try:
             (out, err, rc) = yield self.runStart()
 
