@@ -1,0 +1,3 @@
+# Temporary hack to disable pyup bot which is configured on some account we don't know
+schedule: every month
+search: false
