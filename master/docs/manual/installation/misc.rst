@@ -54,13 +54,35 @@ Common problems here are for :file:`/usr/local` or :file:`~/bin` to not be on yo
 or for :envvar:`PYTHONPATH` to not be set correctly.
 Sometimes :envvar:`HOME` is messed up too. If using systemd to launch :command:`buildbot-worker`,
 it may be a good idea to specify a fixed :envvar:`PATH` using the :envvar:`Environment` directive
-(see `systemd unit file example
-<https://github.com/buildbot/buildbot-contrib/blob/master/worker/contrib/systemd/buildbot-worker%40.service>`_).
+(see the systemd unit file at :file:`worker/contrib/systemd/buildbot-worker@.service`).
 
 Some distributions may include conveniences to make starting buildbot at boot time easy.
 For instance, with the default buildbot package in Debian-based distributions, you may only need to
 modify :file:`/etc/default/buildbot` (see also :file:`/etc/init.d/buildbot`, which reads the
 configuration in :file:`/etc/default/buildbot`).
+
+Buildbot ships systemd template unit files for both master and worker:
+
+.. code-block:: bash
+
+    # install systemd units
+    master/contrib/systemd/buildbot@.service
+    worker/contrib/systemd/buildbot-worker@.service
+
+    # optionally install sysusers.d/tmpfiles.d configs from
+    # common/contrib/systemd/ to create the buildbot user and
+    # /var/lib/buildbot directory (see common/contrib/systemd/README.md)
+
+    # create a master or worker instance
+    cd /var/lib/buildbot
+    buildbot create-master <name>
+    # or
+    buildbot-worker create-worker <name> <master-hostname> <name> <password>
+
+    # enable and start
+    systemctl enable --now buildbot@<name>.service
+    # or
+    systemctl enable --now buildbot-worker@<name>.service
 
 Buildbot also comes with its own init scripts that provide support for controlling multi-worker and
 multi-master setups (mostly because they are based on the init script from the Debian package).
