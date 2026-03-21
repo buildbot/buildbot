@@ -776,6 +776,7 @@ schemas
 scm
 scp
 sdist
+sdists
 searchable
 secretId
 secretsmount

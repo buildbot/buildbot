@@ -41,7 +41,6 @@ exclude .git_archival.txt
 exclude Makefile ruff.toml tox.ini
 exclude buildbot/db/migrations/script.py.mako
 exclude contrib/docker/**
-exclude contrib/systemd/buildbot@.service
 exclude docker/*
 exclude docker-example/**
 exclude docs/relnotes.rst.jinja docs/spelling_wordlist.txt
