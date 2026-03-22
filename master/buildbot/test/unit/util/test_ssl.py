@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.config.errors import capture_config_errors
@@ -23,13 +25,13 @@ from buildbot.util import ssl
 
 class Tests(unittest.TestCase, ConfigErrorsMixin):
     @ssl.skipUnless
-    def test_ClientContextFactory(self):
+    def test_ClientContextFactory(self) -> None:
         from twisted.internet.ssl import ClientContextFactory  # noqa: PLC0415
 
         self.assertEqual(ssl.ClientContextFactory, ClientContextFactory)
 
     @ssl.skipUnless
-    def test_ConfigError(self):
+    def test_ConfigError(self) -> None:
         old_error = ssl.ssl_import_error
         old_has_ssl = ssl.has_ssl
         try:
