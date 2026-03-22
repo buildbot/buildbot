@@ -797,7 +797,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         self.worker.attached(None)
 
         self._steps: list[buildstep.BuildStep] = []
-        self.build: fakebuild.FakeBuild | None = None
+        self.build: fakebuild.FakeBuild = None  # type: ignore[assignment]
 
         # expectations
 
@@ -1109,7 +1109,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
                 step_build_result_summary = yield step.getBuildResultSummary()
                 self.assertEqual(exp_build_summary, step_build_result_summary)
 
-            properties = self.build.getProperties()  # type: ignore[union-attr]
+            properties = self.build.getProperties()
 
             for pn, (pv, ps) in self.exp_properties.items():
                 self.assertTrue(properties.hasProperty(pn), f"missing property '{pn}'")
@@ -1275,12 +1275,12 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         assert system != 'win32'
         self.worker.worker_system = system
         if system == 'nt':
-            self.build.path_module = namedModule('ntpath')  # type: ignore[union-attr]
-            self.build.path_cls = PureWindowsPath  # type: ignore[union-attr]
+            self.build.path_module = namedModule('ntpath')
+            self.build.path_cls = PureWindowsPath  # type: ignore[assignment]
             self.worker.worker_basedir = '\\wrk'
         else:
-            self.build.path_module = namedModule('posixpath')  # type: ignore[union-attr]
-            self.build.path_cls = PurePosixPath  # type: ignore[union-attr]
+            self.build.path_module = namedModule('posixpath')
+            self.build.path_cls = PurePosixPath
             self.worker.worker_basedir = '/wrk'
 
     def interrupt_nth_remote_command(self, number: int) -> None:
