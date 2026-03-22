@@ -71,7 +71,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         prop = 'CMAKE'
         value = 'Real_CMAKE'
 
-        self.setup_step(CMake(cmake=Property(prop)))  # type: ignore[arg-type]
+        self.setup_step(CMake(cmake=Property(prop)))
         self.build.setProperty(prop, value, source='test')
 
         self.expect_commands(ExpectShell(command=[value], workdir='wkdir').exit(0))
@@ -113,7 +113,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     def test_generator_interpolation(self) -> None:
         value = 'Our_GENERATOR'
 
-        self.setup_step(CMake(generator=Property('GENERATOR')))  # type: ignore[arg-type]
+        self.setup_step(CMake(generator=Property('GENERATOR')))
         self.build.setProperty('GENERATOR', value, source='test')
 
         self.expect_and_run_command('-G', value)
@@ -128,7 +128,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         prop = 'option'
         value = 'value'
 
-        self.setup_step(CMake(options=(Property(prop),)))  # type: ignore[arg-type]
+        self.setup_step(CMake(options=(Property(prop),)))
         self.build.setProperty(prop, value, source='test')
         self.expect_and_run_command(value)
 
@@ -142,7 +142,7 @@ class TestCMake(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         prop = 'path'
         value = 'some/path'
 
-        self.setup_step(CMake(path=Property(prop)))  # type: ignore[arg-type]
+        self.setup_step(CMake(path=Property(prop)))
         self.build.setProperty(prop, value, source='test')
         self.expect_and_run_command(value)
 

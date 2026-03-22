@@ -26,6 +26,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import ShellMixin
 
 if TYPE_CHECKING:
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -42,11 +43,14 @@ class CMake(ShellMixin, BuildStep):
 
     def __init__(
         self,
-        path: str | None = None,
-        generator: str | None = None,
+        path: IMaybeRenderableType[str] | None = None,
+        generator: IMaybeRenderableType[str] | None = None,
         definitions: dict[str, Any] | IRenderable | None = None,
-        options: list[str] | tuple[str, ...] | IRenderable | None = None,
-        cmake: str = DEFAULT_CMAKE,
+        options: list[IMaybeRenderableType[str]]
+        | tuple[IMaybeRenderableType[str], ...]
+        | IRenderable
+        | None = None,
+        cmake: IMaybeRenderableType[str] = DEFAULT_CMAKE,
         **kwargs: Any,
     ) -> None:
         self.path = path
