@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -21,44 +26,51 @@ from buildbot.clients import sendchange as sendchange_client
 from buildbot.scripts import sendchange
 from buildbot.test.util import misc
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
     class FakeSender:
-        def __init__(self, testcase, master, auth, encoding=None):
+        def __init__(
+            self, testcase: TestSendChange, master: str, auth: Any, encoding: str | None = None
+        ) -> None:
             self.master = master
             self.auth = auth
             self.encoding = encoding
             self.testcase = testcase
 
-        def send(self, branch, revision, comments, files, **kwargs):
+        def send(
+            self, branch: Any, revision: Any, comments: Any, files: Any, **kwargs: Any
+        ) -> defer.Deferred[None]:
             kwargs['branch'] = branch
             kwargs['revision'] = revision
             kwargs['comments'] = comments
             kwargs['files'] = files
             self.send_kwargs = kwargs
-            d = defer.Deferred()
-            if self.testcase.fail:
-                reactor.callLater(0, d.errback, RuntimeError("oh noes"))
+            d: defer.Deferred[None] = defer.Deferred()
+            if self.testcase.fail:  # type: ignore[truthy-function]
+                reactor.callLater(0, d.errback, RuntimeError("oh noes"))  # type: ignore[attr-defined]
             else:
                 reactor.callLater(0, d.callback, None)
             return d
 
-    def setUp(self):
-        self.fail = False  # set to true to get Sender.send to fail
+    def setUp(self) -> None:
+        self.fail = False  # type: ignore[method-assign,assignment]  # set to true to get Sender.send to fail
 
-        def Sender_constr(*args, **kwargs):
+        def Sender_constr(*args: Any, **kwargs: Any) -> TestSendChange.FakeSender:
             self.sender = self.FakeSender(self, *args, **kwargs)
             return self.sender
 
         self.patch(sendchange_client, 'Sender', Sender_constr)
 
         # undo the effects of @in_reactor
-        self.patch(sendchange, 'sendchange', sendchange.sendchange._orig)
+        self.patch(sendchange, 'sendchange', sendchange.sendchange._orig)  # type: ignore[attr-defined]
 
         self.setUpStdoutAssertions()
 
     @defer.inlineCallbacks
-    def test_sendchange_config(self):
+    def test_sendchange_config(self) -> InlineCallbacksType[None]:
         rc = yield sendchange.sendchange({
             "encoding": 'utf16',
             "who": 'me',
@@ -112,7 +124,7 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_sendchange_config_no_codebase(self):
+    def test_sendchange_config_no_codebase(self) -> InlineCallbacksType[None]:
         rc = yield sendchange.sendchange({
             "encoding": 'utf16',
             "who": 'me',
@@ -165,8 +177,8 @@ class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_sendchange_fail(self):
-        self.fail = True
+    def test_sendchange_fail(self) -> InlineCallbacksType[None]:
+        self.fail = True  # type: ignore[method-assign,assignment]
         rc = yield sendchange.sendchange({})
 
         self.assertEqual((self.getStdout().split('\n')[0], rc), ('change not sent:', 1))

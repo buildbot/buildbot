@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import sys
 from io import StringIO
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -32,42 +36,47 @@ from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
-def mkconfig(**kwargs):
-    config = {"quiet": False, "replace": False, "basedir": 'test'}
+
+def mkconfig(**kwargs: Any) -> dict[str, Any]:
+    config: dict[str, Any] = {"quiet": False, "replace": False, "basedir": 'test'}
     config.update(kwargs)
     return config
 
 
 class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         # createMaster is decorated with @in_reactor, so strip that decoration
         # since the master is already running
-        self.patch(upgrade_master, 'upgradeMaster', upgrade_master.upgradeMaster._orig)
+        self.patch(upgrade_master, 'upgradeMaster', upgrade_master.upgradeMaster._orig)  # type: ignore[attr-defined]
         self.setUpDirs('test')
         self.setUpStdoutAssertions()
 
-    def patchFunctions(self, basedirOk=True, configOk=True):
-        self.calls = []
+    def patchFunctions(self, basedirOk: bool = True, configOk: bool = True) -> None:
+        self.calls: list[str] = []
 
-        def checkBasedir(config):
+        def checkBasedir(config: dict[str, Any]) -> bool:
             self.calls.append('checkBasedir')
             return basedirOk
 
         self.patch(base, 'checkBasedir', checkBasedir)
 
-        def loadConfig(config, configFileName='master.cfg'):
+        def loadConfig(
+            config: dict[str, Any], configFileName: str = 'master.cfg'
+        ) -> config_master.MasterConfig | bool:
             self.calls.append('loadConfig')
             return config_master.MasterConfig() if configOk else False
 
         self.patch(base, 'loadConfig', loadConfig)
 
-        def upgradeFiles(config):
+        def upgradeFiles(config: dict[str, Any]) -> None:
             self.calls.append('upgradeFiles')
 
         self.patch(upgrade_master, 'upgradeFiles', upgradeFiles)
 
-        def upgradeDatabase(config, master_cfg):
+        def upgradeDatabase(config: dict[str, Any], master_cfg: config_master.MasterConfig) -> None:
             self.assertIsInstance(master_cfg, config_master.MasterConfig)
             self.calls.append('upgradeDatabase')
 
@@ -76,7 +85,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.Tes
     # tests
 
     @defer.inlineCallbacks
-    def test_upgradeMaster_success(self):
+    def test_upgradeMaster_success(self) -> InlineCallbacksType[None]:
         self.patchFunctions()
         rv = yield upgrade_master.upgradeMaster(mkconfig())
 
@@ -84,7 +93,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.Tes
         self.assertInStdout('upgrade complete')
 
     @defer.inlineCallbacks
-    def test_upgradeMaster_quiet(self):
+    def test_upgradeMaster_quiet(self) -> InlineCallbacksType[None]:
         self.patchFunctions()
         rv = yield upgrade_master.upgradeMaster(mkconfig(quiet=True))
 
@@ -92,14 +101,14 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.Tes
         self.assertWasQuiet()
 
     @defer.inlineCallbacks
-    def test_upgradeMaster_bad_basedir(self):
+    def test_upgradeMaster_bad_basedir(self) -> InlineCallbacksType[None]:
         self.patchFunctions(basedirOk=False)
         rv = yield upgrade_master.upgradeMaster(mkconfig())
 
         self.assertEqual(rv, 1)
 
     @defer.inlineCallbacks
-    def test_upgradeMaster_bad_config(self):
+    def test_upgradeMaster_bad_config(self) -> InlineCallbacksType[None]:
         self.patchFunctions(configOk=False)
         rv = yield upgrade_master.upgradeMaster(mkconfig())
 
@@ -113,29 +122,29 @@ class TestUpgradeMasterFunctions(
     TestReactorMixin,
     unittest.TestCase,
 ):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         self.setUpDirs('test')
         self.basedir = os.path.abspath(os.path.join('test', 'basedir'))
         self.setUpStdoutAssertions()
 
-    def writeFile(self, path, contents):
+    def writeFile(self, path: str, contents: str) -> None:
         with open(path, "w", encoding='utf-8') as f:
             f.write(contents)
 
-    def readFile(self, path):
+    def readFile(self, path: str) -> str:
         with open(path, encoding='utf-8') as f:
             return f.read()
 
     # tests
 
-    def test_installFile(self):
+    def test_installFile(self) -> None:
         self.writeFile('test/srcfile', 'source data')
         upgrade_master.installFile(mkconfig(), 'test/destfile', 'test/srcfile')
         self.assertEqual(self.readFile('test/destfile'), 'source data')
         self.assertInStdout('creating test/destfile')
 
-    def test_installFile_existing_differing(self):
+    def test_installFile_existing_differing(self) -> None:
         self.writeFile('test/srcfile', 'source data')
         self.writeFile('test/destfile', 'dest data')
         upgrade_master.installFile(mkconfig(), 'test/destfile', 'test/srcfile')
@@ -143,7 +152,7 @@ class TestUpgradeMasterFunctions(
         self.assertEqual(self.readFile('test/destfile.new'), 'source data')
         self.assertInStdout('writing new contents to')
 
-    def test_installFile_existing_differing_overwrite(self):
+    def test_installFile_existing_differing_overwrite(self) -> None:
         self.writeFile('test/srcfile', 'source data')
         self.writeFile('test/destfile', 'dest data')
         upgrade_master.installFile(mkconfig(), 'test/destfile', 'test/srcfile', overwrite=True)
@@ -151,7 +160,7 @@ class TestUpgradeMasterFunctions(
         self.assertFalse(os.path.exists('test/destfile.new'))
         self.assertInStdout('overwriting')
 
-    def test_installFile_existing_same(self):
+    def test_installFile_existing_same(self) -> None:
         self.writeFile('test/srcfile', 'source data')
         self.writeFile('test/destfile', 'source data')
         upgrade_master.installFile(mkconfig(), 'test/destfile', 'test/srcfile')
@@ -159,12 +168,12 @@ class TestUpgradeMasterFunctions(
         self.assertFalse(os.path.exists('test/destfile.new'))
         self.assertWasQuiet()
 
-    def test_installFile_quiet(self):
+    def test_installFile_quiet(self) -> None:
         self.writeFile('test/srcfile', 'source data')
         upgrade_master.installFile(mkconfig(quiet=True), 'test/destfile', 'test/srcfile')
         self.assertWasQuiet()
 
-    def test_upgradeFiles(self):
+    def test_upgradeFiles(self) -> None:
         upgrade_master.upgradeFiles(mkconfig())
         for f in [
             'test/master.cfg.sample',
@@ -172,14 +181,14 @@ class TestUpgradeMasterFunctions(
             self.assertTrue(os.path.exists(f), f"{f} not found")
         self.assertInStdout('upgrading basedir')
 
-    def test_upgradeFiles_notice_about_unused_public_html(self):
+    def test_upgradeFiles_notice_about_unused_public_html(self) -> None:
         os.mkdir('test/public_html')
         self.writeFile('test/public_html/index.html', 'INDEX')
         upgrade_master.upgradeFiles(mkconfig())
         self.assertInStdout('public_html is not used')
 
     @defer.inlineCallbacks
-    def test_upgradeDatabase(self):
+    def test_upgradeDatabase(self) -> InlineCallbacksType[None]:
         setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
         upgrade = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
@@ -198,7 +207,7 @@ class TestUpgradeMasterFunctions(
         self.assertWasQuiet()
 
     @defer.inlineCallbacks
-    def test_upgradeDatabaseFail(self):
+    def test_upgradeDatabaseFail(self) -> InlineCallbacksType[None]:
         setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
         self.patch(sys, 'stderr', StringIO())
@@ -209,6 +218,7 @@ class TestUpgradeMasterFunctions(
         )
         self.assertEqual(ret, 1)
         self.assertIn(
-            "problem while upgrading!:\nTraceback (most recent call last):\n", sys.stderr.getvalue()
+            "problem while upgrading!:\nTraceback (most recent call last):\n",
+            sys.stderr.getvalue(),  # type: ignore[union-attr]
         )
-        self.assertIn("o noz", sys.stderr.getvalue())
+        self.assertIn("o noz", sys.stderr.getvalue())  # type: ignore[union-attr]

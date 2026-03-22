@@ -19,6 +19,7 @@ import getpass
 import os
 import sys
 from io import StringIO
+from typing import Any
 from unittest import mock
 
 from twisted.python import log
@@ -30,62 +31,64 @@ from buildbot.scripts import base
 from buildbot.scripts import runner
 from buildbot.test.util import misc
 
+subcommandFunction: Any = None
+
 
 class OptionsMixin:
-    def setUpOptions(self):
-        self.options_file = {}
-        self.patch(base.SubcommandOptions, 'loadOptionsFile', lambda other_self: self.options_file)
+    def setUpOptions(self) -> None:
+        self.options_file: dict[str, Any] = {}
+        self.patch(base.SubcommandOptions, 'loadOptionsFile', lambda other_self: self.options_file)  # type: ignore[attr-defined]
 
-    def assertOptions(self, opts, exp):
+    def assertOptions(self, opts: usage.Options, exp: dict[str, Any]) -> None:
         got = {k: opts[k] for k in exp}
         if got != exp:
             msg = []
-            for k in exp:
-                if opts[k] != exp[k]:
-                    msg.append(f" {k}: expected {exp[k]!r}, got {opts[k]!r}")
-            self.fail("did not get expected options\n" + ("\n".join(msg)))
+            for k, v in exp.items():
+                if opts[k] != v:
+                    msg.append(f" {k}: expected {v!r}, got {opts[k]!r}")
+            self.fail("did not get expected options\n" + ("\n".join(msg)))  # type: ignore[attr-defined]
 
 
 class TestUpgradeMasterOptions(OptionsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpOptions()
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.UpgradeMasterOptions:
         self.opts = runner.UpgradeMasterOptions()
         self.opts.parseOptions(args)
         return self.opts
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.UpgradeMasterOptions()
         self.assertIn('buildbot upgrade-master', opts.getSynopsis())
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         opts = self.parse()
         exp = {"quiet": False, "replace": False}
         self.assertOptions(opts, exp)
 
-    def test_short(self):
+    def test_short(self) -> None:
         opts = self.parse('-q', '-r')
         exp = {"quiet": True, "replace": True}
         self.assertOptions(opts, exp)
 
-    def test_long(self):
+    def test_long(self) -> None:
         opts = self.parse('--quiet', '--replace')
         exp = {"quiet": True, "replace": True}
         self.assertOptions(opts, exp)
 
 
 class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpOptions()
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.CreateMasterOptions:
         self.opts = runner.CreateMasterOptions()
         self.opts.parseOptions(args)
         return self.opts
 
-    def defaults_and(self, **kwargs):
-        defaults = {
+    def defaults_and(self, **kwargs: Any) -> dict[str, Any]:
+        defaults: dict[str, Any] = {
             "force": False,
             "relocatable": False,
             "config": 'master.cfg',
@@ -100,108 +103,108 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
         opts.update(kwargs)
         return opts
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.CreateMasterOptions()
         self.assertIn('buildbot create-master', opts.getSynopsis())
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         opts = self.parse()
         exp = self.defaults_and()
         self.assertOptions(opts, exp)
 
-    def test_db_quiet(self):
+    def test_db_quiet(self) -> None:
         opts = self.parse('-q')
         exp = self.defaults_and(quiet=True)
         self.assertOptions(opts, exp)
 
-    def test_db_quiet_long(self):
+    def test_db_quiet_long(self) -> None:
         opts = self.parse('--quiet')
         exp = self.defaults_and(quiet=True)
         self.assertOptions(opts, exp)
 
-    def test_force(self):
+    def test_force(self) -> None:
         opts = self.parse('-f')
         exp = self.defaults_and(force=True)
         self.assertOptions(opts, exp)
 
-    def test_force_long(self):
+    def test_force_long(self) -> None:
         opts = self.parse('--force')
         exp = self.defaults_and(force=True)
         self.assertOptions(opts, exp)
 
-    def test_relocatable(self):
+    def test_relocatable(self) -> None:
         opts = self.parse('-r')
         exp = self.defaults_and(relocatable=True)
         self.assertOptions(opts, exp)
 
-    def test_relocatable_long(self):
+    def test_relocatable_long(self) -> None:
         opts = self.parse('--relocatable')
         exp = self.defaults_and(relocatable=True)
         self.assertOptions(opts, exp)
 
-    def test_no_logrotate(self):
+    def test_no_logrotate(self) -> None:
         opts = self.parse('-n')
         exp = self.defaults_and(**{'no-logrotate': True})
         self.assertOptions(opts, exp)
 
-    def test_no_logrotate_long(self):
+    def test_no_logrotate_long(self) -> None:
         opts = self.parse('--no-logrotate')
         exp = self.defaults_and(**{'no-logrotate': True})
         self.assertOptions(opts, exp)
 
-    def test_config(self):
+    def test_config(self) -> None:
         opts = self.parse('-cxyz')
         exp = self.defaults_and(config='xyz')
         self.assertOptions(opts, exp)
 
-    def test_config_long(self):
+    def test_config_long(self) -> None:
         opts = self.parse('--config=xyz')
         exp = self.defaults_and(config='xyz')
         self.assertOptions(opts, exp)
 
-    def test_log_size(self):
+    def test_log_size(self) -> None:
         opts = self.parse('-s124')
         exp = self.defaults_and(**{'log-size': 124})
         self.assertOptions(opts, exp)
 
-    def test_log_size_long(self):
+    def test_log_size_long(self) -> None:
         opts = self.parse('--log-size=124')
         exp = self.defaults_and(**{'log-size': 124})
         self.assertOptions(opts, exp)
 
-    def test_log_size_noninteger(self):
+    def test_log_size_noninteger(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--log-size=1M')
 
-    def test_log_count(self):
+    def test_log_count(self) -> None:
         opts = self.parse('-l124')
         exp = self.defaults_and(**{'log-count': 124})
         self.assertOptions(opts, exp)
 
-    def test_log_count_long(self):
+    def test_log_count_long(self) -> None:
         opts = self.parse('--log-count=124')
         exp = self.defaults_and(**{'log-count': 124})
         self.assertOptions(opts, exp)
 
-    def test_log_count_none(self):
+    def test_log_count_none(self) -> None:
         opts = self.parse('--log-count=None')
         exp = self.defaults_and(**{'log-count': None})
         self.assertOptions(opts, exp)
 
-    def test_log_count_noninteger(self):
+    def test_log_count_noninteger(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--log-count=M')
 
-    def test_db_long(self):
+    def test_db_long(self) -> None:
         opts = self.parse('--db=foo://bar')
         exp = self.defaults_and(db='foo://bar')
         self.assertOptions(opts, exp)
 
-    def test_db_invalid(self):
+    def test_db_invalid(self) -> None:
         with self.assertRaisesRegex(usage.UsageError, "could not parse database URL 'inv_db_url'"):
             self.parse("--db=inv_db_url")
 
-    def test_db_basedir(self):
+    def test_db_basedir(self) -> None:
         path = r'c:\foo\bar' if runtime.platformType == "win32" else '/foo/bar'
         opts = self.parse('-f', path)
         exp = self.defaults_and(force=True, basedir=path)
@@ -214,24 +217,26 @@ class BaseTestSimpleOptions(OptionsMixin):
     commandName: str | None = None
     optionsClass: type[usage.Options] | None = None
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpOptions()
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> usage.Options:
+        assert self.optionsClass is not None
         self.opts = self.optionsClass()
         self.opts.parseOptions(args)
         return self.opts
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
+        assert self.optionsClass is not None
         opts = self.optionsClass()
-        self.assertIn(f'buildbot {self.commandName}', opts.getSynopsis())
+        self.assertIn(f'buildbot {self.commandName}', opts.getSynopsis())  # type: ignore[attr-defined]
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         opts = self.parse()
         exp = {"quiet": False}
         self.assertOptions(opts, exp)
 
-    def test_quiet(self):
+    def test_quiet(self) -> None:
         opts = self.parse('--quiet')
         exp = {"quiet": True}
         self.assertOptions(opts, exp)
@@ -246,7 +251,7 @@ class TestResetartOptions(BaseTestSimpleOptions, unittest.TestCase):
     commandName = 'restart'
     optionsClass = runner.RestartOptions
 
-    def test_nodaemon(self):
+    def test_nodaemon(self) -> None:
         opts = self.parse('--nodaemon')
         exp = {"nodaemon": True}
         self.assertOptions(opts, exp)
@@ -256,7 +261,7 @@ class TestStartOptions(BaseTestSimpleOptions, unittest.TestCase):
     commandName = 'start'
     optionsClass = runner.StartOptions
 
-    def test_nodaemon(self):
+    def test_nodaemon(self) -> None:
         opts = self.parse('--nodaemon')
         exp = {"nodaemon": True}
         self.assertOptions(opts, exp)
@@ -268,16 +273,16 @@ class TestReconfigOptions(BaseTestSimpleOptions, unittest.TestCase):
 
 
 class TestTryOptions(OptionsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpOptions()
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.TryOptions:
         self.opts = runner.TryOptions()
         self.opts.parseOptions(args)
         return self.opts
 
-    def defaults_and(self, **kwargs):
-        defaults = {
+    def defaults_and(self, **kwargs: Any) -> dict[str, Any]:
+        defaults: dict[str, Any] = {
             "connect": None,
             "host": None,
             "jobdir": None,
@@ -311,66 +316,66 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         opts.update(kwargs)
         return opts
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.TryOptions()
         self.assertIn('buildbot try', opts.getSynopsis())
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         opts = self.parse()
         exp = self.defaults_and()
         self.assertOptions(opts, exp)
 
-    def test_properties(self):
+    def test_properties(self) -> None:
         opts = self.parse('--properties=a=b')
         exp = self.defaults_and(properties={"a": 'b'})
         self.assertOptions(opts, exp)
 
-    def test_properties_multiple_opts(self):
+    def test_properties_multiple_opts(self) -> None:
         opts = self.parse('--properties=X=1', '--properties=Y=2')
         exp = self.defaults_and(properties={"X": '1', "Y": '2'})
         self.assertOptions(opts, exp)
 
-    def test_properties_equals(self):
+    def test_properties_equals(self) -> None:
         opts = self.parse('--properties=X=2+2=4')
         exp = self.defaults_and(properties={"X": '2+2=4'})
         self.assertOptions(opts, exp)
 
-    def test_properties_commas(self):
+    def test_properties_commas(self) -> None:
         opts = self.parse('--properties=a=b,c=d')
         exp = self.defaults_and(properties={"a": 'b', "c": 'd'})
         self.assertOptions(opts, exp)
 
-    def test_property(self):
+    def test_property(self) -> None:
         opts = self.parse('--property=a=b')
         exp = self.defaults_and(properties={"a": 'b'})
         self.assertOptions(opts, exp)
 
-    def test_property_multiple_opts(self):
+    def test_property_multiple_opts(self) -> None:
         opts = self.parse('--property=X=1', '--property=Y=2')
         exp = self.defaults_and(properties={"X": '1', "Y": '2'})
         self.assertOptions(opts, exp)
 
-    def test_property_equals(self):
+    def test_property_equals(self) -> None:
         opts = self.parse('--property=X=2+2=4')
         exp = self.defaults_and(properties={"X": '2+2=4'})
         self.assertOptions(opts, exp)
 
-    def test_property_commas(self):
+    def test_property_commas(self) -> None:
         opts = self.parse('--property=a=b,c=d')
         exp = self.defaults_and(properties={"a": 'b,c=d'})
         self.assertOptions(opts, exp)
 
-    def test_property_and_properties(self):
+    def test_property_and_properties(self) -> None:
         opts = self.parse('--property=X=1', '--properties=Y=2')
         exp = self.defaults_and(properties={"X": '1', "Y": '2'})
         self.assertOptions(opts, exp)
 
-    def test_properties_builders_multiple(self):
+    def test_properties_builders_multiple(self) -> None:
         opts = self.parse('--builder=aa', '--builder=bb')
         exp = self.defaults_and(builders=['aa', 'bb'])
         self.assertOptions(opts, exp)
 
-    def test_options_short(self):
+    def test_options_short(self) -> None:
         opts = self.parse(*'-n -q -c pb -u me -m mr:7 -w you -C comm -p 2 -b bb'.split())
         exp = self.defaults_and(
             dryrun=True,
@@ -385,7 +390,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         )
         self.assertOptions(opts, exp)
 
-    def test_options_long(self):
+    def test_options_long(self) -> None:
         opts = self.parse(
             *"""--wait --dryrun --get-builder-names --quiet --connect=pb
                 --host=h --jobdir=j --username=u --master=m:1234 --passwd=p
@@ -421,38 +426,38 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         )
         self.assertOptions(opts, exp)
 
-    def test_patchlevel_inval(self):
+    def test_patchlevel_inval(self) -> None:
         with self.assertRaises(ValueError):
             self.parse('-p', 'a')
 
-    def test_config_builders(self):
+    def test_config_builders(self) -> None:
         self.options_file['try_builders'] = ['a', 'b']
         opts = self.parse()
         self.assertOptions(opts, {"builders": ['a', 'b']})
 
-    def test_config_builders_override(self):
+    def test_config_builders_override(self) -> None:
         self.options_file['try_builders'] = ['a', 'b']
         opts = self.parse('-b', 'd')  # overrides a, b
         self.assertOptions(opts, {"builders": ['d']})
 
-    def test_config_old_names(self):
+    def test_config_old_names(self) -> None:
         self.options_file['try_masterstatus'] = 'ms'
         self.options_file['try_dir'] = 'td'
         self.options_file['try_password'] = 'pw'
         opts = self.parse()
         self.assertOptions(opts, {"master": 'ms', "jobdir": 'td', "passwd": 'pw'})
 
-    def test_config_masterstatus(self):
+    def test_config_masterstatus(self) -> None:
         self.options_file['masterstatus'] = 'ms'
         opts = self.parse()
         self.assertOptions(opts, {"master": 'ms'})
 
-    def test_config_masterstatus_override(self):
+    def test_config_masterstatus_override(self) -> None:
         self.options_file['masterstatus'] = 'ms'
         opts = self.parse('-m', 'mm')
         self.assertOptions(opts, {"master": 'mm'})
 
-    def test_config_options(self):
+    def test_config_options(self) -> None:
         self.options_file.update({
             "try_connect": 'pb',
             "try_vc": 'cvs',
@@ -492,7 +497,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         )
         self.assertOptions(opts, exp)
 
-    def test_pb_withNoMaster(self):
+    def test_pb_withNoMaster(self) -> None:
         """
         When 'builbot try' is asked to connect via pb, but no master is
         specified, a usage error is raised.
@@ -500,7 +505,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         with self.assertRaises(usage.UsageError):
             self.parse('--connect=pb')
 
-    def test_pb_withInvalidMaster(self):
+    def test_pb_withInvalidMaster(self) -> None:
         """
         When 'buildbot try' is asked to connect via pb, but an invalid
         master is specified, a usage error is raised.
@@ -512,23 +517,23 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
     master_and_who = ['-m', 'm:1', '-W', 'w']
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpOptions()
         self.getpass_response = 'typed-password'
         self.patch(getpass, 'getpass', lambda prompt: self.getpass_response)
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.SendChangeOptions:
         self.opts = runner.SendChangeOptions()
         self.opts.parseOptions(args)
         return self.opts
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.SendChangeOptions()
         self.assertIn('buildbot sendchange', opts.getSynopsis())
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         opts = self.parse('-m', 'm:1', '-W', 'me')
-        exp = {
+        exp: dict[str, Any] = {
             "master": 'm:1',
             "auth": ('change', 'changepw'),
             "who": 'me',
@@ -549,19 +554,19 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         }
         self.assertOptions(opts, exp)
 
-    def test_files(self):
+    def test_files(self) -> None:
         opts = self.parse(*[*self.master_and_who, 'a', 'b', 'c'])
         self.assertEqual(opts['files'], ('a', 'b', 'c'))
 
-    def test_properties(self):
+    def test_properties(self) -> None:
         opts = self.parse('--property', 'x:y', '--property', 'a:b', *self.master_and_who)
         self.assertEqual(opts['properties'], {"x": 'y', "a": 'b'})
 
-    def test_properties_with_colon(self):
+    def test_properties_with_colon(self) -> None:
         opts = self.parse('--property', 'x:http://foo', *self.master_and_who)
         self.assertEqual(opts['properties'], {"x": 'http://foo'})
 
-    def test_config_file(self):
+    def test_config_file(self) -> None:
         self.options_file['master'] = 'MMM:123'
         self.options_file['who'] = 'WWW'
         self.options_file['branch'] = 'BBB'
@@ -571,14 +576,14 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         exp = {"master": 'MMM:123', "who": 'WWW', "branch": 'BBB', "category": 'CCC', "vc": 'svn'}
         self.assertOptions(opts, exp)
 
-    def test_short_args(self):
+    def test_short_args(self) -> None:
         opts = self.parse(
             *(
                 '-m m:1 -a a:b -W W -R r -P p -b b -s git '
                 + '-C c -r r -p pn:pv -c c -F f -w 123 -l l -e e'
             ).split()
         )
-        exp = {
+        exp: dict[str, Any] = {
             "master": 'm:1',
             "auth": ('a', 'b'),
             "who": 'W',
@@ -597,7 +602,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         }
         self.assertOptions(opts, exp)
 
-    def test_long_args(self):
+    def test_long_args(self) -> None:
         opts = self.parse(
             *(
                 '--master m:1 --auth a:b --who w --repository r '
@@ -606,7 +611,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
                 + '--when 123 --revlink l --encoding e'
             ).split()
         )
-        exp = {
+        exp: dict[str, Any] = {
             "master": 'm:1',
             "auth": ('a', 'b'),
             "who": 'w',
@@ -625,95 +630,95 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         }
         self.assertOptions(opts, exp)
 
-    def test_revision_file(self):
+    def test_revision_file(self) -> None:
         with open('revfile', "w", encoding='utf-8') as f:
             f.write('my-rev')
         self.addCleanup(lambda: os.unlink('revfile'))
         opts = self.parse('--revision_file', 'revfile', *self.master_and_who)
         self.assertOptions(opts, {"revision": 'my-rev'})
 
-    def test_invalid_when(self):
+    def test_invalid_when(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--when=foo', *self.master_and_who)
 
-    def test_comments_overrides_logfile(self):
+    def test_comments_overrides_logfile(self) -> None:
         opts = self.parse('--logfile', 'logs', '--comments', 'foo', *self.master_and_who)
         self.assertOptions(opts, {"comments": 'foo'})
 
-    def test_logfile(self):
+    def test_logfile(self) -> None:
         with open('comments', "w", encoding='utf-8') as f:
             f.write('hi')
         self.addCleanup(lambda: os.unlink('comments'))
         opts = self.parse('--logfile', 'comments', *self.master_and_who)
         self.assertOptions(opts, {"comments": 'hi'})
 
-    def test_logfile_stdin(self):
+    def test_logfile_stdin(self) -> None:
         stdin = mock.Mock()
         stdin.read = lambda: 'hi'
         self.patch(sys, 'stdin', stdin)
         opts = self.parse('--logfile', '-', *self.master_and_who)
         self.assertOptions(opts, {"comments": 'hi'})
 
-    def test_auth_getpass(self):
+    def test_auth_getpass(self) -> None:
         opts = self.parse('--auth=dustin', *self.master_and_who)
         self.assertOptions(opts, {"auth": ('dustin', 'typed-password')})
 
-    def test_invalid_vcs(self):
+    def test_invalid_vcs(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--vc=foo', *self.master_and_who)
 
-    def test_invalid_master(self):
+    def test_invalid_master(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse("--who=test", "-m foo")
 
 
 class TestTryServerOptions(OptionsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpOptions()
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.TryServerOptions:
         self.opts = runner.TryServerOptions()
         self.opts.parseOptions(args)
         return self.opts
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.TryServerOptions()
         self.assertIn('buildbot tryserver', opts.getSynopsis())
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse()
 
-    def test_with_jobdir(self):
+    def test_with_jobdir(self) -> None:
         opts = self.parse('--jobdir', 'xyz')
         exp = {"jobdir": 'xyz'}
         self.assertOptions(opts, exp)
 
 
 class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpOptions()
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.CheckConfigOptions:
         self.opts = runner.CheckConfigOptions()
         self.opts.parseOptions(args)
         return self.opts
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.CheckConfigOptions()
         self.assertIn('buildbot checkconfig', opts.getSynopsis())
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         opts = self.parse()
         exp = {"quiet": False}
         self.assertOptions(opts, exp)
 
-    def test_configfile(self):
+    def test_configfile(self) -> None:
         opts = self.parse('foo.cfg')
         exp = {"quiet": False, "configFile": 'foo.cfg'}
         self.assertOptions(opts, exp)
 
-    def test_quiet(self):
+    def test_quiet(self) -> None:
         opts = self.parse('-q')
         exp = {"quiet": True}
         self.assertOptions(opts, exp)
@@ -723,47 +728,47 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
     # mandatory arguments
     extra_args = ['--master', 'a:1', '--username', 'u', '--passwd', 'p']
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpOptions()
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.UserOptions:
         self.opts = runner.UserOptions()
         self.opts.parseOptions(args)
         return self.opts
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse()
 
-    def test_synopsis(self):
+    def test_synopsis(self) -> None:
         opts = runner.UserOptions()
         self.assertIn('buildbot user', opts.getSynopsis())
 
-    def test_master(self):
+    def test_master(self) -> None:
         opts = self.parse(
             "--master", "abcd:1234", '--op=get', '--ids=x', '--username=u', '--passwd=p'
         )
         self.assertOptions(opts, {"master": 'abcd:1234'})
 
-    def test_ids(self):
+    def test_ids(self) -> None:
         opts = self.parse("--ids", "id1,id2,id3", '--op', 'get', *self.extra_args)
         self.assertEqual(opts['ids'], ['id1', 'id2', 'id3'])
 
-    def test_info(self):
+    def test_info(self) -> None:
         opts = self.parse(
             "--info", "git=Tyler Durden <tyler@mayhem.net>", '--op', 'add', *self.extra_args
         )
         self.assertEqual(opts['info'], [{"git": 'Tyler Durden <tyler@mayhem.net>'}])
 
-    def test_info_only_id(self):
+    def test_info_only_id(self) -> None:
         opts = self.parse("--info", "tdurden", '--op', 'update', *self.extra_args)
         self.assertEqual(opts['info'], [{"identifier": 'tdurden'}])
 
-    def test_info_with_id(self):
+    def test_info_with_id(self) -> None:
         opts = self.parse("--info", "tdurden:svn=marla", '--op', 'update', *self.extra_args)
         self.assertEqual(opts['info'], [{"identifier": 'tdurden', "svn": 'marla'}])
 
-    def test_info_multiple(self):
+    def test_info_multiple(self) -> None:
         opts = self.parse(
             "--info",
             "git=Tyler Durden <tyler@mayhem.net>",
@@ -778,123 +783,123 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
             [{"git": 'Tyler Durden <tyler@mayhem.net>'}, {"git": 'Narrator <narrator@mayhem.net>'}],
         )
 
-    def test_config_user_params(self):
+    def test_config_user_params(self) -> None:
         self.options_file['user_master'] = 'mm:99'
         self.options_file['user_username'] = 'un'
         self.options_file['user_passwd'] = 'pw'
         opts = self.parse('--op', 'get', '--ids', 'x')
         self.assertOptions(opts, {"master": 'mm:99', "username": 'un', "passwd": 'pw'})
 
-    def test_config_master(self):
+    def test_config_master(self) -> None:
         self.options_file['master'] = 'mm:99'
         opts = self.parse('--op', 'get', '--ids', 'x', '--username=u', '--passwd=p')
         self.assertOptions(opts, {"master": 'mm:99'})
 
-    def test_config_master_override(self):
+    def test_config_master_override(self) -> None:
         self.options_file['master'] = 'not seen'
         self.options_file['user_master'] = 'mm:99'
         opts = self.parse('--op', 'get', '--ids', 'x', '--username=u', '--passwd=p')
         self.assertOptions(opts, {"master": 'mm:99'})
 
-    def test_invalid_info(self):
+    def test_invalid_info(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse("--info", "foo=bar", '--op', 'add', *self.extra_args)
 
-    def test_no_master(self):
+    def test_no_master(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('-op=foo')
 
-    def test_invalid_master(self):
+    def test_invalid_master(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('-m', 'foo')
 
-    def test_no_operation(self):
+    def test_no_operation(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('-m', 'a:1')
 
-    def test_bad_operation(self):
+    def test_bad_operation(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('-m', 'a:1', '--op=mayhem')
 
-    def test_no_username(self):
+    def test_no_username(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('-m', 'a:1', '--op=add')
 
-    def test_no_password(self):
+    def test_no_password(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=add', '-m', 'a:1', '-u', 'tdurden')
 
-    def test_invalid_bb_username(self):
+    def test_invalid_bb_username(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=add', '--bb_username=tdurden', *self.extra_args)
 
-    def test_invalid_bb_password(self):
+    def test_invalid_bb_password(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=add', '--bb_password=marla', *self.extra_args)
 
-    def test_update_no_bb_username(self):
+    def test_update_no_bb_username(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=update', '--bb_password=marla', *self.extra_args)
 
-    def test_update_no_bb_password(self):
+    def test_update_no_bb_password(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=update', '--bb_username=tdurden', *self.extra_args)
 
-    def test_no_ids_info(self):
+    def test_no_ids_info(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=add', *self.extra_args)
 
-    def test_ids_with_add(self):
+    def test_ids_with_add(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=add', '--ids=id1', *self.extra_args)
 
-    def test_ids_with_update(self):
+    def test_ids_with_update(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=update', '--ids=id1', *self.extra_args)
 
-    def test_no_ids_found_update(self):
+    def test_no_ids_found_update(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse("--op=update", "--info=svn=x", *self.extra_args)
 
-    def test_id_with_add(self):
+    def test_id_with_add(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse("--op=add", "--info=id:x", *self.extra_args)
 
-    def test_info_with_remove(self):
+    def test_info_with_remove(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=remove', '--info=x=v', *self.extra_args)
 
-    def test_info_with_get(self):
+    def test_info_with_get(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse('--op=get', '--info=x=v', *self.extra_args)
 
 
 class TestOptions(OptionsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpOptions()
         self.setUpStdoutAssertions()
 
-    def parse(self, *args):
+    def parse(self, *args: str) -> runner.Options:
         self.opts = runner.Options()
         self.opts.parseOptions(args)
         return self.opts
 
-    def test_defaults(self):
+    def test_defaults(self) -> None:
         with self.assertRaises(usage.UsageError):
             self.parse()
 
-    def test_version(self):
+    def test_version(self) -> None:
         try:
             self.parse('--version')
         except SystemExit as e:
             self.assertEqual(e.args[0], 0)
         self.assertInStdout('Buildbot version:')
 
-    def test_verbose(self):
+    def test_verbose(self) -> None:
         self.patch(log, 'startLogging', mock.Mock())
         with self.assertRaises(usage.UsageError):
             self.parse("--verbose")
-        log.startLogging.assert_called_once_with(sys.stderr)
+        log.startLogging.assert_called_once_with(sys.stderr)  # type: ignore[attr-defined]
 
 
 class TestRun(unittest.TestCase):
@@ -902,11 +907,11 @@ class TestRun(unittest.TestCase):
         subcommandFunction = 'buildbot.test.unit.scripts.test_runner.subcommandFunction'
         optFlags = [['loud', 'l', 'be noisy']]
 
-        def postOptions(self):
+        def postOptions(self) -> None:
             if self['loud']:
                 raise usage.UsageError('THIS IS ME BEING LOUD')
 
-    def setUp(self):
+    def setUp(self) -> None:
         # patch our subcommand in
         self.patch(runner.Options, 'subCommands', [['my', None, self.MySubCommand, 'my, my']])
 
@@ -914,7 +919,7 @@ class TestRun(unittest.TestCase):
         global subcommandFunction
         subcommandFunction = mock.Mock(name='subcommandFunction', return_value=3)
 
-    def test_run_good(self):
+    def test_run_good(self) -> None:
         self.patch(sys, 'argv', ['buildbot', 'my'])
         try:
             runner.run()
@@ -923,7 +928,7 @@ class TestRun(unittest.TestCase):
         else:
             self.fail("didn't exit")
 
-    def test_run_bad(self):
+    def test_run_bad(self) -> None:
         self.patch(sys, 'argv', ['buildbot', 'my', '-l'])
         stdout = StringIO()
         self.patch(sys, 'stdout', stdout)
