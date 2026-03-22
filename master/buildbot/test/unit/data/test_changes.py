@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -30,13 +34,18 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = changes.ChangeEndpoint
     resourceTypeClass = changes.Change
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=234),
@@ -52,14 +61,14 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing(self):
+    def test_get_existing(self) -> InlineCallbacksType[None]:
         change = yield self.callGet(('changes', '13'))
 
         self.validateData(change)
         self.assertEqual(change['project'], 'world-domination')
 
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         change = yield self.callGet(('changes', '99'))
 
         self.assertEqual(change, None)
@@ -70,7 +79,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = changes.Change
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Master(id=1),
@@ -104,7 +113,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_get(self) -> InlineCallbacksType[None]:
         changes = yield self.callGet(('changes',))
         changes = sorted(changes, key=lambda ch: ch['changeid'])
 
@@ -114,7 +123,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(changes[1]['changeid'], 14)
 
     @defer.inlineCallbacks
-    def test_getChanges_from_build(self):
+    def test_getChanges_from_build(self) -> InlineCallbacksType[None]:
         fake_change = yield self.master.db.changes.getChangeFromSSid(144)
 
         mockGetChangeById = mock.Mock(
@@ -128,7 +137,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(changes[0]['changeid'], 14)
 
     @defer.inlineCallbacks
-    def test_getChanges_from_builder(self):
+    def test_getChanges_from_builder(self) -> InlineCallbacksType[None]:
         fake_change = yield self.master.db.changes.getChangeFromSSid(144)
         mockGetChangeById = mock.Mock(
             spec=self.master.db.changes.getChangesForBuild, return_value=[fake_change]
@@ -140,7 +149,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(changes[0]['changeid'], 14)
 
     @defer.inlineCallbacks
-    def test_getChanges_recent(self):
+    def test_getChanges_recent(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.ResultSpec(limit=1, order=('-changeid',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
@@ -149,14 +158,14 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(len(changes), 1)
 
     @defer.inlineCallbacks
-    def test_getChangesOtherOrder(self):
+    def test_getChangesOtherOrder(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.ResultSpec(limit=1, order=('-when_timestamp',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         self.assertEqual(len(changes), 1)
 
     @defer.inlineCallbacks
-    def test_getChangesOtherOffset(self):
+    def test_getChangesOtherOffset(self) -> InlineCallbacksType[None]:
         resultSpec = resultspec.ResultSpec(limit=1, offset=1, order=('-changeid',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
@@ -194,7 +203,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     }
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = changes.Change(self.master)
@@ -203,34 +212,39 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             fakedb.SourceStamp(id=99),  # force minimum ID in tests below
         ])
 
-    def test_signature_addChange(self):
+    def test_signature_addChange(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.addChange,  # fake
             self.rtype.addChange,
         )  # real
         def addChange(
-            self,
-            files=None,
-            comments=None,
-            author=None,
-            committer=None,
-            revision=None,
-            when_timestamp=None,
-            branch=None,
-            category=None,
-            revlink='',
-            properties=None,
-            repository='',
-            codebase=None,
-            project='',
-            src=None,
-        ):
+            self: object,
+            files: list[str] | None = None,
+            comments: str | None = None,
+            author: str | None = None,
+            committer: str | None = None,
+            revision: str | None = None,
+            when_timestamp: int | None = None,
+            branch: str | None = None,
+            category: str | Callable | None = None,
+            revlink: str | None = '',
+            properties: dict[str, Any] | None = None,
+            repository: str = '',
+            codebase: str | None = None,
+            project: str = '',
+            src: str | None = None,
+        ) -> None:
             pass
 
     @defer.inlineCallbacks
     def do_test_addChange(
-        self, kwargs, expectedRoutingKey, expectedMessage, expectedRow, expectedChangeUsers=None
-    ):
+        self,
+        kwargs: dict[str, Any],
+        expectedRoutingKey: tuple[str, ...],
+        expectedMessage: dict[str, Any],
+        expectedRow: ChangeModel,
+        expectedChangeUsers: list[int] | None = None,
+    ) -> InlineCallbacksType[None]:
         if expectedChangeUsers is None:
             expectedChangeUsers = []
         self.reactor.advance(10000000)
@@ -247,7 +261,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         change_users = yield self.master.db.changes.getChangeUids(500)
         self.assertEqual(change_users, expectedChangeUsers)
 
-    def test_addChange(self):
+    def test_addChange(self) -> defer.Deferred[None]:
         # src and codebase are default here
         kwargs = {
             "_test_changeid": 500,
@@ -286,7 +300,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         return self.do_test_addChange(kwargs, expectedRoutingKey, expectedMessage, expectedRow)
 
     @defer.inlineCallbacks
-    def test_addChange_src_codebase(self):
+    def test_addChange_src_codebase(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.User(uid=123),
         ])
@@ -363,8 +377,8 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
 
         createUserObject.assert_called_once_with(self.master, 'warner', 'git')
 
-    def test_addChange_src_codebaseGenerator(self):
-        def preChangeGenerator(**kwargs):
+    def test_addChange_src_codebaseGenerator(self) -> defer.Deferred[None]:
+        def preChangeGenerator(**kwargs: Any) -> dict[str, Any]:
             return kwargs
 
         self.master.config = mock.Mock(name='master.config')
@@ -433,7 +447,7 @@ class Change(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         )
         return self.do_test_addChange(kwargs, expectedRoutingKey, expectedMessage, expectedRow)
 
-    def test_addChange_repository_revision(self):
+    def test_addChange_repository_revision(self) -> defer.Deferred[None]:
         self.master.config = mock.Mock(name='master.config')
         self.master.config.revlink = lambda rev, repo: f'foo{repo}bar{rev}baz'
         # revlink is default here

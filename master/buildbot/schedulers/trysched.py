@@ -21,6 +21,7 @@ import os
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
+from typing import cast
 
 from twisted.internet import defer
 from twisted.protocols import basic
@@ -38,10 +39,15 @@ from buildbot.util.service import IndependentAsyncMultiService
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from typing import IO
+
+    from twisted.internet.defer import Deferred
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class TryBase(base.ReconfigurableBaseScheduler):
-    def filterBuilderList(self, builderNames):
+    def filterBuilderList(self, builderNames: list[str]) -> list[str]:
         """
         Make sure that C{builderNames} is a subset of the configured
         C{self.builderNames}, returning an empty list if not.  If
@@ -54,14 +60,15 @@ class TryBase(base.ReconfigurableBaseScheduler):
         # available for try.  If the user supplies a list of builders,
         # it must be restricted to the configured list.  If not, build
         # on all of the configured builders.
+        configured_names = cast(list[str], self.builderNames)
         if builderNames:
             for b in builderNames:
-                if b not in self.builderNames:
+                if b not in configured_names:
                     log.msg(f"{self} got with builder {b}")
-                    log.msg(f" but that wasn't in our list: {self.builderNames}")
+                    log.msg(f" but that wasn't in our list: {configured_names}")
                     return []
         else:
-            builderNames = self.builderNames
+            builderNames = configured_names
         return builderNames
 
 
@@ -75,12 +82,12 @@ class JobdirService(MaildirService):
     # "self.scheduler"
     name = 'JobdirService'
 
-    def __init__(self, scheduler, basedir=None):
+    def __init__(self, scheduler: Try_Jobdir, basedir: str | None = None) -> None:
         self.scheduler = scheduler
         super().__init__(basedir)
 
-    def messageReceived(self, filename):
-        with self.moveToCurDir(filename) as f:
+    def messageReceived(self, filename: str) -> Deferred[None]:
+        with self.moveToCurDir(filename) as f:  # type: ignore[union-attr]
             rv = self.scheduler.handleJobFile(filename, f)
         return rv
 
@@ -88,22 +95,22 @@ class JobdirService(MaildirService):
 class Try_Jobdir(TryBase):
     compare_attrs: ClassVar[Sequence[str]] = ('jobdir',)
 
-    def __init__(self, name, builderNames, jobdir, **kwargs):
+    def __init__(self, name: str, builderNames: list[str], jobdir: str, **kwargs: Any) -> None:
         super().__init__(name=name, builderNames=builderNames, jobdir=jobdir, **kwargs)
         self.watcher = JobdirService(scheduler=self)
         self._watcher_parent = IndependentAsyncMultiService()
         self.watcher.setServiceParent(self._watcher_parent)
 
-    def checkConfig(self, builderNames, jobdir, **kwargs: Any):  # type: ignore[override]
+    def checkConfig(self, builderNames: list[str], jobdir: str, **kwargs: Any) -> None:  # type: ignore[override]
         super().checkConfig(builderNames=builderNames, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(  # type: ignore[override]
         self,
-        builderNames,
-        jobdir,
+        builderNames: list[str],
+        jobdir: str,
         **kwargs: Any,
-    ):
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(builderNames=builderNames, **kwargs)
         self.jobdir = jobdir
         self._watcher_parent.set_master(self.master)
@@ -112,7 +119,7 @@ class Try_Jobdir(TryBase):
             self._watcher_parent.stopService()
             self._start_watcher()
 
-    def _start_watcher(self):
+    def _start_watcher(self) -> None:
         # set the watcher's basedir now that we have a master
         jobdir = os.path.join(self.master.basedir, self.jobdir)
         self.watcher.setBasedir(jobdir)
@@ -127,7 +134,7 @@ class Try_Jobdir(TryBase):
     # activation handlers
 
     @defer.inlineCallbacks
-    def activate(self):
+    def activate(self) -> InlineCallbacksType[None]:
         yield super().activate()
 
         if not self.enabled:
@@ -136,7 +143,7 @@ class Try_Jobdir(TryBase):
         self._start_watcher()
 
     @defer.inlineCallbacks
-    def deactivate(self):
+    def deactivate(self) -> InlineCallbacksType[None]:
         yield super().deactivate()
 
         if not self.enabled:
@@ -144,7 +151,7 @@ class Try_Jobdir(TryBase):
 
         self._watcher_parent.stopService()
 
-    def parseJob(self, f):
+    def parseJob(self, f: IO[Any]) -> dict[str, Any]:
         # jobfiles are serialized build requests. Each is a list of
         # serialized netstrings, in the following order:
         #  format version number:
@@ -190,16 +197,16 @@ class Try_Jobdir(TryBase):
         keys = [v1_keys, v2_keys, v3_keys, v4_keys]
         # v5 introduces properties and uses JSON serialization
 
-        parsed_job = {}
+        parsed_job: dict[str, Any] = {}
 
-        def extract_netstrings(p, keys):
+        def extract_netstrings(p: netstrings.NetstringParser, keys: list[str]) -> None:
             for i, key in enumerate(keys):
                 if key == 'patch_body':
                     parsed_job[key] = p.strings[i]
                 else:
                     parsed_job[key] = bytes2unicode(p.strings[i])
 
-        def postprocess_parsed_job():
+        def postprocess_parsed_job() -> None:
             # apply defaults and handle type casting
             parsed_job['branch'] = parsed_job['branch'] or None
             parsed_job['baserev'] = parsed_job['baserev'] or None
@@ -234,7 +241,7 @@ class Try_Jobdir(TryBase):
             raise BadJobfile(f"unknown version '{ver}'")
         return parsed_job
 
-    def handleJobFile(self, filename, f):
+    def handleJobFile(self, filename: str, f: IO[Any]) -> Deferred[Any]:
         try:
             parsed_job = self.parseJob(f)
             builderNames = parsed_job['builderNames']
@@ -282,19 +289,19 @@ class Try_Jobdir(TryBase):
             reason=reason,
             external_idstring=bytes2unicode(parsed_job['jobid']),
             builderNames=builderNames,
-            priority=self.priority,
+            priority=self.priority,  # type: ignore[arg-type]
             properties=requested_props,
         )
 
 
 class RemoteBuildSetStatus(pb.Referenceable):
-    def __init__(self, master, bsid, brids):
+    def __init__(self, master: Any, bsid: int, brids: dict[int, int]) -> None:
         self.master = master
         self.bsid = bsid
         self.brids = brids
 
     @defer.inlineCallbacks
-    def remote_getBuildRequests(self):
+    def remote_getBuildRequests(self) -> InlineCallbacksType[list[tuple[str, RemoteBuildRequest]]]:
         brids = {}
         for builderid, brid in self.brids.items():
             builderDict = yield self.master.data.get(('builders', builderid))
@@ -303,14 +310,14 @@ class RemoteBuildSetStatus(pb.Referenceable):
 
 
 class RemoteBuildRequest(pb.Referenceable):
-    def __init__(self, master, builderName, brid):
+    def __init__(self, master: Any, builderName: str, brid: int) -> None:
         self.master = master
         self.builderName = builderName
         self.brid = brid
-        self.consumer = None
+        self.consumer: Any = None
 
     @defer.inlineCallbacks
-    def remote_subscribe(self, subscriber):
+    def remote_subscribe(self, subscriber: Any) -> InlineCallbacksType[None]:
         brdict = yield self.master.data.get(('buildrequests', self.brid))
         if not brdict:
             return
@@ -319,7 +326,7 @@ class RemoteBuildRequest(pb.Referenceable):
         reportedBuilds = set([])
 
         # subscribe to any new builds..
-        def gotBuild(key, msg):
+        def gotBuild(key: tuple[str, ...], msg: dict[str, Any]) -> Deferred[None] | None:
             if msg['buildrequestid'] != self.brid or key[-1] != 'new':
                 return None
             if msg['buildid'] in reportedBuilds:
@@ -344,23 +351,23 @@ class RemoteBuildRequest(pb.Referenceable):
                 'newbuild', RemoteBuild(self.master, build, self.builderName), self.builderName
             )
 
-    def remote_unsubscribe(self, subscriber):
+    def remote_unsubscribe(self, subscriber: Any) -> None:
         if self.consumer:
             self.consumer.stopConsuming()
             self.consumer = None
 
 
 class RemoteBuild(pb.Referenceable):
-    def __init__(self, master, builddict, builderName):
+    def __init__(self, master: Any, builddict: dict[str, Any], builderName: str) -> None:
         self.master = master
         self.builddict = builddict
         self.builderName = builderName
-        self.consumer = None
+        self.consumer: Any = None
 
     @defer.inlineCallbacks
-    def remote_subscribe(self, subscriber, interval):
+    def remote_subscribe(self, subscriber: Any, interval: int) -> InlineCallbacksType[None]:
         # subscribe to any new steps..
-        def stepChanged(key, msg):
+        def stepChanged(key: tuple[str, ...], msg: dict[str, Any]) -> Deferred[None] | None:
             if key[-1] == 'started':
                 return subscriber.callRemote(
                     'stepStarted', self.builderName, self, msg['name'], None
@@ -376,16 +383,16 @@ class RemoteBuild(pb.Referenceable):
         )
         subscriber.notifyOnDisconnect(lambda _: self.remote_unsubscribe(subscriber))
 
-    def remote_unsubscribe(self, subscriber):
+    def remote_unsubscribe(self, subscriber: Any) -> None:
         if self.consumer:
             self.consumer.stopConsuming()
             self.consumer = None
 
     @defer.inlineCallbacks
-    def remote_waitUntilFinished(self):
-        d = defer.Deferred()
+    def remote_waitUntilFinished(self) -> InlineCallbacksType[RemoteBuild]:
+        d: defer.Deferred[None] = defer.Deferred()
 
-        def buildEvent(key, msg):
+        def buildEvent(key: tuple[str, ...], msg: dict[str, Any]) -> None:
             if key[-1] == 'finished':
                 d.callback(None)
 
@@ -400,36 +407,36 @@ class RemoteBuild(pb.Referenceable):
         return self  # callers expect result=self
 
     @defer.inlineCallbacks
-    def remote_getResults(self):
+    def remote_getResults(self) -> InlineCallbacksType[int]:
         buildid = self.builddict['buildid']
         builddict = yield self.master.data.get(('builds', buildid))
         return builddict['results']
 
     @defer.inlineCallbacks
-    def remote_getText(self):
+    def remote_getText(self) -> InlineCallbacksType[list[str]]:
         buildid = self.builddict['buildid']
         builddict = yield self.master.data.get(('builds', buildid))
         return [builddict['state_string']]
 
 
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
-    def __init__(self, scheduler, username):
+    def __init__(self, scheduler: Try_Userpass, username: str) -> None:
         self.scheduler = scheduler
         self.username = username
 
     @defer.inlineCallbacks
     def perspective_try(
         self,
-        branch,
-        revision,
-        patch,
-        repository,
-        project,
-        builderNames,
-        who="",
-        comment="",
-        properties=None,
-    ):
+        branch: str,
+        revision: str,
+        patch: tuple[int, str],
+        repository: str,
+        project: str,
+        builderNames: list[str],
+        who: str = "",
+        comment: str = "",
+        properties: dict[str, Any] | None = None,
+    ) -> InlineCallbacksType[RemoteBuildSetStatus | None]:
         log.msg(f"user {self.username} requesting build on builders {builderNames}")
         if properties is None:
             properties = {}
@@ -481,7 +488,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         bss = RemoteBuildSetStatus(self.scheduler.master, bsid, brids)
         return bss
 
-    def perspective_getAvailableBuilderNames(self):
+    def perspective_getAvailableBuilderNames(self) -> Any:
         # Return a list of builder names that are configured
         # for the try service
         # This is mostly intended for integrating try services
@@ -498,23 +505,32 @@ class Try_Userpass(TryBase):
         'properties',
     )
 
-    def __init__(self, name, builderNames, port, userpass, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        builderNames: list[str],
+        port: str,
+        userpass: list[tuple[str, str]],
+        **kwargs: Any,
+    ) -> None:
         super().__init__(
             name=name, builderNames=builderNames, port=port, userpass=userpass, **kwargs
         )
-        self.registrations = []
+        self.registrations: list[Any] = []
 
-    def checkConfig(self, builderNames, port, userpass, **kwargs: Any):  # type: ignore[override]
+    def checkConfig(  # type: ignore[override]
+        self, builderNames: list[str], port: str, userpass: list[tuple[str, str]], **kwargs: Any
+    ) -> None:
         super().checkConfig(builderNames=builderNames, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(  # type: ignore[override]
         self,
-        builderNames,
-        port,
-        userpass,
+        builderNames: list[str],
+        port: str,
+        userpass: list[tuple[str, str]],
         **kwargs: Any,
-    ):
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(builderNames=builderNames, **kwargs)
         self.port = port
         self.userpass = userpass
@@ -525,9 +541,9 @@ class Try_Userpass(TryBase):
             yield self._create_pb()
 
     @defer.inlineCallbacks
-    def _create_pb(self):
+    def _create_pb(self) -> InlineCallbacksType[None]:
         # register each user/passwd with the pbmanager
-        def factory(mind, username):
+        def factory(mind: Any, username: str) -> Try_Userpass_Perspective:
             return Try_Userpass_Perspective(self, username)
 
         for user, passwd in self.userpass:
@@ -535,14 +551,14 @@ class Try_Userpass(TryBase):
             self.registrations.append(reg)
 
     @defer.inlineCallbacks
-    def _destroy_pb(self):
+    def _destroy_pb(self) -> InlineCallbacksType[None]:
         yield defer.gatherResults(
             [reg.unregister() for reg in self.registrations], consumeErrors=True
         )
         self.registrations = []
 
     @defer.inlineCallbacks
-    def activate(self):
+    def activate(self) -> InlineCallbacksType[None]:
         yield super().activate()
 
         if not self.enabled:
@@ -551,7 +567,7 @@ class Try_Userpass(TryBase):
         yield self._create_pb()
 
     @defer.inlineCallbacks
-    def deactivate(self):
+    def deactivate(self) -> InlineCallbacksType[None]:
         yield super().deactivate()
 
         if not self.enabled:

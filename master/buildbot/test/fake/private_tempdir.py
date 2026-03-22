@@ -13,11 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
+
+if TYPE_CHECKING:
+    from types import TracebackType
 
 
 class FakePrivateTemporaryDirectory:
-    def __init__(self, suffix=None, prefix=None, dir=None, mode=0o700):
+    def __init__(
+        self,
+        suffix: str | None = None,
+        prefix: str | None = None,
+        dir: str | None = None,
+        mode: int = 0o700,
+    ) -> None:
         dir = dir or '/'
         prefix = prefix or ''
         suffix = suffix or ''
@@ -25,21 +38,26 @@ class FakePrivateTemporaryDirectory:
         self.name = os.path.join(dir, prefix + '@@@' + suffix)
         self.mode = mode
 
-    def __enter__(self):
+    def __enter__(self) -> str:
         return self.name
 
-    def __exit__(self, exc, value, tb):
+    def __exit__(
+        self,
+        exc: type[BaseException] | None,
+        value: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         pass
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         pass
 
 
 class MockPrivateTemporaryDirectory:
-    def __init__(self):
-        self.dirs = []
+    def __init__(self) -> None:
+        self.dirs: list[tuple[str, int]] = []
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> FakePrivateTemporaryDirectory:
         ret = FakePrivateTemporaryDirectory(*args, **kwargs)
         self.dirs.append((ret.name, ret.mode))
         return ret

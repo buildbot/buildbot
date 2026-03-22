@@ -12,8 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
 import copy
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -22,11 +25,14 @@ from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import results
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class ShellArg(results.ResultComputingConfigMixin):
     publicAttributes = [*results.ResultComputingConfigMixin.resultConfig, "command", "logname"]
 
-    def __init__(self, command=None, logname=None, **kwargs):
+    def __init__(self, command: Any = None, logname: str | None = None, **kwargs: Any) -> None:
         name = self.__class__.__name__
         if command is None:
             config.error(f"the 'command' parameter of {name} must not be None")
@@ -40,7 +46,7 @@ class ShellArg(results.ResultComputingConfigMixin):
             setattr(self, k, v)
         # we don't validate anything yet as we can have renderables.
 
-    def validateAttributes(self):
+    def validateAttributes(self) -> None:
         # only make the check if we have a list
         if not isinstance(self.command, (str, list)):
             config.error(f"{self.command} is an invalid command, it must be a string or a list")
@@ -55,7 +61,7 @@ class ShellArg(results.ResultComputingConfigMixin):
             config.error(f"{not_bool!r} must be booleans")
 
     @defer.inlineCallbacks
-    def getRenderingFor(self, build):
+    def getRenderingFor(self, build: Any) -> InlineCallbacksType[ShellArg]:
         rv = copy.copy(self)
         for p_attr in self.publicAttributes:
             res = yield build.render(getattr(self, p_attr))
@@ -67,19 +73,19 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
     last_command = None
     renderables = ['commands']
 
-    def __init__(self, commands=None, **kwargs):
+    def __init__(self, commands: list[Any] | None = None, **kwargs: Any) -> None:
         self.commands = commands
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
 
-    def shouldRunTheCommand(self, cmd):
+    def shouldRunTheCommand(self, cmd: Any) -> bool:
         return bool(cmd)
 
-    def getFinalState(self):
-        return self.describe(True)
+    def getFinalState(self) -> Any:
+        return self.describe(True)  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def runShellSequence(self, commands):
+    def runShellSequence(self, commands: list[Any] | None) -> InlineCallbacksType[int]:
         terminate = False
         if commands is None:
             log.msg("After rendering, ShellSequence `commands` is None")
@@ -106,14 +112,14 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
             # keep the command around so we can describe it
             self.last_command = command
 
-            cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName=arg.logname)
+            cmd = yield self.makeRemoteShellCommand(command=command, stdioLogName=arg.logname)  # type: ignore[arg-type]
             yield self.runCommand(cmd)
-            overall_result, terminate = results.computeResultAndTermination(
+            overall_result, terminate = results.computeResultAndTermination(  # type: ignore[assignment]
                 arg, cmd.results(), overall_result
             )
             if terminate:
                 break
         return overall_result
 
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
         return self.runShellSequence(self.commands)

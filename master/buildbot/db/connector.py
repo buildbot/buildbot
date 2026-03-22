@@ -14,7 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import textwrap
+from typing import TYPE_CHECKING
 
 from twisted.application import internet
 from twisted.internet import defer
@@ -22,7 +25,6 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot import util
-from buildbot.config.master import DBConfig
 from buildbot.db import build_data
 from buildbot.db import builders
 from buildbot.db import buildrequests
@@ -54,6 +56,14 @@ from buildbot.util.deferwaiter import DeferWaiter
 from buildbot.util.sautils import get_upsert_method
 from buildbot.util.twisted import async_to_deferred
 
+if TYPE_CHECKING:
+    import sqlalchemy as sa
+
+    from buildbot.config.master import DBConfig
+    from buildbot.config.master import MasterConfig
+    from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
+
 upgrade_message = textwrap.dedent("""\
 
     The Buildmaster database needs to be upgraded before this version of
@@ -82,9 +92,9 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
     # periodic cleanup actions on this schedule.
     CLEANUP_PERIOD = 3600
 
-    configured_db_config: DBConfig
+    configured_db_config: DBConfig | None
 
-    def __init__(self, basedir):
+    def __init__(self, basedir: str) -> None:
         super().__init__()
         self.setName('db')
         self.basedir = basedir
@@ -94,22 +104,24 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.configured_db_config = None
 
         # set up components
-        self._engine = None  # set up in reconfigService
-        self.pool = None  # set up in reconfigService
+        self._engine: sa.Engine | None = None  # set up in reconfigService
+        self.pool: pool.DBThreadPool = None  # type: ignore[assignment,unused-ignore]  # set up in reconfigService
         self.upsert = get_upsert_method(None)  # set up in reconfigService
         self.has_native_upsert = False
 
-        self._master = None
+        self._master: BuildMaster | None = None
 
-        self._db_tasks_waiter = DeferWaiter()
+        self._db_tasks_waiter: DeferWaiter = DeferWaiter()
 
     @property
-    def master(self):
+    def master(self) -> BuildMaster | None:
         return self._master
 
     @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        new_db_config = yield self.master.get_db_config(new_config)
+    def reconfigServiceWithBuildbotConfig(
+        self, new_config: MasterConfig
+    ) -> InlineCallbacksType[None]:
+        new_db_config = yield self.master.get_db_config(new_config)  # type: ignore[union-attr]
         if self.configured_db_config is None:
             self.configured_db_config = new_db_config
         elif self.configured_db_config != new_db_config:
@@ -120,7 +132,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         return (yield super().reconfigServiceWithBuildbotConfig(new_config))
 
     @defer.inlineCallbacks
-    def set_master(self, master):
+    def set_master(self, master: BuildMaster) -> InlineCallbacksType[None]:
         self._master = master
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
@@ -169,27 +181,27 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         yield self.test_result_sets.setServiceParent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD, self._doCleanup)
-        self.cleanup_timer.clock = self.master.reactor
+        self.cleanup_timer.clock = master.reactor
         yield self.cleanup_timer.setServiceParent(self)
 
     @defer.inlineCallbacks
-    def setup(self, check_version=True, verbose=True):
+    def setup(self, check_version: bool = True, verbose: bool = True) -> InlineCallbacksType[None]:
         if self.configured_db_config is None:
-            self.configured_db_config = yield self.master.get_db_config(self.master.config)
+            self.configured_db_config = yield self.master.get_db_config(self.master.config)  # type: ignore[union-attr]
 
         log.msg(
-            f"Setting up database with URL {util.stripUrlPassword(self.configured_db_config.db_url)!r}"
+            f"Setting up database with URL {util.stripUrlPassword(self.configured_db_config.db_url)!r}"  # type: ignore[arg-type]
         )
 
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(
-            self.configured_db_config.db_url,
+            self.configured_db_config.db_url,  # type: ignore[arg-type]
             basedir=self.basedir,
             **self.configured_db_config.engine_kwargs,
         )
         self.upsert = get_upsert_method(self._engine)
         self.has_native_upsert = self.upsert != get_upsert_method(None)
-        self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)
+        self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)  # type: ignore[union-attr]
         self.pool.start()
 
         # make sure the db is up to date, unless specifically asked not to
@@ -201,7 +213,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
                 yield self.model.upgrade()
             current = yield self.model.is_current()
             if not current:
-                for l in upgrade_message.format(basedir=self.master.basedir).split('\n'):
+                for l in upgrade_message.format(basedir=self.master.basedir).split('\n'):  # type: ignore[union-attr]
                     log.msg(l)
                 raise exceptions.DatabaseNotReadyError()
 
@@ -214,14 +226,14 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         await self._db_tasks_waiter.wait()
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         yield self._shutdown()
         try:
             yield super().stopService()
         finally:
             yield self.pool.stop()
 
-    def _doCleanup(self):
+    def _doCleanup(self) -> defer.Deferred[None] | None:
         """
         Perform any periodic database cleanup tasks.
 
@@ -231,7 +243,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         if not self.configured_db_config:
             return None
 
-        d = self.changes.pruneChanges(self.master.config.changeHorizon)
+        d = self.changes.pruneChanges(self.master.config.changeHorizon)  # type: ignore[union-attr,arg-type]
         d.addErrback(log.err, 'while pruning changes')
         return d
 

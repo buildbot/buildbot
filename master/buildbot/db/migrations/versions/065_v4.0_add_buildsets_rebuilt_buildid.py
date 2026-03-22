@@ -30,7 +30,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("buildsets") as batch_op:
         batch_op.add_column(
             sa.Column(
@@ -44,5 +44,5 @@ def upgrade():
         )
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_column("buildsets", "rebuilt_buildid")

@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -26,10 +31,13 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.misc import BuildDictLookAlike
 from buildbot.test.util.reporter import ReporterTestMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin, ConfigErrorsMixin):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
@@ -37,7 +45,12 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin,
         self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
-    def createReporter(self, auth=("username", "passwd"), headers=None, **kwargs):
+    def createReporter(
+        self,
+        auth: tuple[str, str] | None = ("username", "passwd"),
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
             self,
@@ -52,56 +65,56 @@ class TestHttpStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin,
         interpolated_auth = None
         if auth is not None:
             username, passwd = auth
-            passwd = Interpolate(passwd)
-            interpolated_auth = (username, passwd)
+            interpolated_passwd = Interpolate(passwd)
+            interpolated_auth = (username, interpolated_passwd)
 
         self.sp = HttpStatusPush("serv", auth=interpolated_auth, headers=headers, **kwargs)
         yield self.sp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         yield self.createReporter()
         self._http.expect("post", "", json=BuildDictLookAlike(complete=False))
         self._http.expect("post", "", json=BuildDictLookAlike(complete=True))
         build = yield self.insert_build_new()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_basic_noauth(self):
+    def test_basic_noauth(self) -> InlineCallbacksType[None]:
         yield self.createReporter(auth=None)
         self._http.expect("post", "", json=BuildDictLookAlike(complete=False))
         self._http.expect("post", "", json=BuildDictLookAlike(complete=True))
         build = yield self.insert_build_new()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_header(self):
+    def test_header(self) -> InlineCallbacksType[None]:
         yield self.createReporter(headers={'Custom header': 'On'})
         self._http.expect("post", "", json=BuildDictLookAlike())
         build = yield self.insert_build_finished(SUCCESS)
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def http2XX(self, code, content):
+    def http2XX(self, code: int, content: str) -> InlineCallbacksType[None]:
         yield self.createReporter()
         self._http.expect('post', '', code=code, content=content, json=BuildDictLookAlike())
         build = yield self.insert_build_finished(SUCCESS)
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_http200(self):
+    def test_http200(self) -> InlineCallbacksType[None]:
         yield self.http2XX(code=200, content="OK")
 
     @defer.inlineCallbacks
-    def test_http201(self):  # e.g. GitHub returns 201
+    def test_http201(self) -> InlineCallbacksType[None]:  # e.g. GitHub returns 201
         yield self.http2XX(code=201, content="Created")
 
     @defer.inlineCallbacks
-    def test_http202(self):
+    def test_http202(self) -> InlineCallbacksType[None]:
         yield self.http2XX(code=202, content="Accepted")

@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import os
 import sys
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -28,24 +31,27 @@ from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import ReconfigError
 from buildbot.util import rewrap
 
+if TYPE_CHECKING:
+    from twisted.python.failure import Failure
+
 
 class Follower:
-    def follow(self, basedir, timeout=None):
+    def follow(self, basedir: str, timeout: float | None = None) -> int:
         self.rc = 0
         self._timeout = timeout if timeout else 10.0
         print("Following twistd.log until startup finished..")
         lw = LogWatcher(os.path.join(basedir, "twistd.log"), timeout=self._timeout)
         d = lw.start()
         d.addCallbacks(self._success, self._failure)
-        reactor.run()
+        reactor.run()  # type: ignore[attr-defined]
         return self.rc
 
-    def _success(self, _):
+    def _success(self, _: Any) -> None:
         print("The buildmaster appears to have (re)started correctly.")
         self.rc = 0
-        reactor.stop()
+        reactor.stop()  # type: ignore[attr-defined]
 
-    def _failure(self, why):
+    def _failure(self, why: Failure) -> None:
         if why.check(BuildmasterTimeoutError):
             print(
                 rewrap(f"""\
@@ -80,10 +86,10 @@ class Follower:
             )
             print(why)
         self.rc = 1
-        reactor.stop()
+        reactor.stop()  # type: ignore[attr-defined]
 
 
-def launchNoDaemon(config):
+def launchNoDaemon(config: dict[str, Any]) -> None:
     os.chdir(config['basedir'])
     sys.path.insert(0, os.path.abspath(config['basedir']))
 
@@ -109,7 +115,7 @@ def launchNoDaemon(config):
     twistd.run()
 
 
-def launch(config):
+def launch(config: dict[str, Any]) -> None:
     os.chdir(config['basedir'])
     sys.path.insert(0, os.path.abspath(config['basedir']))
 
@@ -129,14 +135,14 @@ def launch(config):
     ]
 
     # ProcessProtocol just ignores all output
-    proc = reactor.spawnProcess(protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
+    proc = reactor.spawnProcess(protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)  # type: ignore[attr-defined]
 
     if platformType == "win32":
         with open("twistd.pid", "w", encoding='utf-8') as pidfile:
             pidfile.write(f"{proc.pid}")
 
 
-def start(config):
+def start(config: dict[str, Any]) -> int:
     if not base.isBuildmasterDir(config['basedir']):
         return 1
 

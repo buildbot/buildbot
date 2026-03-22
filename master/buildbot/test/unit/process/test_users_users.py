@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import copy
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -24,16 +27,19 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class UsersTests(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.test_sha = users.encrypt("cancer")
 
     @defer.inlineCallbacks
-    def verify_users(self, users):
+    def verify_users(self, users: list[UserModel]) -> InlineCallbacksType[None]:
         users_no_attrs = copy.deepcopy(users)
         for user in users_no_attrs:
             user.attributes = None
@@ -46,19 +52,19 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
             self.assertEqual(got_user, user)
 
     @defer.inlineCallbacks
-    def test_createUserObject_no_src(self):
+    def test_createUserObject_no_src(self) -> InlineCallbacksType[None]:
         yield users.createUserObject(self.master, "Tyler Durden", None)
         got_users = yield self.master.db.users.getUsers()
         self.assertEqual(got_users, [])
 
     @defer.inlineCallbacks
-    def test_createUserObject_unrecognized_src(self):
+    def test_createUserObject_unrecognized_src(self) -> InlineCallbacksType[None]:
         yield users.createUserObject(self.master, "Tyler Durden", 'blah')
         got_users = yield self.master.db.users.getUsers()
         self.assertEqual(got_users, [])
 
     @defer.inlineCallbacks
-    def test_createUserObject_git(self):
+    def test_createUserObject_git(self) -> InlineCallbacksType[None]:
         yield users.createUserObject(self.master, "Tyler Durden <tyler@mayhem.net>", 'git')
         yield self.verify_users([
             UserModel(
@@ -71,7 +77,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_createUserObject_svn(self):
+    def test_createUserObject_svn(self) -> InlineCallbacksType[None]:
         yield users.createUserObject(self.master, "tdurden", 'svn')
 
         yield self.verify_users([
@@ -85,7 +91,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_createUserObject_hg(self):
+    def test_createUserObject_hg(self) -> InlineCallbacksType[None]:
         yield users.createUserObject(self.master, "Tyler Durden <tyler@mayhem.net>", 'hg')
 
         yield self.verify_users([
@@ -99,7 +105,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_createUserObject_cvs(self):
+    def test_createUserObject_cvs(self) -> InlineCallbacksType[None]:
         yield users.createUserObject(self.master, "tdurden", 'cvs')
 
         yield self.verify_users([
@@ -113,7 +119,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_createUserObject_darcs(self):
+    def test_createUserObject_darcs(self) -> InlineCallbacksType[None]:
         yield users.createUserObject(self.master, "tyler@mayhem.net", 'darcs')
 
         yield self.verify_users([
@@ -127,7 +133,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_createUserObject_bzr(self):
+    def test_createUserObject_bzr(self) -> InlineCallbacksType[None]:
         yield users.createUserObject(self.master, "Tyler Durden", 'bzr')
 
         yield self.verify_users([
@@ -141,7 +147,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_getUserContact_found(self):
+    def test_getUserContact_found(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.User(uid=1, identifier='tdurden'),
             fakedb.UserInfo(uid=1, attr_type='svn', attr_data='tdurden'),
@@ -152,7 +158,7 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(contact, 'tyler@mayhem.net')
 
     @defer.inlineCallbacks
-    def test_getUserContact_key_not_found(self):
+    def test_getUserContact_key_not_found(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.User(uid=1, identifier='tdurden'),
             fakedb.UserInfo(uid=1, attr_type='svn', attr_data='tdurden'),
@@ -163,11 +169,11 @@ class UsersTests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(contact, None)
 
     @defer.inlineCallbacks
-    def test_getUserContact_uid_not_found(self):
+    def test_getUserContact_uid_not_found(self) -> InlineCallbacksType[None]:
         contact = yield users.getUserContact(self.master, contact_types=['email'], uid=1)
 
         self.assertEqual(contact, None)
 
-    def test_check_passwd(self):
+    def test_check_passwd(self) -> None:
         res = users.check_passwd("cancer", self.test_sha)
         self.assertEqual(res, True)

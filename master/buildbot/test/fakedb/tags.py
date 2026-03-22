@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from buildbot.test.fakedb.row import Row
 
@@ -23,5 +24,7 @@ class Tag(Row):
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
 
-    def __init__(self, id=None, name='some:tag', name_hash=None):
+    def __init__(
+        self, id: int | None = None, name: str | None = 'some:tag', name_hash: str | None = None
+    ) -> None:
         super().__init__(id=id, name=name, name_hash=name_hash)

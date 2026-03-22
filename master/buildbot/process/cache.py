@@ -13,8 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+
 from buildbot.util import lru
 from buildbot.util import service
+
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+
+    from buildbot.config.master import MasterConfig
 
 
 class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
@@ -31,12 +42,14 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
     # miss function; and it will optimize repeated fetches of the same object.
     DEFAULT_CACHE_SIZE = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.setName('caches')
-        self.config = {}
-        self._caches = {}
+        self.config: dict[str, int] = {}
+        self._caches: dict[str, lru.AsyncLRUCache[Any, Any]] = {}
 
-    def get_cache(self, cache_name, miss_fn):
+    def get_cache(
+        self, cache_name: str, miss_fn: Callable[..., Any]
+    ) -> lru.AsyncLRUCache[Any, Any]:
         """
         Get an L{AsyncLRUCache} object with the given name.  If such an object
         does not exist, it will be created.  Since the cache is permanent, this
@@ -57,14 +70,14 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
             c = self._caches[cache_name] = lru.AsyncLRUCache(miss_fn, max_size)
             return c
 
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config: MasterConfig) -> Deferred[None]:
         self.config = new_config.caches
         for name, cache in self._caches.items():
             cache.set_max_size(new_config.caches.get(name, self.DEFAULT_CACHE_SIZE))
 
         return super().reconfigServiceWithBuildbotConfig(new_config)
 
-    def get_metrics(self):
+    def get_metrics(self) -> dict[str, dict[str, int]]:
         return {
             n: {'hits': c.hits, 'refhits': c.refhits, 'misses': c.misses, 'max_size': c.max_size}
             for n, c in self._caches.items()

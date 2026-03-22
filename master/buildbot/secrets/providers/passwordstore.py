@@ -20,12 +20,16 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.util import runprocess
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class SecretInPass(SecretProviderBase):
@@ -35,20 +39,20 @@ class SecretInPass(SecretProviderBase):
 
     name: str | None = "SecretInPass"  # type: ignore[assignment]
 
-    def checkPassIsInPath(self):
+    def checkPassIsInPath(self) -> None:
         if not any((Path(p) / "pass").is_file() for p in os.environ["PATH"].split(":")):
             config.error("pass does not exist in PATH")
 
-    def checkPassDirectoryIsAvailableAndReadable(self, dirname):
+    def checkPassDirectoryIsAvailableAndReadable(self, dirname: str) -> None:
         if not os.access(dirname, os.F_OK):
             config.error(f"directory {dirname} does not exist")
 
-    def checkConfig(self, gpgPassphrase=None, dirname=None):
+    def checkConfig(self, gpgPassphrase: str | None = None, dirname: str | None = None) -> None:  # type: ignore[override]
         self.checkPassIsInPath()
         if dirname:
             self.checkPassDirectoryIsAvailableAndReadable(dirname)
 
-    def reconfigService(self, gpgPassphrase=None, dirname=None):
+    def reconfigService(self, gpgPassphrase: str | None = None, dirname: str | None = None) -> None:  # type: ignore[override]
         self._env = {**os.environ}
         if gpgPassphrase:
             self._env["PASSWORD_STORE_GPG_OPTS"] = f"--passphrase {gpgPassphrase}"
@@ -56,7 +60,7 @@ class SecretInPass(SecretProviderBase):
             self._env["PASSWORD_STORE_DIR"] = dirname
 
     @defer.inlineCallbacks
-    def get(self, entry):
+    def get(self, entry: str) -> InlineCallbacksType[str | None]:
         """
         get the value from pass identified by 'entry'
         """

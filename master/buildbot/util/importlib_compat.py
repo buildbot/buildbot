@@ -15,8 +15,16 @@
 
 # This module is for backward compatibility of importlib.
 
+from __future__ import annotations
 
-def entry_points_get(entry_points, group):
+from typing import TYPE_CHECKING
+from typing import Any
+
+if TYPE_CHECKING:
+    from importlib.metadata import EntryPoint
+
+
+def entry_points_get(entry_points: Any, group: str) -> list[EntryPoint]:
     """Since Python 3.12 dictionary access is removed and replaced by new interface.
     see: https://github.com/python/cpython/issues/97781
     """

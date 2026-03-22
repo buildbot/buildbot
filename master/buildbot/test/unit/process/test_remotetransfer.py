@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
 import stat
 import tempfile
@@ -28,7 +30,7 @@ from buildbot.process import remotetransfer
 class TestFileWriter(unittest.TestCase):
     # test FileWriter.__init__() method.
 
-    def testInit(self):
+    def testInit(self) -> None:
         #
         # patch functions called in constructor
         #
@@ -66,7 +68,7 @@ class TestFileWriter(unittest.TestCase):
 
 
 class TestStringFileWriter(unittest.TestCase):
-    def testBasic(self):
+    def testBasic(self) -> None:
         sfw = remotetransfer.StringFileWriter()
         # StringFileWriter takes bytes or native string and outputs native strings
         sfw.remote_write(b'bytes')

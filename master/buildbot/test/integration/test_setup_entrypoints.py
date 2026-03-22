@@ -14,16 +14,23 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import importlib
 import inspect
 import os
 import warnings
+from typing import TYPE_CHECKING
+from typing import Any
 
 import twisted
 from packaging.version import parse as parse_version
 from twisted.trial import unittest
 from twisted.trial.unittest import SkipTest
 from zope.interface.verify import verifyClass
+
+if TYPE_CHECKING:
+    from zope.interface import Interface
 
 from buildbot.interfaces import IBuildStep
 from buildbot.interfaces import IChangeSource
@@ -32,7 +39,7 @@ from buildbot.interfaces import IWorker
 from buildbot.plugins.db import get_plugins
 
 
-def get_python_module_contents(package_name):
+def get_python_module_contents(package_name: str) -> set[str]:
     spec = importlib.util.find_spec(package_name)
     if spec is None or spec.origin is None:
         return set()
@@ -63,7 +70,7 @@ def get_python_module_contents(package_name):
 # NOTE: when running this test locally, make sure to reinstall master after every change to pick up
 # new entry points.
 class TestSetupPyEntryPoints(unittest.TestCase):
-    def test_changes(self):
+    def test_changes(self) -> None:
         known_not_exported = {
             'buildbot.changes.gerritchangesource.GerritChangeSourceBase',
             'buildbot.changes.base.ReconfigurablePollingChangeSource',
@@ -73,7 +80,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'changes', 'buildbot.changes', IChangeSource, known_not_exported
         )
 
-    def test_schedulers(self):
+    def test_schedulers(self) -> None:
         known_not_exported = {
             'buildbot.schedulers.basic.BaseBasicScheduler',
             'buildbot.schedulers.timed.Timed',
@@ -87,7 +94,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'schedulers', 'buildbot.schedulers', IScheduler, known_not_exported
         )
 
-    def test_steps(self):
+    def test_steps(self) -> None:
         known_not_exported = {
             'buildbot.steps.download_secret_to_worker.RemoveWorkerFileSecret',
             'buildbot.steps.source.base.Source',
@@ -97,7 +104,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         }
         self.verify_plugins_registered('steps', 'buildbot.steps', IBuildStep, known_not_exported)
 
-    def test_util(self):
+    def test_util(self) -> None:
         # work around Twisted bug 9384.
         if parse_version(twisted.__version__) < parse_version("18.9.0"):
             raise SkipTest('manhole.py can not be imported on old twisted and new python')
@@ -168,7 +175,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         }
         self.verify_plugins_registered('util', 'buildbot.util', None, known_not_exported)
 
-    def test_reporters(self):
+    def test_reporters(self) -> None:
         known_not_exported = {
             'buildbot.reporters.base.ReporterBase',
             'buildbot.reporters.generators.utils.BuildStatusGeneratorMixin',
@@ -201,7 +208,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         }
         self.verify_plugins_registered('reporters', 'buildbot.reporters', None, known_not_exported)
 
-    def test_secrets(self):
+    def test_secrets(self) -> None:
         known_not_exported = {
             'buildbot.secrets.manager.SecretManager',
             'buildbot.secrets.providers.base.SecretProviderBase',
@@ -210,12 +217,12 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         }
         self.verify_plugins_registered('secrets', 'buildbot.secrets', None, known_not_exported)
 
-    def test_webhooks(self):
+    def test_webhooks(self) -> None:
         # in the case of webhooks the entry points list modules, not classes, so
         # verify_plugins_registered won't work. For now let's ignore this edge case
         get_plugins('webhooks', None, load_now=True)
 
-    def test_workers(self):
+    def test_workers(self) -> None:
         known_not_exported = {
             'buildbot.worker.upcloud.UpcloudLatentWorker',
             'buildbot.worker.base.AbstractWorker',
@@ -227,8 +234,12 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         self.verify_plugins_registered('worker', 'buildbot.worker', IWorker, known_not_exported)
 
     def verify_plugins_registered(
-        self, plugin_type, module_name, interface, known_not_exported=None
-    ):
+        self,
+        plugin_type: str,
+        module_name: str,
+        interface: type[Interface] | None,
+        known_not_exported: set[str] | None = None,
+    ) -> None:
         # This will verify whether we can load plugins, i.e. whether the entry points are valid.
         plugins = get_plugins(plugin_type, interface, load_now=True)
 
@@ -245,14 +256,14 @@ class TestSetupPyEntryPoints(unittest.TestCase):
         self.assertEqual(not_exported_classes, set())
         self.assertEqual(known_not_exported - existing_classes, set())
 
-    def class_provides_iface(self, interface, klass):
+    def class_provides_iface(self, interface: type[Interface], klass: type[Any]) -> bool:
         try:
             verifyClass(interface, klass)
             return True
         except Exception:
             return False
 
-    def get_existing_classes(self, module_name, interface):
+    def get_existing_classes(self, module_name: str, interface: type[Interface] | None) -> set[str]:
         existing_modules = get_python_module_contents(module_name)
         existing_classes = set()
 

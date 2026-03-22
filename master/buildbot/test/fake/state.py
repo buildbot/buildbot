@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import Any
+
 
 class State:
     """
@@ -22,5 +26,5 @@ class State:
     attributes
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self.__dict__.update(kwargs)

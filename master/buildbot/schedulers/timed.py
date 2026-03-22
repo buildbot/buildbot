@@ -35,7 +35,10 @@ from buildbot.schedulers import base
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from collections.abc import Sequence
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 # States of objects which have to be observed are registered in the data base table `object_state`.
 # `objectid` in the `object_state` refers to the object from the `object` table.
@@ -85,6 +88,8 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
     before the service stops.
     """
 
+    codebases: Any
+
     compare_attrs: ClassVar[Sequence[str]] = (
         'reason',
         'createAbsoluteSourceStamps',
@@ -99,32 +104,32 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
     class NoBranch:
         pass
 
-    def __init__(self, name, builderNames, **kwargs):
+    def __init__(self, name: str, builderNames: Any, **kwargs: Any) -> None:
         super().__init__(name=name, builderNames=builderNames, **kwargs)
 
-        self.lastActuated = None
+        self.lastActuated: float | None = None
 
         # A lock to make sure that each actuation occurs without interruption.
         # This lock governs actuateAt, actuateAtTimer, and actuateOk
         self.actuationLock = defer.DeferredLock()
         self.actuateOk = False
-        self.actuateAt = None
-        self.actuateAtTimer = None
+        self.actuateAt: float | None = None
+        self.actuateAtTimer: Any = None
 
-        self.is_first_build = None
+        self.is_first_build: bool | None = None
 
     def checkConfig(  # type: ignore[override]
         self,
-        builderNames,
-        reason='',
-        createAbsoluteSourceStamps=False,
-        onlyIfChanged=False,
-        branch=NoBranch,
-        change_filter=None,
-        fileIsImportant=None,
-        onlyImportant=False,
+        builderNames: Any,
+        reason: str = '',
+        createAbsoluteSourceStamps: bool = False,
+        onlyIfChanged: bool = False,
+        branch: Any = NoBranch,
+        change_filter: Any = None,
+        fileIsImportant: Callable[..., bool] | None = None,
+        onlyImportant: bool = False,
         **kwargs: Any,
-    ):
+    ) -> None:
         super().checkConfig(builderNames=builderNames, **kwargs)
 
         if fileIsImportant and not callable(fileIsImportant):
@@ -133,16 +138,16 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
     @defer.inlineCallbacks
     def reconfigService(  # type: ignore[override]
         self,
-        builderNames,
-        reason='',
-        createAbsoluteSourceStamps=False,
-        onlyIfChanged=False,
-        branch=NoBranch,
-        change_filter=None,
-        fileIsImportant=None,
-        onlyImportant=False,
+        builderNames: Any,
+        reason: str = '',
+        createAbsoluteSourceStamps: bool = False,
+        onlyIfChanged: bool = False,
+        branch: Any = NoBranch,
+        change_filter: Any = None,
+        fileIsImportant: Callable[..., bool] | None = None,
+        onlyImportant: bool = False,
         **kwargs: Any,
-    ):
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(builderNames=builderNames, **kwargs)
 
         self.reason = util.bytes2unicode(reason % {'name': self.name})
@@ -168,7 +173,7 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
                 yield self.master.db.schedulers.flushChangeClassifications(self.serviceid)
 
     @defer.inlineCallbacks
-    def activate(self):
+    def activate(self) -> InlineCallbacksType[None]:
         yield super().activate()
 
         if not self.enabled:
@@ -199,7 +204,7 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
         return None
 
     @defer.inlineCallbacks
-    def deactivate(self):
+    def deactivate(self) -> InlineCallbacksType[None]:
         yield super().deactivate()
 
         if not self.enabled:
@@ -208,7 +213,7 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
         # shut down any pending actuation, and ensure that we wait for any
         # current actuation to complete by acquiring the lock.  This ensures
         # that no build will be scheduled after deactivate is complete.
-        def stop_actuating():
+        def stop_actuating() -> None:
             self.actuateOk = False
             self.actuateAt = None
             if self.actuateAtTimer:
@@ -221,7 +226,7 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
     # Scheduler methods
 
     @defer.inlineCallbacks
-    def gotChange(self, change, important):
+    def gotChange(self, change: Any, important: bool) -> InlineCallbacksType[None]:  # type: ignore[override]
         # both important and unimportant changes on our branch are recorded, as
         # we will include all such changes in any buildsets we start.  Note
         # that we must check the branch here because it is not included in the
@@ -235,7 +240,7 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
             yield self.recordChange(change)
 
     @defer.inlineCallbacks
-    def startBuild(self):
+    def startBuild(self) -> InlineCallbacksType[None]:
         if not self.enabled:
             log.msg(
                 format='ignoring build from %(name)s because scheduler '
@@ -290,18 +295,20 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
             # a build of the latest revision, whatever that is
             sourcestamps = [{"codebase": cb} for cb in self.codebases]
             yield self.addBuildsetForSourceStampsWithDefaults(
-                reason=self.reason, sourcestamps=sourcestamps, priority=self.priority
+                reason=self.reason,
+                sourcestamps=sourcestamps,
+                priority=self.priority,  # type: ignore[arg-type]
             )
         self.is_first_build = False
 
-    def getCodebaseDict(self, codebase):
+    def getCodebaseDict(self, codebase: str) -> defer.Deferred[Any]:
         if self.createAbsoluteSourceStamps:
             return super().getCodebaseDict(codebase)
         return self.codebases[codebase]
 
     # Timed methods
 
-    def getNextBuildTime(self, lastActuation):
+    def getNextBuildTime(self, lastActuation: float | None) -> defer.Deferred[float | None]:
         """
         Called by to calculate the next time to actuate a BuildSet.  Override
         in subclasses.  To trigger a fresh call to this method, use
@@ -314,7 +321,7 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
         """
         raise NotImplementedError
 
-    def scheduleNextBuild(self):
+    def scheduleNextBuild(self) -> defer.Deferred[None]:
         """
         Schedule the next build, re-invoking L{getNextBuildTime}.  This can be
         called at any time, and it will avoid contention with builds being
@@ -324,7 +331,9 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
         """
         return self.actuationLock.run(self._scheduleNextBuild_locked)
 
-    def maybe_force_build_on_unimportant_changes(self, current_actuation_time):
+    def maybe_force_build_on_unimportant_changes(
+        self, current_actuation_time: float | None
+    ) -> bool:
         """
         Allows forcing a build in cases when there are no important changes and onlyIfChanged is
         enabled.
@@ -333,18 +342,18 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
 
     # utilities
 
-    def now(self):
+    def now(self) -> float:
         "Similar to util.now, but patchable by tests"
         return util.now(self.master.reactor)
 
-    def current_utc_offset(self, tm):
+    def current_utc_offset(self, tm: float) -> float:
         return (
             datetime.datetime.fromtimestamp(tm).replace(tzinfo=datetime.timezone.utc)
             - datetime.datetime.fromtimestamp(tm, datetime.timezone.utc)
         ).total_seconds()
 
     @defer.inlineCallbacks
-    def _scheduleNextBuild_locked(self):
+    def _scheduleNextBuild_locked(self) -> InlineCallbacksType[None]:
         # clear out the existing timer
         if self.actuateAtTimer:
             self.actuateAtTimer.cancel()
@@ -368,13 +377,13 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
             self.actuateAtTimer = self.master.reactor.callLater(untilNext, self._actuate)
 
     @defer.inlineCallbacks
-    def _actuate(self):
+    def _actuate(self) -> InlineCallbacksType[None]:
         # called from the timer when it's time to start a build
         self.actuateAtTimer = None
         self.lastActuated = self.actuateAt
 
         @defer.inlineCallbacks
-        def set_state_and_start():
+        def set_state_and_start() -> InlineCallbacksType[None]:
             # bail out if we shouldn't be actuating anymore
             if not self.actuateOk:
                 return
@@ -400,11 +409,11 @@ class Periodic(Timed):
 
     def checkConfig(  # type: ignore[override]
         self,
-        builderNames,
-        periodicBuildTimer,
-        reason="The Periodic scheduler named '%(name)s' triggered this build",
+        builderNames: Any,
+        periodicBuildTimer: int,
+        reason: str = "The Periodic scheduler named '%(name)s' triggered this build",
         **kwargs: Any,
-    ):
+    ) -> None:
         super().checkConfig(builderNames=builderNames, reason=reason, **kwargs)
 
         if periodicBuildTimer <= 0:
@@ -413,15 +422,15 @@ class Periodic(Timed):
     @defer.inlineCallbacks
     def reconfigService(  # type: ignore[override]
         self,
-        builderNames,
-        periodicBuildTimer,
-        reason="The Periodic scheduler named '%(name)s' triggered this build",
+        builderNames: Any,
+        periodicBuildTimer: int,
+        reason: str = "The Periodic scheduler named '%(name)s' triggered this build",
         **kwargs: Any,
-    ):
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(builderNames=builderNames, reason=reason, **kwargs)
         self.periodicBuildTimer = periodicBuildTimer
 
-    def getNextBuildTime(self, lastActuated):
+    def getNextBuildTime(self, lastActuated: float | None) -> defer.Deferred[float | None]:
         if lastActuated is None:
             return defer.succeed(self.now())  # meaning "ASAP"
         return defer.succeed(lastActuated + self.periodicBuildTimer)
@@ -443,37 +452,37 @@ class NightlyBase(Timed):
 
     def checkConfig(  # type: ignore[override]
         self,
-        builderNames,
-        minute=0,
-        hour='*',
-        dayOfMonth='*',
-        month='*',
-        dayOfWeek='*',
-        force_at_minute=None,
-        force_at_hour=None,
-        force_at_day_of_month=None,
-        force_at_month=None,
-        force_at_day_of_week=None,
+        builderNames: Any,
+        minute: Any = 0,
+        hour: Any = '*',
+        dayOfMonth: Any = '*',
+        month: Any = '*',
+        dayOfWeek: Any = '*',
+        force_at_minute: Any = None,
+        force_at_hour: Any = None,
+        force_at_day_of_month: Any = None,
+        force_at_month: Any = None,
+        force_at_day_of_week: Any = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         super().checkConfig(builderNames=builderNames, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(  # type: ignore[override]
         self,
-        builderNames,
-        minute=0,
-        hour='*',
-        dayOfMonth='*',
-        month='*',
-        dayOfWeek='*',
-        force_at_minute=None,
-        force_at_hour=None,
-        force_at_day_of_month=None,
-        force_at_month=None,
-        force_at_day_of_week=None,
+        builderNames: Any,
+        minute: Any = 0,
+        hour: Any = '*',
+        dayOfMonth: Any = '*',
+        month: Any = '*',
+        dayOfWeek: Any = '*',
+        force_at_minute: Any = None,
+        force_at_hour: Any = None,
+        force_at_day_of_month: Any = None,
+        force_at_month: Any = None,
+        force_at_day_of_week: Any = None,
         **kwargs: Any,
-    ):
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(builderNames=builderNames, **kwargs)
 
         self.minute = minute
@@ -490,7 +499,7 @@ class NightlyBase(Timed):
             or force_at_day_of_week is not None
         )
 
-        def default_if_none(value, default):
+        def default_if_none(value: Any, default: Any) -> Any:
             if value is None:
                 return default
             return value
@@ -501,7 +510,7 @@ class NightlyBase(Timed):
         self.force_at_month = default_if_none(force_at_month, "*")
         self.force_at_day_of_week = default_if_none(force_at_day_of_week, "*")
 
-    def _timeToCron(self, time, isDayOfWeek=False):
+    def _timeToCron(self, time: Any, isDayOfWeek: bool = False) -> Any:
         if isinstance(time, int):
             if isDayOfWeek:
                 # Convert from Mon = 0 format to Sun = 0 format for use in
@@ -512,7 +521,7 @@ class NightlyBase(Timed):
         if isinstance(time, str):
             if isDayOfWeek:
                 # time could be a comma separated list of values, e.g. "5,sun"
-                time_array = str(time).split(',')
+                time_array: list[Any] = str(time).split(',')
                 for i, time_val in enumerate(time_array):
                     try:
                         # try to convert value in place
@@ -532,7 +541,9 @@ class NightlyBase(Timed):
 
         return ','.join([str(s) for s in time])  # Convert the list to a string
 
-    def _times_to_cron_line(self, minute, hour, day_of_month, month, day_of_week):
+    def _times_to_cron_line(
+        self, minute: Any, hour: Any, day_of_month: Any, month: Any, day_of_week: Any
+    ) -> str:
         return " ".join([
             str(self._timeToCron(minute)),
             str(self._timeToCron(hour)),
@@ -541,13 +552,13 @@ class NightlyBase(Timed):
             str(self._timeToCron(day_of_week, True)),
         ])
 
-    def _time_to_croniter_tz_time(self, ts):
+    def _time_to_croniter_tz_time(self, ts: float) -> datetime.datetime:
         # By default croniter interprets input timestamp in UTC timezone. However, the scheduler
         # works in local timezone, so appropriate timezone information needs to be passed
         tz = datetime.timezone(datetime.timedelta(seconds=self.current_utc_offset(ts)))
         return datetime.datetime.fromtimestamp(ts, tz)
 
-    def getNextBuildTime(self, lastActuated):
+    def getNextBuildTime(self, lastActuated: float | None) -> defer.Deferred[float | None]:
         ts = lastActuated or self.now()
         sched = self._times_to_cron_line(
             self.minute,
@@ -561,7 +572,9 @@ class NightlyBase(Timed):
         nextdate = cron.get_next(float)
         return defer.succeed(nextdate)
 
-    def maybe_force_build_on_unimportant_changes(self, current_actuation_time):
+    def maybe_force_build_on_unimportant_changes(
+        self, current_actuation_time: float | None
+    ) -> bool:
         if not self.force_at_enabled:
             return False
         cron_string = self._times_to_cron_line(
@@ -573,54 +586,55 @@ class NightlyBase(Timed):
         )
 
         return croniter.croniter.match(
-            cron_string, self._time_to_croniter_tz_time(current_actuation_time)
+            cron_string,
+            self._time_to_croniter_tz_time(current_actuation_time),  # type: ignore[arg-type]
         )
 
 
 class Nightly(NightlyBase):
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         *args: Any,
-        reason="The Nightly scheduler named '%(name)s' triggered this build",
+        reason: str = "The Nightly scheduler named '%(name)s' triggered this build",
         **kwargs: Any,
-    ):
+    ) -> None:
         super().checkConfig(*args, reason=reason, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(
         self,
         *args: Any,
-        reason="The Nightly scheduler named '%(name)s' triggered this build",
+        reason: str = "The Nightly scheduler named '%(name)s' triggered this build",
         **kwargs: Any,
-    ):
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(*args, reason=reason, **kwargs)
 
 
 @implementer(ITriggerableScheduler)
 class NightlyTriggerable(NightlyBase):
-    def __init__(self, *args: Any, **kwargs: Any):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._lastTrigger = None
+        self._lastTrigger: tuple[Any, ...] | None = None
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         *args: Any,
-        reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
+        reason: str = "The NightlyTriggerable scheduler named '%(name)s' triggered this build",
         **kwargs: Any,
-    ):
+    ) -> None:
         super().checkConfig(*args, reason=reason, **kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(
         self,
         *args: Any,
-        reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
+        reason: str = "The NightlyTriggerable scheduler named '%(name)s' triggered this build",
         **kwargs: Any,
-    ):
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(*args, reason=reason, **kwargs)
 
     @defer.inlineCallbacks
-    def activate(self):
+    def activate(self) -> InlineCallbacksType[None]:
         yield super().activate()
 
         if not self.enabled:
@@ -657,12 +671,12 @@ class NightlyTriggerable(NightlyBase):
 
     def trigger(
         self,
-        waited_for,
-        sourcestamps=None,
-        set_props=None,
-        parent_buildid=None,
-        parent_relationship=None,
-    ):
+        waited_for: bool,
+        sourcestamps: list[Any] | None = None,
+        set_props: Any = None,
+        parent_buildid: int | None = None,
+        parent_relationship: str | None = None,
+    ) -> tuple[defer.Deferred[Any], defer.Deferred[Any]]:
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
         assert isinstance(sourcestamps, list), "trigger requires a list of sourcestamps"
@@ -686,7 +700,7 @@ class NightlyTriggerable(NightlyBase):
         return (defer.succeed((None, {})), d.addCallback(lambda _: buildstep.SUCCESS))
 
     @defer.inlineCallbacks
-    def startBuild(self):
+    def startBuild(self) -> InlineCallbacksType[None]:
         if not self.enabled:
             log.msg(
                 format='ignoring build from %(name)s because scheduler '
@@ -715,5 +729,5 @@ class NightlyTriggerable(NightlyBase):
             properties=props,
             parent_buildid=parent_buildid,
             parent_relationship=parent_relationship,
-            priority=self.priority,
+            priority=self.priority,  # type: ignore[arg-type]
         )

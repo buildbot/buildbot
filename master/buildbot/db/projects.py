@@ -17,12 +17,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from typing import Any
 
 from buildbot.db import base
 from buildbot.util.sautils import hash_columns
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    import sqlalchemy as sa
     from twisted.internet import defer
 
 
@@ -36,7 +38,7 @@ class ProjectModel:
     description_html: str | None
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -68,7 +70,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
         )
 
     def get_project(self, projectid: int) -> defer.Deferred[ProjectModel | None]:
-        def thd(conn) -> ProjectModel | None:
+        def thd(conn: sa.engine.Connection) -> ProjectModel | None:
             q = self.db.model.projects.select().where(
                 self.db.model.projects.c.id == projectid,
             )
@@ -84,7 +86,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def get_projects(self) -> defer.Deferred[list[ProjectModel]]:
-        def thd(conn) -> list[ProjectModel]:
+        def thd(conn: sa.engine.Connection) -> list[ProjectModel]:
             tbl = self.db.model.projects
             q = tbl.select()
             q = q.order_by(tbl.c.name)
@@ -94,7 +96,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def get_active_projects(self) -> defer.Deferred[list[ProjectModel]]:
-        def thd(conn) -> list[ProjectModel]:
+        def thd(conn: sa.engine.Connection) -> list[ProjectModel]:
             projects_tbl = self.db.model.projects
             builders_tbl = self.db.model.builders
             bm_tbl = self.db.model.builder_masters
@@ -114,7 +116,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
         description_format: str | None,
         description_html: str | None,
     ) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             q = self.db.model.projects.update().where(self.db.model.projects.c.id == projectid)
             conn.execute(
                 q.values(
@@ -127,7 +129,7 @@ class ProjectsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do_with_transaction(thd)
 
-    def _model_from_row(self, row):
+    def _model_from_row(self, row: Any) -> ProjectModel:
         return ProjectModel(
             id=row.id,
             name=row.name,

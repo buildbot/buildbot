@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import Any
 
 from twisted.internet import defer
 
@@ -27,20 +30,21 @@ class BuildStepController:
     https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self.step = ControllableBuildStep(self, **kwargs)
         self.running = False
-        self.auto_finish_results = None
-        self._run_deferred = None
+        self.auto_finish_results: int | None = None
+        self._run_deferred: defer.Deferred[int] | None = None
 
-    def finish_step(self, result):
+    def finish_step(self, result: int) -> None:
         assert self.running
         self.running = False
         d = self._run_deferred
         self._run_deferred = None
+        assert d is not None
         d.callback(result)
 
-    def auto_finish_step(self, result):
+    def auto_finish_step(self, result: int) -> None:
         self.auto_finish_results = result
         if self.running:
             self.finish_step(result)
@@ -53,11 +57,11 @@ class ControllableBuildStep(BuildStep):
 
     name = "controllableStep"
 
-    def __init__(self, controller, **kwargs):
+    def __init__(self, controller: BuildStepController, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._controller = controller
 
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
         if self._controller.auto_finish_results is not None:
             return defer.succeed(self._controller.auto_finish_results)
         assert not self._controller.running
@@ -65,5 +69,5 @@ class ControllableBuildStep(BuildStep):
         self._controller._run_deferred = defer.Deferred()
         return self._controller._run_deferred
 
-    def interrupt(self, reason):
+    def interrupt(self, reason: str | Exception) -> None:  # type: ignore[override]
         self._controller.finish_step(CANCELLED)

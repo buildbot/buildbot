@@ -103,7 +103,7 @@ class AvatarGitHub(AvatarBase):
 
         self.client = yield httpclientservice.HTTPSession(
             self.master.httpservice,
-            self.github_api_endpoint,
+            self.github_api_endpoint,  # type: ignore[arg-type]
             headers=headers,
             debug=self.debug,
             verify=self.verify,

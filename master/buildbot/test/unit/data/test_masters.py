@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -29,6 +32,9 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 SOMETIME = 1349016870
 OTHERTIME = 1249016870
 
@@ -38,7 +44,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = masters.Master
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         self.master.name = "myname"
         yield self.master.db.insert_test_data([
@@ -50,33 +56,33 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing(self):
+    def test_get_existing(self) -> InlineCallbacksType[None]:
         master = yield self.callGet(('masters', 14))
 
         self.validateData(master)
         self.assertEqual(master['name'], 'master-14')
 
     @defer.inlineCallbacks
-    def test_get_builderid_existing(self):
+    def test_get_builderid_existing(self) -> InlineCallbacksType[None]:
         master = yield self.callGet(('builders', 23, 'masters', 13))
 
         self.validateData(master)
         self.assertEqual(master['name'], 'master-13')
 
     @defer.inlineCallbacks
-    def test_get_builderid_no_match(self):
+    def test_get_builderid_no_match(self) -> InlineCallbacksType[None]:
         master = yield self.callGet(('builders', 24, 'masters', 13))
 
         self.assertEqual(master, None)
 
     @defer.inlineCallbacks
-    def test_get_builderid_missing(self):
+    def test_get_builderid_missing(self) -> InlineCallbacksType[None]:
         master = yield self.callGet(('builders', 25, 'masters', 13))
 
         self.assertEqual(master, None)
 
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         master = yield self.callGet(('masters', 99))
 
         self.assertEqual(master, None)
@@ -87,7 +93,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = masters.Master
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         self.master.name = "myname"
         yield self.master.db.insert_test_data([
@@ -98,7 +104,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_get(self) -> InlineCallbacksType[None]:
         masters = yield self.callGet(('masters',))
 
         for m in masters:
@@ -107,7 +113,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([m['masterid'] for m in masters]), [13, 14])
 
     @defer.inlineCallbacks
-    def test_get_builderid(self):
+    def test_get_builderid(self) -> InlineCallbacksType[None]:
         masters = yield self.callGet(('builders', 22, 'masters'))
 
         for m in masters:
@@ -116,7 +122,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([m['masterid'] for m in masters]), [13])
 
     @defer.inlineCallbacks
-    def test_get_builderid_missing(self):
+    def test_get_builderid_missing(self) -> InlineCallbacksType[None]:
         masters = yield self.callGet(('builders', 23, 'masters'))
 
         self.assertEqual(masters, [])
@@ -124,21 +130,21 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = masters.Master(self.master)
 
-    def test_signature_masterActive(self):
+    def test_signature_masterActive(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.masterActive,  # fake
             self.rtype.masterActive,
         )  # real
-        def masterActive(self, name, masterid):
+        def masterActive(self: object, name: str, masterid: int) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_masterActive(self):
+    def test_masterActive(self) -> InlineCallbacksType[None]:
         self.reactor.advance(60)
 
         yield self.master.db.insert_test_data([
@@ -185,48 +191,48 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         )
         self.master.mq.productions = []
 
-    def test_signature_masterStopped(self):
+    def test_signature_masterStopped(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.masterStopped,  # fake
             self.rtype.masterStopped,
         )  # real
-        def masterStopped(self, name, masterid):
+        def masterStopped(self: object, name: str, masterid: int) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_masterStopped(self):
+    def test_masterStopped(self) -> InlineCallbacksType[None]:
         self.reactor.advance(60)
 
         yield self.master.db.insert_test_data([
-            fakedb.Master(id=13, name='aname', active=1, last_active=self.reactor.seconds()),
+            fakedb.Master(id=13, name='aname', active=1, last_active=self.reactor.seconds()),  # type: ignore[arg-type]
         ])
 
-        self.rtype._masterDeactivated = mock.Mock()
+        self.rtype._masterDeactivated = mock.Mock()  # type: ignore[method-assign]
         yield self.rtype.masterStopped(name='aname', masterid=13)
         self.rtype._masterDeactivated.assert_called_with(13, 'aname')
 
     @defer.inlineCallbacks
-    def test_masterStopped_already(self):
+    def test_masterStopped_already(self) -> InlineCallbacksType[None]:
         self.reactor.advance(60)
 
         yield self.master.db.insert_test_data([
             fakedb.Master(id=13, name='aname', active=0, last_active=0),
         ])
 
-        self.rtype._masterDeactivated = mock.Mock()
+        self.rtype._masterDeactivated = mock.Mock()  # type: ignore[method-assign]
         yield self.rtype.masterStopped(name='aname', masterid=13)
         self.rtype._masterDeactivated.assert_not_called()
 
-    def test_signature_expireMasters(self):
+    def test_signature_expireMasters(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.expireMasters,  # fake
             self.rtype.expireMasters,
         )  # real
-        def expireMasters(self, forceHouseKeeping=False):
+        def expireMasters(self: object, forceHouseKeeping: bool = False) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_expireMasters(self):
+    def test_expireMasters(self) -> InlineCallbacksType[None]:
         self.reactor.advance(60)
 
         yield self.master.db.insert_test_data([
@@ -234,7 +240,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             fakedb.Master(id=15, active=1, last_active=0),
         ])
 
-        self.rtype._masterDeactivated = mock.Mock()
+        self.rtype._masterDeactivated = mock.Mock()  # type: ignore[method-assign]
 
         # check after 10 minutes, and see #14 deactivated; #15 gets deactivated
         # by another master, so it's not included here
@@ -249,7 +255,7 @@ class Master(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.rtype._masterDeactivated.assert_called_with(14, 'master-14')
 
     @defer.inlineCallbacks
-    def test_masterDeactivated(self):
+    def test_masterDeactivated(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Master(id=14, name='other', active=0, last_active=0),
             # set up a running build with some steps

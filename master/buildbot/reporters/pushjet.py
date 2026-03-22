@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log as twlog
@@ -29,6 +33,9 @@ from buildbot.util import httpclientservice
 
 from .utils import merge_reports_prop
 from .utils import merge_reports_prop_take_first
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 ENCODING = 'utf8'
 
@@ -47,16 +54,26 @@ DEFAULT_MSG_TEMPLATE = (
 
 
 class PushjetNotifier(ReporterBase):
-    def checkConfig(self, secret, levels=None, base_url='https://api.pushjet.io', generators=None):
+    def checkConfig(  # type: ignore[override]
+        self,
+        secret: Any,
+        levels: dict[str, int] | None = None,
+        base_url: str = 'https://api.pushjet.io',
+        generators: list[Any] | None = None,
+    ) -> None:
         if generators is None:
             generators = self._create_default_generators()
 
         super().checkConfig(generators=generators)
 
     @defer.inlineCallbacks
-    def reconfigService(
-        self, secret, levels=None, base_url='https://api.pushjet.io', generators=None
-    ):
+    def reconfigService(  # type: ignore[override]
+        self,
+        secret: Any,
+        levels: dict[str, int] | None = None,
+        base_url: str = 'https://api.pushjet.io',
+        generators: list[Any] | None = None,
+    ) -> InlineCallbacksType[None]:
         secret = yield self.renderSecrets(secret)
 
         if generators is None:
@@ -65,22 +82,24 @@ class PushjetNotifier(ReporterBase):
         yield super().reconfigService(generators=generators)
         self.secret = secret
         if levels is None:
-            self.levels = {}
+            self.levels: dict[str, int] = {}
         else:
             self.levels = levels
-        self._http = yield httpclientservice.HTTPSession(self.master.httpservice, base_url)
+        self._http: httpclientservice.HTTPSession = yield httpclientservice.HTTPSession(
+            self.master.httpservice, base_url
+        )
 
-    def _create_default_generators(self):
+    def _create_default_generators(self) -> list[Any]:
         formatter = MessageFormatter(template_type='html', template=DEFAULT_MSG_TEMPLATE)
         return [BuildStatusGenerator(message_formatter=formatter)]
 
-    def sendMessage(self, reports):
+    def sendMessage(self, reports: list[Any]) -> Any:
         body = merge_reports_prop(reports, 'body')
         subject = merge_reports_prop_take_first(reports, 'subject')
         results = merge_reports_prop(reports, 'results')
         worker = merge_reports_prop_take_first(reports, 'worker')
 
-        msg = {'message': body, 'title': subject}
+        msg: dict[str, Any] = {'message': body, 'title': subject}
 
         level = self.levels.get(LEVELS[results] if worker is None else 'worker_missing')
         if level is not None:
@@ -88,7 +107,7 @@ class PushjetNotifier(ReporterBase):
 
         return self.sendNotification(msg)
 
-    def sendNotification(self, params):
+    def sendNotification(self, params: dict[str, Any]) -> Any:
         twlog.msg("sending pushjet notification")
         params.update({"secret": self.secret})
         return self._http.post('/message', data=params)

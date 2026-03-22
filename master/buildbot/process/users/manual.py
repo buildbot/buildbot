@@ -13,11 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import pbutil
 from buildbot.util import service
+
+if TYPE_CHECKING:
+    from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.protocols.manager.base import Registration
 
 # this class is known to contain cruft and will be looked at later, so
 # no current implementation utilizes it aside from scripts.runner.
@@ -30,10 +40,10 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
     perspective_commandline is called.
     """
 
-    def __init__(self, master):
+    def __init__(self, master: BuildMaster) -> None:
         self.master = master
 
-    def formatResults(self, op, results):
+    def formatResults(self, op: str, results: list) -> str:
         """
         This formats the results of the database operations for printing
         back to the caller
@@ -89,7 +99,14 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
         return formatted_results
 
     @defer.inlineCallbacks
-    def perspective_commandline(self, op, bb_username, bb_password, ids, info):
+    def perspective_commandline(
+        self,
+        op: str,
+        bb_username: str,
+        bb_password: str,
+        ids: list[Any] | None,
+        info: list[Any] | None,
+    ) -> InlineCallbacksType[str]:
         """
         This performs the requested operations from the `buildbot user`
         call by calling the proper buildbot.db.users methods based on
@@ -139,7 +156,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
 
                 results.append(result)
         else:
-            for user in info:
+            for user in info:  # type: ignore[union-attr]
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
                 ident = user.pop('identifier')
@@ -186,8 +203,8 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                         if result:
                             results.append(result)
                             uid = result
-        results = self.formatResults(op, results)
-        return results
+        formatted = self.formatResults(op, results)
+        return formatted
 
 
 class CommandlineUserManager(service.AsyncMultiService):
@@ -196,7 +213,9 @@ class CommandlineUserManager(service.AsyncMultiService):
     so `buildbot user` calls get to perspective_commandline.
     """
 
-    def __init__(self, username=None, passwd=None, port=None):
+    def __init__(
+        self, username: str | None = None, passwd: str | None = None, port: str | None = None
+    ) -> None:
         super().__init__()
         assert username and passwd, (
             "A username and password pair must be given to connect and use `buildbot user`"
@@ -206,12 +225,12 @@ class CommandlineUserManager(service.AsyncMultiService):
 
         assert port, "A port must be specified for a PB connection"
         self.port = port
-        self.registration = None
+        self.registration: Registration | None = None
 
     @defer.inlineCallbacks
-    def startService(self):
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         # set up factory and register with buildbot.pbmanager
-        def factory(mind, username):
+        def factory(mind: object, username: str) -> CommandlineUserManagerPerspective:
             return CommandlineUserManagerPerspective(self.master)
 
         self.registration = yield self.master.pbmanager.register(
@@ -220,7 +239,7 @@ class CommandlineUserManager(service.AsyncMultiService):
         yield super().startService()
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         yield defer.maybeDeferred(service.AsyncMultiService.stopService, self)
 
         if self.registration:

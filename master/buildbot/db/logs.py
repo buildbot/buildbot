@@ -23,6 +23,7 @@ from collections.abc import AsyncIterator
 from contextlib import AbstractAsyncContextManager
 from functools import partial
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import TypeVar
 
 import sqlalchemy as sa
@@ -53,10 +54,12 @@ if TYPE_CHECKING:
     from typing import Callable
     from typing import Literal
 
-    from sqlalchemy.engine import Connection as SAConnection
+    from sqlalchemy.engine import RowMapping
     from twisted.internet.defer import Deferred
     from twisted.internet.interfaces import IReactorThreads
     from typing_extensions import ParamSpec
+
+    from buildbot.util.twisted import InlineCallbacksType
 
     _P = ParamSpec('_P')
 
@@ -84,7 +87,7 @@ class LogModel:
     type: LogType
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -158,12 +161,12 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         )
 
     @defer.inlineCallbacks
-    def startService(self):
+    def startService(self) -> InlineCallbacksType[None]:
         yield super().startService()
         self._compression_pool.start()
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         yield super().stopService()
         self._compression_pool.stop()
 
@@ -190,8 +193,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             raise LogCompressionFormatUnavailableError(msg)
         return compressor
 
-    def _getLog(self, whereclause) -> defer.Deferred[LogModel | None]:
-        def thd_getLog(conn) -> LogModel | None:
+    def _getLog(self, whereclause: Any) -> defer.Deferred[LogModel | None]:
+        def thd_getLog(conn: sa.engine.Connection) -> LogModel | None:
             q = self.db.model.logs.select()
             if whereclause is not None:
                 q = q.where(whereclause)
@@ -214,7 +217,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         return self._getLog((tbl.c.slug == slug) & (tbl.c.stepid == stepid))
 
     def getLogs(self, stepid: int | None = None) -> defer.Deferred[list[LogModel]]:
-        def thdGetLogs(conn) -> list[LogModel]:
+        def thdGetLogs(conn: sa.engine.Connection) -> list[LogModel]:
             tbl = self.db.model.logs
             q = tbl.select()
             if stepid is not None:
@@ -232,7 +235,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         last_line: int | None = None,
     ) -> AsyncGenerator[str, None]:
         def _thd_get_chunks(
-            conn: SAConnection,
+            conn: sa.engine.Connection,
             first_line: int,
             last_line: int | None,
             batch: int,
@@ -253,7 +256,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 for row in conn.execute(q)
             ]
 
-        async def _iter_chunks_batched():
+        async def _iter_chunks_batched() -> AsyncGenerator[tuple[int, int, int, bytes], None]:
             CHUNK_BATCH_SIZE = 100
             batch_first_line = first_line
             while chunks := await self.db.pool.do(
@@ -331,7 +334,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def addLog(self, stepid: int, name: str, slug: str, type: LogType) -> defer.Deferred[int]:
         assert type in 'tsh', "Log type must be one of t, s, or h"
 
-        def thdAddLog(conn) -> int:
+        def thdAddLog(conn: sa.engine.Connection) -> int:
             try:
                 r = conn.execute(
                     self.db.model.logs.insert(),
@@ -360,7 +363,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
     @async_to_deferred
     async def appendLog(self, logid: int, content: str) -> tuple[int, int] | None:
-        def _thd_get_numlines(conn: SAConnection) -> int | None:
+        def _thd_get_numlines(conn: sa.engine.Connection) -> int | None:
             q = sa.select(self.db.model.logs.c.num_lines)
             q = q.where(self.db.model.logs.c.id == logid)
             res = conn.execute(q)
@@ -369,7 +372,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return num_lines[0] if num_lines else None
 
         def _thd_insert_chunk(
-            conn: SAConnection,
+            conn: sa.engine.Connection,
             first_line: int,
             last_line: int,
             content: bytes,
@@ -388,7 +391,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             conn.commit()
             res.close()
 
-        def _thd_update_num_lines(conn: SAConnection, num_lines: int) -> None:
+        def _thd_update_num_lines(conn: sa.engine.Connection, num_lines: int) -> None:
             res = conn.execute(
                 self.db.model.logs
                 .update()
@@ -517,7 +520,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         return num_lines, last_line
 
     def finishLog(self, logid: int) -> defer.Deferred[None]:
-        def thdfinishLog(conn) -> None:
+        def thdfinishLog(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.logs
             q = tbl.update().where(tbl.c.id == logid)
             conn.execute(q.values(complete=1))
@@ -531,7 +534,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         """
         tbl = self.db.model.logchunks
 
-        def _thd_gather_chunks_to_process(conn: SAConnection) -> list[tuple[int, int]]:
+        def _thd_gather_chunks_to_process(conn: sa.engine.Connection) -> list[tuple[int, int]]:
             """
             returns the total size of chunks and a list of chunks to group.
             chunks list is empty if not force, and no chunks would be grouped.
@@ -600,7 +603,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return grouped_chunks
 
         def _thd_get_chunks_content(
-            conn: SAConnection,
+            conn: sa.engine.Connection,
             first_line: int,
             last_line: int,
         ) -> list[tuple[int, bytes]]:
@@ -618,7 +621,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return content
 
         def _thd_replace_chunks_by_new_grouped_chunk(
-            conn: SAConnection,
+            conn: sa.engine.Connection,
             first_line: int,
             last_line: int,
             new_compressed_id: int,
@@ -709,10 +712,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         return total_bytes_saved
 
     def deleteOldLogChunks(self, older_than_timestamp: int) -> defer.Deferred[int]:
-        def thddeleteOldLogs(conn) -> int:
+        def thddeleteOldLogs(conn: sa.engine.Connection) -> int:
             model = self.db.model
             res = conn.execute(sa.select(sa.func.count(model.logchunks.c.logid)))
-            count1 = res.fetchone()[0]
+            count1 = res.fetchone()[0]  # type: ignore[index]
             res.close()
 
             # update log types older than timestamps
@@ -749,31 +752,31 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 res.close()
 
             # query all logs with type 'd' and delete their chunks.
-            if self.db._engine.dialect.name == 'sqlite':
+            if self.db._engine.dialect.name == 'sqlite':  # type: ignore[union-attr]
                 # sqlite does not support delete with a join, so for this case we use a subquery,
                 # which is much slower
-                q = sa.select(model.logs.c.id)
-                q = q.select_from(model.logs)
-                q = q.where(model.logs.c.type == 'd')
+                select_q = sa.select(model.logs.c.id)
+                select_q = select_q.select_from(model.logs)
+                select_q = select_q.where(model.logs.c.type == 'd')
 
                 # delete their logchunks
-                q = model.logchunks.delete().where(model.logchunks.c.logid.in_(q))
+                delete_q = model.logchunks.delete().where(model.logchunks.c.logid.in_(select_q))
             else:
-                q = model.logchunks.delete()
-                q = q.where(model.logs.c.id == model.logchunks.c.logid)
-                q = q.where(model.logs.c.type == 'd')
+                delete_q = model.logchunks.delete()
+                delete_q = delete_q.where(model.logs.c.id == model.logchunks.c.logid)
+                delete_q = delete_q.where(model.logs.c.type == 'd')
 
-            res = conn.execute(q)
+            res = conn.execute(delete_q)
             conn.commit()
             res.close()
             res = conn.execute(sa.select(sa.func.count(model.logchunks.c.logid)))
-            count2 = res.fetchone()[0]
+            count2 = res.fetchone()[0]  # type: ignore[index]
             res.close()
             return count1 - count2
 
         return self.db.pool.do(thddeleteOldLogs)
 
-    def _model_from_row(self, row):
+    def _model_from_row(self, row: RowMapping) -> LogModel:
         return LogModel(
             id=row.id,
             name=row.name,

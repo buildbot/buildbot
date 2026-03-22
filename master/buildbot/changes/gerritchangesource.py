@@ -156,7 +156,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
     external_property_whitelist = ['*']
     property_basename = 'event'
 
-    def checkConfig(
+    def checkConfig(  # type: ignore[override]
         self,
         gitBaseURL: str | None = None,
         handled_events: tuple[str, ...] = ("patchset-created", "ref-updated"),
@@ -166,7 +166,7 @@ class GerritChangeSourceBase(base.ChangeSource, PullRequestMixin):
         if gitBaseURL is None:
             config.error("gitBaseURL must be specified")
 
-    def reconfigService(
+    def reconfigService(  # type: ignore[override]
         self,
         gitBaseURL: str | None = None,
         handled_events: tuple[str, ...] = ("patchset-created", "ref-updated"),
@@ -286,7 +286,7 @@ class GerritSshStreamEventsConnector:
             self._ended_deferred: defer.Deferred[None] = defer.Deferred()
 
         @defer.inlineCallbacks
-        def outLineReceived(self, line: bytes) -> InlineCallbacksType[None]:
+        def outLineReceived(self, line: bytes) -> InlineCallbacksType[None]:  # type: ignore[override]
             if self.connector.debug:
                 log.msg(
                     f"{self.connector.change_source.name} "
@@ -1017,7 +1017,9 @@ class GerritEventLogPoller(GerritChangeSourceBase):
             on_lines_received_cb=self._lines_received,
         )
         yield self._connector.setup()
-        self._poller = util.poll.Poller(self._connector.do_poll, self, self.master.reactor)
+        self._poller = util.poll.Poller(
+            type(self._connector).do_poll, self._connector, self.master.reactor
+        )
 
     def getFiles(self, change: str, patchset: str) -> defer.Deferred:
         return self._connector.get_files(change, patchset)

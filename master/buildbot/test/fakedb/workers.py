@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from buildbot.test.fakedb.row import Row
 
 
@@ -24,8 +26,14 @@ class Worker(Row):
     id_column = 'id'
 
     def __init__(
-        self, id=None, name='some:worker', info=None, paused=0, pause_reason=None, graceful=0
-    ):
+        self,
+        id: int | None = None,
+        name: str = 'some:worker',
+        info: dict[str, Any] | None = None,
+        paused: int = 0,
+        pause_reason: str | None = None,
+        graceful: int = 0,
+    ) -> None:
         if info is None:
             info = {"a": "b"}
         super().__init__(
@@ -38,7 +46,9 @@ class ConnectedWorker(Row):
 
     id_column = 'id'
 
-    def __init__(self, id=None, masterid=None, workerid=None):
+    def __init__(
+        self, id: int | None = None, masterid: int | None = None, workerid: int | None = None
+    ) -> None:
         super().__init__(id=id, masterid=masterid, workerid=workerid)
 
 
@@ -47,5 +57,7 @@ class ConfiguredWorker(Row):
 
     id_column = 'id'
 
-    def __init__(self, id=None, buildermasterid=None, workerid=None):
+    def __init__(
+        self, id: int | None = None, buildermasterid: int | None = None, workerid: int | None = None
+    ) -> None:
         super().__init__(id=id, buildermasterid=buildermasterid, workerid=workerid)

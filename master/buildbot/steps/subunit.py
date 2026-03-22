@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import io
+from typing import TYPE_CHECKING
 from unittest import TestResult
 
 from twisted.internet import defer
@@ -25,6 +27,9 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
     """Observe a log that may contain subunit output.
@@ -33,7 +38,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
     parser in the most direct fashion.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         try:
             from subunit import PROGRESS_CUR  # noqa: PLC0415
@@ -51,41 +56,41 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.PROGRESS_POP = PROGRESS_POP
         self.warningio = io.BytesIO()
         self.protocol = TestProtocolServer(self, self.warningio)
-        self.skips = []
-        self.seen_tags = set()  # don't yet know what tags does in subunit
+        self.skips: list[tuple[object, object]] = []
+        self.seen_tags: set[str] = set()  # don't yet know what tags does in subunit
 
-    def outLineReceived(self, line):
+    def outLineReceived(self, line: str) -> None:
         # Impedance mismatch: subunit wants lines, observers get lines-no\n
         # Note that observers get already decoded lines whereas protocol wants bytes
         self.protocol.lineReceived(line.encode('utf-8') + b'\n')
 
-    def errLineReceived(self, line):
+    def errLineReceived(self, line: str) -> None:
         # Same note as in outLineReceived applies
         self.protocol.lineReceived(line.encode('utf-8') + b'\n')
 
-    def stopTest(self, test):
-        super().stopTest(test)
+    def stopTest(self, test: object) -> None:
+        super().stopTest(test)  # type: ignore[arg-type]
         self.step.setProgress('tests', self.testsRun)
 
-    def addSkip(self, test, detail):
+    def addSkip(self, test: object, detail: object) -> None:
         if hasattr(TestResult, 'addSkip'):
-            super().addSkip(test, detail)
+            super().addSkip(test, detail)  # type: ignore[arg-type]
         else:
             self.skips.append((test, detail))
 
-    def addError(self, test, err):
-        super().addError(test, err)
+    def addError(self, test: object, err: object) -> None:
+        super().addError(test, err)  # type: ignore[arg-type]
         self.issue(test, err)
 
-    def addFailure(self, test, err):
-        super().addFailure(test, err)
+    def addFailure(self, test: object, err: object) -> None:
+        super().addFailure(test, err)  # type: ignore[arg-type]
         self.issue(test, err)
 
-    def issue(self, test, err):
+    def issue(self, test: object, err: object) -> None:
         """An issue - failing, erroring etc test."""
         self.step.setProgress('tests failed', len(self.failures) + len(self.errors))
 
-    def tags(self, new_tags, gone_tags):
+    def tags(self, new_tags: set[str], gone_tags: set[str]) -> None:
         """Accumulate the seen tags."""
         self.seen_tags.update(new_tags)
 
@@ -96,7 +101,7 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
     """A ShellCommand that sniffs subunit output.
     """
 
-    def __init__(self, failureOnNoTests=False, *args, **kwargs):
+    def __init__(self, failureOnNoTests: bool = False, *args: object, **kwargs: object) -> None:
         kwargs = self.setupShellMixin(kwargs)
         super().__init__(*args, **kwargs)
 
@@ -107,7 +112,7 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         self.progressMetrics = (*self.progressMetrics, "tests", "tests failed")
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         cmd = yield self.makeRemoteShellCommand()
         yield self.runCommand(cmd)
 
@@ -138,7 +143,7 @@ class SubunitShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
             return FAILURE
         return SUCCESS
 
-    def getResultSummary(self):
+    def getResultSummary(self) -> dict[str, str]:
         failures = len(self._observer.failures)
         errors = len(self._observer.errors)
         skips = len(self._observer.skips)

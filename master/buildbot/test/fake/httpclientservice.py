@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import json as jsonmodule
+from typing import Any
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -35,24 +37,24 @@ log = Logger()
 
 @implementer(IHttpResponse)
 class ResponseWrapper:
-    def __init__(self, code, content, url=None):
+    def __init__(self, code: int, content: str | None = None, url: str | None = None) -> None:
         self._content = content
         self._code = code
         self._url = url
 
-    def content(self):
+    def content(self) -> defer.Deferred[bytes]:
         content = unicode2bytes(self._content)
-        return defer.succeed(content)
+        return defer.succeed(content)  # type: ignore[arg-type]
 
-    def json(self):
-        return defer.succeed(jsonmodule.loads(self._content))
+    def json(self) -> defer.Deferred[Any]:
+        return defer.succeed(jsonmodule.loads(self._content))  # type: ignore[arg-type]
 
     @property
-    def code(self):
+    def code(self) -> int:
         return self._code
 
     @property
-    def url(self):
+    def url(self) -> str | None:
         return self._url
 
 
@@ -68,14 +70,21 @@ class HTTPClientService(service.SharedService):
     """
 
     quiet = False
+    case: Any
 
     def __init__(
-        self, base_url, auth=None, headers=None, debug=False, verify=None, skipEncoding=False
-    ):
+        self,
+        base_url: str,
+        auth: Any = None,
+        headers: dict[str, str] | None = None,
+        debug: bool = False,
+        verify: Any = None,
+        skipEncoding: bool = False,
+    ) -> None:
         assert not base_url.endswith("/"), "baseurl should not end with /"
         super().__init__()
         self._session = httpclientservice.HTTPSession(
-            self,
+            self,  # type: ignore[arg-type]
             base_url,
             auth=auth,
             headers=headers,
@@ -84,15 +93,17 @@ class HTTPClientService(service.SharedService):
             skip_encoding=skipEncoding,
         )
 
-        self._expected = []
+        self._expected: list[dict[str, Any]] = []
 
-    def updateHeaders(self, headers):
+    def updateHeaders(self, headers: dict[str, str]) -> None:
         self._session.update_headers(headers)
 
     @classmethod
     @async_to_deferred
-    async def getService(cls, master, case, *args, **kwargs):
-        def assertNotCalled(self, *_args, **_kwargs):
+    async def getService(  # type: ignore[override]
+        cls, master: Any, case: Any, *args: Any, **kwargs: Any
+    ) -> HTTPClientService:
+        def assertNotCalled(self: Any, *_args: Any, **_kwargs: Any) -> None:
             case.fail(
                 f"HTTPClientService called with *{_args!r}, **{_kwargs!r} "
                 f"while should be called *{args!r} **{kwargs!r}"
@@ -101,30 +112,30 @@ class HTTPClientService(service.SharedService):
         case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
 
         service = await super().getService(master, *args, **kwargs)
-        service.case = case
-        case.addCleanup(service.assertNoOutstanding)
+        service.case = case  # type: ignore[attr-defined]
+        case.addCleanup(service.assertNoOutstanding)  # type: ignore[attr-defined]
 
         master.httpservice = service
 
-        return service
+        return service  # type: ignore[return-value]
 
     def expect(
         self,
-        method,
-        ep,
-        session=None,
-        params=None,
-        headers=None,
-        data=None,
-        json=None,
-        code=200,
-        content=None,
-        content_json=None,
-        files=None,
-        verify=None,
-        cert=None,
-        processing_delay_s=None,
-    ):
+        method: str,
+        ep: str,
+        session: Any = None,
+        params: Any = None,
+        headers: dict[str, str] | None = None,
+        data: Any = None,
+        json: Any = None,
+        code: int = 200,
+        content: str | None = None,
+        content_json: Any = None,
+        files: Any = None,
+        verify: Any = None,
+        cert: Any = None,
+        processing_delay_s: float | None = None,
+    ) -> ValueError | None:
         if content is not None and content_json is not None:
             return ValueError("content and content_json cannot be both specified")
 
@@ -148,7 +159,7 @@ class HTTPClientService(service.SharedService):
         })
         return None
 
-    def assertNoOutstanding(self):
+    def assertNoOutstanding(self) -> None:
         self.case.assertEqual(
             0, len(self._expected), f"expected more http requests:\n {self._expected!r}"
         )
@@ -156,21 +167,21 @@ class HTTPClientService(service.SharedService):
     @async_to_deferred
     async def _do_request(
         self,
-        session,
-        method,
-        ep,
-        params=None,
-        headers=None,
-        cookies=None,  # checks are not implemented
-        data=None,
-        json=None,
-        files=None,
-        auth=None,  # checks are not implemented
-        timeout=None,
-        verify=None,
-        cert=None,
-        allow_redirects=None,  # checks are not implemented
-        proxies=None,  # checks are not implemented
+        session: httpclientservice.HTTPSession,
+        method: str,
+        ep: str,
+        params: Any = None,
+        headers: dict[str, str] | None = None,
+        cookies: Any = None,  # checks are not implemented
+        data: Any = None,
+        json: Any = None,
+        files: Any = None,
+        auth: Any = None,  # checks are not implemented
+        timeout: Any = None,
+        verify: Any = None,
+        cert: Any = None,
+        allow_redirects: Any = None,  # checks are not implemented
+        proxies: Any = None,  # checks are not implemented
     ) -> IHttpResponse:
         if ep.startswith('http://') or ep.startswith('https://'):
             pass
@@ -269,17 +280,17 @@ class HTTPClientService(service.SharedService):
 
     # lets be nice to the auto completers, and don't generate that code
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
-    def get(self, ep, **kwargs):
+    def get(self, ep: str, **kwargs: Any) -> defer.Deferred[IHttpResponse]:
         return self._do_request(self._session, 'get', ep, **kwargs)
 
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
-    def put(self, ep, **kwargs):
+    def put(self, ep: str, **kwargs: Any) -> defer.Deferred[IHttpResponse]:
         return self._do_request(self._session, 'put', ep, **kwargs)
 
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
-    def delete(self, ep, **kwargs):
+    def delete(self, ep: str, **kwargs: Any) -> defer.Deferred[IHttpResponse]:
         return self._do_request(self._session, 'delete', ep, **kwargs)
 
     @deprecate.deprecated(versions.Version("buildbot", 4, 1, 0))
-    def post(self, ep, **kwargs):
+    def post(self, ep: str, **kwargs: Any) -> defer.Deferred[IHttpResponse]:
         return self._do_request(self._session, 'post', ep, **kwargs)

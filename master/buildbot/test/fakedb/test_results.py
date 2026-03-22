@@ -23,7 +23,9 @@ class TestName(Row):
 
     id_column = 'id'
 
-    def __init__(self, id=None, builderid=None, name='nam'):
+    def __init__(
+        self, id: int | None = None, builderid: int | None = None, name: str = 'nam'
+    ) -> None:
         super().__init__(id=id, builderid=builderid, name=name)
 
 
@@ -32,7 +34,9 @@ class TestCodePath(Row):
 
     id_column = 'id'
 
-    def __init__(self, id=None, builderid=None, path='path/to/file'):
+    def __init__(
+        self, id: int | None = None, builderid: int | None = None, path: str = 'path/to/file'
+    ) -> None:
         super().__init__(id=id, builderid=builderid, path=path)
 
 
@@ -43,15 +47,15 @@ class TestResult(Row):
 
     def __init__(
         self,
-        id=None,
-        builderid=None,
-        test_result_setid=None,
-        test_nameid=None,
-        test_code_pathid=None,
-        line=None,
-        duration_ns=None,
-        value=None,
-    ):
+        id: int | None = None,
+        builderid: int | None = None,
+        test_result_setid: int | None = None,
+        test_nameid: int | None = None,
+        test_code_pathid: int | None = None,
+        line: int | None = None,
+        duration_ns: int | None = None,
+        value: str | None = None,
+    ) -> None:
         super().__init__(
             id=id,
             builderid=builderid,

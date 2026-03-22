@@ -25,6 +25,7 @@ import getpass
 import sys
 import textwrap
 from typing import Any
+from typing import cast
 
 import sqlalchemy as sa
 from twisted.python import reflect
@@ -38,7 +39,7 @@ from buildbot.util import check_functional_environment
 # fact, they are interchanged several times.  Caveat legator.
 
 
-def validateMasterOption(master):
+def validateMasterOption(master: str) -> None:
     """
     Validate master (-m, --master) command line option.
 
@@ -51,8 +52,8 @@ def validateMasterOption(master):
     @raise usage.UsageError: on invalid master option
     """
     try:
-        _, port = master.split(":")
-        port = int(port)
+        _, port_str = master.split(":")
+        int(port_str)
     except (TypeError, ValueError) as e:
         raise usage.UsageError("master must have the form 'hostname:port'") from e
 
@@ -70,7 +71,7 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     ]
     optParameters: list[tuple[str, str | None, Any, str]] = []
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot upgrade-master [options] [<basedir>]"
 
     longdesc = textwrap.dedent("""
@@ -119,7 +120,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
         ],
     ]
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot create-master [options] [<basedir>]"
 
     longdesc = textwrap.dedent("""
@@ -152,7 +153,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     the newly-created BuildMaster object.
     """)
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         super().postOptions()
 
         # validate 'log-count' parameter
@@ -180,7 +181,7 @@ class StopOptions(base.BasedirMixin, base.SubcommandOptions):
         ["no-wait", None, "Don't wait for complete master shutdown"],
     ]
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot stop [<basedir>]"
 
 
@@ -201,7 +202,7 @@ class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
         ],
     ]
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot restart [<basedir>]"
 
 
@@ -221,7 +222,7 @@ class StartOptions(base.BasedirMixin, base.SubcommandOptions):
         ],
     ]
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot start [<basedir>]"
 
 
@@ -240,14 +241,14 @@ class ReconfigOptions(base.BasedirMixin, base.SubcommandOptions):
         ],
     ]
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot reconfig [<basedir>]"
 
 
 class SendChangeOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.sendchange.sendchange"
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self['properties'] = {}
 
@@ -292,17 +293,17 @@ class SendChangeOptions(base.SubcommandOptions):
 
     requiredOptions = ['who', 'master']
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot sendchange [options] filenames.."
 
-    def parseArgs(self, *args):
+    def parseArgs(self, *args: str) -> None:
         self['files'] = args
 
-    def opt_property(self, property):
+    def opt_property(self, property: str) -> None:
         name, value = property.split(':', 1)
         self['properties'][name] = value
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         super().postOptions()
 
         if self.get("revision_file"):
@@ -327,7 +328,7 @@ class SendChangeOptions(base.SubcommandOptions):
             self['comments'] = ""
 
         # fix up the auth with a password if none was given
-        auth = self.get('auth')
+        auth = cast(str, self.get('auth'))
         if ':' not in auth:
             pw = getpass.getpass(f"Enter password for '{auth}': ")
             auth = f"{auth}:{pw}"
@@ -337,7 +338,7 @@ class SendChangeOptions(base.SubcommandOptions):
         if self.get('vc') and self.get('vc') not in vcs:
             raise usage.UsageError(f"vc must be one of {', '.join(vcs)}")
 
-        validateMasterOption(self.get('master'))
+        validateMasterOption(self.get('master'))  # type: ignore[arg-type]
 
 
 class TryOptions(base.SubcommandOptions):
@@ -448,15 +449,15 @@ class TryOptions(base.SubcommandOptions):
         ['try_password', 'passwd'],
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self['builders'] = []
         self['properties'] = {}
 
-    def opt_builder(self, option):
+    def opt_builder(self, option: str) -> None:
         self['builders'].append(option)
 
-    def opt_properties(self, option):
+    def opt_properties(self, option: str) -> None:
         # We need to split the value of this option
         # into a dictionary of properties
         propertylist = option.split(",")
@@ -464,17 +465,17 @@ class TryOptions(base.SubcommandOptions):
             splitproperty = prop.split("=", 1)
             self['properties'][splitproperty[0]] = splitproperty[1]
 
-    def opt_property(self, option):
+    def opt_property(self, option: str) -> None:
         name, _, value = option.partition("=")
         self['properties'][name] = value
 
-    def opt_patchlevel(self, option):
+    def opt_patchlevel(self, option: str) -> None:
         self['patchlevel'] = int(option)
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot try [options]"
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         super().postOptions()
         opts = self.optionsFile
         if not self['builders']:
@@ -501,10 +502,10 @@ class TryServerOptions(base.SubcommandOptions):
     ]
     requiredOptions = ['jobdir']
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot tryserver [options]"
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         if not self['jobdir']:
             raise usage.UsageError('jobdir is required')
 
@@ -521,14 +522,14 @@ class CheckConfigOptions(base.SubcommandOptions):
         # twisted version (>=11.1.0) that supports it
         compData = usage.Completions(extraActions=[usage.CompleteFiles()])
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return (
             "Usage:\t\tbuildbot checkconfig [configFile]\n"
             + "\t\tIf not specified, the config file specified in "
             + "'buildbot.tac' from the current directory will be used"
         )
 
-    def parseArgs(self, *args):
+    def parseArgs(self, *args: str) -> None:
         if len(args) >= 1:
             self['configFile'] = args[0]
 
@@ -583,16 +584,16 @@ class UserOptions(base.SubcommandOptions):
     git, svn, hg, cvs, darcs, bzr, email
     """)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self['ids'] = []
         self['info'] = []
 
-    def opt_ids(self, option):
+    def opt_ids(self, option: str) -> None:
         id_list = option.split(",")
         self['ids'].extend(id_list)
 
-    def opt_info(self, option):
+    def opt_info(self, option: str) -> None:
         # splits info into type/value dictionary, appends to info
         info_list = option.split(",")
         info_elem = {}
@@ -613,10 +614,10 @@ class UserOptions(base.SubcommandOptions):
                 info_elem[split_info[0]] = split_info[1]
             self['info'].append(info_elem)
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot user [options]"
 
-    def _checkValidTypes(self, info):
+    def _checkValidTypes(self, info: list[dict[str, str]]) -> None:
         from buildbot.process.users import users  # noqa: PLC0415
 
         valid = set(["identifier", "email", *users.srcs])
@@ -628,10 +629,10 @@ class UserOptions(base.SubcommandOptions):
                         f"Type not a valid attr_type, must be in: {', '.join(valid)}"
                     )
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         super().postOptions()
 
-        validateMasterOption(self.get('master'))
+        validateMasterOption(self.get('master'))  # type: ignore[arg-type]
 
         op = self.get('op')
         if not op:
@@ -650,8 +651,8 @@ class UserOptions(base.SubcommandOptions):
             if not bb_username or not bb_password:
                 raise usage.UsageError("Must specify both bb_username and bb_password or neither.")
 
-        info = self.get('info')
-        ids = self.get('ids')
+        info = cast(list[dict[str, str]], self.get('info'))
+        ids = cast(list[str], self.get('ids'))
 
         # check for erroneous args
         if not info and not ids:
@@ -685,7 +686,7 @@ class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
         ['global', 'g', None, "output a js script, that sets a global, for inclusion in testsuite"],
     ]
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:   buildbot dataspec [options]"
 
 
@@ -732,7 +733,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     ]
     optParameters: list[tuple[str, str | None, Any, str]] = []
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot cleanupdb [options] [<basedir>]"
 
     longdesc = textwrap.dedent("""
@@ -760,10 +761,10 @@ class CopyDBOptions(base.BasedirMixin, base.SubcommandOptions):
         ('ignore-fk-error-rows', None, 'Ignore rows that have foreign key constraint errors'),
     ]
 
-    def getSynopsis(self):
+    def getSynopsis(self) -> str:
         return "Usage:    buildbot copydb <destination_url> [<basedir>]"
 
-    def parseArgs(self, *args):
+    def parseArgs(self, *args: str) -> None:
         if len(args) == 0:
             raise usage.UsageError("incorrect number of arguments")
 
@@ -836,21 +837,21 @@ class Options(usage.Options):
         ["copy-db", None, CopyDBOptions, "copy the database"],
     ]
 
-    def opt_version(self):
+    def opt_version(self) -> None:
         print(f"Buildbot version: {buildbot.version}")
         super().opt_version()
 
-    def opt_verbose(self):
+    def opt_verbose(self) -> None:
         from twisted.python import log  # noqa: PLC0415
 
         log.startLogging(sys.stderr)
 
-    def postOptions(self):
+    def postOptions(self) -> None:
         if not hasattr(self, 'subOptions'):
             raise usage.UsageError("must specify a command")
 
 
-def run():
+def run() -> None:
     config = Options()
     check_functional_environment(buildbot.config)
     try:

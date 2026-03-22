@@ -25,17 +25,17 @@ class Buildset(Row):
 
     def __init__(
         self,
-        id=None,
-        external_idstring='extid',
-        reason='because',
-        submitted_at=12345678,
-        complete=0,
-        complete_at=None,
-        results=-1,
-        rebuilt_buildid=None,
-        parent_buildid=None,
-        parent_relationship=None,
-    ):
+        id: int | None = None,
+        external_idstring: str | None = 'extid',
+        reason: str = 'because',
+        submitted_at: int = 12345678,
+        complete: int = 0,
+        complete_at: int | None = None,
+        results: int | None = -1,
+        rebuilt_buildid: int | None = None,
+        parent_buildid: int | None = None,
+        parent_relationship: str | None = None,
+    ) -> None:
         super().__init__(
             id=id,
             external_idstring=external_idstring,
@@ -53,7 +53,12 @@ class Buildset(Row):
 class BuildsetProperty(Row):
     table = "buildset_properties"
 
-    def __init__(self, buildsetid=None, property_name='prop', property_value='[22, "fakedb"]'):
+    def __init__(
+        self,
+        buildsetid: int | None = None,
+        property_name: str = 'prop',
+        property_value: str = '[22, "fakedb"]',
+    ) -> None:
         super().__init__(
             buildsetid=buildsetid, property_name=property_name, property_value=property_value
         )
@@ -64,5 +69,7 @@ class BuildsetSourceStamp(Row):
 
     id_column = 'id'
 
-    def __init__(self, id=None, buildsetid=None, sourcestampid=None):
+    def __init__(
+        self, id: int | None = None, buildsetid: int | None = None, sourcestampid: int | None = None
+    ) -> None:
         super().__init__(id=id, buildsetid=buildsetid, sourcestampid=sourcestampid)

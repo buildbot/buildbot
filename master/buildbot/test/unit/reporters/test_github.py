@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -29,12 +33,15 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestGitHubStatusPush(
     TestReactorMixin, unittest.TestCase, ConfigErrorsMixin, ReporterTestMixin
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
 
         self.setup_reporter_test()
@@ -57,11 +64,11 @@ class TestGitHubStatusPush(
         self.sp = self.createService()
         yield self.sp.setServiceParent(self.master)
 
-    def createService(self):
+    def createService(self) -> GitHubStatusPush:
         return GitHubStatusPush(Interpolate('XXYYZZ'))
 
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new()
         self._http.expect(
             'post',
@@ -99,25 +106,25 @@ class TestGitHubStatusPush(
 
         build['complete'] = False
         build['results'] = None
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_empty(self):
+    def test_empty(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new(insert_ss=False)
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_source_stamp_no_props_nightly_scheduler(self):
+    def test_source_stamp_no_props_nightly_scheduler(self) -> InlineCallbacksType[None]:
         # no status updates are expected
 
         yield self.master.db.insert_test_data([
@@ -155,14 +162,14 @@ class TestGitHubStatusPush(
         build = yield self.master.data.get(("builds", 20))
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_multiple_source_stamps_no_props(self):
+    def test_multiple_source_stamps_no_props(self) -> InlineCallbacksType[None]:
         repository = 'http://test_repo'
         project = 'test_user/test_project'
         codebase1 = 'test_codebase1'
@@ -289,16 +296,16 @@ class TestGitHubStatusPush(
         build = yield self.master.data.get(("builds", 20))
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
 
 class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
 
         self.setup_reporter_test()
@@ -322,11 +329,11 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
         self.sp = self.createService()
         yield self.sp.setServiceParent(self.master)
 
-    def createService(self):
+    def createService(self) -> GitHubStatusPush:
         return GitHubStatusPush('XXYYZZ')
 
     @defer.inlineCallbacks
-    def test_ssh(self):
+    def test_ssh(self) -> InlineCallbacksType[None]:
         self.reporter_test_repo = 'git@github.com:buildbot2/buildbot2.git'
 
         build = yield self.insert_build_new()
@@ -364,15 +371,15 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
             headers={'Authorization': 'token XXYYZZ'},
         )
 
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_https(self):
+    def test_https(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new()
         self._http.expect(
             'post',
@@ -408,20 +415,20 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
             headers={'Authorization': 'token XXYYZZ'},
         )
 
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
 
 class TestGitHubCommentPush(TestGitHubStatusPush):
-    def createService(self):
+    def createService(self) -> GitHubCommentPush:
         return GitHubCommentPush('XXYYZZ')
 
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new()
         self._http.expect(
             'post',
@@ -437,25 +444,25 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         )
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_empty(self):
+    def test_empty(self) -> InlineCallbacksType[None]:
         build = yield self.insert_build_new(insert_ss=False)
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_basic_branch_head(self):
+    def test_basic_branch_head(self) -> InlineCallbacksType[None]:
         self.reporter_test_props['branch'] = 'refs/pull/13/head'
         build = yield self.insert_build_new()
         self._http.expect(
@@ -472,15 +479,15 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         )
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_multiple_source_stamps_no_props(self):
+    def test_multiple_source_stamps_no_props(self) -> InlineCallbacksType[None]:
         repository = 'http://test_repo'
         project = 'test_user/test_project'
         codebase1 = 'test_codebase1'
@@ -568,8 +575,8 @@ class TestGitHubCommentPush(TestGitHubStatusPush):
         build = yield self.master.data.get(("builds", 20))
 
         build['complete'] = False
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]

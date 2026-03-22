@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import base64
 import subprocess
 import time
+from typing import TYPE_CHECKING
 from unittest.case import SkipTest
 
 from parameterized import parameterized
@@ -28,6 +31,9 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step
 
@@ -37,7 +43,7 @@ from buildbot.test.util.integration import RunMasterBase
 @skipUnlessPlatformIs('posix')
 class TestVaultHvac(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self, secret_specifier):
+    def setup_config(self, secret_specifier: str) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -62,7 +68,7 @@ class TestVaultHvac(RunMasterBase):
 
         yield self.setup_master(c)
 
-    def start_container(self, image_tag):
+    def start_container(self, image_tag: str) -> None:
         try:
             image = f'vault:{image_tag}'
             subprocess.check_call(['docker', 'pull', image], stdout=subprocess.DEVNULL)
@@ -138,11 +144,13 @@ class TestVaultHvac(RunMasterBase):
         except (FileNotFoundError, subprocess.CalledProcessError) as e:
             raise SkipTest("Vault integration needs docker environment to be setup") from e
 
-    def remove_container(self):
+    def remove_container(self) -> None:
         subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'], stdout=subprocess.DEVNULL)
 
     @defer.inlineCallbacks
-    def do_secret_test(self, image_tag, secret_specifier, expected_obfuscation, expected_value):
+    def do_secret_test(
+        self, image_tag: str, secret_specifier: str, expected_obfuscation: str, expected_value: str
+    ) -> InlineCallbacksType[None]:
         self.start_container(image_tag)
         yield self.setup_config(secret_specifier=secret_specifier)
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
@@ -164,17 +172,17 @@ class TestVaultHvac(RunMasterBase):
 
     @parameterized.expand(all_tags)
     @defer.inlineCallbacks
-    def test_key(self, image_tag):
+    def test_key(self, image_tag: str) -> InlineCallbacksType[None]:
         yield self.do_secret_test(image_tag, '%(secret:key|value)s', '<key|value>', 'word')
 
     @parameterized.expand(all_tags)
     @defer.inlineCallbacks
-    def test_key_any_value(self, image_tag):
+    def test_key_any_value(self, image_tag: str) -> InlineCallbacksType[None]:
         yield self.do_secret_test(
             image_tag, '%(secret:anykey|anyvalue)s', '<anykey|anyvalue>', 'anyword'
         )
 
     @parameterized.expand(all_tags)
     @defer.inlineCallbacks
-    def test_nested_key(self, image_tag):
+    def test_nested_key(self, image_tag: str) -> InlineCallbacksType[None]:
         yield self.do_secret_test(image_tag, '%(secret:key1/key2|id)s', '<key1/key2|id>', 'val')

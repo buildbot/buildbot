@@ -14,9 +14,14 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
 import platform
 import signal
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -27,10 +32,17 @@ from buildbot.scripts.logwatcher import ReconfigError
 from buildbot.util import in_reactor
 from buildbot.util import rewrap
 
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class Reconfigurator:
     @defer.inlineCallbacks
-    def run(self, basedir, quiet, timeout=None):
+    def run(
+        self, basedir: str, quiet: bool, timeout: float | None = None
+    ) -> InlineCallbacksType[int | None]:
         # Returns "Microsoft" for Vista and "Windows" for other versions
         if platform.system() in ("Windows", "Microsoft"):
             print("Reconfig (through SIGHUP) is not supported on Windows.")
@@ -39,7 +51,7 @@ class Reconfigurator:
         with open(os.path.join(basedir, "twistd.pid"), encoding='utf-8') as f:
             self.pid = int(f.read().strip())
         if quiet:
-            os.kill(self.pid, signal.SIGHUP)
+            os.kill(self.pid, cast(Any, signal).SIGHUP)
             return None
 
         # keep reading twistd.log. Display all messages between "loading
@@ -48,7 +60,7 @@ class Reconfigurator:
         # `timeout` seconds have elapsed.
 
         self.sent_signal = False
-        reactor.callLater(0.2, self.sighup)
+        cast("IReactorTime", reactor).callLater(0.2, self.sighup)
 
         lw = LogWatcher(os.path.join(basedir, "twistd.log"), timeout=timeout)
 
@@ -73,16 +85,16 @@ class Reconfigurator:
 
         return 1
 
-    def sighup(self):
+    def sighup(self) -> None:
         if self.sent_signal:
             return
         print(f"sending SIGHUP to process {self.pid}")
         self.sent_signal = True
-        os.kill(self.pid, signal.SIGHUP)
+        os.kill(self.pid, cast(Any, signal).SIGHUP)
 
 
 @in_reactor
-def reconfig(config):
+def reconfig(config: dict[str, Any]) -> int | defer.Deferred[int | None]:
     basedir = config['basedir']
     quiet = config['quiet']
 

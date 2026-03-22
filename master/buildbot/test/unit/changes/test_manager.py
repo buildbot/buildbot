@@ -14,6 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 from unittest import mock
 
 from twisted.internet import defer
@@ -24,10 +29,15 @@ from buildbot.changes import manager
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestChangeManager(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True)
         self.cm = manager.ChangeManager()
@@ -38,13 +48,15 @@ class TestChangeManager(TestReactorMixin, unittest.TestCase):
         yield self.cm.setServiceParent(self.master)
         self.new_config = mock.Mock()
 
-    def make_sources(self, n, klass=base.ChangeSource, **kwargs):
+    def make_sources(
+        self, n: int, klass: type[base.ChangeSource] = base.ChangeSource, **kwargs: Any
+    ) -> Generator[base.ChangeSource, None, None]:
         for i in range(n):
             src = klass(name=f'ChangeSource {i}', **kwargs)
             yield src
 
     @defer.inlineCallbacks
-    def test_reconfigService_add(self):
+    def test_reconfigService_add(self) -> InlineCallbacksType[None]:
         src1, src2 = self.make_sources(2)
         yield src1.setServiceParent(self.cm)
         self.new_config.change_sources = [src1, src2]
@@ -55,7 +67,7 @@ class TestChangeManager(TestReactorMixin, unittest.TestCase):
         self.assertIdentical(src2.master, self.master)
 
     @defer.inlineCallbacks
-    def test_reconfigService_remove(self):
+    def test_reconfigService_remove(self) -> InlineCallbacksType[None]:
         (src1,) = self.make_sources(1)
         yield src1.setServiceParent(self.cm)
         self.new_config.change_sources = []
@@ -66,7 +78,7 @@ class TestChangeManager(TestReactorMixin, unittest.TestCase):
         self.assertFalse(src1.running)
 
     @defer.inlineCallbacks
-    def test_reconfigService_change_reconfigurable(self):
+    def test_reconfigService_change_reconfigurable(self) -> InlineCallbacksType[None]:
         (src1,) = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=1)
         yield src1.setServiceParent(self.cm)
 
@@ -75,9 +87,9 @@ class TestChangeManager(TestReactorMixin, unittest.TestCase):
         self.new_config.change_sources = [src2]
 
         self.assertTrue(src1.running)
-        self.assertEqual(src1.pollInterval, 1)
+        self.assertEqual(cast(base.ReconfigurablePollingChangeSource, src1).pollInterval, 1)
         yield self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertTrue(src1.running)
         self.assertFalse(src2.running)
-        self.assertEqual(src1.pollInterval, 2)
+        self.assertEqual(cast(base.ReconfigurablePollingChangeSource, src1).pollInterval, 2)

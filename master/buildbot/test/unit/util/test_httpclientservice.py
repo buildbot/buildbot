@@ -57,6 +57,8 @@ class HTTPClientServiceTestBase(unittest.TestCase):
 
 
 class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
+    _http: httpclientservice.HTTPClientService
+
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()
@@ -167,6 +169,8 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 
 
 class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
+    _http: httpclientservice.HTTPClientService
+
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()
@@ -198,6 +202,8 @@ class HTTPClientServiceTestTxRequestNoEncoding(HTTPClientServiceTestBase):
 
 
 class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
+    _http: httpclientservice.HTTPClientService
+
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()
@@ -288,6 +294,8 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
 
 
 class HTTPClientServiceTestTReqNoEncoding(HTTPClientServiceTestBase):
+    _http: httpclientservice.HTTPClientService
+
     @defer.inlineCallbacks
     def setUp(self):
         yield super().setUp()

@@ -14,7 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import base64
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -30,6 +34,11 @@ from buildbot.test.util.integration import RunMasterBase
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
+if TYPE_CHECKING:
+    import email.message
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step, and a MailNotifier
@@ -38,24 +47,24 @@ class NotifierMaster(RunMasterBase):
         skip = "twisted-mail unavailable, see: https://twistedmatrix.com/trac/ticket/8770"
 
     @defer.inlineCallbacks
-    def create_master_config(self, build_set_summary=False):
+    def create_master_config(self, build_set_summary: bool = False) -> InlineCallbacksType[None]:
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import reporters  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
         from buildbot.plugins import steps  # noqa: PLC0415
         from buildbot.process.factory import BuildFactory  # noqa: PLC0415
 
-        self.mailDeferred = defer.Deferred()
+        self.mailDeferred: defer.Deferred[tuple[str, list[str]]] = defer.Deferred()
 
         # patch MailNotifier.sendmail to know when the mail has been sent
-        def sendMail(_, mail, recipients):
+        def sendMail(_: MailNotifier, mail: email.message.Message, recipients: list[str]) -> None:
             self.mailDeferred.callback((mail.as_string(), recipients))
 
         self.patch(MailNotifier, "sendMail", sendMail)
 
-        self.notification = defer.Deferred()
+        self.notification: defer.Deferred[dict[str, str | bytes]] = defer.Deferred()
 
-        def sendNotification(_, params):
+        def sendNotification(_: PushoverNotifier, params: dict[str, Any]) -> None:
             self.notification.callback(params)
 
         self.patch(PushoverNotifier, "sendNotification", sendNotification)
@@ -96,7 +105,7 @@ class NotifierMaster(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def doTest(self, what):
+    def doTest(self, what: str) -> InlineCallbacksType[None]:
         change = {
             "branch": "master",
             "files": ["foo.c"],
@@ -126,7 +135,7 @@ class NotifierMaster(RunMasterBase):
             },
         )
 
-    def assertEncodedIn(self, text, mail):
+    def assertEncodedIn(self, text: str, mail: str) -> None:
         # The default transfer encoding is base64 for utf-8 even when it could be represented
         # accurately by quoted 7bit encoding. TODO: it is possible to override it,
         # see https://bugs.python.org/issue12552
@@ -138,17 +147,17 @@ class NotifierMaster(RunMasterBase):
             self.assertIn(encodedText, mail)
 
     @defer.inlineCallbacks
-    def test_notifiy_for_build(self):
+    def test_notifiy_for_build(self) -> InlineCallbacksType[None]:
         yield self.create_master_config(build_set_summary=False)
         yield self.doTest('testy')
 
     @defer.inlineCallbacks
-    def test_notifiy_for_buildset(self):
+    def test_notifiy_for_buildset(self) -> InlineCallbacksType[None]:
         yield self.create_master_config(build_set_summary=True)
         yield self.doTest('projectname')
 
     @defer.inlineCallbacks
-    def test_missing_worker(self):
+    def test_missing_worker(self) -> InlineCallbacksType[None]:
         yield self.create_master_config(build_set_summary=False)
         yield self.master.data.updates.workerMissing(
             workerid='local1',

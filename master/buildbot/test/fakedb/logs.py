@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from buildbot.test.fakedb.row import Row
 
@@ -23,8 +24,15 @@ class Log(Row):
     id_column = 'id'
 
     def __init__(
-        self, id=None, name='log29', slug=None, stepid=None, complete=0, num_lines=0, type='s'
-    ):
+        self,
+        id: int | None = None,
+        name: str = 'log29',
+        slug: str | None = None,
+        stepid: int | None = None,
+        complete: int = 0,
+        num_lines: int = 0,
+        type: str = 's',
+    ) -> None:
         if slug is None:
             slug = name
         super().__init__(
@@ -44,7 +52,14 @@ class LogChunk(Row):
     # 'content' column is sa.LargeBinary, it's bytestring.
     binary_columns = ('content',)
 
-    def __init__(self, logid=None, first_line=0, last_line=0, content='', compressed=0):
+    def __init__(
+        self,
+        logid: int | None = None,
+        first_line: int = 0,
+        last_line: int = 0,
+        content: str | bytes = '',
+        compressed: int = 0,
+    ) -> None:
         super().__init__(
             logid=logid,
             first_line=first_line,

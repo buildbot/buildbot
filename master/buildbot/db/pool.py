@@ -19,6 +19,7 @@ import inspect
 import time
 import traceback
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -41,6 +42,8 @@ if TYPE_CHECKING:
     from typing_extensions import Concatenate
     from typing_extensions import ParamSpec
 
+    from buildbot.util.twisted import InlineCallbacksType
+
     _T = TypeVar('_T')
     _P = ParamSpec('_P')
 
@@ -52,11 +55,11 @@ debug = False
 _debug_id = 1
 
 
-def timed_do_fn(f):
+def timed_do_fn(f: Any) -> Any:
     """Decorate a do function to log before, after, and elapsed time,
     with the name of the calling function.  This is not speedy!"""
 
-    def wrap(callable, *args, **kwargs):
+    def wrap(callable: Any, *args: Any, **kwargs: Any) -> Any:
         global _debug_id
 
         # get a description of the function that called us
@@ -65,7 +68,7 @@ def timed_do_fn(f):
 
         # and its locals
         frame = inspect.currentframe()
-        locals = frame.f_locals
+        locals = frame.f_locals  # type: ignore[union-attr]
 
         # invent a unique ID for the description
         id = _debug_id
@@ -82,7 +85,7 @@ def timed_do_fn(f):
 
         # wrap the callable to log the begin and end of the actual thread
         # function
-        def callable_wrap(*args, **kargs):
+        def callable_wrap(*args: Any, **kargs: Any) -> Any:
             log.msg(f"{descr} - thd start")
             try:
                 return callable(*args, **kwargs)
@@ -92,7 +95,7 @@ def timed_do_fn(f):
         d = f(callable_wrap, *args, **kwargs)
 
         @d.addBoth
-        def after(x):
+        def after(x: Any) -> Any:
             end_time = time.time()
             elapsed = (end_time - start_time) * 1000
             log.msg(f"{descr} - after ({elapsed:0.2f} ms elapsed)")
@@ -108,13 +111,13 @@ def timed_do_fn(f):
 class DBThreadPool:
     running = False
 
-    def __init__(self, engine, reactor, verbose=False):
+    def __init__(self, engine: sa.engine.Engine, reactor: Any, verbose: bool = False) -> None:
         # verbose is used by upgrade scripts, and if it is set we should print
         # messages about versions and other warnings
         log_msg = log.msg
         if verbose:
 
-            def _log_msg(m):
+            def _log_msg(m: str) -> None:
                 print(m)
 
             log_msg = _log_msg
@@ -150,12 +153,12 @@ class DBThreadPool:
 
         # patch the do methods to do verbose logging if necessary
         if debug:
-            self.do = timed_do_fn(self.do)
-            self.do_with_engine = timed_do_fn(self.do_with_engine)
+            self.do = timed_do_fn(self.do)  # type: ignore[method-assign]
+            self.do_with_engine = timed_do_fn(self.do_with_engine)  # type: ignore[method-assign]
 
         self.forbidded_callable_return_type = self.get_sqlalchemy_result_type()
 
-    def get_sqlalchemy_result_type(self):
+    def get_sqlalchemy_result_type(self) -> type:
         try:
             from sqlalchemy.engine import ResultProxy  # sqlalchemy 1.x - 1.3  # noqa: PLC0415
 
@@ -172,13 +175,13 @@ class DBThreadPool:
 
         raise ImportError("Could not import SQLAlchemy result type")
 
-    def start(self):
+    def start(self) -> None:
         if not self.running:
             self._pool.start()
             self.running = True
 
     @defer.inlineCallbacks
-    def stop(self):
+    def stop(self) -> InlineCallbacksType[None]:
         if self.running:
             yield threads.deferToThreadPool(self.reactor, self._pool, self.engine.dispose)
             self._pool.stop()
@@ -206,7 +209,7 @@ class DBThreadPool:
         start = time.time()
         while True:
             if with_engine:
-                arg = self.engine
+                arg: sa.engine.Engine | sa.engine.Connection = self.engine
             else:
                 arg = self.engine.connect()
             try:
@@ -216,7 +219,7 @@ class DBThreadPool:
                         "do not return ResultProxy objects!"
                     )
                 except sa.exc.OperationalError as e:
-                    if not self.engine.should_retry(e):
+                    if not self.engine.should_retry(e):  # type: ignore[attr-defined]
                         log.err(e, 'Got fatal OperationalError on DB')
                         raise
                     elapsed = time.time() - start
@@ -252,7 +255,7 @@ class DBThreadPool:
                     raise
             finally:
                 if not with_engine:
-                    arg.close()
+                    arg.close()  # type: ignore[union-attr]
             break
         return rv
 

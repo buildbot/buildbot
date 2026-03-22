@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from buildbot.test.fakedb.row import Row
 
@@ -22,12 +23,14 @@ class Object(Row):
 
     id_column = 'id'
 
-    def __init__(self, id=None, name='nam', class_name='cls'):
+    def __init__(self, id: int | None = None, name: str = 'nam', class_name: str = 'cls') -> None:
         super().__init__(id=id, name=name, class_name=class_name)
 
 
 class ObjectState(Row):
     table = "object_state"
 
-    def __init__(self, objectid=None, name='nam', value_json='{}'):
+    def __init__(
+        self, objectid: int | None = None, name: str = 'nam', value_json: str = '{}'
+    ) -> None:
         super().__init__(objectid=objectid, name=name, value_json=value_json)

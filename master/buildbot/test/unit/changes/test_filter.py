@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
 
 from parameterized import parameterized
@@ -23,7 +25,7 @@ from buildbot.test.fake.change import Change
 
 
 class TestChangeFilter(unittest.TestCase):
-    def test_filter_change_filter_fn(self):
+    def test_filter_change_filter_fn(self) -> None:
         f = ChangeFilter(filter_fn=lambda ch: ch.x > 3)
         self.assertFalse(f.filter_change(Change(x=2)))
         self.assertTrue(f.filter_change(Change(x=4)))
@@ -64,12 +66,12 @@ class TestChangeFilter(unittest.TestCase):
     ]
 
     @parameterized.expand(test_cases)
-    def test_eq(self, name, change, expected):
+    def test_eq(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(project="p", codebase="c", repository="r", category="ct", branch="b")
         self.assertEqual(f.filter_change(change), expected)
 
     @parameterized.expand(test_cases)
-    def test_eq_list(self, name, change, expected):
+    def test_eq_list(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(
             project=["p", "p9"],
             codebase=["c", "c9"],
@@ -80,7 +82,7 @@ class TestChangeFilter(unittest.TestCase):
         self.assertEqual(f.filter_change(change), expected)
 
     @parameterized.expand(test_cases)
-    def test_not_eq(self, name, change, expected):
+    def test_not_eq(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(
             project_not_eq="p0",
             codebase_not_eq="c0",
@@ -91,7 +93,7 @@ class TestChangeFilter(unittest.TestCase):
         self.assertEqual(f.filter_change(change), expected)
 
     @parameterized.expand(test_cases)
-    def test_not_eq_list(self, name, change, expected):
+    def test_not_eq_list(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(
             project_not_eq=["p0", "p1"],
             codebase_not_eq=["c0", "c1"],
@@ -102,7 +104,7 @@ class TestChangeFilter(unittest.TestCase):
         self.assertEqual(f.filter_change(change), expected)
 
     @parameterized.expand(test_cases)
-    def test_re(self, name, change, expected):
+    def test_re(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(
             project_re="^p$",
             codebase_re="^c$",
@@ -113,18 +115,18 @@ class TestChangeFilter(unittest.TestCase):
         self.assertEqual(f.filter_change(change), expected)
 
     @parameterized.expand(test_cases)
-    def test_re_list(self, name, change, expected):
+    def test_re_list(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(
-            project_re=["^p$", "^p1$"],
-            codebase_re=["^c$", "^c1$"],
-            repository_re=["^r$", "^r1$"],
-            category_re=["^ct$", "^ct1$"],
-            branch_re=["^b$", "^b1$"],
+            project_re=["^p$", "^p1$"],  # type: ignore[arg-type]
+            codebase_re=["^c$", "^c1$"],  # type: ignore[arg-type]
+            repository_re=["^r$", "^r1$"],  # type: ignore[arg-type]
+            category_re=["^ct$", "^ct1$"],  # type: ignore[arg-type]
+            branch_re=["^b$", "^b1$"],  # type: ignore[arg-type]
         )
         self.assertEqual(f.filter_change(change), expected)
 
     @parameterized.expand(test_cases)
-    def test_not_re(self, name, change, expected):
+    def test_not_re(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(
             project_not_re="^p0$",
             codebase_not_re="^c0$",
@@ -135,18 +137,18 @@ class TestChangeFilter(unittest.TestCase):
         self.assertEqual(f.filter_change(change), expected)
 
     @parameterized.expand(test_cases)
-    def test_not_re_list(self, name, change, expected):
+    def test_not_re_list(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(
-            project_not_re=["^p0$", "^p1$"],
-            codebase_not_re=["^c0$", "^c1$"],
-            repository_not_re=["^r0$", "^r1$"],
-            category_not_re=["^ct0$", "^ct1$"],
-            branch_not_re=["^b0$", "^b1$"],
+            project_not_re=["^p0$", "^p1$"],  # type: ignore[arg-type]
+            codebase_not_re=["^c0$", "^c1$"],  # type: ignore[arg-type]
+            repository_not_re=["^r0$", "^r1$"],  # type: ignore[arg-type]
+            category_not_re=["^ct0$", "^ct1$"],  # type: ignore[arg-type]
+            branch_not_re=["^b0$", "^b1$"],  # type: ignore[arg-type]
         )
         self.assertEqual(f.filter_change(change), expected)
 
     @parameterized.expand(test_cases)
-    def test_re_pattern(self, name, change, expected):
+    def test_re_pattern(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(
             project_re=re.compile("^p$"),
             codebase_re=re.compile("^c$"),
@@ -157,7 +159,7 @@ class TestChangeFilter(unittest.TestCase):
         self.assertEqual(f.filter_change(change), expected)
 
     @parameterized.expand(test_cases)
-    def test_fn(self, name, change, expected):
+    def test_fn(self, name: str, change: Change, expected: bool) -> None:
         f = ChangeFilter(
             project_fn=lambda p: p == "p",
             codebase_fn=lambda p: p == "c",
@@ -173,19 +175,19 @@ class TestChangeFilter(unittest.TestCase):
             "<lambda>(repository) and <lambda>(category) and <lambda>(branch)>",
         )
 
-    def test_filter_change_filt_branch_list_None(self):
+    def test_filter_change_filt_branch_list_None(self) -> None:
         f = ChangeFilter(branch=["mybr", None])
         self.assertTrue(f.filter_change(Change(branch="mybr")))
         self.assertTrue(f.filter_change(Change(branch=None)))
         self.assertFalse(f.filter_change(Change(branch="misc")))
 
-    def test_filter_change_branch_re(self):  # regression - see #927
+    def test_filter_change_branch_re(self) -> None:  # regression - see #927
         f = ChangeFilter(branch_re="^t.*")
         self.assertTrue(f.filter_change(Change(branch="trunk")))
         self.assertFalse(f.filter_change(Change(branch="development")))
         self.assertFalse(f.filter_change(Change(branch=None)))
 
-    def test_filter_change_combination(self):
+    def test_filter_change_combination(self) -> None:
         f = ChangeFilter(project="p", repository="r", branch="b", category="c", codebase="cb")
         self.assertFalse(
             f.filter_change(Change(project="x", repository="x", branch="x", category="x"))
@@ -202,7 +204,7 @@ class TestChangeFilter(unittest.TestCase):
             )
         )
 
-    def test_filter_change_combination_filter_fn(self):
+    def test_filter_change_combination_filter_fn(self) -> None:
         f = ChangeFilter(
             project="p",
             repository="r",
@@ -223,7 +225,7 @@ class TestChangeFilter(unittest.TestCase):
             f.filter_change(Change(project="p", repository="r", branch="b", category="c", ff=True))
         )
 
-    def test_filter_props(self):
+    def test_filter_props(self) -> None:
         f = ChangeFilter(property_eq={"event.type": "ref-updated"})
         self.assertTrue(f.filter_change(Change(properties={"event.type": "ref-updated"})))
         self.assertFalse(f.filter_change(Change(properties={"event.type": "patch-uploaded"})))

@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from buildbot.test.fakedb.row import Row
 
 
@@ -25,17 +27,17 @@ class Build(Row):
 
     def __init__(
         self,
-        id=None,
-        number=None,
-        buildrequestid=None,
-        builderid=None,
-        workerid=-1,
-        masterid=None,
-        started_at=1304262222,
-        complete_at=None,
-        state_string="test",
-        results=None,
-    ):
+        id: int | None = None,
+        number: int | None = None,
+        buildrequestid: int | None = None,
+        builderid: int | None = None,
+        workerid: int = -1,
+        masterid: int | None = None,
+        started_at: int = 1304262222,
+        complete_at: int | None = None,
+        state_string: str = "test",
+        results: int | None = None,
+    ) -> None:
         if number is None:
             number = id
         super().__init__(
@@ -56,5 +58,11 @@ class Build(Row):
 class BuildProperty(Row):
     table = "build_properties"
 
-    def __init__(self, buildid=None, name='prop', value=42, source='fakedb'):
+    def __init__(
+        self,
+        buildid: int | None = None,
+        name: str = 'prop',
+        value: Any = 42,
+        source: str = 'fakedb',
+    ) -> None:
         super().__init__(buildid=buildid, name=name, value=value, source=source)

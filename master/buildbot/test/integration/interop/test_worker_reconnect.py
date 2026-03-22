@@ -14,21 +14,26 @@
 # Copyright Buildbot Team Members
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class DisconnectingStep(BuildStep):
     disconnection_list: list[DisconnectingStep] = []
 
-    def run(self):
+    def run(self) -> int:  # type: ignore[override]
         self.disconnection_list.append(self)
-        assert self.worker.conn.get_peer().startswith("127.0.0.1:")
+        assert self.worker.conn.get_peer().startswith("127.0.0.1:")  # type: ignore[attr-defined]
         if len(self.disconnection_list) < 2:
-            self.worker.disconnect()
+            self.worker.disconnect()  # type: ignore[attr-defined]
         return SUCCESS
 
 
@@ -38,7 +43,7 @@ class WorkerReconnectPb(RunMasterBase):
     proto = "pb"
 
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -55,7 +60,7 @@ class WorkerReconnectPb(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_eventually_reconnect(self):
+    def test_eventually_reconnect(self) -> InlineCallbacksType[None]:
         DisconnectingStep.disconnection_list = []
         yield self.setup_config()
 

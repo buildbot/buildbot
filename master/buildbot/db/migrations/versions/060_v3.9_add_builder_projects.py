@@ -30,7 +30,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     hash_length = 40
 
     op.create_table(
@@ -57,7 +57,7 @@ def upgrade():
     op.create_index('projects_name_hash', "projects", ["name_hash"], unique=True)
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_index("builders_projectid")
     op.drop_column("builders", "project")
     op.drop_table("projects")

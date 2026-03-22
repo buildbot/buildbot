@@ -16,6 +16,8 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import SkipTest
 
 from twisted.internet import defer
@@ -30,19 +32,24 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.util import httpclientservice
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     # returns a Deferred
-    def setupFakeHttp(self, base_url='https://api.pushjet.io'):
+    def setupFakeHttp(self, base_url: str = 'https://api.pushjet.io') -> Any:
         return fakehttpclientservice.HTTPClientService.getService(self.master, self, base_url)
 
     @defer.inlineCallbacks
-    def setupPushjetNotifier(self, secret: Interpolate | None = None, **kwargs):
+    def setupPushjetNotifier(
+        self, secret: Interpolate | None = None, **kwargs: Any
+    ) -> InlineCallbacksType[PushjetNotifier]:
         if secret is None:
             secret = Interpolate("1234")
         pn = PushjetNotifier(secret, **kwargs)
@@ -51,7 +58,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
         return pn
 
     @defer.inlineCallbacks
-    def test_sendMessage(self):
+    def test_sendMessage(self) -> InlineCallbacksType[None]:
         _http = yield self.setupFakeHttp()
         pn = yield self.setupPushjetNotifier(levels={'passing': 2})
         _http.expect(
@@ -67,7 +74,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
         self.assertEqual(j['status'], 'ok')
 
     @defer.inlineCallbacks
-    def test_sendNotification(self):
+    def test_sendNotification(self) -> InlineCallbacksType[None]:
         _http = yield self.setupFakeHttp('https://tests.io')
         pn = yield self.setupPushjetNotifier(base_url='https://tests.io')
         _http.expect(
@@ -81,7 +88,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
         self.assertEqual(j['status'], 'ok')
 
     @defer.inlineCallbacks
-    def test_sendRealNotification(self):
+    def test_sendRealNotification(self) -> InlineCallbacksType[None]:
         secret = os.environ.get('TEST_PUSHJET_SECRET')
         if secret is None:
             raise SkipTest(
@@ -91,7 +98,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
             self.master, 'https://api.pushjet.io'
         )
         yield _http.startService()
-        pn = yield self.setupPushjetNotifier(secret=secret)
+        pn = yield self.setupPushjetNotifier(secret=secret)  # type: ignore[arg-type]
         n = yield pn.sendNotification({'message': "Buildbot Pushjet test passed!"})
         j = yield n.json()
         self.assertEqual(j['status'], 'ok')

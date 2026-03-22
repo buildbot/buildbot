@@ -87,7 +87,7 @@ class Authz:
 
     @defer.inlineCallbacks
     def assertUserAllowed(
-        self, ep: str, action: str, options: dict[str, Any], userDetails: dict[str, Any]
+        self, ep: tuple[str, ...], action: str, options: dict[str, Any], userDetails: dict[str, Any]
     ) -> InlineCallbacksType[None]:
         roles = self.getRolesFromUser(userDetails)
         for rule in self.allowRules:

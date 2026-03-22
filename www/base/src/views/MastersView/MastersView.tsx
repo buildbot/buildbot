@@ -25,6 +25,7 @@ import {computed} from 'mobx';
 import {Link} from 'react-router-dom';
 import {
   BadgeRound,
+  getBuildLinkDisplayProperties,
   BuildLinkWithSummaryTooltip,
   durationFromNowFormat,
   useCurrentTime,
@@ -38,7 +39,9 @@ export const MastersView = observer(() => {
   const mastersQuery = useDataApiQuery(() => Master.getAll(accessor));
   const workersQuery = useDataApiQuery(() => Worker.getAll(accessor));
   const buildsQuery = useDataApiQuery(() =>
-    Build.getAll(accessor, {query: {limit: 100, order: '-started_at'}}),
+    Build.getAll(accessor, {
+      query: {limit: 100, order: '-started_at', property: getBuildLinkDisplayProperties()},
+    }),
   );
   const buildersQuery = useDataApiQuery(() => Builder.getAll(accessor));
 

@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
 import xml.dom.minidom
 import xml.parsers.expat
+from typing import TYPE_CHECKING
+from typing import Any
 from urllib.parse import quote as urlquote
 from urllib.parse import unquote as urlunquote
 from urllib.parse import urlparse
@@ -31,6 +35,11 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class SVN(Source):
     """I perform Subversion checkout/update operations."""
@@ -42,17 +51,17 @@ class SVN(Source):
 
     def __init__(
         self,
-        repourl=None,
-        mode='incremental',
-        method=None,
-        username=None,
-        password=None,
-        extra_args=None,
-        keep_on_purge=None,
-        depth=None,
-        preferLastChangedRev=False,
-        **kwargs,
-    ):
+        repourl: str | None = None,
+        mode: str = 'incremental',
+        method: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        extra_args: list[str] | None = None,
+        keep_on_purge: list[str] | None = None,
+        depth: str | None = None,
+        preferLastChangedRev: bool = False,
+        **kwargs: Any,
+    ) -> None:
         self.repourl = repourl
         self.username = username
         self.password = password
@@ -76,7 +85,9 @@ class SVN(Source):
             raise ConfigErrors(errors)
 
     @defer.inlineCallbacks
-    def run_vc(self, branch, revision, patch):
+    def run_vc(
+        self, branch: str | None, revision: str | None, patch: Any
+    ) -> InlineCallbacksType[int]:
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = yield self.addLogForRemoteCommands("stdio")
@@ -85,7 +96,7 @@ class SVN(Source):
         # it
         if self.password is not None:
             if not self.workerVersionIsOlderThan('shell', '2.16'):
-                self.password = ('obfuscated', self.password, 'XXXXXX')
+                self.password = ('obfuscated', self.password, 'XXXXXX')  # type: ignore[assignment]
             else:
                 log.msg("Worker does not understand obfuscation; svn password will be logged")
 
@@ -105,7 +116,7 @@ class SVN(Source):
         return res
 
     @defer.inlineCallbacks
-    def mode_full(self):
+    def mode_full(self) -> InlineCallbacksType[None]:
         if self.method == 'clobber':
             yield self.clobber()
             return
@@ -123,7 +134,7 @@ class SVN(Source):
             yield self.fresh()
 
     @defer.inlineCallbacks
-    def mode_incremental(self):
+    def mode_incremental(self) -> InlineCallbacksType[None]:
         updatable = yield self._sourcedirIsUpdatable()
 
         if not updatable:
@@ -137,12 +148,12 @@ class SVN(Source):
             yield self._dovccmd(command)
 
     @defer.inlineCallbacks
-    def clobber(self):
+    def clobber(self) -> InlineCallbacksType[None]:
         yield self.runRmdir(self.workdir, timeout=self.timeout)
         yield self._checkout()
 
     @defer.inlineCallbacks
-    def fresh(self):
+    def fresh(self) -> InlineCallbacksType[None]:
         yield self.purge(True)
         cmd = ['update']
         if self.revision:
@@ -150,7 +161,7 @@ class SVN(Source):
         yield self._dovccmd(cmd)
 
     @defer.inlineCallbacks
-    def clean(self):
+    def clean(self) -> InlineCallbacksType[None]:
         yield self.purge(False)
         cmd = ['update']
         if self.revision:
@@ -158,12 +169,12 @@ class SVN(Source):
         yield self._dovccmd(cmd)
 
     @defer.inlineCallbacks
-    def copy(self):
+    def copy(self) -> InlineCallbacksType[None]:
         yield self.runRmdir(self.workdir, timeout=self.timeout)
 
         checkout_dir = 'source'
         if self.codebase:
-            checkout_dir = self.build.path_module.join(checkout_dir, self.codebase)
+            checkout_dir = self.build.path_module.join(checkout_dir, self.codebase)  # type: ignore[union-attr]
         # temporarily set workdir = checkout_dir and do an incremental checkout
         old_workdir = self.workdir
         try:
@@ -202,7 +213,13 @@ class SVN(Source):
             raise buildstep.BuildStepFailed()
 
     @defer.inlineCallbacks
-    def _dovccmd(self, command, collectStdout=False, collectStderr=False, abandonOnFailure=True):
+    def _dovccmd(
+        self,
+        command: list[str],
+        collectStdout: bool = False,
+        collectStderr: bool = False,
+        abandonOnFailure: bool = True,
+    ) -> InlineCallbacksType[str | tuple[str, str] | int]:
         assert command, "No command specified"
         command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
@@ -235,9 +252,9 @@ class SVN(Source):
             return cmd.stdout
         elif collectStderr:
             return cmd.stderr
-        return cmd.rc
+        return cmd.rc  # type: ignore[return-value]
 
-    def _getMethod(self):
+    def _getMethod(self) -> str | None:
         if self.method is not None and self.mode != 'incremental':
             return self.method
         elif self.mode == 'incremental':
@@ -247,9 +264,9 @@ class SVN(Source):
         return None
 
     @defer.inlineCallbacks
-    def _sourcedirIsUpdatable(self):
+    def _sourcedirIsUpdatable(self) -> InlineCallbacksType[bool]:
         # first, perform a stat to ensure that this is really an svn directory
-        res = yield self.pathExists(self.build.path_module.join(self.workdir, '.svn'))
+        res = yield self.pathExists(self.build.path_module.join(self.workdir, '.svn'))  # type: ignore[union-attr]
         if not res:
             return False
 
@@ -265,14 +282,14 @@ class SVN(Source):
 
         try:
             stdout_xml = xml.dom.minidom.parseString(stdout)
-            extractedurl = stdout_xml.getElementsByTagName('url')[0].firstChild.nodeValue
+            extractedurl = stdout_xml.getElementsByTagName('url')[0].firstChild.nodeValue  # type: ignore[union-attr]
         except xml.parsers.expat.ExpatError as e:
-            yield self.stdio_log.addHeader("Corrupted xml, aborting step")
+            yield self.stdio_log.addHeader("Corrupted xml, aborting step")  # type: ignore[attr-defined]
             raise buildstep.BuildStepFailed() from e
         return extractedurl == self.svnUriCanonicalize(self.repourl)
 
     @defer.inlineCallbacks
-    def parseGotRevision(self):
+    def parseGotRevision(self) -> InlineCallbacksType[int]:
         # if this was a full/export, then we need to check svnversion in the
         # *source* directory, not the build directory
         svnversion_dir = self.workdir
@@ -293,7 +310,7 @@ class SVN(Source):
         try:
             stdout_xml = xml.dom.minidom.parseString(stdout)
         except xml.parsers.expat.ExpatError as e:
-            yield self.stdio_log.addHeader("Corrupted xml, aborting step")
+            yield self.stdio_log.addHeader("Corrupted xml, aborting step")  # type: ignore[attr-defined]
             raise buildstep.BuildStepFailed() from e
 
         revision = None
@@ -313,13 +330,13 @@ class SVN(Source):
                 log.msg(msg)
                 raise buildstep.BuildStepFailed() from e
 
-        yield self.stdio_log.addHeader(f"Got SVN revision {revision}")
+        yield self.stdio_log.addHeader(f"Got SVN revision {revision}")  # type: ignore[attr-defined]
         self.updateSourceProperty('got_revision', revision)
 
-        return cmd.rc
+        return cmd.rc  # type: ignore[return-value]
 
     @defer.inlineCallbacks
-    def purge(self, ignore_ignores):
+    def purge(self, ignore_ignores: bool) -> InlineCallbacksType[None]:
         """Delete everything that shown up on status."""
         command = ['status', '--xml']
         if ignore_ignores:
@@ -328,19 +345,19 @@ class SVN(Source):
 
         files = []
         for filename in self.getUnversionedFiles(stdout, self.keep_on_purge):
-            filename = self.build.path_module.join(self.workdir, filename)
+            filename = self.build.path_module.join(self.workdir, filename)  # type: ignore[union-attr]
             files.append(filename)
         if files:
             if self.workerVersionIsOlderThan('rmdir', '2.14'):
                 rc = yield self.removeFiles(files)
             else:
-                rc = yield self.runRmdir(files, abandonOnFailure=False, timeout=self.timeout)
+                rc = yield self.runRmdir(files, abandonOnFailure=False, timeout=self.timeout)  # type: ignore[arg-type]
             if rc != 0:
                 log.msg("Failed removing files")
                 raise buildstep.BuildStepFailed()
 
     @staticmethod
-    def getUnversionedFiles(xmlStr, keep_on_purge):
+    def getUnversionedFiles(xmlStr: str, keep_on_purge: list[str]) -> Generator[str, None, None]:
         try:
             result_xml = xml.dom.minidom.parseString(xmlStr)
         except xml.parsers.expat.ExpatError as e:
@@ -359,7 +376,7 @@ class SVN(Source):
             yield filename
 
     @defer.inlineCallbacks
-    def removeFiles(self, files):
+    def removeFiles(self, files: list[str]) -> InlineCallbacksType[int]:
         for filename in files:
             res = yield self.runRmdir(filename, abandonOnFailure=False, timeout=self.timeout)
             if res:
@@ -367,7 +384,7 @@ class SVN(Source):
         return 0
 
     @defer.inlineCallbacks
-    def checkSvn(self):
+    def checkSvn(self) -> InlineCallbacksType[bool]:
         cmd = remotecommand.RemoteShellCommand(
             self.workdir,
             ['svn', '--version'],
@@ -379,21 +396,21 @@ class SVN(Source):
         yield self.runCommand(cmd)
         return cmd.rc == 0
 
-    def computeSourceRevision(self, changes):
+    def computeSourceRevision(self, changes: Any) -> int | None:
         if not changes or None in [c.revision for c in changes]:
             return None
         lastChange = max(int(c.revision) for c in changes)
         return lastChange
 
     @staticmethod
-    def svnUriCanonicalize(uri):
+    def svnUriCanonicalize(uri: str | None) -> str | None:
         collapse = re.compile(r'([^/]+/\.\./?|/\./|//|/\.$|/\.\.$|^/\.\.)')
         server_authority = re.compile(r'^(?:([^@]+)@)?([^:]+)(?::(.+))?$')
         default_port = {'http': '80', 'https': '443', 'svn': '3690'}
 
         relative_schemes = ['http', 'https', 'svn']
 
-        def quote(uri):
+        def quote(uri: str) -> str:
             return urlquote(uri, "!$&'()*+,-./:=@_~", encoding="latin-1")
 
         if not uri or uri == '/':
@@ -431,7 +448,7 @@ class SVN(Source):
         return canonical_uri
 
     @defer.inlineCallbacks
-    def _checkout(self):
+    def _checkout(self) -> InlineCallbacksType[None]:
         checkout_cmd = ['checkout', self.repourl, '.']
         if self.revision:
             checkout_cmd.extend(["--revision", str(self.revision)])
@@ -439,7 +456,7 @@ class SVN(Source):
             abandonOnFailure = self.retry[1] <= 0
         else:
             abandonOnFailure = True
-        res = yield self._dovccmd(checkout_cmd, abandonOnFailure=abandonOnFailure)
+        res = yield self._dovccmd(checkout_cmd, abandonOnFailure=abandonOnFailure)  # type: ignore[arg-type]
 
         if self.retry:
             if self.stopped or res == 0:
@@ -448,8 +465,8 @@ class SVN(Source):
             if repeats > 0:
                 log.msg(f"Checkout failed, trying {repeats} more times after {delay} seconds")
                 self.retry = (delay, repeats - 1)
-                df = defer.Deferred()
+                df: defer.Deferred[None] = defer.Deferred()
                 df.addCallback(lambda _: self.runRmdir(self.workdir, timeout=self.timeout))
                 df.addCallback(lambda _: self._checkout())
-                reactor.callLater(delay, df.callback, None)
+                reactor.callLater(delay, df.callback, None)  # type: ignore[attr-defined]
                 yield df

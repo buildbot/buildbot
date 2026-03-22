@@ -14,12 +14,19 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class TestBadRows(TestReactorMixin, unittest.TestCase):
@@ -29,12 +36,12 @@ class TestBadRows(TestReactorMixin, unittest.TestCase):
     # source] tuple.
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
 
     @defer.inlineCallbacks
-    def test_bogus_row_no_source(self):
+    def test_bogus_row_no_source(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel', property_value='"no source"'),
@@ -46,7 +53,7 @@ class TestBadRows(TestReactorMixin, unittest.TestCase):
         self.assertEqual(c.properties, {"devel": ('no source', 'Change')})
 
     @defer.inlineCallbacks
-    def test_bogus_row_jsoned_list(self):
+    def test_bogus_row_jsoned_list(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel', property_value='[1, 2]'),

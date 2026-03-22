@@ -34,8 +34,10 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 if TYPE_CHECKING:
+    from buildbot.data.resultspec import ResultSpec
     from buildbot.data.sourcestamps import SourceStampData
     from buildbot.db.buildsets import BuildSetModel
+    from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -54,7 +56,9 @@ class BuildSetData(TypedDict):
 
 
 @defer.inlineCallbacks
-def _db2data(model: BuildSetModel | None, master) -> InlineCallbacksType[BuildSetData | None]:
+def _db2data(
+    model: BuildSetModel | None, master: BuildMaster
+) -> InlineCallbacksType[BuildSetData | None]:
     if not model:
         return None
 
@@ -62,7 +66,7 @@ def _db2data(model: BuildSetModel | None, master) -> InlineCallbacksType[BuildSe
     sourcestamps: list[SourceStampData] = []
 
     @defer.inlineCallbacks
-    def getSs(ssid) -> InlineCallbacksType[None]:
+    def getSs(ssid: int) -> InlineCallbacksType[None]:
         ss: SourceStampData | None = yield master.data.get(('sourcestamps', str(ssid)))
         if ss is not None:
             sourcestamps.append(ss)
@@ -107,7 +111,9 @@ class BuildsetEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs) -> InlineCallbacksType[BuildSetData | None]:
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[BuildSetData | None]:
         res = yield self.master.db.buildsets.getBuildset(kwargs['bsid'])
         res = yield _db2data(res, self.master)
         return res
@@ -121,7 +127,9 @@ class BuildsetsEndpoint(base.Endpoint):
     rootLinkName = 'buildsets'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs) -> InlineCallbacksType[list[BuildSetData]]:
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[BuildSetData]]:
         complete = resultSpec.popBooleanFilter('complete')
         resultSpec.fieldMapping = buildset_field_mapping
         buildsets = yield self.master.db.buildsets.getBuildsets(
@@ -172,8 +180,8 @@ class Buildset(base.ResourceType):
         rebuilt_buildid: int | None = None,
         parent_buildid: int | None = None,
         parent_relationship: str | None = None,
-        priority=0,
-    ):
+        priority: int = 0,
+    ) -> InlineCallbacksType[tuple[int, dict[str, int]]]:
         if sourcestamps is None:
             sourcestamps = []
         if properties is None:
@@ -205,7 +213,8 @@ class Buildset(base.ResourceType):
 
         # notify about the component build requests
         brResource = self.master.data.getResourceType("buildrequest")
-        brResource.generateEvent(list(brids.values()), 'new')
+        assert brResource is not None
+        brResource.generateEvent(list(brids.values()), 'new')  # type: ignore[attr-defined]
 
         # and the buildset itself
         msg = {
@@ -235,7 +244,7 @@ class Buildset(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def maybeBuildsetComplete(self, bsid: int):
+    def maybeBuildsetComplete(self, bsid: int) -> InlineCallbacksType[None]:
         brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid, complete=False)
 
         # if there are incomplete buildrequests, bail out
@@ -245,7 +254,7 @@ class Buildset(base.ResourceType):
         brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid)
 
         # figure out the overall results of the buildset:
-        cumulative_results = SUCCESS
+        cumulative_results: int = SUCCESS
         for brdict in brdicts:
             cumulative_results = worst_status(cumulative_results, brdict.results)
 

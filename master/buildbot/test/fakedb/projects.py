@@ -26,14 +26,14 @@ class Project(Row):
 
     def __init__(
         self,
-        id=None,
-        name='fake_project',
-        name_hash=None,
-        slug=None,
-        description=None,
-        description_format=None,
-        description_html=None,
-    ):
+        id: int | None = None,
+        name: str = 'fake_project',
+        name_hash: str | None = None,
+        slug: str | None = None,
+        description: str | None = None,
+        description_format: str | None = None,
+        description_html: str | None = None,
+    ) -> None:
         if slug is None:
             slug = name
         super().__init__(

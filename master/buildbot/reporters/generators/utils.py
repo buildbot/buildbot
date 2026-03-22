@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -33,6 +34,8 @@ from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class BuildStatusGeneratorMixin(util.ComparableMixin):
@@ -57,7 +60,17 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         'add_patch',
     ]
 
-    def __init__(self, mode, tags, builders, schedulers, branches, subject, add_logs, add_patch):
+    def __init__(
+        self,
+        mode: str | tuple[str, ...],
+        tags: list[str] | None,
+        builders: list[str] | None,
+        schedulers: list[str] | None,
+        branches: list[str] | None,
+        subject: str | None,
+        add_logs: Any,
+        add_patch: bool,
+    ) -> None:
         self.mode = self._compute_shortcut_modes(mode)
 
         if add_logs is not None:
@@ -77,7 +90,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         self.add_logs = add_logs
         self.add_patch = add_patch
 
-    def check(self):
+    def check(self) -> None:
         self._verify_build_generator_mode(self.mode)
 
         if self.subject is not None and '\n' in self.subject:
@@ -96,7 +109,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         if self.builders is not None and self.tags is not None:
             config.error("Please specify only builders or tags to include - not both.")
 
-    def generate_name(self):
+    def generate_name(self) -> str:
         name = self.__class__.__name__
         if self.tags is not None:
             name += "_tags_" + "+".join(self.tags)
@@ -109,7 +122,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         name += "_".join(self.mode)
         return name
 
-    def is_message_needed_by_props(self, build):
+    def is_message_needed_by_props(self, build: Any) -> bool:
         builder = build['builder']
         scheduler = build['properties'].get('scheduler', [None])[0]
         branch = build['properties'].get('branch', [None])[0]
@@ -124,7 +137,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             return False
         return True
 
-    def is_message_needed_by_results(self, build):
+    def is_message_needed_by_results(self, build: Any) -> bool:
         results = build['results']
         if "change" in self.mode:
             prev = build['prev_build']
@@ -147,7 +160,9 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         return False
 
-    def _merge_msgtype(self, msgtype, new_msgtype):
+    def _merge_msgtype(
+        self, msgtype: str | None, new_msgtype: str | None
+    ) -> tuple[str | None, bool]:
         if new_msgtype is None:
             return msgtype, False
         if msgtype is None:
@@ -161,12 +176,12 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         return msgtype, True
 
-    def _merge_subject(self, subject, new_subject):
+    def _merge_subject(self, subject: str | None, new_subject: str | None) -> str | None:
         if subject is None and new_subject is not None:
             return new_subject
         return subject
 
-    def _merge_body(self, body, new_body):
+    def _merge_body(self, body: Any, new_body: Any) -> tuple[Any, bool]:
         if body is None:
             return new_body, True
         if new_body is None:
@@ -184,7 +199,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         )
         return body, False
 
-    def _merge_extra_info(self, info, new_info):
+    def _merge_extra_info(self, info: Any, new_info: Any) -> tuple[Any, bool]:
         if info is None:
             return new_info, True
         if new_info is None:
@@ -202,7 +217,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         return info, True
 
-    def _get_patches_for_build(self, build):
+    def _get_patches_for_build(self, build: Any) -> list[Any]:
         if not self.add_patch:
             return []
 
@@ -211,7 +226,9 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         return [ss['patch'] for ss in ss_list if 'patch' in ss and ss['patch'] is not None]
 
     @defer.inlineCallbacks
-    def build_message(self, formatter, master, reporter, build):
+    def build_message(
+        self, formatter: Any, master: Any, reporter: Any, build: Any
+    ) -> InlineCallbacksType[Any]:
         patches = self._get_patches_for_build(build)
 
         logs = self._get_logs_for_build(build)
@@ -246,7 +263,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             "extra_info": buildmsg["extra_info"],
         }
 
-    def _get_logs_for_build(self, build):
+    def _get_logs_for_build(self, build: Any) -> list[Any]:
         if 'steps' not in build:
             return []
 
@@ -259,7 +276,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                     all_logs.append(l)
         return all_logs
 
-    def _verify_build_generator_mode(self, mode):
+    def _verify_build_generator_mode(self, mode: tuple[str, ...]) -> None:
         for m in self._compute_shortcut_modes(mode):
             if m not in self.possible_modes:
                 if m == "all":
@@ -270,11 +287,11 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                 else:
                     config.error(f"mode {m} is not a valid mode")
 
-    def _verify_list_or_none_param(self, name, param):
+    def _verify_list_or_none_param(self, name: str, param: Any) -> None:
         if param is not None and not isinstance(param, list):
             config.error(f"{name} must be a list or None")
 
-    def _compute_shortcut_modes(self, mode):
+    def _compute_shortcut_modes(self, mode: str | tuple[str, ...]) -> tuple[str, ...]:
         if isinstance(mode, str):
             if mode == "all":
                 mode = ("failing", "passing", "warnings", "exception", "cancelled")
@@ -284,5 +301,5 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                 mode = (mode,)
         return mode
 
-    def _matches_any_tag(self, tags):
-        return self.tags and any(tag for tag in self.tags if tag in tags)
+    def _matches_any_tag(self, tags: list[str]) -> bool:
+        return bool(self.tags and any(tag for tag in self.tags if tag in tags))

@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from buildbot.interfaces import IProperties
     from buildbot.locks import BaseLock
     from buildbot.locks import BaseLockId
+    from buildbot.locks import LockAccess
     from buildbot.process.builder import Builder
     from buildbot.process.buildrequest import BuildRequest
     from buildbot.process.buildrequest import TempChange
@@ -120,7 +121,7 @@ class Build(properties.PropertiesMixin):
         self.locks: IMaybeRenderableType[Iterable[BaseLockId]] = []  # list of lock accesses
 
         # list of (real_lock, access) tuples
-        self._locks_to_acquire: list[tuple[BaseLock, str]] = []
+        self._locks_to_acquire: list[tuple[BaseLock, LockAccess]] = []
         # build a source stamp
         self.sources: list[TempSourceStamp] = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
@@ -141,7 +142,7 @@ class Build(properties.PropertiesMixin):
 
         self.terminate = False
 
-        self._acquiringLock: tuple[BaseLock, str, Deferred[None]] | None = None
+        self._acquiringLock: tuple[BaseLock, LockAccess, Deferred[None]] | None = None
         self._builderid: int | None = None
         # overall results, may downgrade after each step
         self.results = SUCCESS
@@ -249,7 +250,7 @@ class Build(properties.PropertiesMixin):
 
     def getWorkerCommandVersion(self, command: str, oldversion: str | None = None) -> str:
         assert self.workerforbuilder is not None
-        return self.workerforbuilder.getWorkerCommandVersion(command, oldversion)
+        return self.workerforbuilder.getWorkerCommandVersion(command, oldversion)  # type: ignore[return-value]
 
     def getWorkerName(self) -> str | None:
         return self.workername
@@ -535,12 +536,12 @@ class Build(properties.PropertiesMixin):
         # properties
         self.setupWorkerProperties(workerforbuilder)
         self.setupWorkerForBuilder(workerforbuilder)
-        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
+        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)  # type: ignore[union-attr]
 
         # tell the remote that it's starting a build, too
         try:
             assert self.builder.name is not None
-            yield self.conn.remoteStartBuild(self.builder.name)
+            yield self.conn.remoteStartBuild(self.builder.name)  # type: ignore[union-attr]
         except Exception:
             yield self.buildPreparationFailure(Failure(), "start_build")
             yield self.buildFinished(["worker", "not", "building"], RETRY)
@@ -952,7 +953,7 @@ class Build(properties.PropertiesMixin):
     @defer.inlineCallbacks
     def getUrl(self) -> InlineCallbacksType[str]:
         builder_id = yield self.getBuilderId()
-        return getURLForBuild(self.master, builder_id, self.number)
+        return getURLForBuild(self.master, builder_id, self.number)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
     def get_buildid(self) -> InlineCallbacksType[int]:
@@ -965,7 +966,8 @@ class Build(properties.PropertiesMixin):
     def waitUntilFinished(self) -> InlineCallbacksType[None]:
         buildid = yield self.get_buildid()
         yield self.master.mq.waitUntilEvent(
-            ('builds', str(buildid), 'finished'), lambda: self.finished
+            ('builds', str(buildid), 'finished'),
+            lambda: self.finished,  # type: ignore[arg-type,return-value]
         )
 
     def getWorkerInfo(self) -> Properties:

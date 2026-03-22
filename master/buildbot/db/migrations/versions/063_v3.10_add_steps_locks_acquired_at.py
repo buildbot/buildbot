@@ -32,7 +32,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     op.add_column("steps", sa.Column("locks_acquired_at", sa.Integer, nullable=True))
 
     metadata = sa.MetaData()
@@ -46,5 +46,5 @@ def upgrade():
     op.execute(steps_tbl.update().values({steps_tbl.c.locks_acquired_at: steps_tbl.c.started_at}))
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_column("steps", "locks_acquired_at")

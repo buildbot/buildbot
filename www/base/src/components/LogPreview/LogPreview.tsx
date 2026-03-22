@@ -90,6 +90,10 @@ export const LogPreview = observer(
         return;
       }
 
+      if (log.type === 'd') {
+        return;
+      }
+
       if (log.type === 'h') {
         if (pendingRequest.current !== null) {
           pendingRequest.current.cancel();
@@ -158,6 +162,9 @@ export const LogPreview = observer(
     }, [log.num_lines, fullDisplay]);
 
     const renderLogContent = () => {
+      if (log.type === 'd') {
+        return <Card.Body>This log has been deleted from the database.</Card.Body>;
+      }
       if (log.type === 'h') {
         return <Card.Body dangerouslySetInnerHTML={{__html: htmlLog}} />;
       }
@@ -197,13 +204,19 @@ export const LogPreview = observer(
             </div>
             <div className="flex-grow-1">
               <div className="bb-log-preview-download">
-                <Link
-                  to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}
-                >
-                  view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}
-                  &nbsp;
-                </Link>
-                <LogDownloadButtons log={log} />
+                {log.type !== 'd' ? (
+                  <>
+                    <Link
+                      to={`/builders/${builderid}/builds/${buildnumber}/steps/${stepnumber}/logs/${log.slug}`}
+                    >
+                      view all {log.num_lines} line{log.num_lines > 1 ? 's' : ''}
+                      &nbsp;
+                    </Link>
+                    <LogDownloadButtons log={log} />
+                  </>
+                ) : (
+                  <span className="text-muted">deleted</span>
+                )}
               </div>
             </div>
           </div>

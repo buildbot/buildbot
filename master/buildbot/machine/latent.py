@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import enum
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -23,6 +26,12 @@ from zope.interface import implementer
 from buildbot import interfaces
 from buildbot.machine.base import Machine
 from buildbot.util import Notifier
+
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IDelayedCall
+
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.base import AbstractWorker
 
 
 class States(enum.Enum):
@@ -37,17 +46,25 @@ class States(enum.Enum):
 class AbstractLatentMachine(Machine):
     DEFAULT_MISSING_TIMEOUT = 20 * 60
 
-    def checkConfig(
-        self, name, build_wait_timeout=0, missing_timeout=DEFAULT_MISSING_TIMEOUT, **kwargs
-    ):
+    def checkConfig(  # type: ignore[override]
+        self,
+        name: str,
+        build_wait_timeout: int = 0,
+        missing_timeout: int = DEFAULT_MISSING_TIMEOUT,
+        **kwargs: Any,
+    ) -> None:
         super().checkConfig(name, **kwargs)
         self.state = States.STOPPED
-        self.latent_workers = []
+        self.latent_workers: list[AbstractWorker] = []
 
     @defer.inlineCallbacks
-    def reconfigService(
-        self, name, build_wait_timeout=0, missing_timeout=DEFAULT_MISSING_TIMEOUT, **kwargs
-    ):
+    def reconfigService(  # type: ignore[override]
+        self,
+        name: str,
+        build_wait_timeout: int = 0,
+        missing_timeout: int = DEFAULT_MISSING_TIMEOUT,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         yield super().reconfigService(name, **kwargs)
         self.build_wait_timeout = build_wait_timeout
         self.missing_timeout = missing_timeout
@@ -57,23 +74,23 @@ class AbstractLatentMachine(Machine):
                 raise RuntimeError(f'Worker is not latent {worker.name}')
 
         self.state = States.STOPPED
-        self._start_notifier = Notifier()
-        self._stop_notifier = Notifier()
-        self._build_wait_timer = None
-        self._missing_timer = None
+        self._start_notifier: Notifier[bool] = Notifier()
+        self._stop_notifier: Notifier[None] = Notifier()
+        self._build_wait_timer: IDelayedCall | None = None
+        self._missing_timer: IDelayedCall | None = None
 
-    def start_machine(self):
+    def start_machine(self) -> defer.Deferred[bool]:
         # Responsible for starting the machine. The function should return a
         # deferred which should result in True if the startup has been
         # successful, or False otherwise.
         raise NotImplementedError
 
-    def stop_machine(self):
+    def stop_machine(self) -> defer.Deferred[None]:
         # Responsible for shutting down the machine
         raise NotImplementedError
 
     @defer.inlineCallbacks
-    def substantiate(self, starting_worker):
+    def substantiate(self, starting_worker: AbstractWorker) -> InlineCallbacksType[bool]:
         if self.state == States.STOPPING:
             # wait until stop action finishes
             yield self._stop_notifier.wait()
@@ -98,8 +115,8 @@ class AbstractLatentMachine(Machine):
         # because the original call to substantiate will get them anyway and
         # we don't want to be slowed down by other workers on the machine.
         for worker in self.workers:
-            if worker.starts_without_substantiate:
-                worker.substantiate(None, None)
+            if worker.starts_without_substantiate:  # type: ignore[attr-defined]
+                worker.substantiate(None, None)  # type: ignore[attr-defined]
 
         # Start the machine. We don't need to wait for any workers to actually
         # come online as that's handled in their substantiate() functions.
@@ -111,7 +128,8 @@ class AbstractLatentMachine(Machine):
 
         if not ret:
             yield defer.DeferredList(
-                [worker.insubstantiate() for worker in self.workers], consumeErrors=True
+                [worker.insubstantiate() for worker in self.workers],  # type: ignore[attr-defined]
+                consumeErrors=True,
             )
         else:
             self._setMissingTimer()
@@ -122,8 +140,8 @@ class AbstractLatentMachine(Machine):
         return ret
 
     @defer.inlineCallbacks
-    def _stop(self):
-        if any(worker.building for worker in self.workers) or self.state == States.STARTING:
+    def _stop(self) -> InlineCallbacksType[None]:
+        if any(worker.building for worker in self.workers) or self.state == States.STARTING:  # type: ignore[attr-defined]
             return None
 
         if self.state == States.STOPPING:
@@ -134,7 +152,8 @@ class AbstractLatentMachine(Machine):
 
         # wait until workers insubstantiate, then stop
         yield defer.DeferredList(
-            [worker.insubstantiate() for worker in self.workers], consumeErrors=True
+            [worker.insubstantiate() for worker in self.workers],  # type: ignore[attr-defined]
+            consumeErrors=True,
         )
         try:
             yield self.stop_machine()
@@ -145,34 +164,34 @@ class AbstractLatentMachine(Machine):
         self._stop_notifier.notify(None)
         return None
 
-    def notifyBuildStarted(self):
+    def notifyBuildStarted(self) -> None:
         self._clearMissingTimer()
 
-    def notifyBuildFinished(self):
-        if any(worker.building for worker in self.workers):
+    def notifyBuildFinished(self) -> None:
+        if any(worker.building for worker in self.workers):  # type: ignore[attr-defined]
             self._clearBuildWaitTimer()
         else:
             self._setBuildWaitTimer()
 
-    def _clearMissingTimer(self):
+    def _clearMissingTimer(self) -> None:
         if self._missing_timer is not None:
             if self._missing_timer.active():
                 self._missing_timer.cancel()
             self._missing_timer = None
 
-    def _setMissingTimer(self):
+    def _setMissingTimer(self) -> None:
         self._clearMissingTimer()
         self._missing_timer = self.master.reactor.callLater(self.missing_timeout, self._stop)
 
-    def _clearBuildWaitTimer(self):
+    def _clearBuildWaitTimer(self) -> None:
         if self._build_wait_timer is not None:
             if self._build_wait_timer.active():
                 self._build_wait_timer.cancel()
             self._build_wait_timer = None
 
-    def _setBuildWaitTimer(self):
+    def _setBuildWaitTimer(self) -> None:
         self._clearBuildWaitTimer()
         self._build_wait_timer = self.master.reactor.callLater(self.build_wait_timeout, self._stop)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<AbstractLatentMachine '{self.name}' at {id(self)}>"

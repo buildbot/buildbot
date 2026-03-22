@@ -1,0 +1,1 @@
+Deleted logs now display a message indicating they have been removed instead of showing empty content (:issue:`4274`).

@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest.mock import Mock
 
 from twisted.internet import defer
@@ -28,26 +32,36 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestBuildSetGeneratorBase(
     ConfigErrorsMixin, TestReactorMixin, ReporterTestMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
-    def insert_build_finished_get_props(self, results, **kwargs):
+    def insert_build_finished_get_props(
+        self, results: int | None, **kwargs: Any
+    ) -> InlineCallbacksType[dict[str, Any]]:
         build = yield self.insert_build_finished(results, **kwargs)
         yield utils.getDetailsForBuild(self.master, build, want_properties=True)
         return build
 
     @defer.inlineCallbacks
     def setup_generator(
-        self, results=SUCCESS, message=None, db_args=None, insert_build=True, **kwargs
-    ):
+        self,
+        results: int | None = SUCCESS,
+        message: dict[str, Any] | None = None,
+        db_args: dict[str, Any] | None = None,
+        insert_build: bool = True,
+        **kwargs: Any,
+    ) -> InlineCallbacksType[Any]:
         if message is None:
             message = {
                 "body": "body",
@@ -72,7 +86,7 @@ class TestBuildSetGeneratorBase(
         formatter.want_logs_content = False
         formatter.want_steps = False
 
-        g = self.GENERATOR_CLASS(message_formatter=formatter, **kwargs)
+        g = self.GENERATOR_CLASS(message_formatter=formatter, **kwargs)  # type: ignore[attr-defined]
 
         return (g, build, buildset)
 
@@ -84,7 +98,9 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
     GENERATOR_CLASS = BuildSetStatusGenerator
 
     @defer.inlineCallbacks
-    def buildset_message(self, g, builds, buildset):
+    def buildset_message(
+        self, g: Any, builds: list[dict[str, Any]], buildset: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
@@ -92,7 +108,9 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         return report
 
     @defer.inlineCallbacks
-    def generate(self, g, key, build):
+    def generate(
+        self, g: Any, key: tuple[str | int, ...], build: Any
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         reporter = Mock()
         reporter.getResponsibleUsersForBuild.return_value = []
 
@@ -100,7 +118,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         return report
 
     @defer.inlineCallbacks
-    def test_buildset_message_nominal(self):
+    def test_buildset_message_nominal(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator(mode=("change",))
         report = yield self.buildset_message(g, [build], buildset)
 
@@ -125,7 +143,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_buildset_message_no_result(self):
+    def test_buildset_message_no_result(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator(results=None, mode=("change",))
         buildset["results"] = None
         report = yield self.buildset_message(g, [build], buildset)
@@ -151,7 +169,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_buildset_message_no_result_formatter_no_subject(self):
+    def test_buildset_message_no_result_formatter_no_subject(self) -> InlineCallbacksType[None]:
         message = {
             "body": "body",
             "type": "text",
@@ -186,7 +204,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_generate_complete(self):
+    def test_generate_complete(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator()
         report = yield self.generate(g, ('buildsets', 98, 'complete'), buildset)
 
@@ -212,7 +230,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_generate_complete_no_builds(self):
+    def test_generate_complete_no_builds(self) -> InlineCallbacksType[None]:
         g, _, buildset = yield self.setup_generator(insert_build=False)
         report = yield self.generate(g, ('buildsets', 98, 'complete'), buildset)
 
@@ -220,7 +238,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         self.assertIsNone(report)
 
     @defer.inlineCallbacks
-    def test_generate_complete_non_matching_builder(self):
+    def test_generate_complete_non_matching_builder(self) -> InlineCallbacksType[None]:
         g, _, buildset = yield self.setup_generator(builders=['non-matched'])
         report = yield self.generate(g, ('buildsets', 98, 'complete'), buildset)
 
@@ -228,7 +246,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         self.assertIsNone(report)
 
     @defer.inlineCallbacks
-    def test_generate_complete_non_matching_result(self):
+    def test_generate_complete_non_matching_result(self) -> InlineCallbacksType[None]:
         g, _, buildset = yield self.setup_generator(mode=('failing',))
         report = yield self.generate(g, ('buildsets', 98, 'complete'), buildset)
 
@@ -240,18 +258,22 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
     GENERATOR_CLASS = BuildSetCombinedStatusGenerator
 
     @defer.inlineCallbacks
-    def buildset_message(self, g, buildset, builds):
+    def buildset_message(
+        self, g: Any, buildset: dict[str, Any], builds: list[dict[str, Any]]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         reporter = Mock()
         report = yield g.buildset_message(g.formatter, self.master, reporter, buildset, builds)
         return report
 
     @defer.inlineCallbacks
-    def generate(self, g, key, buildset):
+    def generate(
+        self, g: Any, key: tuple[str | int, ...], buildset: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         report = yield g.generate(self.master, Mock(), key, buildset)
         return report
 
     @defer.inlineCallbacks
-    def test_buildset_message_normal(self):
+    def test_buildset_message_normal(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator()
         report = yield self.buildset_message(g, buildset, [build])
 
@@ -281,7 +303,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_buildset_message_no_builds(self):
+    def test_buildset_message_no_builds(self) -> InlineCallbacksType[None]:
         g, _, buildset = yield self.setup_generator(insert_build=False)
         report = yield self.buildset_message(g, buildset, [])
 
@@ -306,7 +328,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_buildset_message_no_result(self):
+    def test_buildset_message_no_result(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator(results=None)
         buildset["results"] = None
         report = yield self.buildset_message(g, buildset, [build])
@@ -337,7 +359,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_buildset_message_no_builds_no_result(self):
+    def test_buildset_message_no_builds_no_result(self) -> InlineCallbacksType[None]:
         g, _, buildset = yield self.setup_generator(results=None, insert_build=False)
         buildset["results"] = None
         report = yield self.buildset_message(g, buildset, [])
@@ -363,7 +385,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_buildset_message_no_result_formatter_no_subject(self):
+    def test_buildset_message_no_result_formatter_no_subject(self) -> InlineCallbacksType[None]:
         message = {
             "body": "body",
             "type": "text",
@@ -400,7 +422,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_generate_complete(self):
+    def test_generate_complete(self) -> InlineCallbacksType[None]:
         g, _, buildset = yield self.setup_generator(insert_build=False)
         report = yield self.generate(g, ("buildsets", 98, "complete"), buildset)
 
@@ -421,7 +443,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         )
 
     @defer.inlineCallbacks
-    def test_generate_complete_with_builds(self):
+    def test_generate_complete_with_builds(self) -> InlineCallbacksType[None]:
         g, build, buildset = yield self.setup_generator(insert_build=True)
         report = yield self.generate(g, ("buildsets", 98, "complete"), buildset)
 

@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -27,6 +32,11 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces as util_interfaces
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    import datetime
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 A_TIMESTAMP = 1341700729
 A_TIMESTAMP_EPOCH = epoch2datetime(A_TIMESTAMP)
 EARLIER = 1248529376
@@ -38,7 +48,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = buildsets.Buildset
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Buildset(id=13, reason='because I said so'),
@@ -50,21 +60,21 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing(self):
+    def test_get_existing(self) -> InlineCallbacksType[None]:
         buildset = yield self.callGet(('buildsets', 13))
 
         self.validateData(buildset)
         self.assertEqual(buildset['reason'], 'because I said so')
 
     @defer.inlineCallbacks
-    def test_get_existing_no_sourcestamps(self):
+    def test_get_existing_no_sourcestamps(self) -> InlineCallbacksType[None]:
         buildset = yield self.callGet(('buildsets', 14))
 
         self.validateData(buildset)
         self.assertEqual(buildset['sourcestamps'], [])
 
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         buildset = yield self.callGet(('buildsets', 99))
 
         self.assertEqual(buildset, None)
@@ -75,7 +85,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = buildsets.Buildset
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.SourceStamp(id=92),
@@ -86,7 +96,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_get(self) -> InlineCallbacksType[None]:
         buildsets = yield self.callGet(('buildsets',))
 
         self.validateData(buildsets[0])
@@ -95,7 +105,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildsets[1]['bsid'], 14)
 
     @defer.inlineCallbacks
-    def test_get_complete(self):
+    def test_get_complete(self) -> InlineCallbacksType[None]:
         f = resultspec.Filter('complete', 'eq', [True])
         buildsets = yield self.callGet(
             ('buildsets',), resultSpec=resultspec.ResultSpec(filters=[f])
@@ -106,7 +116,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildsets[0]['bsid'], 13)
 
     @defer.inlineCallbacks
-    def test_get_incomplete(self):
+    def test_get_incomplete(self) -> InlineCallbacksType[None]:
         f = resultspec.Filter('complete', 'eq', [False])
         buildsets = yield self.callGet(
             ('buildsets',), resultSpec=resultspec.ResultSpec(filters=[f])
@@ -119,7 +129,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = buildsets.Buildset(self.master)
@@ -150,29 +160,35 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         'ssid': 234,
     }
 
-    def test_signature_addBuildset(self):
+    def test_signature_addBuildset(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.addBuildset,  # fake
             self.rtype.addBuildset,
         )  # real
         def addBuildset(
-            self,
-            waited_for,
-            scheduler=None,
-            sourcestamps=None,
-            reason='',
-            properties=None,
-            builderids=None,
-            external_idstring=None,
-            rebuilt_buildid=None,
-            parent_buildid=None,
-            parent_relationship=None,
-            priority=0,
-        ):
+            self: object,
+            waited_for: bool,
+            scheduler: str | None = None,
+            sourcestamps: list[dict[str, Any] | str] | None = None,
+            reason: str = '',
+            properties: dict[str, Any] | None = None,
+            builderids: list[int] | None = None,
+            external_idstring: str | None = None,
+            rebuilt_buildid: int | None = None,
+            parent_buildid: int | None = None,
+            parent_relationship: str | None = None,
+            priority: int = 0,
+        ) -> None:
             pass
 
     @defer.inlineCallbacks
-    def do_test_addBuildset(self, kwargs, expectedReturn, expectedMessages, expectedBuildset):
+    def do_test_addBuildset(
+        self,
+        kwargs: dict[str, Any],
+        expectedReturn: tuple[int, dict[int, int]],
+        expectedMessages: list[tuple[tuple[str, ...], dict[str, Any]]],
+        expectedBuildset: dict[str, Any],
+    ) -> InlineCallbacksType[None]:
         """Run a test of addBuildset.
 
         @param kwargs: kwargs to addBuildset
@@ -205,7 +221,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             [expectedBuildset],
         )
 
-    def _buildRequestMessageDict(self, brid, bsid, builderid):
+    def _buildRequestMessageDict(self, brid: int, bsid: int, builderid: int) -> dict[str, Any]:
         return {
             'builderid': builderid,
             'buildrequestid': brid,
@@ -222,19 +238,25 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             'properties': None,
         }
 
-    def _buildRequestMessage1(self, brid, bsid, builderid):
+    def _buildRequestMessage1(
+        self, brid: int, bsid: int, builderid: int
+    ) -> tuple[tuple[str, ...], dict[str, Any]]:
         return (
             ('buildsets', str(bsid), 'builders', str(builderid), 'buildrequests', str(brid), 'new'),
             self._buildRequestMessageDict(brid, bsid, builderid),
         )
 
-    def _buildRequestMessage2(self, brid, bsid, builderid):
+    def _buildRequestMessage2(
+        self, brid: int, bsid: int, builderid: int
+    ) -> tuple[tuple[str, ...], dict[str, Any]]:
         return (
             ('buildrequests', str(brid), 'new'),
             self._buildRequestMessageDict(brid, bsid, builderid),
         )
 
-    def _buildRequestMessage3(self, brid, bsid, builderid):
+    def _buildRequestMessage3(
+        self, brid: int, bsid: int, builderid: int
+    ) -> tuple[tuple[str, ...], dict[str, Any]]:
         return (
             ('builders', str(builderid), 'buildrequests', str(brid), 'new'),
             self._buildRequestMessageDict(brid, bsid, builderid),
@@ -242,13 +264,13 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
 
     def _buildsetMessage(
         self,
-        bsid,
-        external_idstring='extid',
-        reason='because',
-        scheduler='fakesched',
-        sourcestampids=None,
-        submitted_at=A_TIMESTAMP,
-    ):
+        bsid: int,
+        external_idstring: str = 'extid',
+        reason: str = 'because',
+        scheduler: str = 'fakesched',
+        sourcestampids: list[int] | None = None,
+        submitted_at: int = A_TIMESTAMP,
+    ) -> tuple[tuple[str, ...], dict[str, Any]]:
         if sourcestampids is None:
             sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
@@ -271,14 +293,14 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
 
     def _buildsetCompleteMessage(
         self,
-        bsid,
-        complete_at=A_TIMESTAMP_EPOCH,
-        submitted_at=A_TIMESTAMP_EPOCH,
-        external_idstring='extid',
-        reason='because',
-        results=0,
-        sourcestampids=None,
-    ):
+        bsid: int,
+        complete_at: datetime.datetime = A_TIMESTAMP_EPOCH,
+        submitted_at: datetime.datetime = A_TIMESTAMP_EPOCH,
+        external_idstring: str = 'extid',
+        reason: str = 'because',
+        results: int = 0,
+        sourcestampids: list[int] | None = None,
+    ) -> tuple[tuple[str, ...], dict[str, Any]]:
         if sourcestampids is None:
             sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
@@ -299,7 +321,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             },
         )
 
-    def test_addBuildset_two_builderNames(self):
+    def test_addBuildset_two_builderNames(self) -> defer.Deferred[None]:
         kwargs = {
             "scheduler": 'fakesched',
             "reason": 'because',
@@ -325,7 +347,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         }
         return self.do_test_addBuildset(kwargs, expectedReturn, expectedMessages, expectedBuildset)
 
-    def test_addBuildset_no_builderNames(self):
+    def test_addBuildset_no_builderNames(self) -> defer.Deferred[None]:
         kwargs = {
             "scheduler": 'fakesched',
             "reason": 'because',
@@ -333,7 +355,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             "external_idstring": 'extid',
             "waited_for": False,
         }
-        expectedReturn = (200, {})
+        expectedReturn: tuple[int, dict[int, int]] = (200, {})
         expectedMessages = [
             self._buildsetMessage(200),
             # with no builderNames, this is done already
@@ -346,24 +368,24 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         }
         return self.do_test_addBuildset(kwargs, expectedReturn, expectedMessages, expectedBuildset)
 
-    def test_signature_maybeBuildsetComplete(self):
+    def test_signature_maybeBuildsetComplete(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.maybeBuildsetComplete,  # fake
             self.rtype.maybeBuildsetComplete,
         )  # real
-        def maybeBuildsetComplete(self, bsid):
+        def maybeBuildsetComplete(self: object, bsid: int) -> None:
             pass
 
     @defer.inlineCallbacks
     def do_test_maybeBuildsetComplete(
         self,
-        buildRequestCompletions=None,
-        buildRequestResults=None,
-        buildsetComplete=False,
-        expectComplete=False,
-        expectMessage=False,
-        expectSuccess=True,
-    ):
+        buildRequestCompletions: dict[int, bool] | None = None,
+        buildRequestResults: dict[int, int] | None = None,
+        buildsetComplete: bool = False,
+        expectComplete: bool = False,
+        expectMessage: bool = False,
+        expectSuccess: bool = True,
+    ) -> InlineCallbacksType[None]:
         """Test maybeBuildsetComplete.
 
         @param buildRequestCompletions: dict mapping brid to True if complete,
@@ -392,7 +414,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
 
         self.reactor.advance(A_TIMESTAMP)
 
-        def mkbr(brid, bsid):
+        def mkbr(brid: int, bsid: int) -> fakedb.BuildRequest:
             return fakedb.BuildRequest(
                 id=brid,
                 buildsetid=bsid,
@@ -438,18 +460,18 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
         else:
             self.assertEqual(self.master.mq.productions, [])
 
-    def test_maybeBuildsetComplete_not_yet(self):
+    def test_maybeBuildsetComplete_not_yet(self) -> defer.Deferred[None]:
         # only brid 42 is complete, so the buildset is not complete
         return self.do_test_maybeBuildsetComplete(buildRequestCompletions={42: True})
 
-    def test_maybeBuildsetComplete_complete(self):
+    def test_maybeBuildsetComplete_complete(self) -> defer.Deferred[None]:
         return self.do_test_maybeBuildsetComplete(
             buildRequestCompletions={42: True, 43: True, 44: True},
             expectComplete=True,
             expectMessage=True,
         )
 
-    def test_maybeBuildsetComplete_complete_failure(self):
+    def test_maybeBuildsetComplete_complete_failure(self) -> defer.Deferred[None]:
         return self.do_test_maybeBuildsetComplete(
             buildRequestCompletions={42: True, 43: True, 44: True},
             buildRequestResults={43: FAILURE},
@@ -458,7 +480,7 @@ class Buildset(TestReactorMixin, util_interfaces.InterfaceTests, unittest.TestCa
             expectSuccess=False,
         )
 
-    def test_maybeBuildsetComplete_already_complete(self):
+    def test_maybeBuildsetComplete_already_complete(self) -> defer.Deferred[None]:
         return self.do_test_maybeBuildsetComplete(
             buildRequestCompletions={42: True, 43: True, 44: True},
             buildsetComplete=True,

@@ -12,18 +12,26 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Portions Copyright Buildbot Team Members
-
+from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.config import error
 from buildbot.worker.base import Worker
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class LocalWorker(Worker):
-    def checkConfig(self, name, workdir=None, **kwargs):
+    LocalWorkerFactory: Any = None
+    remote_worker: Any = None
+
+    def checkConfig(self, name: str, workdir: str | None = None, **kwargs: Any) -> None:  # type: ignore[override]
         kwargs['password'] = None
         super().checkConfig(name, **kwargs)
         self.LocalWorkerFactory = None
@@ -40,7 +48,9 @@ class LocalWorker(Worker):
         self.remote_worker = None
 
     @defer.inlineCallbacks
-    def reconfigService(self, name, workdir=None, **kwargs):
+    def reconfigService(  # type: ignore[override]
+        self, name: str, workdir: str | None = None, **kwargs: Any
+    ) -> InlineCallbacksType[None]:
         kwargs['password'] = None
         yield super().reconfigService(name, **kwargs)
         if workdir is None:

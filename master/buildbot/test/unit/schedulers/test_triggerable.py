@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.trial import unittest
@@ -26,9 +31,12 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import interfaces
 from buildbot.test.util import scheduler
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
-    def test_interface(self):
+    def test_interface(self) -> None:
         self.assertInterfacesImplemented(triggerable.Triggerable)
 
 
@@ -37,7 +45,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
     SCHEDULERID = 13
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         # Necessary to get an assertable submitted_at time.
         self.reactor.advance(946684799)
@@ -46,7 +54,9 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         self.subscription = None
 
     @defer.inlineCallbacks
-    def makeScheduler(self, overrideBuildsetMethods=False, **kwargs):
+    def makeScheduler(
+        self, overrideBuildsetMethods: bool = False, **kwargs: Any
+    ) -> InlineCallbacksType[triggerable.Triggerable]:
         yield self.master.db.insert_test_data([fakedb.Builder(id=77, name='b')])
 
         sched = yield self.attachScheduler(
@@ -59,7 +69,13 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         return sched
 
     @defer.inlineCallbacks
-    def assertTriggeredBuildset(self, idsDeferred, waited_for, properties=None, sourcestamps=None):
+    def assertTriggeredBuildset(
+        self,
+        idsDeferred: defer.Deferred[tuple[int, dict[int, int]]],
+        waited_for: bool,
+        properties: dict[str, tuple[str, str]] | None = None,
+        sourcestamps: list[dict[str, str]] | None = None,
+    ) -> InlineCallbacksType[int]:
         if properties is None:
             properties = {}
         bsid, brids = yield idsDeferred
@@ -91,6 +107,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
             consumeErrors=True,
         )
 
+        assert sourcestamps is not None
         self.assertEqual(len(sourcestamps), len(actual_sourcestamps))
         for expected_ss, actual_ss in zip(sourcestamps, actual_sourcestamps):
             # We don't care if the actual sourcestamp has *more* attributes
@@ -119,7 +136,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
         return bsid
 
-    def sendCompletionMessage(self, bsid, results=3):
+    def sendCompletionMessage(self, bsid: int, results: int = 3) -> None:
         self.master.mq.callConsumer(
             ('buildsets', str(bsid), 'complete'),
             {
@@ -144,32 +161,32 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
     # method returns.
 
     @defer.inlineCallbacks
-    def test_constructor_no_reason(self):
+    def test_constructor_no_reason(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler()
         yield sched.configureService()
         self.assertEqual(sched.reason, None)  # default reason is dynamic
 
     @defer.inlineCallbacks
-    def test_constructor_explicit_reason(self):
+    def test_constructor_explicit_reason(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(reason="Because I said so")
         yield sched.configureService()
         self.assertEqual(sched.reason, "Because I said so")
 
     @defer.inlineCallbacks
-    def test_constructor_priority_none(self):
+    def test_constructor_priority_none(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(priority=None)
         yield sched.configureService()
         self.assertEqual(sched.priority, None)
 
     @defer.inlineCallbacks
-    def test_constructor_priority_int(self):
+    def test_constructor_priority_int(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(priority=8)
         yield sched.configureService()
         self.assertEqual(sched.priority, 8)
 
     @defer.inlineCallbacks
-    def test_constructor_priority_function(self):
-        def sched_priority(builderNames, changesByCodebase):
+    def test_constructor_priority_function(self) -> InlineCallbacksType[None]:
+        def sched_priority(builderNames: list[str], changesByCodebase: dict[str, list[Any]]) -> int:
             return 0
 
         sched = yield self.makeScheduler(priority=sched_priority)
@@ -177,7 +194,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         self.assertEqual(sched.priority, sched_priority)
 
     @defer.inlineCallbacks
-    def test_trigger(self):
+    def test_trigger(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(codebases={'cb': {'repository': 'r'}})
 
         # no subscription should be in place yet
@@ -218,7 +235,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         self.fired = False
 
         @d.addCallback
-        def fired(xxx_todo_changeme):
+        def fired(xxx_todo_changeme: tuple[int, dict[int, int]]) -> None:
             (result, brids) = xxx_todo_changeme
             self.assertEqual(result, 3)  # from sendCompletionMessage
             self.assertEqual(brids, {77: 1})
@@ -262,7 +279,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         yield d
 
     @defer.inlineCallbacks
-    def test_trigger_overlapping(self):
+    def test_trigger_overlapping(self) -> InlineCallbacksType[None]:
         sched = yield self.makeScheduler(codebases={'cb': {'repository': 'r'}})
 
         # no subscription should be in place yet
@@ -272,7 +289,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
 
         waited_for = False
 
-        def makeSS(rev):
+        def makeSS(rev: str) -> dict[str, str]:
             return {
                 'revision': rev,
                 'branch': 'br',
@@ -298,7 +315,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         )
         d.addCallback(
             lambda res_brids: (
-                self.assertEqual(res_brids[0], 11) and self.assertEqual(res_brids[1], {77: 1})
+                self.assertEqual(res_brids[0], 11) and self.assertEqual(res_brids[1], {77: 1})  # type: ignore[func-returns-value]
             )
         )
 
@@ -321,7 +338,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         )
         d.addCallback(
             lambda res_brids1: (
-                self.assertEqual(res_brids1[0], 22) and self.assertEqual(res_brids1[1], {77: 2})
+                self.assertEqual(res_brids1[0], 22) and self.assertEqual(res_brids1[1], {77: 2})  # type: ignore[func-returns-value]
             )
         )
 
@@ -348,7 +365,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_trigger_with_sourcestamp(self):
+    def test_trigger_with_sourcestamp(self) -> InlineCallbacksType[None]:
         # Test triggering a scheduler with a sourcestamp, and see that
         # sourcestamp handed to addBuildsetForSourceStampsWithDefaults.
         sched = yield self.makeScheduler(overrideBuildsetMethods=True)
@@ -391,7 +408,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_trigger_without_sourcestamps(self):
+    def test_trigger_without_sourcestamps(self) -> InlineCallbacksType[None]:
         # Test triggering *without* sourcestamps, and see that nothing is passed
         # to addBuildsetForSourceStampsWithDefaults
         waited_for = True
@@ -419,7 +436,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_trigger_with_reason(self):
+    def test_trigger_with_reason(self) -> InlineCallbacksType[None]:
         # Test triggering with a reason, and make sure the buildset's reason is updated accordingly
         # (and not the default)
         waited_for = True
@@ -452,7 +469,7 @@ class Triggerable(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_startService_stopService(self):
+    def test_startService_stopService(self) -> InlineCallbacksType[None]:
         yield self.makeScheduler()
         yield self.master.startService()
         yield self.master.stopService()

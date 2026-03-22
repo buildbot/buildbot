@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-def _db2data(model: TestResultSetModel):
+def _db2data(model: TestResultSetModel) -> dict[str, Any]:
     return {
         'test_result_setid': model.id,
         'builderid': model.builderid,
@@ -55,7 +55,9 @@ class TestResultSetsEndpoint(base.BuildNestingMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: Any, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]]]:
         complete = resultSpec.popBooleanFilter('complete')
         if 'stepid' in kwargs:
             step_dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
@@ -98,9 +100,9 @@ class TestResultSetsFromCommitRangeEndpoint(base.Endpoint):
     ]
 
     @async_to_deferred
-    async def get(self, result_spec, kwargs) -> list[dict[str, Any]]:
-        commit_from = int(kwargs.get('commitid1'))
-        commit_to = int(kwargs.get('commitid2'))
+    async def get(self, result_spec: Any, kwargs: dict[str, Any]) -> list[dict[str, Any]]:
+        commit_from = int(kwargs.get('commitid1'))  # type: ignore[arg-type]
+        commit_to = int(kwargs.get('commitid2'))  # type: ignore[arg-type]
         r = await self.master.db.codebase_commits.get_first_common_commit_with_ranges(
             commit_from, commit_to
         )
@@ -122,7 +124,9 @@ class TestResultSetEndpoint(base.BuildNestingMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: Any, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         model = yield self.master.db.test_result_sets.getTestResultSet(kwargs['test_result_setid'])
         return _db2data(model) if model else None
 
@@ -154,7 +158,7 @@ class TestResultSet(base.ResourceType):
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
-    def generateEvent(self, test_result_setid, event):
+    def generateEvent(self, test_result_setid: int, event: str) -> InlineCallbacksType[None]:
         test_result_set = yield self.master.data.get(('test_result_sets', test_result_setid))
         self.produceEvent(test_result_set, event)
 

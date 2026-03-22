@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -22,14 +27,17 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-    def _get_worker_dict(self, worker_name):
+    def _get_worker_dict(self, worker_name: str) -> dict[str, Any]:
         return {
             'name': worker_name,
             'notify': ["workeradmin@example.org"],
@@ -42,7 +50,9 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.T
         ('all',),
     ])
     @defer.inlineCallbacks
-    def test_report_matched_worker(self, worker_filter):
+    def test_report_matched_worker(
+        self, worker_filter: str | list[str]
+    ) -> InlineCallbacksType[None]:
         g = WorkerMissingGenerator(workers=worker_filter)
 
         report = yield g.generate(
@@ -53,7 +63,7 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.T
         self.assertIn(b"worker named myworker went away", report['body'])
 
     @defer.inlineCallbacks
-    def test_report_not_matched_worker(self):
+    def test_report_not_matched_worker(self) -> InlineCallbacksType[None]:
         g = WorkerMissingGenerator(workers=['other'])
 
         report = yield g.generate(
@@ -62,7 +72,7 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.T
 
         self.assertIsNone(report)
 
-    def test_unsupported_workers(self):
+    def test_unsupported_workers(self) -> None:
         g = WorkerMissingGenerator(workers='string worker')
         with self.assertRaisesConfigError("workers must be 'all', or list of worker names"):
             g.check()

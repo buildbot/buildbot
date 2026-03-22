@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -33,12 +37,15 @@ from buildbot.test.util import logging
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestGerritVerifyStatusPush(
     TestReactorMixin, ReporterTestMixin, ConfigErrorsMixin, logging.LoggingMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.reporter_test_props = {'gerrit_changes': [{'change_id': 12, 'revision_id': 2}]}
@@ -49,7 +56,7 @@ class TestGerritVerifyStatusPush(
         self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
-    def createGerritStatus(self, **kwargs):
+    def createGerritStatus(self, **kwargs: Any) -> InlineCallbacksType[None]:
         auth = kwargs.pop('auth', ('log', Interpolate('pass')))
 
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
@@ -59,7 +66,7 @@ class TestGerritVerifyStatusPush(
         yield self.sp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         yield self.createGerritStatus()
         build = yield self.insert_build_new()
         self._http.expect(
@@ -101,18 +108,18 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
         build['results'] = FAILURE
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_custom_description(self):
+    def test_custom_description(self) -> InlineCallbacksType[None]:
         start_formatter = MessageFormatterRenderable(Interpolate("started %(prop:buildername)s"))
         end_formatter = MessageFormatterRenderable(Interpolate("finished %(prop:buildername)s"))
 
@@ -148,16 +155,16 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_custom_name(self):
+    def test_custom_name(self) -> InlineCallbacksType[None]:
         yield self.createGerritStatus(verification_name=Interpolate("builder %(prop:buildername)s"))
         build = yield self.insert_build_new()
         self._http.expect(
@@ -186,16 +193,16 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_custom_abstain(self):
+    def test_custom_abstain(self) -> InlineCallbacksType[None]:
         yield self.createGerritStatus(
             abstain=renderer(lambda p: p.getProperty("buildername") == 'Builder0')
         )
@@ -226,16 +233,16 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_custom_category(self):
+    def test_custom_category(self) -> InlineCallbacksType[None]:
         yield self.createGerritStatus(category=renderer(lambda p: p.getProperty("buildername")))
         build = yield self.insert_build_new()
         self._http.expect(
@@ -266,16 +273,16 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_custom_reporter(self):
+    def test_custom_reporter(self) -> InlineCallbacksType[None]:
         yield self.createGerritStatus(reporter=renderer(lambda p: p.getProperty("buildername")))
         build = yield self.insert_build_new()
         self._http.expect(
@@ -304,16 +311,16 @@ class TestGerritVerifyStatusPush(
                 'duration': '2h 1m 4s',
             },
         )
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         build['complete'] = True
         build['complete_at'] = build['started_at'] + datetime.timedelta(
             hours=2, minutes=1, seconds=4
         )
         build['results'] = SUCCESS
-        yield self.sp._got_event(('builds', 20, 'finished'), build)
+        yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_verbose(self):
+    def test_verbose(self) -> InlineCallbacksType[None]:
         yield self.createGerritStatus(verbose=True)
         build = yield self.insert_build_new()
         self._http.expect(
@@ -330,11 +337,11 @@ class TestGerritVerifyStatusPush(
             },
         )
         self.setUpLogging()
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         self.assertLogged("Sending Gerrit status for")
 
     @defer.inlineCallbacks
-    def test_not_verbose(self):
+    def test_not_verbose(self) -> InlineCallbacksType[None]:
         yield self.createGerritStatus(verbose=False)
         build = yield self.insert_build_new()
         self._http.expect(
@@ -352,11 +359,11 @@ class TestGerritVerifyStatusPush(
         )
         self.setUpLogging()
         self._http.quiet = True
-        yield self.sp._got_event(('builds', 20, 'new'), build)
+        yield self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
         self.assertWasQuiet()
 
     @defer.inlineCallbacks
-    def test_format_duration(self):
+    def test_format_duration(self) -> InlineCallbacksType[None]:
         yield self.createGerritStatus(verbose=False)
         self.assertEqual(self.sp.formatDuration(datetime.timedelta(seconds=1)), "0m 1s")
         self.assertEqual(self.sp.formatDuration(datetime.timedelta(hours=1, seconds=1)), "1h 0m 1s")
@@ -368,7 +375,7 @@ class TestGerritVerifyStatusPush(
         )
 
     @defer.inlineCallbacks
-    def test_gerrit_changes(self):
+    def test_gerrit_changes(self) -> InlineCallbacksType[None]:
         yield self.createGerritStatus()
 
         # from chdict:

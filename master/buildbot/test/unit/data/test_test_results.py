@@ -14,6 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -25,13 +30,16 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestResultsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = test_results.TestResultsEndpoint
     resourceTypeClass = test_results.TestResult
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Worker(id=47, name='linux'),
@@ -80,21 +88,21 @@ class TestResultsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing_results(self):
+    def test_get_existing_results(self) -> InlineCallbacksType[None]:
         results = yield self.callGet(('test_result_sets', 13, 'results'))
         for result in results:
             self.validateData(result)
         self.assertEqual([r['test_resultid'] for r in results], [101, 102, 103])
 
     @defer.inlineCallbacks
-    def test_get_missing_results(self):
+    def test_get_missing_results(self) -> InlineCallbacksType[None]:
         results = yield self.callGet(('test_result_sets', 14, 'results'))
         self.assertEqual(results, [])
 
 
 class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = test_results.TestResult(self.master)
@@ -111,16 +119,21 @@ class TestResult(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase)
             fakedb.TestResultSet(id=13, builderid=88, buildid=30, stepid=131),
         ])
 
-    def test_signature_add_test_results(self):
+    def test_signature_add_test_results(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.addTestResults, self.rtype.addTestResults
         )
-        def addTestResults(self, builderid, test_result_setid, result_values):
+        def addTestResults(
+            self: object,
+            builderid: int,
+            test_result_setid: int,
+            result_values: list[dict[str, Any]],
+        ) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_add_test_results(self):
-        result_values = [
+    def test_add_test_results(self) -> InlineCallbacksType[None]:
+        result_values: list[dict[str, Any]] = [
             {'test_name': 'name1', 'value': '1'},
             {'test_name': 'name2', 'duration_ns': 1000, 'value': '1'},
             {'test_name': 'name3', 'test_code_path': 'path2', 'value': '2'},

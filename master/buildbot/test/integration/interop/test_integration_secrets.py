@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 
 from parameterized import parameterized
 from twisted.internet import defer
@@ -23,16 +27,19 @@ from buildbot.reporters.http import HttpStatusPush
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class FakeSecretReporter(HttpStatusPush):
-    def sendMessage(self, reports):
-        assert self.auth == ('user', 'myhttppasswd')
+    def sendMessage(self, reports: list[dict[str, Any]]) -> None:  # type: ignore[override]
+        assert self.auth == ('user', 'myhttppasswd')  # type: ignore[attr-defined]
         self.reported = True
 
 
 class SecretsConfig(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self, use_interpolation):
+    def setup_config(self, use_interpolation: bool) -> InlineCallbacksType[FakeSecretReporter]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -48,7 +55,7 @@ class SecretsConfig(RunMasterBase):
         c['schedulers'] = [schedulers.ForceScheduler(name="force", builderNames=["testy"])]
 
         c['secretsProviders'] = [
-            FakeSecretStorage(
+            FakeSecretStorage(  # type: ignore[list-item]
                 secretdict={"foo": "secretvalue", "something": "more", 'httppasswd': 'myhttppasswd'}
             )
         ]
@@ -63,11 +70,11 @@ class SecretsConfig(RunMasterBase):
             else:
                 command = Interpolate('echo %(secret:foo)s')
         else:
-            command = ['echo', util.Secret('foo')]
+            command = ['echo', util.Secret('foo')]  # type: ignore[assignment]
 
         f.addStep(steps.ShellCommand(command=command))
 
-        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]
+        c['builders'] = [BuilderConfig(name="testy", workernames=["local1"], factory=f)]  # type: ignore[list-item]
         yield self.setup_master(c)
 
         return fake_reporter
@@ -79,7 +86,7 @@ class SecretsConfig(RunMasterBase):
         ('plain_command', False),
     ])
     @defer.inlineCallbacks
-    def test_secret(self, name, use_interpolation):
+    def test_secret(self, name: str, use_interpolation: bool) -> InlineCallbacksType[None]:
         fake_reporter = yield self.setup_config(use_interpolation)
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -105,7 +112,7 @@ class SecretsConfig(RunMasterBase):
         ('plain_command', False),
     ])
     @defer.inlineCallbacks
-    def test_secretReconfig(self, name, use_interpolation):
+    def test_secretReconfig(self, name: str, use_interpolation: bool) -> InlineCallbacksType[None]:
         yield self.setup_config(use_interpolation)
         self.master_config_dict['secretsProviders'] = [
             FakeSecretStorage(secretdict={"foo": "different_value", "something": "more"})

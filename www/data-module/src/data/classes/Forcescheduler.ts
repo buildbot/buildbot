@@ -73,6 +73,10 @@ export type ForceSchedulerFieldNested = ForceSchedulerFieldBase & {
   fields: ForceSchedulerFieldBase[];
 };
 
+export type ForceSchedulerFieldFile = ForceSchedulerFieldString & {
+  // type: 'file'
+};
+
 export class Forcescheduler extends BaseClass {
   @observable name!: string;
   @observable all_fields!: ForceSchedulerFieldBase[];

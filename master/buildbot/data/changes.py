@@ -34,6 +34,7 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 if TYPE_CHECKING:
+    from buildbot.data.resultspec import ResultSpec
     from buildbot.data.sourcestamps import SourceStampData
     from buildbot.db.changes import ChangeModel
     from buildbot.util.twisted import InlineCallbacksType
@@ -111,7 +112,9 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[ChangeData | None]:
         change = yield self.master.db.changes.getChange(kwargs['changeid'])
         if change is None:
             return None
@@ -129,7 +132,9 @@ class ChangesEndpoint(FixerMixin, base.BuildNestingMixin, base.Endpoint):
     rootLinkName = 'changes'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[ChangeData]]:
         buildid = kwargs.get('buildid')
         if 'build_number' in kwargs:
             buildid = yield self.getBuildid(kwargs)
@@ -200,7 +205,7 @@ class Change(base.ResourceType):
         project: str = '',
         src: str | None = None,
         _test_changeid: int | None = None,
-    ):
+    ) -> InlineCallbacksType[int]:
         metrics.MetricCountEvent.log("added_changes", 1)
 
         if properties is None:
@@ -212,7 +217,7 @@ class Change(base.ResourceType):
         # get a user id
         if src:
             # create user object, returning a corresponding uid
-            uid = yield users.createUserObject(self.master, author, src)
+            uid = yield users.createUserObject(self.master, author, src)  # type: ignore[arg-type]
         else:
             uid = None
 
@@ -266,7 +271,7 @@ class Change(base.ResourceType):
             revision=revision,
             when_timestamp=epoch2datetime(when_timestamp),
             branch=branch,
-            category=category,
+            category=category,  # type: ignore[arg-type]
             revlink=revlink,
             properties=properties,
             repository=repository,

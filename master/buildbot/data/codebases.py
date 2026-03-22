@@ -23,6 +23,8 @@ from buildbot.data import types
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    from twisted.internet import defer
+
     from buildbot.db.codebases import CodebaseModel
 
 
@@ -104,7 +106,7 @@ class Codebase(base.ResourceType):
     @base.updateMethod
     def find_codebase_id(
         self, *, projectid: int, name: str, auto_create: bool = True
-    ) -> int | None:
+    ) -> defer.Deferred[int | None]:
         return self.master.db.codebases.find_codebase_id(
             projectid=projectid, name=name, auto_create=auto_create
         )

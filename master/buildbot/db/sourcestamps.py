@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -34,6 +35,8 @@ from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     import datetime
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @dataclass
@@ -59,7 +62,7 @@ class SourceStampModel:
     patch: PatchModel | None = None
 
     # For backward compatibility from when SsDict inherited from Dict
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -101,17 +104,17 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def findSourceStampId(
         self,
-        branch=None,
-        revision=None,
-        repository=None,
-        project=None,
-        codebase=None,
-        patch_body=None,
-        patch_level=None,
-        patch_author=None,
-        patch_comment=None,
-        patch_subdir=None,
-    ):
+        branch: str | None = None,
+        revision: str | None = None,
+        repository: str | None = None,
+        project: str | None = None,
+        codebase: str | None = None,
+        patch_body: str | None = None,
+        patch_level: int | None = None,
+        patch_author: str | None = None,
+        patch_comment: str | None = None,
+        patch_subdir: str | None = None,
+    ) -> InlineCallbacksType[int]:
         sourcestampid, _ = yield self.findOrCreateId(
             branch,
             revision,
@@ -129,17 +132,17 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def findOrCreateId(
         self,
-        branch=None,
-        revision=None,
-        repository=None,
-        project=None,
-        codebase=None,
-        patch_body=None,
-        patch_level=None,
-        patch_author=None,
-        patch_comment=None,
-        patch_subdir=None,
-    ):
+        branch: str | None = None,
+        revision: str | None = None,
+        repository: str | None = None,
+        project: str | None = None,
+        codebase: str | None = None,
+        patch_body: str | None = None,
+        patch_level: int | None = None,
+        patch_author: str | None = None,
+        patch_comment: str | None = None,
+        patch_subdir: str | None = None,
+    ) -> InlineCallbacksType[tuple[int, bool]]:
         tbl = self.db.model.sourcestamps
 
         assert codebase is not None, "codebase cannot be None"
@@ -151,7 +154,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         self.checkLength(tbl.c.project, project)
 
         # get a patchid, if we have a patch
-        def thd(conn):
+        def thd(conn: sa.engine.Connection) -> int | None:
             patchid = None
             if patch_body:
                 patch_body_bytes = unicode2bytes(patch_body)
@@ -192,8 +195,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
     # returns a Deferred that returns a value
     @base.cached("ssdicts")
-    def getSourceStamp(self, ssid) -> defer.Deferred[SourceStampModel | None]:
-        def thd(conn) -> SourceStampModel | None:
+    def getSourceStamp(self, ssid: int) -> defer.Deferred[SourceStampModel | None]:
+        def thd(conn: sa.engine.Connection) -> SourceStampModel | None:
             tbl = self.db.model.sourcestamps
             q = tbl.select().where(tbl.c.id == ssid)
             res = conn.execute(q)
@@ -207,8 +210,10 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def get_sourcestamps_for_buildset(self, buildsetid) -> defer.Deferred[list[SourceStampModel]]:
-        def thd(conn) -> list[SourceStampModel]:
+    def get_sourcestamps_for_buildset(
+        self, buildsetid: int
+    ) -> defer.Deferred[list[SourceStampModel]]:
+        def thd(conn: sa.engine.Connection) -> list[SourceStampModel]:
             bsets_tbl = self.db.model.buildsets
             bsss_tbl = self.db.model.buildset_sourcestamps
             sstamps_tbl = self.db.model.sourcestamps
@@ -225,10 +230,10 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns a value
-    def getSourceStampsForBuild(self, buildid) -> defer.Deferred[list[SourceStampModel]]:
+    def getSourceStampsForBuild(self, buildid: int) -> defer.Deferred[list[SourceStampModel]]:
         assert buildid > 0
 
-        def thd(conn) -> list[SourceStampModel]:
+        def thd(conn: sa.engine.Connection) -> list[SourceStampModel]:
             # Get SourceStamps for the build
             builds_tbl = self.db.model.builds
             reqs_tbl = self.db.model.buildrequests
@@ -251,7 +256,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
     # returns a Deferred that returns a value
     def getSourceStamps(self) -> defer.Deferred[list[SourceStampModel]]:
-        def thd(conn) -> list[SourceStampModel]:
+        def thd(conn: sa.engine.Connection) -> list[SourceStampModel]:
             tbl = self.db.model.sourcestamps
             q = tbl.select()
             res = conn.execute(q)
@@ -259,7 +264,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _rowToModel_thd(self, conn, row) -> SourceStampModel:
+    def _rowToModel_thd(self, conn: sa.engine.Connection, row: Any) -> SourceStampModel:
         ssid = row.id
         model = SourceStampModel(
             ssid=ssid,

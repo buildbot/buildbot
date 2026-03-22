@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -22,20 +26,23 @@ from buildbot.test.util import endpoint
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = root.RootEndpoint
     resourceTypeClass = root.Root
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         self.master.data.rootLinks = [
             {'name': 'abc'},
         ]
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_get(self) -> InlineCallbacksType[None]:
         with assertProducesWarnings(
             DeprecatedApiWarning, message_pattern='.*the root endpoint with endpoint directory.*'
         ):
@@ -57,7 +64,7 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = root.Spec
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         # replace fakeConnector with real DataConnector
         self.master.data.disownServiceParent()
@@ -65,7 +72,7 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.master.data.setServiceParent(self.master)
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_get(self) -> InlineCallbacksType[None]:
         specs = yield self.callGet(('application.spec',))
 
         for s in specs:

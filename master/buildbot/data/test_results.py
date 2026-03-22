@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-def _db2data(model: TestResultModel):
+def _db2data(model: TestResultModel) -> dict[str, Any]:
     return {
         'test_resultid': model.id,
         'builderid': model.builderid,
@@ -48,7 +48,9 @@ class TestResultsEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: Any, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]]]:
         set_dbdict = yield self.master.db.test_result_sets.getTestResultSet(
             kwargs['test_result_setid']
         )

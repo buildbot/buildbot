@@ -25,21 +25,21 @@ class Change(Row):
 
     def __init__(
         self,
-        changeid=None,
-        author='frank',
-        committer='steve',
-        comments='test change',
-        branch='master',
-        revision='abcd',
-        revlink='http://vc/abcd',
-        when_timestamp=1200000,
-        category='cat',
-        repository='repo',
-        codebase='',
-        project='proj',
-        sourcestampid=92,
-        parent_changeids=None,
-    ):
+        changeid: int | None = None,
+        author: str = 'frank',
+        committer: str | None = 'steve',
+        comments: str = 'test change',
+        branch: str | None = 'master',
+        revision: str | None = 'abcd',
+        revlink: str | None = 'http://vc/abcd',
+        when_timestamp: int = 1200000,
+        category: str | None = 'cat',
+        repository: str = 'repo',
+        codebase: str = '',
+        project: str = 'proj',
+        sourcestampid: int = 92,
+        parent_changeids: int | None = None,
+    ) -> None:
         super().__init__(
             changeid=changeid,
             author=author,
@@ -61,14 +61,19 @@ class Change(Row):
 class ChangeFile(Row):
     table = "change_files"
 
-    def __init__(self, changeid=None, filename=None):
+    def __init__(self, changeid: int | None = None, filename: str | None = None) -> None:
         super().__init__(changeid=changeid, filename=filename)
 
 
 class ChangeProperty(Row):
     table = "change_properties"
 
-    def __init__(self, changeid=None, property_name=None, property_value=None):
+    def __init__(
+        self,
+        changeid: int | None = None,
+        property_name: str | None = None,
+        property_value: str | None = None,
+    ) -> None:
         super().__init__(
             changeid=changeid, property_name=property_name, property_value=property_value
         )
@@ -77,5 +82,5 @@ class ChangeProperty(Row):
 class ChangeUser(Row):
     table = "change_users"
 
-    def __init__(self, changeid=None, uid=None):
+    def __init__(self, changeid: int | None = None, uid: int | None = None) -> None:
         super().__init__(changeid=changeid, uid=uid)

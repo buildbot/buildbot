@@ -170,7 +170,7 @@ class Connection(base.Connection):
     def loseConnection(self) -> None:
         self.stopKeepaliveTimer()
         assert self.protocol is not None
-        self.protocol.transport.abortConnection()
+        self.protocol.transport.abortConnection()  # type: ignore[union-attr]
 
     # keepalive handling
 
@@ -483,8 +483,8 @@ class Connection(base.Connection):
 
     def get_peer(self) -> str:
         assert self.protocol is not None
-        p = self.protocol.transport.getPeer()
-        return f"{p.host}:{p.port}"
+        p = self.protocol.transport.getPeer()  # type: ignore[union-attr]
+        return f"{p.host}:{p.port}"  # type: ignore[union-attr]
 
     def _get_builder_basedir(self, builder_name: str) -> PurePath:
         assert self.path_cls is not None

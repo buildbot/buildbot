@@ -1,0 +1,1 @@
+Fixed build badges in Grid View, Console View, Masters View, and Build View debug tab not displaying build properties (e.g. branch name from ``Links.build_link_template`` setting) (:issue:`8142`).

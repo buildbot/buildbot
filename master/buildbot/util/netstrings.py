@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 from twisted.internet.interfaces import IAddress
 from twisted.internet.interfaces import ITransport
@@ -31,19 +32,19 @@ class NullAddress:
 class NullTransport:
     "a do-nothing transport to make NetstringReceiver happy"
 
-    def write(self, data):
+    def write(self, data: bytes) -> None:
         raise NotImplementedError
 
-    def writeSequence(self, data):
+    def writeSequence(self, data: list[bytes]) -> None:  # type: ignore[override]
         raise NotImplementedError
 
-    def loseConnection(self):
+    def loseConnection(self) -> None:
         pass
 
-    def getPeer(self):
+    def getPeer(self) -> type[NullAddress]:  # type: ignore[override]
         return NullAddress
 
-    def getHost(self):
+    def getHost(self) -> type[NullAddress]:  # type: ignore[override]
         return NullAddress
 
 
@@ -56,18 +57,18 @@ class NetstringParser(basic.NetstringReceiver):
     the list C{self.strings}.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # most of the complexity here is stubbing out the transport code so
         # that Twisted-10.2.0 and higher believes that this is a valid protocol
         self.makeConnection(NullTransport())
-        self.strings = []
+        self.strings: list[bytes] = []
 
-    def feed(self, data):
+    def feed(self, data: str | bytes) -> None:
         data = unicode2bytes(data)
         self.dataReceived(data)
         # dataReceived handles errors unusually quietly!
         if self.brokenPeer:
             raise basic.NetstringParseError
 
-    def stringReceived(self, string):
+    def stringReceived(self, string: bytes) -> None:
         self.strings.append(string)

@@ -13,10 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import asyncio
 import json
 import logging
+from typing import Any
 
 import aiohttp  # dev-proxy command requires aiohttp! run 'pip install aiohttp'
 import aiohttp.web
@@ -30,7 +32,14 @@ log = logging.getLogger(__name__)
 class DevProxy:
     MAX_CONNECTIONS = 10
 
-    def __init__(self, port, next_url, plugins, unsafe_ssl, auth_cookie):
+    def __init__(
+        self,
+        port: int,
+        next_url: str,
+        plugins: str | None,
+        unsafe_ssl: bool,
+        auth_cookie: str | None,
+    ) -> None:
         while next_url.endswith('/'):
             next_url = next_url[:-1]
         self.next_url = next_url
@@ -45,11 +54,11 @@ class DevProxy:
             cookies = {'TWISTED_SESSION': auth_cookie}
         logging.basicConfig(level=logging.DEBUG)
         if plugins is None:
-            plugins = {}
+            plugins = {}  # type: ignore[assignment]
         else:
             plugins = json.loads(plugins)
 
-        self.plugins = plugins
+        self.plugins: dict[str, Any] = plugins  # type: ignore[assignment]
 
         app.router.add_route('*', '/ws', self.ws_handler)
         for path in ['/api', '/auth', '/sse', '/avatar']:
@@ -65,29 +74,29 @@ class DevProxy:
         app.router.add_static('/', staticdir)
         conn = aiohttp.TCPConnector(limit=self.MAX_CONNECTIONS, verify_ssl=not self.unsafe_ssl)
         self.session = aiohttp.ClientSession(connector=conn, trust_env=True, cookies=cookies)
-        self.config = None
+        self.config: dict[str, Any] | None = None
         self.buildbotURL = f"http://localhost:{port}/"
         app.on_startup.append(self.on_startup)
         app.on_cleanup.append(self.on_cleanup)
         aiohttp.web.run_app(app, host="localhost", port=port)
 
-    async def on_startup(self, app):
+    async def on_startup(self, app: Any) -> None:
         try:
             await self.fetch_config_from_upstream()
         except aiohttp.ClientConnectionError as e:
             raise RuntimeError("Unable to connect to buildbot master" + str(e)) from e
 
-    async def on_cleanup(self, app):
+    async def on_cleanup(self, app: Any) -> None:
         await self.session.close()
 
-    async def ws_handler(self, req):
+    async def ws_handler(self, req: Any) -> Any:
         # based on https://github.com/oetiker/aio-reverse-proxy/blob/master/paraview-proxy.py
         ws_server = aiohttp.web.WebSocketResponse()
         await ws_server.prepare(req)
 
         async with self.session.ws_connect(self.next_url + "/ws", headers=req.headers) as ws_client:
 
-            async def ws_forward(ws_from, ws_to):
+            async def ws_forward(ws_from: Any, ws_to: Any) -> None:
                 async for msg in ws_from:
                     if ws_to.closed:
                         await ws_to.close(code=ws_to.close_code, message=msg.extra)
@@ -110,7 +119,7 @@ class DevProxy:
             )
         return ws_server
 
-    async def proxy_handler(self, req):
+    async def proxy_handler(self, req: Any) -> Any:
         method = getattr(self.session, req.method.lower())
         upstream_url = self.next_url + req.path
         headers = req.headers.copy()
@@ -135,12 +144,12 @@ class DevProxy:
         except aiohttp.ClientConnectionError as e:
             return self.connection_error(e)
 
-    def connection_error(self, error):
+    def connection_error(self, error: Any) -> Any:
         return aiohttp.web.Response(
             text=f'Unable to connect to upstream server {self.next_url} ({error!s})', status=502
         )
 
-    async def fetch_config_from_upstream(self):
+    async def fetch_config_from_upstream(self) -> None:
         async with self.session.get(self.next_url) as request:
             index = await request.content.read()
             if request.status != 200:
@@ -164,7 +173,7 @@ class DevProxy:
         self.config['buildbotURL'] = self.buildbotURL
         self.config['buildbotURLs'] = [self.buildbotURL, self.next_url + "/"]
 
-    async def index_handler(self, req):
+    async def index_handler(self, req: Any) -> Any:
         tpl = self.jinja.get_template('index.html')
         index = tpl.render(
             configjson=json.dumps(self.config), custom_templates={}, config=self.config
@@ -172,7 +181,7 @@ class DevProxy:
         return aiohttp.web.Response(body=index, content_type='text/html')
 
 
-def devproxy(config):
+def devproxy(config: dict[str, Any]) -> None:
     DevProxy(
         config['port'],
         config['buildbot_url'],

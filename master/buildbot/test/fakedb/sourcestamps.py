@@ -25,13 +25,13 @@ class Patch(Row):
 
     def __init__(
         self,
-        id=None,
-        patchlevel=0,
-        patch_base64='aGVsbG8sIHdvcmxk',  # 'hello, world',
-        patch_author=None,
-        patch_comment=None,
-        subdir=None,
-    ):
+        id: int | None = None,
+        patchlevel: int = 0,
+        patch_base64: str = 'aGVsbG8sIHdvcmxk',  # 'hello, world',
+        patch_author: str | None = None,
+        patch_comment: str | None = None,
+        subdir: str | None = None,
+    ) -> None:
         super().__init__(
             id=id,
             patchlevel=patchlevel,
@@ -66,16 +66,16 @@ class SourceStamp(Row):
 
     def __init__(
         self,
-        id=None,
-        branch='master',
-        revision=NotSet,
-        patchid=None,
-        repository='repo',
-        codebase='',
-        project='proj',
-        created_at=89834834,
-        ss_hash=None,
-    ):
+        id: int | None = None,
+        branch: str | None = 'master',
+        revision: str | None | type[NotSet] = NotSet,
+        patchid: int | None = None,
+        repository: str = 'repo',
+        codebase: str = '',
+        project: str = 'proj',
+        created_at: int = 89834834,
+        ss_hash: str | None = None,
+    ) -> None:
         if revision is NotSet:
             revision = f'rev-{id}'
         super().__init__(

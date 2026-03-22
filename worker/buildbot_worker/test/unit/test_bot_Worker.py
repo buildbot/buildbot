@@ -311,7 +311,7 @@ class TestWorker(unittest.TestCase):
         # the deferred for the whole test
         def call_shutdown(mind: object | None) -> None:
             assert self.worker is not None
-            self.worker.bf.perspective = fakepersp
+            self.worker.bf.perspective = fakepersp  # type: ignore[union-attr]
             shutdown_d = self.worker.gracefulShutdown()
             assert shutdown_d is not None
             shutdown_d.addCallbacks(d.callback, d.errback)

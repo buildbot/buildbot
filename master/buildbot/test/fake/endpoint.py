@@ -15,9 +15,15 @@
 
 # This is a static resource type and set of endpoints used as common data by
 # tests.
+
+from __future__ import annotations
+
+from typing import Any
+
 from twisted.internet import defer
 
 from buildbot.data import base
+from buildbot.data import resultspec
 from buildbot.data import types
 
 testData = {
@@ -53,7 +59,7 @@ class TestsEndpoint(base.Endpoint):
     ]
     rootLinkName = 'tests'
 
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec: resultspec.ResultSpec, kwargs: dict[str, Any]) -> Any:
         # results are sorted by ID for test stability
         return defer.succeed(sorted(testData.values(), key=lambda v: v['testid']))
 
@@ -64,7 +70,7 @@ class RawTestsEndpoint(base.Endpoint):
         "/rawtest",
     ]
 
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec: resultspec.ResultSpec, kwargs: dict[str, Any]) -> Any:
         return defer.succeed({"filename": "test.txt", "mime-type": "text/test", 'raw': 'value'})
 
 
@@ -74,7 +80,7 @@ class FailEndpoint(base.Endpoint):
         "/test/fail",
     ]
 
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec: resultspec.ResultSpec, kwargs: dict[str, Any]) -> Any:
         return defer.fail(RuntimeError('oh noes'))
 
 
@@ -85,12 +91,12 @@ class TestEndpoint(base.Endpoint):
         "/test/n:testid",
     ]
 
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec: resultspec.ResultSpec, kwargs: dict[str, Any]) -> Any:
         if kwargs['testid'] == 0:
             return None
         return defer.succeed(testData[kwargs['testid']])
 
-    def control(self, action, args, kwargs):
+    def control(self, action: str, args: Any, kwargs: Any) -> Any:
         if action == "fail":
             return defer.fail(RuntimeError("oh noes"))
         return defer.succeed({'action': action, 'args': args, 'kwargs': kwargs})
@@ -102,7 +108,7 @@ class StepsEndpoint(base.Endpoint):
         "/tests/n:testid/steps",
     ]
 
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec: resultspec.ResultSpec, kwargs: dict[str, Any]) -> Any:
         data = [step for step in stepData.values() if step['testid'] == kwargs['testid']]
         # results are sorted by ID for test stability
         return defer.succeed(sorted(data, key=lambda v: v['stepid']))
@@ -114,7 +120,7 @@ class StepEndpoint(base.Endpoint):
         "/tests/n:testid/steps/n:stepid",
     ]
 
-    def get(self, resultSpec, kwargs):
+    def get(self, resultSpec: resultspec.ResultSpec, kwargs: dict[str, Any]) -> Any:
         if kwargs['testid'] == 0:
             return None
         return defer.succeed(testData[kwargs['testid']])

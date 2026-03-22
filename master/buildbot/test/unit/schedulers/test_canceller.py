@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -26,9 +31,12 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.util.ssfilter import SourceStampFilter
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestFilterSet(unittest.TestCase):
-    def test_empty_filter(self):
+    def test_empty_filter(self) -> None:
         filter = _OldBuildFilterSet()
         self.assertFalse(filter.is_matched('builder', {'prop': 'value'}))
 
@@ -39,7 +47,9 @@ class TestFilterSet(unittest.TestCase):
         ('single2', 'builder1', {'project': 'value_other', 'repository': 'r'}, True),
         ('all', 'builder1', {'project': 'p', 'repository': 'r'}, True),
     ])
-    def test_multiple_filters_on_builder(self, name, builder, props, expected):
+    def test_multiple_filters_on_builder(
+        self, name: str, builder: str, props: dict[str, str], expected: bool
+    ) -> None:
         filter = _OldBuildFilterSet()
         filter.add_filter(['builder1'], SourceStampFilter(project_eq='p'))
         filter.add_filter(['builder1'], SourceStampFilter(repository_eq='r'))
@@ -48,7 +58,7 @@ class TestFilterSet(unittest.TestCase):
 
 
 class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         filter = _OldBuildFilterSet()
 
@@ -56,19 +66,21 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
             codebase_eq=['cb1', 'cb2'], repository_eq=['rp1', 'rp2'], branch_eq=['br1', 'br2']
         )
         filter.add_filter(['bldr1', 'bldr2'], ss_filter)
-        self.cancellations = []
+        self.cancellations: list[int] = []
         self.tracker = _OldBuildrequestTracker(
             self.reactor, filter, lambda ss: ss['branch'], self.on_cancel
         )
 
-    def on_cancel(self, brid):
+    def on_cancel(self, brid: int) -> None:
         self.cancellations.append(brid)
 
-    def assert_cancelled(self, cancellations):
+    def assert_cancelled(self, cancellations: list[int]) -> None:
         self.assertEqual(self.cancellations, cancellations)
         self.cancellations = []
 
-    def create_ss_dict(self, project, codebase, repository, branch):
+    def create_ss_dict(
+        self, project: str, codebase: str, repository: str, branch: str | None
+    ) -> dict[str, str | None]:
         # Changes have the same structure for the attributes that we're using, so we reuse this
         # function for changes.
         return {
@@ -78,13 +90,13 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
             'branch': branch,
         }
 
-    def test_unknown_branch_not_tracked(self):
+    def test_unknown_branch_not_tracked(self) -> None:
         ss_dicts = [self.create_ss_dict('pr1', 'cb1', 'rp1', None)]
 
         self.tracker.on_new_buildrequest(10, 'bldr1', ss_dicts)
         self.assertFalse(self.tracker.is_buildrequest_tracked(10))
 
-    def test_multi_codebase_unknown_branch_not_tracked(self):
+    def test_multi_codebase_unknown_branch_not_tracked(self) -> None:
         ss_dicts = [
             self.create_ss_dict('pr1', 'cb1', 'rp1', None),
             self.create_ss_dict('pr2', 'cb2', 'rp2', 'br2'),
@@ -93,13 +105,13 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.tracker.on_new_buildrequest(10, 'bldr1', ss_dicts)
         self.assertFalse(self.tracker.is_buildrequest_tracked(10))
 
-    def test_unmatched_ss_not_tracked(self):
+    def test_unmatched_ss_not_tracked(self) -> None:
         ss_dicts = [self.create_ss_dict('pr1', 'cb1', 'rp1', 'untracked')]
 
         self.tracker.on_new_buildrequest(10, 'bldr1', ss_dicts)
         self.assertFalse(self.tracker.is_buildrequest_tracked(10))
 
-    def test_multi_codebase_unmatched_ss_not_tracked(self):
+    def test_multi_codebase_unmatched_ss_not_tracked(self) -> None:
         ss_dicts = [
             self.create_ss_dict('pr1', 'cb1', 'rp1', 'untracked'),
             self.create_ss_dict('pr2', 'cb2', 'rp2', 'untracked'),
@@ -108,7 +120,7 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.tracker.on_new_buildrequest(10, 'bldr1', ss_dicts)
         self.assertFalse(self.tracker.is_buildrequest_tracked(10))
 
-    def test_multi_codebase_tracks_if_at_least_one_ss_match(self):
+    def test_multi_codebase_tracks_if_at_least_one_ss_match(self) -> None:
         ss_dicts = [
             self.create_ss_dict('pr1', 'cb1', 'rp1', 'untracked'),
             self.create_ss_dict('pr2', 'cb2', 'rp2', 'br2'),
@@ -117,7 +129,7 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.tracker.on_new_buildrequest(10, 'bldr1', ss_dicts)
         self.assertTrue(self.tracker.is_buildrequest_tracked(10))
 
-    def test_cancel_buildrequest(self):
+    def test_cancel_buildrequest(self) -> None:
         ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
         not_matching_ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br2')
 
@@ -146,7 +158,7 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([2])
         self.tracker.on_complete_buildrequest(2)
 
-    def test_cancel_buildrequest_identical_times(self):
+    def test_cancel_buildrequest_identical_times(self) -> None:
         ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
         not_matching_ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br2')
 
@@ -166,7 +178,7 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.tracker.on_new_buildrequest(3, 'bldr1', [ss_dict])
         self.assert_cancelled([])
 
-    def test_not_cancel_finished_buildrequest(self):
+    def test_not_cancel_finished_buildrequest(self) -> None:
         ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
 
         self.tracker.on_new_buildrequest(1, 'bldr1', [ss_dict])
@@ -184,7 +196,7 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([])
         self.assertFalse(self.tracker.is_buildrequest_tracked(1))
 
-    def test_not_cancel_buildrequest_too_new(self):
+    def test_not_cancel_buildrequest_too_new(self) -> None:
         ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
 
         self.tracker.on_change(ss_dict)
@@ -202,7 +214,7 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.tracker.on_complete_buildrequest(1)
         self.tracker.on_complete_buildrequest(2)
 
-    def test_not_cancel_buildrequest_different_builder(self):
+    def test_not_cancel_buildrequest_different_builder(self) -> None:
         ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
 
         self.tracker.on_change(ss_dict)
@@ -225,7 +237,7 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         ('first', True),
         ('second', False),
     ])
-    def test_cancel_multi_codebase_buildrequest(self, name, cancel_first_ss):
+    def test_cancel_multi_codebase_buildrequest(self, name: str, cancel_first_ss: bool) -> None:
         ss_dict1 = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
         ss_dict2 = self.create_ss_dict('pr2', 'cb2', 'rp2', 'br2')
         not_matching_ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br2')
@@ -257,7 +269,9 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([3])
         self.tracker.on_complete_buildrequest(3)
 
-    def test_cancel_multi_codebase_buildrequest_ignores_non_matching_change_in_tracked_br(self):
+    def test_cancel_multi_codebase_buildrequest_ignores_non_matching_change_in_tracked_br(
+        self,
+    ) -> None:
         ss_dict1 = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
         non_matched_ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'brZ')
 
@@ -271,7 +285,7 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([])
         self.assertTrue(self.tracker.is_buildrequest_tracked(1))
 
-    def test_cancel_multiple_buildrequests(self):
+    def test_cancel_multiple_buildrequests(self) -> None:
         ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
         not_matching_ss_dict = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br2')
 
@@ -305,7 +319,7 @@ class TestOldBuildrequestTracker(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([4])
         self.tracker.on_complete_buildrequest(4)
 
-    def test_cancel_multi_codebase_multiple_buildrequests(self):
+    def test_cancel_multi_codebase_multiple_buildrequests(self) -> None:
         ss_dict1 = self.create_ss_dict('pr1', 'cb1', 'rp1', 'br1')
         ss_dict2 = self.create_ss_dict('pr2', 'cb2', 'rp2', 'br2')
         ss_dict3 = self.create_ss_dict('pr3', 'cb3', 'rp3', 'br3')
@@ -355,46 +369,50 @@ class TestOldBuildCancellerUtils(ConfigErrorsMixin, unittest.TestCase):
             ],
         ),
     ])
-    def test_check_filters_valid(self, name, filters):
+    def test_check_filters_valid(
+        self, name: str, filters: list[tuple[list[str], SourceStampFilter]]
+    ) -> None:
         OldBuildCanceller.check_filters(filters)
 
     @parameterized.expand([
         ('dict', {}),
         ('list_list', [[]]),
     ])
-    def test_check_filters_not_dict(self, name, value):
+    def test_check_filters_not_dict(self, name: str, value: object) -> None:
         with self.assertRaisesConfigError('The filters argument must be a list of tuples'):
-            OldBuildCanceller.check_filters(value)
+            OldBuildCanceller.check_filters(value)  # type: ignore[arg-type]
 
-    def test_check_filters_invalid_uple(self):
+    def test_check_filters_invalid_uple(self) -> None:
         with self.assertRaisesConfigError('must be a list of tuples each of which'):
-            OldBuildCanceller.check_filters([('a', 'b', 'c')])
+            OldBuildCanceller.check_filters([('a', 'b', 'c')])  # type: ignore[list-item]
         with self.assertRaisesConfigError('must be a list of tuples each of which'):
-            OldBuildCanceller.check_filters([('a',)])
+            OldBuildCanceller.check_filters([('a',)])  # type: ignore[list-item]
 
     @parameterized.expand([
         ('dict', {}, 'filter builders must be list of strings or a string'),
         ('list_int', [1], 'Value of filter builders must be string'),
     ])
-    def test_check_builders_keys_not_list(self, name, value, error):
+    def test_check_builders_keys_not_list(self, name: str, value: object, error: str) -> None:
         with self.assertRaisesConfigError(error):
-            OldBuildCanceller.check_filters([(value, SourceStampFilter())])
+            OldBuildCanceller.check_filters([(value, SourceStampFilter())])  # type: ignore[list-item]
 
 
 class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantData=True, wantDb=True)
         self.master.mq.verifyMessages = False
 
         yield self.insert_test_data()
-        self._cancelled_build_ids = []
+        self._cancelled_build_ids: list[int] = []
 
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
-    def create_ss_dict(self, project, codebase, repository, branch):
+    def create_ss_dict(
+        self, project: str, codebase: str, repository: str, branch: str | None
+    ) -> dict[str, str | None]:
         # Changes have the same structure for the attributes that we're using, so we reuse this
         # function for changes.
         return {
@@ -405,7 +423,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         }
 
     @defer.inlineCallbacks
-    def insert_test_data(self):
+    def insert_test_data(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
@@ -478,7 +496,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def setup_canceller_with_filters(self):
+    def setup_canceller_with_filters(self) -> InlineCallbacksType[None]:
         self.canceller = OldBuildCanceller(
             'canceller',
             [
@@ -490,11 +508,11 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         yield self.canceller.setServiceParent(self.master)
 
     @defer.inlineCallbacks
-    def setup_canceller_with_no_filters(self):
+    def setup_canceller_with_no_filters(self) -> InlineCallbacksType[None]:
         self.canceller = OldBuildCanceller('canceller', [])
         yield self.canceller.setServiceParent(self.master)
 
-    def assert_cancelled(self, cancellations):
+    def assert_cancelled(self, cancellations: list[int]) -> None:
         expected_productions = []
         for id in cancellations:
             expected_productions.append((
@@ -505,7 +523,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.master.mq.assertProductions(expected_productions)
 
     @defer.inlineCallbacks
-    def test_buildrequest_no_branch(self):
+    def test_buildrequest_no_branch(self) -> InlineCallbacksType[None]:
         yield self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
@@ -534,7 +552,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([])
 
     @defer.inlineCallbacks
-    def test_cancel_buildrequest_after_new_commit_with_buildrequest(self):
+    def test_cancel_buildrequest_after_new_commit_with_buildrequest(
+        self,
+    ) -> InlineCallbacksType[None]:
         yield self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
@@ -586,7 +606,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([14])
 
     @defer.inlineCallbacks
-    def test_no_cancel_buildrequest_after_only_new_commit(self):
+    def test_no_cancel_buildrequest_after_only_new_commit(self) -> InlineCallbacksType[None]:
         yield self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
@@ -597,7 +617,9 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([])
 
     @defer.inlineCallbacks
-    def test_cancel_buildrequest_after_new_commit_gerrit_branch_filter(self):
+    def test_cancel_buildrequest_after_new_commit_gerrit_branch_filter(
+        self,
+    ) -> InlineCallbacksType[None]:
         yield self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
@@ -649,7 +671,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([14])
 
     @defer.inlineCallbacks
-    def test_build_finished_then_new_commit_no_cancel(self):
+    def test_build_finished_then_new_commit_no_cancel(self) -> InlineCallbacksType[None]:
         yield self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
@@ -661,7 +683,7 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([])
 
     @defer.inlineCallbacks
-    def test_reconfig_no_longer_matched_tracked_build_cancelled(self):
+    def test_reconfig_no_longer_matched_tracked_build_cancelled(self) -> InlineCallbacksType[None]:
         yield self.setup_canceller_with_filters()
 
         self.reactor.advance(1)
@@ -714,32 +736,36 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         self.assert_cancelled([])
 
     @defer.inlineCallbacks
-    def test_reconfig_defers_finished_builds_to_after_registration(self):
+    def test_reconfig_defers_finished_builds_to_after_registration(
+        self,
+    ) -> InlineCallbacksType[None]:
         # We need to make sure that during reconfiguration any finished build messages are not
         # acted before the build is tracked
 
         yield self.setup_canceller_with_no_filters()
 
         # Setup controllable blocking wait on canceller._on_buildrequest_new
-        on_buildrequest_new_d = defer.Deferred()
+        on_buildrequest_new_d: defer.Deferred[None] = defer.Deferred()
         on_buildrequest_new_original = self.canceller._on_buildrequest_new
-        on_buildrequest_new_breq_ids = []
+        on_buildrequest_new_breq_ids: list[int] = []
 
         @defer.inlineCallbacks
-        def waiting_on_buildrequest_new(key, breq):
+        def waiting_on_buildrequest_new(
+            key: str | None, breq: dict[str, Any]
+        ) -> InlineCallbacksType[None]:
             on_buildrequest_new_breq_ids.append(breq['buildrequestid'])
             if not on_buildrequest_new_d.called:
                 yield on_buildrequest_new_d
             yield on_buildrequest_new_original(key, breq)
 
-        self.canceller._on_buildrequest_new = waiting_on_buildrequest_new
+        self.canceller._on_buildrequest_new = waiting_on_buildrequest_new  # type: ignore[method-assign]
 
         # Start reconfig. We verify that we actually blocked in on_buildrequest_new
         d = self.canceller.reconfigService(
             'canceller',
             [
-                {'builders': ['builder1'], 'branch_eq': ['branch1']},
-                {'builders': ['builder2'], 'branch_eq': ['branch2']},
+                {'builders': ['builder1'], 'branch_eq': ['branch1']},  # type: ignore[list-item]
+                {'builders': ['builder2'], 'branch_eq': ['branch2']},  # type: ignore[list-item]
             ],
         )
 
@@ -755,5 +781,6 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
         yield d
         self.assertEqual(on_buildrequest_new_breq_ids, [10, 11, 12])
 
+        assert self.canceller._build_tracker is not None
         self.assertFalse(self.canceller._build_tracker.is_buildrequest_tracked(10))
         self.assertFalse(self.canceller._build_tracker.is_buildrequest_tracked(11))

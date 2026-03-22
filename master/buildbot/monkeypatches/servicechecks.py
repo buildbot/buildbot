@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
-def patch():
+from typing import Any
+
+
+def patch() -> None:
     """
     Patch startService and stopService so that they check the previous state
     first.
@@ -26,13 +30,13 @@ def patch():
     old_startService = Service.startService
     old_stopService = Service.stopService
 
-    def startService(self):
+    def startService(self: Any) -> Any:
         assert not self.running, f"{self!r} already running"
         return old_startService(self)
 
-    def stopService(self):
+    def stopService(self: Any) -> Any:
         assert self.running, f"{self!r} already stopped"
         return old_stopService(self)
 
-    Service.startService = startService
-    Service.stopService = stopService
+    Service.startService = startService  # type: ignore[method-assign]
+    Service.stopService = stopService  # type: ignore[method-assign]

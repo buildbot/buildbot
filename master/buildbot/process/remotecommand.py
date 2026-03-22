@@ -216,7 +216,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         return d
 
     @async_to_deferred
-    async def _finished(self, failure=None) -> None:
+    async def _finished(self, failure: Failure | None = None) -> None:
         # Finished may be called concurrently by a message from worker and interruption due to
         # lost connection.
         if not self.active:
@@ -241,7 +241,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             self.deferred.errback(e)
 
     @async_to_deferred
-    async def interrupt(self, why) -> None:
+    async def interrupt(self, why: Failure | str) -> None:
         self._logger.info(f"RemoteCommand.interrupt {self}, {why}")
 
         if self.conn and isinstance(why, Failure) and why.check(error.ConnectionLost):
@@ -337,7 +337,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             max_updatenum = max(max_updatenum, num)
         return defer.succeed(max_updatenum)
 
-    def remote_complete(self, failure=None) -> defer.Deferred[None]:
+    def remote_complete(self, failure: Failure | None = None) -> defer.Deferred[None]:
         """
         Called by the worker's
         L{buildbot_worker.base.WorkerForBuilderBase.commandComplete} to
@@ -358,7 +358,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @util.deferredLocked('loglock')
     @async_to_deferred
-    async def addStdout(self, data) -> None:
+    async def addStdout(self, data: str) -> None:
         if self.collectStdout:
             self.stdout += data
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
@@ -366,7 +366,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @util.deferredLocked('loglock')
     @async_to_deferred
-    async def add_stdout_lines(self, data, is_flushed: bool) -> None:
+    async def add_stdout_lines(self, data: str, is_flushed: bool) -> None:
         if self.collectStdout:
             if is_flushed:
                 data = data[:-1]
@@ -376,7 +376,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @util.deferredLocked('loglock')
     @async_to_deferred
-    async def addStderr(self, data) -> None:
+    async def addStderr(self, data: str) -> None:
         if self.collectStderr:
             self.stderr += data
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
@@ -384,7 +384,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @util.deferredLocked('loglock')
     @async_to_deferred
-    async def add_stderr_lines(self, data, is_flushed) -> None:
+    async def add_stderr_lines(self, data: str, is_flushed: bool) -> None:
         if self.collectStderr:
             if is_flushed:
                 data = data[:-1]
@@ -394,19 +394,19 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @util.deferredLocked('loglock')
     @async_to_deferred
-    async def addHeader(self, data) -> None:
+    async def addHeader(self, data: str) -> None:
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
             await self.logs[self.stdioLogName].addHeader(data)
 
     @util.deferredLocked('loglock')
     @async_to_deferred
-    async def add_header_lines(self, data) -> None:
+    async def add_header_lines(self, data: str) -> None:
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
             await self.logs[self.stdioLogName].add_header_lines(data)
 
     @util.deferredLocked('loglock')
     @async_to_deferred
-    async def addToLog(self, logname, data) -> None:
+    async def addToLog(self, logname: str, data: str) -> None:
         # Activate delayed logs on first data.
         if logname in self.delayedLogs:
             (activateCallBack, closeWhenFinished) = self.delayedLogs.pop(logname)
@@ -421,8 +421,8 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     @async_to_deferred
-    async def remoteUpdate(self, key: str, value, is_flushed: bool) -> None:
-        def cleanup(data):
+    async def remoteUpdate(self, key: str, value: Any, is_flushed: bool) -> None:
+        def cleanup(data: str) -> str:
             if self.step is None or self.step.build is None:
                 return data
             return self.step.build.properties.cleanupTextFromSecrets(data)
@@ -452,7 +452,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             self.updates[key].append(value)
 
     @async_to_deferred
-    async def remoteComplete(self, maybeFailure) -> None:
+    async def remoteComplete(self, maybeFailure: Failure | pb.CopiedFailure | str | None) -> None:
         if self._startTime and self._remoteElapsed:
             delta = (util.now() - self._startTime) - self._remoteElapsed
             metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
@@ -510,25 +510,25 @@ LoggedRemoteCommand = RemoteCommand
 class RemoteShellCommand(RemoteCommand):
     def __init__(
         self,
-        workdir,
-        command,
-        env=None,
-        want_stdout=1,
-        want_stderr=1,
-        timeout=20 * 60,
-        maxTime=None,
-        max_lines=None,
-        sigtermTime=None,
-        logfiles=None,
-        usePTY=None,
-        logEnviron=True,
-        collectStdout=False,
-        collectStderr=False,
-        interruptSignal=None,
-        initialStdin=None,
-        decodeRC=None,
-        stdioLogName='stdio',
-    ):
+        workdir: str | None,
+        command: str | bytes | list[Any],
+        env: dict[str, str] | None = None,
+        want_stdout: int = 1,
+        want_stderr: int = 1,
+        timeout: float = 20 * 60,
+        maxTime: float | None = None,
+        max_lines: int | None = None,
+        sigtermTime: float | None = None,
+        logfiles: dict[str, str] | None = None,
+        usePTY: bool | None = None,
+        logEnviron: bool = True,
+        collectStdout: bool = False,
+        collectStderr: bool = False,
+        interruptSignal: str | None = None,
+        initialStdin: str | None = None,
+        decodeRC: dict[int | None, int] | None = None,
+        stdioLogName: str = 'stdio',
+    ) -> None:
         if logfiles is None:
             logfiles = {}
         if decodeRC is None:
@@ -539,7 +539,7 @@ class RemoteShellCommand(RemoteCommand):
             self.fake_command = command
         else:
             # Try to obfuscate command.
-            def obfuscate(arg):
+            def obfuscate(arg: Any) -> Any:
                 if isinstance(arg, tuple) and len(arg) == 3 and arg[0] == 'obfuscated':
                     return arg[2]
                 return arg
@@ -577,9 +577,9 @@ class RemoteShellCommand(RemoteCommand):
             stdioLogName=stdioLogName,
         )
 
-    def _start(self):
+    def _start(self) -> defer.Deferred[Any]:
         if self.args['usePTY'] is None:
-            if self.step.workerVersionIsOlderThan("shell", "3.0"):
+            if self.step.workerVersionIsOlderThan("shell", "3.0"):  # type: ignore[union-attr]
                 # Old worker default of usePTY is to use worker-configuration.
                 self.args['usePTY'] = "slave-config"
             else:
@@ -591,13 +591,13 @@ class RemoteShellCommand(RemoteCommand):
         if self.remote_command == "shell":
             # non-ShellCommand worker commands are responsible for doing this
             # fixup themselves
-            if self.step.workerVersion("shell", "old") == "old":
+            if self.step.workerVersion("shell", "old") == "old":  # type: ignore[union-attr]
                 self.args['dir'] = self.args['workdir']
-            if self.step.workerVersionIsOlderThan("shell", "2.16"):
+            if self.step.workerVersionIsOlderThan("shell", "2.16"):  # type: ignore[union-attr]
                 self.args.pop('sigtermTime', None)
-        what = f"command '{self.fake_command}' in dir '{self.args['workdir']}'"
+        what = f"command '{self.fake_command}' in dir '{self.args['workdir']}'"  # type: ignore[str-bytes-safe]
         self._logger.info(what)
         return super()._start()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<RemoteShellCommand '{self.fake_command!r}'>"

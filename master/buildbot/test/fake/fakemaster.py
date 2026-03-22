@@ -18,6 +18,8 @@ from __future__ import annotations
 import os
 import shutil
 import weakref
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -39,37 +41,40 @@ from buildbot.test.util.db import resolve_test_db_url
 from buildbot.util import service
 from buildbot.util.twisted import async_to_deferred
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class FakeCache:
     """Emulate an L{AsyncLRUCache}, but without any real caching.  This
     I{does} do the weakref part, to catch un-weakref-able objects."""
 
-    def __init__(self, name, miss_fn):
+    def __init__(self, name: str, miss_fn: Any) -> None:
         self.name = name
         self.miss_fn = miss_fn
 
-    def get(self, key, **kwargs):
+    def get(self, key: Any, **kwargs: Any) -> defer.Deferred[Any]:
         d = self.miss_fn(key, **kwargs)
 
         @d.addCallback
-        def mkref(x):
+        def mkref(x: Any) -> Any:
             if x is not None:
                 weakref.ref(x)
             return x
 
         return d
 
-    def put(self, key, val):
+    def put(self, key: Any, val: Any) -> None:
         pass
 
 
 class FakeCaches:
-    def get_cache(self, name, miss_fn):
+    def get_cache(self, name: str, miss_fn: Any) -> FakeCache:
         return FakeCache(name, miss_fn)
 
 
 class FakeBuilder:
-    def __init__(self, master=None, buildername="Builder"):
+    def __init__(self, master: Any = None, buildername: str = "Builder") -> None:
         if master:
             self.master = master
             self.botmaster = master.botmaster
@@ -97,11 +102,16 @@ class FakeMaster(service.MasterService):
     _test_want_db: bool = False
     _test_did_shutdown: bool = False
 
-    def __init__(self, reactor, basedir='basedir', master_id=fakedb.FakeDBConnector.MASTER_ID):
+    def __init__(
+        self,
+        reactor: Any,
+        basedir: str = 'basedir',
+        master_id: int = fakedb.FakeDBConnector.MASTER_ID,
+    ) -> None:
         super().__init__()
         self._master_id = master_id
         self.reactor = reactor
-        self.objectids = {}
+        self.objectids: dict[tuple[str, str], int] = {}
         self.config = MasterConfig()
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
@@ -121,7 +131,7 @@ class FakeMaster(service.MasterService):
         self.next_objectid = 0
         self.config_version = 0
 
-        def getObjectId(sched_name, class_name):
+        def getObjectId(sched_name: str, class_name: str) -> defer.Deferred[int]:
             k = (sched_name, class_name)
             try:
                 rv = self.objectids[k]
@@ -132,10 +142,10 @@ class FakeMaster(service.MasterService):
 
         self.db.state.getObjectId = getObjectId
 
-    def getObjectId(self):
+    def getObjectId(self) -> defer.Deferred[int]:
         return defer.succeed(self._master_id)
 
-    def subscribeToBuildRequests(self, callback):
+    def subscribeToBuildRequests(self, callback: Any) -> None:
         pass
 
     def acquire_lock(self) -> defer.Deferred[None]:
@@ -145,12 +155,12 @@ class FakeMaster(service.MasterService):
         return None
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         yield super().stopService()
         yield self.test_shutdown()
 
     @defer.inlineCallbacks
-    def test_shutdown(self):
+    def test_shutdown(self) -> InlineCallbacksType[None]:
         if self._test_did_shutdown:
             return
         self._test_did_shutdown = True
@@ -165,21 +175,21 @@ class FakeMaster(service.MasterService):
 
 @async_to_deferred
 async def make_master(
-    testcase,
-    wantMq=False,
-    wantDb=False,
-    wantData=False,
-    wantRealReactor=False,
-    wantGraphql=False,
-    with_secrets: dict | None = None,
-    url=None,
-    db_url=None,
-    sqlite_memory=True,
-    auto_upgrade=True,
-    auto_shutdown=True,
-    check_version=True,
-    auto_clean=True,
-    **kwargs,
+    testcase: Any,
+    wantMq: bool = False,
+    wantDb: bool = False,
+    wantData: bool = False,
+    wantRealReactor: bool = False,
+    wantGraphql: bool = False,
+    with_secrets: dict[str, str] | None = None,
+    url: str | None = None,
+    db_url: str | None = None,
+    sqlite_memory: bool = True,
+    auto_upgrade: bool = True,
+    auto_shutdown: bool = True,
+    check_version: bool = True,
+    auto_clean: bool = True,
+    **kwargs: Any,
 ) -> FakeMaster:
     if wantRealReactor:
         _reactor = reactor
@@ -213,10 +223,10 @@ async def make_master(
             # affect further tests
             testcase.addCleanup(master.test_shutdown)
 
-        master.db.configured_db_config = MasterDBConfig(resolve_test_db_url(db_url, sqlite_memory))
+        master.db.configured_db_config = MasterDBConfig(resolve_test_db_url(db_url, sqlite_memory))  # type: ignore[arg-type]
         if not os.path.exists(master.basedir):
             os.makedirs(master.basedir)
-        await master.db.set_master(master)
+        await master.db.set_master(master)  # type: ignore[arg-type]
         await master.db.setup()
 
     if wantData:

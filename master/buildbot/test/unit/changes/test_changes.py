@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import pprint
 import re
 import textwrap
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -24,6 +27,9 @@ from buildbot.changes import changes
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Change(TestReactorMixin, unittest.TestCase):
@@ -53,10 +59,10 @@ class Change(TestReactorMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
-        self.change23 = changes.Change(**{  # using **dict(..) forces kwargs
+        self.change23 = changes.Change(**{  # type: ignore[arg-type]
             "category": 'devel',
             "repository": 'git://warner',
             "codebase": 'mainapp',
@@ -73,7 +79,7 @@ class Change(TestReactorMixin, unittest.TestCase):
         })
         self.change23.number = 23
 
-        self.change24 = changes.Change(**{
+        self.change24 = changes.Change(**{  # type: ignore[arg-type]
             "category": 'devel',
             "repository": 'git://warner',
             "codebase": 'mainapp',
@@ -90,7 +96,7 @@ class Change(TestReactorMixin, unittest.TestCase):
         })
         self.change24.number = 24
 
-        self.change25 = changes.Change(**{
+        self.change25 = changes.Change(**{  # type: ignore[arg-type]
             "category": 'devel',
             "repository": 'git://warner',
             "codebase": 'mainapp',
@@ -108,7 +114,7 @@ class Change(TestReactorMixin, unittest.TestCase):
         self.change25.number = 25
 
     @defer.inlineCallbacks
-    def test_fromChdict(self):
+    def test_fromChdict(self) -> InlineCallbacksType[None]:
         # get a real honest-to-goodness chdict from the fake db
         yield self.master.db.insert_test_data(self.change23_rows)
         chdict = yield self.master.db.changes.getChange(23)
@@ -134,16 +140,16 @@ class Change(TestReactorMixin, unittest.TestCase):
         ok = ok and got.project == exp.project
         if not ok:
 
-            def printable(c):
+            def printable(c: changes.Change) -> str:
                 return pprint.pformat(c.__dict__)
 
             self.fail(f"changes do not match; expected\n{printable(exp)}\ngot\n{printable(got)}")
 
-    def test_str(self):
+    def test_str(self) -> None:
         string = str(self.change23)
         self.assertTrue(re.match(r"Change\(.*\)", string), string)
 
-    def test_asText(self):
+    def test_asText(self) -> None:
         text = self.change23.asText()
         self.assertTrue(
             re.match(
@@ -165,7 +171,7 @@ class Change(TestReactorMixin, unittest.TestCase):
             text,
         )
 
-    def test_asDict(self):
+    def test_asDict(self) -> None:
         dict = self.change23.asDict()
         self.assertIn('1978', dict['at'])  # timezone-sensitive
         del dict['at']
@@ -190,24 +196,24 @@ class Change(TestReactorMixin, unittest.TestCase):
             },
         )
 
-    def test_getShortAuthor(self):
+    def test_getShortAuthor(self) -> None:
         self.assertEqual(self.change23.getShortAuthor(), 'dustin')
 
-    def test_getTime(self):
+    def test_getTime(self) -> None:
         # careful, or timezones will hurt here
         self.assertIn('Jun 1978', self.change23.getTime())
 
-    def test_getTimes(self):
+    def test_getTimes(self) -> None:
         self.assertEqual(self.change23.getTimes(), (266738404, None))
 
-    def test_getText(self):
+    def test_getText(self) -> None:
         self.change23.who = 'nasty < nasty'  # test the html escaping (ugh!)
         self.assertEqual(self.change23.getText(), ['nasty &lt; nasty'])
 
-    def test_getLogs(self):
+    def test_getLogs(self) -> None:
         self.assertEqual(self.change23.getLogs(), {})
 
-    def test_compare(self):
+    def test_compare(self) -> None:
         self.assertEqual(self.change23, self.change23)
         self.assertNotEqual(self.change24, self.change23)
         self.assertGreater(self.change24, self.change23)

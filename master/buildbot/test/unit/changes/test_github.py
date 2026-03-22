@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -27,6 +31,9 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import changesource
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 gitJsonPayloadSinglePullrequest = """
 {
@@ -179,7 +186,7 @@ class TestGitHubPullrequestPoller(
     changesource.ChangeSourceMixin, TestReactorMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setUpChangeSource()
 
@@ -195,7 +202,9 @@ class TestGitHubPullrequestPoller(
         fake_storage_service.reconfigService(secretdict={"token": "1234"})
 
     @defer.inlineCallbacks
-    def newChangeSource(self, owner, repo, endpoint='https://api.github.com', **kwargs):
+    def newChangeSource(
+        self, owner: str, repo: str, endpoint: str = 'https://api.github.com', **kwargs: Any
+    ) -> InlineCallbacksType[None]:
         http_headers = {'User-Agent': 'Buildbot'}
         token = kwargs.get('token', None)
         if token:
@@ -206,14 +215,16 @@ class TestGitHubPullrequestPoller(
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, endpoint, headers=http_headers
         )
-        self.changesource = GitHubPullrequestPoller(owner, repo, **kwargs)
+        self.changesource = GitHubPullrequestPoller(owner, repo, **kwargs)  # type: ignore[assignment]
 
     @defer.inlineCallbacks
-    def startChangeSource(self):
-        yield self.changesource.setServiceParent(self.master)
+    def startChangeSource(self) -> InlineCallbacksType[None]:
+        yield self.changesource.setServiceParent(self.master)  # type: ignore[attr-defined]
         yield self.attachChangeSource(self.changesource)
 
-    def assertDictSubset(self, expected_dict, response_dict):
+    def assertDictSubset(
+        self, expected_dict: dict[str, Any], response_dict: dict[str, Any]
+    ) -> None:
         expected = {}
         for key in expected_dict.keys():
             self.assertIn(key, set(response_dict.keys()))
@@ -221,35 +232,35 @@ class TestGitHubPullrequestPoller(
         self.assertDictEqual(expected_dict, expected)
 
     @defer.inlineCallbacks
-    def test_describe(self):
+    def test_describe(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource('defunkt', 'defunkt')
         yield self.startChangeSource()
         self.assertEqual(
             f"GitHubPullrequestPoller watching the GitHub repository {'defunkt'}/{'defunkt'}",
-            self.changesource.describe(),
+            self.changesource.describe(),  # type: ignore[attr-defined]
         )
 
     @defer.inlineCallbacks
-    def test_default_name(self):
+    def test_default_name(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource('defunkt', 'defunkt')
         yield self.startChangeSource()
-        self.assertEqual(f"GitHubPullrequestPoller:{'defunkt'}/{'defunkt'}", self.changesource.name)
+        self.assertEqual(f"GitHubPullrequestPoller:{'defunkt'}/{'defunkt'}", self.changesource.name)  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_custom_name(self):
+    def test_custom_name(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource('defunkt', 'defunkt', name="MyName")
         yield self.startChangeSource()
-        self.assertEqual("MyName", self.changesource.name)
+        self.assertEqual("MyName", self.changesource.name)  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_SimplePR(self):
+    def test_SimplePR(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource(
             'defunkt', 'defunkt', token='1234', github_property_whitelist=["github.*"]
         )
         yield self.simple_pr()
 
     @defer.inlineCallbacks
-    def test_project(self):
+    def test_project(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource(
             'defunkt',
             'defunkt',
@@ -260,14 +271,14 @@ class TestGitHubPullrequestPoller(
         yield self.simple_pr(project='tst_project')
 
     @defer.inlineCallbacks
-    def test_secret_token(self):
+    def test_secret_token(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource(
             'defunkt', 'defunkt', token=Secret('token'), github_property_whitelist=["github.*"]
         )
         yield self.simple_pr()
 
     @defer.inlineCallbacks
-    def simple_pr(self, project=None):
+    def simple_pr(self, project: str | None = None) -> InlineCallbacksType[None]:
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
@@ -294,7 +305,7 @@ class TestGitHubPullrequestPoller(
             content_json=json.loads(gitJsonPayloadFiles),
         )
         yield self.startChangeSource()
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
@@ -316,7 +327,7 @@ class TestGitHubPullrequestPoller(
         )
 
     @defer.inlineCallbacks
-    def test_wrongBranch(self):
+    def test_wrongBranch(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource('defunkt', 'defunkt', token='1234', branches=['wrongBranch'])
         self._http.expect(
             method='get',
@@ -325,11 +336,11 @@ class TestGitHubPullrequestPoller(
         )
 
         yield self.startChangeSource()
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def test_http_error(self):
+    def test_http_error(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource('defunkt', 'defunkt', token='1234')
         self._http.expect(
             method='get',
@@ -338,11 +349,11 @@ class TestGitHubPullrequestPoller(
             code=404,
         )
         yield self.startChangeSource()
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def test_baseURL(self):
+    def test_baseURL(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource(
             'defunkt',
             'defunkt',
@@ -377,7 +388,7 @@ class TestGitHubPullrequestPoller(
             content_json=json.loads(gitJsonPayloadFiles),
         )
         yield self.startChangeSource()
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
@@ -397,7 +408,7 @@ class TestGitHubPullrequestPoller(
         )
 
     @defer.inlineCallbacks
-    def test_PRfilter(self):
+    def test_PRfilter(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource(
             'defunkt', 'defunkt', token='1234', pullrequest_filter=lambda pr: pr['number'] == 1337
         )
@@ -407,11 +418,11 @@ class TestGitHubPullrequestPoller(
             content_json=json.loads(gitJsonPayloadPullRequests),
         )
         yield self.startChangeSource()
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def test_failCommitters(self):
+    def test_failCommitters(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource('defunkt', 'defunkt', token='1234')
         self._http.expect(
             method='get',
@@ -435,10 +446,10 @@ class TestGitHubPullrequestPoller(
         )
         yield self.startChangeSource()
         with self.assertRaises(KeyError):
-            yield self.changesource.poll()
+            yield self.changesource.poll()  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_failFiles(self):
+    def test_failFiles(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource('defunkt', 'defunkt', token='1234')
         self._http.expect(
             method='get',
@@ -462,17 +473,17 @@ class TestGitHubPullrequestPoller(
         )
         yield self.startChangeSource()
         with self.assertRaises(KeyError):
-            yield self.changesource.poll()
+            yield self.changesource.poll()  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_wrongRepoLink(self):
+    def test_wrongRepoLink(self) -> InlineCallbacksType[None]:
         with self.assertRaises(ConfigErrors):
             yield self.newChangeSource(
                 'defunkt', 'defunkt', token='1234', repository_type='defunkt'
             )
 
     @defer.inlineCallbacks
-    def test_magicLink(self):
+    def test_magicLink(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource(
             'defunkt',
             'defunkt',
@@ -506,7 +517,7 @@ class TestGitHubPullrequestPoller(
             content_json=json.loads(gitJsonPayloadFiles),
         )
         yield self.startChangeSource()
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
@@ -526,7 +537,7 @@ class TestGitHubPullrequestPoller(
         )
 
     @defer.inlineCallbacks
-    def test_AuthormissingEmail(self):
+    def test_AuthormissingEmail(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource(
             'defunkt', 'defunkt', token='1234', github_property_whitelist=["github.*"]
         )
@@ -556,7 +567,7 @@ class TestGitHubPullrequestPoller(
             content_json=json.loads(gitJsonPayloadFiles),
         )
         yield self.startChangeSource()
-        yield self.changesource.poll()
+        yield self.changesource.poll()  # type: ignore[attr-defined]
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]

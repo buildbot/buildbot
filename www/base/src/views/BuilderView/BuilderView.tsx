@@ -210,7 +210,7 @@ export const BuilderView = observer(() => {
       },
       (reason) => {
         setIsCancelling(false);
-        setErrorMsg(`Cannot cancel: ${reason.error.message}`);
+        setErrorMsg(`Cannot cancel: ${reason.response.data.error.message}`);
       },
     );
   };

@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import functools
 import inspect
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import reflect
@@ -27,15 +31,22 @@ from buildbot.util import pathmatch
 from buildbot.util import service
 from buildbot.warnings import warn_deprecated
 
+if TYPE_CHECKING:
+    from types import ModuleType
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class Updates:
     # empty container object; see _scanModule, below
-    pass
+    def __getattr__(self, name: str) -> Any:
+        raise AttributeError(name)
 
 
 class RTypes:
     # empty container object; see _scanModule, below
-    pass
+    def __getattr__(self, name: str) -> Any:
+        raise AttributeError(name)
 
 
 class DataConnector(service.AsyncService):
@@ -66,21 +77,21 @@ class DataConnector(service.AsyncService):
     ]
     name = "data"
 
-    def __init__(self):
-        self.matcher = pathmatch.Matcher()
-        self.rootLinks = []  # links from the root of the API
+    def __init__(self) -> None:
+        self.matcher: pathmatch.Matcher[base.Endpoint] = pathmatch.Matcher()
+        self.rootLinks: list[dict[str, str]] = []  # links from the root of the API
 
     @defer.inlineCallbacks
-    def setServiceParent(self, parent):
+    def setServiceParent(self, parent: Any) -> InlineCallbacksType[None]:
         yield super().setServiceParent(parent)
         self._setup()
 
-    def _scanModule(self, mod, _noSetattr=False):
+    def _scanModule(self, mod: ModuleType, _noSetattr: bool = False) -> None:
         for sym in dir(mod):
             obj = getattr(mod, sym)
             if inspect.isclass(obj) and issubclass(obj, base.ResourceType):
                 rtype = obj(self.master)
-                setattr(self.rtypes, rtype.name, rtype)
+                setattr(self.rtypes, rtype.name, rtype)  # type: ignore[arg-type]
                 # put its update methods into our 'updates' attribute
                 for name in dir(rtype):
                     o = getattr(rtype, name)
@@ -109,65 +120,80 @@ class DataConnector(service.AsyncService):
                     if rootLinkName:
                         self.rootLinks.append({'name': rootLinkName})
 
-    def _setup(self):
+    def _setup(self) -> None:
         self.updates = Updates()
         self.rtypes = RTypes()
         for moduleName in self.submodules:
             module = reflect.namedModule(moduleName)
             self._scanModule(module)
 
-    def getEndpoint(self, path):
+    def getEndpoint(self, path: tuple[str | int, ...]) -> tuple[base.Endpoint, dict[str, Any]]:
         try:
-            return self.matcher[path]
+            return self.matcher[path]  # type: ignore[index]
         except KeyError as e:
             raise exceptions.InvalidPathError(
                 "Invalid path: " + "/".join([str(p) for p in path])
             ) from e
 
-    def getResourceType(self, name):
+    def getResourceType(self, name: str) -> base.ResourceType | None:
         return getattr(self.rtypes, name, None)
 
-    def get(self, path, filters=None, fields=None, order=None, limit=None, offset=None):
+    def get(
+        self,
+        path: tuple[str | int, ...],
+        filters: Any = None,
+        fields: Any = None,
+        order: Any = None,
+        limit: Any = None,
+        offset: Any = None,
+    ) -> defer.Deferred[Any]:
         resultSpec = resultspec.ResultSpec(
             filters=filters, fields=fields, order=order, limit=limit, offset=offset
         )
         return self.get_with_resultspec(path, resultSpec)
 
     @defer.inlineCallbacks
-    def get_with_resultspec(self, path, resultSpec):
+    def get_with_resultspec(
+        self, path: tuple[str | int, ...], resultSpec: resultspec.ResultSpec
+    ) -> InlineCallbacksType[Any]:
         endpoint, kwargs = self.getEndpoint(path)
         rv = yield endpoint.get(resultSpec, kwargs)
         if resultSpec:
             rv = resultSpec.apply(rv)
         return rv
 
-    def control(self, action, args, path):
+    def control(self, action: str, args: Any, path: tuple[str | int, ...]) -> Any:
         endpoint, kwargs = self.getEndpoint(path)
         return endpoint.control(action, args, kwargs)
 
-    def produceEvent(self, rtype, msg, event):
+    def produceEvent(self, rtype: str, msg: dict[str, Any] | None, event: str) -> None:
         warn_deprecated(
             '4.3.0',
             'DataConnector.produceEvent is deprecated, use data API update methods',
         )
         rsrc = self.getResourceType(rtype)
-        return rsrc.produceEvent(msg, event)
+        return rsrc.produceEvent(msg, event)  # type: ignore[union-attr,return-value]
 
     @functools.lru_cache(1)  # noqa: B019
-    def allEndpoints(self):
+    def allEndpoints(self) -> list[dict[str, Any]]:
         """return the full spec of the connector as a list of dicts"""
         paths = []
         for k, v in sorted(self.matcher.iterPatterns()):
             paths.append({
                 "path": '/'.join(k),
                 "plural": str(v.rtype.plural),
-                "type": str(v.rtype.entityType.name),
-                "type_spec": v.rtype.entityType.getSpec(),
+                "type": str(v.rtype.entityType.name),  # type: ignore[union-attr]
+                "type_spec": v.rtype.entityType.getSpec(),  # type: ignore[union-attr]
             })
         return paths
 
-    def resultspec_from_jsonapi(self, req_args, entityType, is_collection):
-        def checkFields(fields, negOk=False):
+    def resultspec_from_jsonapi(
+        self,
+        req_args: dict[bytes | str, Any],
+        entityType: Any,
+        is_collection: bool,
+    ) -> resultspec.ResultSpec:
+        def checkFields(fields: list[Any] | tuple[Any, ...], negOk: bool = False) -> None:
             for field in fields:
                 k = bytes2unicode(field)
                 if k[0] == '-' and negOk:
@@ -178,7 +204,7 @@ class DataConnector(service.AsyncService):
         limit = offset = order = fields = None
         filters = []
         properties = []
-        for arg in req_args:
+        for arg in req_args:  # noqa: PLC0206
             argStr = bytes2unicode(arg)
             if argStr == 'order':
                 order = tuple(bytes2unicode(o) for o in req_args[arg])
@@ -205,7 +231,7 @@ class DataConnector(service.AsyncService):
                         props.append(bytes2unicode(v))
                 except Exception as e:
                     raise exceptions.InvalidQueryParameter(
-                        f'invalid property value for {arg}'
+                        f'invalid property value for {arg}'  # type: ignore[str-bytes-safe]
                     ) from e
                 properties.append(resultspec.Property(arg, 'eq', props))
             elif argStr in entityType.fieldNames:

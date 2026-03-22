@@ -13,19 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import sys
 import traceback
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
 from buildbot.clients import sendchange as sendchange_client
 from buildbot.util import in_reactor
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 @in_reactor
 @defer.inlineCallbacks
-def sendchange(config):
+def sendchange(config: dict[str, Any]) -> InlineCallbacksType[int]:
     encoding = config.get('encoding', 'utf8')
     who = config.get('who')
     auth = config.get('auth')
@@ -43,12 +49,12 @@ def sendchange(config):
     files = config.get('files', ())
     codebase = config.get('codebase', None)
 
-    s = sendchange_client.Sender(master, auth, encoding=encoding)
+    s = sendchange_client.Sender(master, auth, encoding=encoding)  # type: ignore[arg-type]
     try:
         yield s.send(
             branch,
             revision,
-            comments,
+            comments,  # type: ignore[arg-type]
             files,
             who=who,
             category=category,

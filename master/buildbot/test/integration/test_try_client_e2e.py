@@ -14,7 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -22,13 +25,16 @@ from twisted.internet import reactor
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 # This integration test tests that the try command line works end2end
 class TryClientE2E(RunMasterBase):
     timeout = 15
 
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -47,19 +53,19 @@ class TryClientE2E(RunMasterBase):
 
     @flaky(bugNumber=7084)
     @defer.inlineCallbacks
-    def test_shell(self):
+    def test_shell(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
 
-        def trigger_callback():
+        def trigger_callback() -> None:
             port = self.master.pbmanager.dispatchers['tcp:0'].port.getHost().port
 
-            def thd():
+            def thd() -> None:
                 os.system(
                     f"buildbot try --connect=pb --master=127.0.0.1:{port} -b testy "
                     "--property=foo:bar --username=alice --passwd=pw1 --vc=none"
                 )
 
-            reactor.callInThread(thd)
+            reactor.callInThread(thd)  # type: ignore[attr-defined]
 
         build = yield self.doForceBuild(
             wantSteps=True, triggerCallback=trigger_callback, wantLogs=True, wantProperties=True

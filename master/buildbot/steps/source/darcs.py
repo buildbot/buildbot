@@ -16,6 +16,12 @@
 Source step code for darcs
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -28,6 +34,11 @@ from buildbot.process import results
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source.base import Source
 
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IReactorTime
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class Darcs(Source):
     """Class for Darcs with all smarts"""
@@ -37,7 +48,13 @@ class Darcs(Source):
     renderables = ['repourl']
     possible_methods = ('clobber', 'copy')
 
-    def __init__(self, repourl=None, mode='incremental', method=None, **kwargs):
+    def __init__(
+        self,
+        repourl: str | None = None,
+        mode: str = 'incremental',
+        method: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         self.repourl = repourl
         self.method = method
         self.mode = mode
@@ -62,7 +79,9 @@ class Darcs(Source):
             raise ConfigErrors(errors)
 
     @defer.inlineCallbacks
-    def run_vc(self, branch, revision, patch):
+    def run_vc(
+        self, branch: str | None, revision: str | None, patch: Any
+    ) -> InlineCallbacksType[int]:
         self.revision = revision
         self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
@@ -83,7 +102,7 @@ class Darcs(Source):
         return results.SUCCESS
 
     @defer.inlineCallbacks
-    def checkDarcs(self):
+    def checkDarcs(self) -> InlineCallbacksType[bool]:
         cmd = remotecommand.RemoteShellCommand(
             self.workdir,
             ['darcs', '--version'],
@@ -96,7 +115,7 @@ class Darcs(Source):
         return cmd.rc == 0
 
     @defer.inlineCallbacks
-    def mode_full(self):
+    def mode_full(self) -> InlineCallbacksType[None]:
         if self.method == 'clobber':
             yield self.clobber()
             return
@@ -105,7 +124,7 @@ class Darcs(Source):
             return
 
     @defer.inlineCallbacks
-    def mode_incremental(self):
+    def mode_incremental(self) -> InlineCallbacksType[None]:
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             yield self._checkout()
@@ -114,7 +133,7 @@ class Darcs(Source):
             yield self._dovccmd(command)
 
     @defer.inlineCallbacks
-    def copy(self):
+    def copy(self) -> InlineCallbacksType[None]:
         cmd = remotecommand.RemoteCommand(
             'rmdir',
             {
@@ -144,12 +163,12 @@ class Darcs(Source):
         self.workdir = 'build'
 
     @defer.inlineCallbacks
-    def clobber(self):
+    def clobber(self) -> InlineCallbacksType[None]:
         yield self.runRmdir(self.workdir)
         yield self._checkout()
 
     @defer.inlineCallbacks
-    def _clone(self, abandonOnFailure=False):
+    def _clone(self, abandonOnFailure: bool = False) -> InlineCallbacksType[Any]:
         command = ['darcs', 'get', '--verbose', '--lazy', '--repo-name', self.workdir]
 
         if self.revision:
@@ -157,11 +176,11 @@ class Darcs(Source):
             command.append('--context')
             command.append('.darcs-context')
 
-        command.append(self.repourl)
+        command.append(cast(str, self.repourl))
         yield self._dovccmd(command, abandonOnFailure=abandonOnFailure, wkdir='.')
 
     @defer.inlineCallbacks
-    def _checkout(self):
+    def _checkout(self) -> InlineCallbacksType[Any]:
         if self.retry:
             abandonOnFailure = self.retry[1] <= 0
         else:
@@ -176,28 +195,28 @@ class Darcs(Source):
             if repeats > 0:
                 log.msg(f"Checkout failed, trying {repeats} more times after {delay} seconds")
                 self.retry = (delay, repeats - 1)
-                df = defer.Deferred()
+                df: defer.Deferred[Any] = defer.Deferred()
                 df.addCallback(lambda _: self.runRmdir(self.workdir))
                 df.addCallback(lambda _: self._checkout())
-                reactor.callLater(delay, df.callback, None)
+                cast("IReactorTime", reactor).callLater(delay, df.callback, None)
                 res = yield df
         return res
 
     @defer.inlineCallbacks
-    def parseGotRevision(self):
+    def parseGotRevision(self) -> InlineCallbacksType[None]:
         revision = yield self._dovccmd(['darcs', 'changes', '--max-count=1'], collectStdout=True)
         self.updateSourceProperty('got_revision', revision)
 
     @defer.inlineCallbacks
     def _dovccmd(
         self,
-        command,
-        collectStdout=False,
-        initialStdin=None,
-        decodeRC=None,
-        abandonOnFailure=True,
-        wkdir=None,
-    ):
+        command: list[str],
+        collectStdout: bool = False,
+        initialStdin: str | None = None,
+        decodeRC: dict[int, Any] | None = None,
+        abandonOnFailure: bool = True,
+        wkdir: str | None = None,
+    ) -> InlineCallbacksType[Any]:
         if not command:
             raise ValueError("No command specified")
 
@@ -212,7 +231,7 @@ class Darcs(Source):
             timeout=self.timeout,
             collectStdout=collectStdout,
             initialStdin=initialStdin,
-            decodeRC=decodeRC,
+            decodeRC=decodeRC,  # type: ignore[arg-type]
         )
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
@@ -224,5 +243,6 @@ class Darcs(Source):
             return cmd.stdout
         return cmd.rc
 
-    def _sourcedirIsUpdatable(self):
+    def _sourcedirIsUpdatable(self) -> defer.Deferred[bool]:
+        assert self.build is not None
         return self.pathExists(self.build.path_module.join(self.workdir, '_darcs'))

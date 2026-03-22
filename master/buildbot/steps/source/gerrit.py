@@ -12,15 +12,22 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+from typing import Any
 
 from buildbot.steps.source.git import Git
 
+if TYPE_CHECKING:
+    from twisted.internet import defer
+
 
 class Gerrit(Git):
-    def run_vc(self, branch, revision, patch):
+    def run_vc(self, branch: str | None, revision: str | None, patch: Any) -> defer.Deferred[Any]:
         gerrit_branch = None
 
+        assert self.build is not None
         changed_project = self.build.getProperty('event.change.project')
         if not self.sourcestamp or (self.sourcestamp.project != changed_project):
             # If we don't have a sourcestamp, or the project is  wrong, this

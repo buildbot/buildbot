@@ -14,12 +14,16 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import Any
+
 from buildbot.scripts import base
 from buildbot.scripts import start
 from buildbot.scripts import stop
 
 
-def restart(config):
+def restart(config: dict[str, Any]) -> int:
     basedir = config['basedir']
     quiet = config['quiet']
 

@@ -18,6 +18,7 @@ from __future__ import annotations
 import itertools
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -34,6 +35,9 @@ from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     import datetime
+
+    from buildbot.data.resultspec import ResultSpec
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class AlreadyClaimedError(Exception):
@@ -65,7 +69,7 @@ class BuildRequestModel:
         return self.claimed_at is not None
 
     # For backward compatibility from when SsDict inherited from Dict
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -88,7 +92,7 @@ class BrDict(BuildRequestModel):
 
 
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
-    def _simple_sa_select_query(self):
+    def _simple_sa_select_query(self) -> sa.sql.selectable.Select[Any]:
         reqs_tbl = self.db.model.buildrequests
         claims_tbl = self.db.model.buildrequest_claims
         builder_tbl = self.db.model.builders
@@ -102,7 +106,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             builder_tbl.c.name.label('buildername'),
         ).select_from(from_clause)
 
-    def _saSelectQuery(self):
+    def _saSelectQuery(self) -> sa.sql.selectable.Select[Any]:
         reqs_tbl = self.db.model.buildrequests
         claims_tbl = self.db.model.buildrequest_claims
         bsets_tbl = self.db.model.buildsets
@@ -125,8 +129,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             builder_tbl.c.name.label('buildername'),
         ).select_from(from_clause)
 
-    def getBuildRequest(self, brid) -> defer.Deferred[BuildRequestModel | None]:
-        def thd(conn) -> BuildRequestModel | None:
+    def getBuildRequest(self, brid: int) -> defer.Deferred[BuildRequestModel | None]:
+        def thd(conn: sa.engine.Connection) -> BuildRequestModel | None:
             reqs_tbl = self.db.model.buildrequests
             q = self._simple_sa_select_query()
             q = q.where(reqs_tbl.c.id == brid)
@@ -143,18 +147,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def getBuildRequests(
         self,
-        builderid=None,
-        complete=None,
-        claimed=None,
-        bsid=None,
-        branch=None,
-        repository=None,
-        resultSpec=None,
-    ):
+        builderid: int | None = None,
+        complete: bool | None = None,
+        claimed: bool | int | None = None,
+        bsid: int | None = None,
+        branch: str | None = None,
+        repository: str | None = None,
+        resultSpec: ResultSpec | None = None,
+    ) -> InlineCallbacksType[list[BuildRequestModel]]:
         def deduplicateBrdict(brdicts: list[BuildRequestModel]) -> list[BuildRequestModel]:
             return list(({b.buildrequestid: b for b in brdicts}).values())
 
-        def thd(conn) -> list[BuildRequestModel]:
+        def thd(conn: sa.engine.Connection) -> list[BuildRequestModel]:
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
             sstamps_tbl = self.db.model.sourcestamps
@@ -183,7 +187,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(sstamps_tbl.c.repository == repository)
 
             if resultSpec is not None:
-                return deduplicateBrdict(resultSpec.thd_execute(conn, q, self._modelFromRow))
+                return deduplicateBrdict(resultSpec.thd_execute(conn, q, self._modelFromRow))  # type: ignore[arg-type]
 
             res = conn.execute(q)
 
@@ -193,17 +197,22 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return res
 
     @defer.inlineCallbacks
-    def claimBuildRequests(self, brids, claimed_at=None):
+    def claimBuildRequests(
+        self, brids: list[int], claimed_at: datetime.datetime | None = None
+    ) -> InlineCallbacksType[None]:
         if claimed_at is not None:
-            claimed_at = datetime2epoch(claimed_at)
+            claimed_at_epoch = datetime2epoch(claimed_at)
         else:
-            claimed_at = int(self.master.reactor.seconds())
+            claimed_at_epoch = int(self.master.reactor.seconds())
 
-        yield self._claim_buildrequests_for_master(brids, claimed_at, self.db.master.masterid)
+        assert self.db.master.masterid is not None  # type: ignore[union-attr]
+        yield self._claim_buildrequests_for_master(brids, claimed_at_epoch, self.db.master.masterid)  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
-    def _claim_buildrequests_for_master(self, brids, claimed_at, masterid):
-        def thd(conn):
+    def _claim_buildrequests_for_master(
+        self, brids: list[int], claimed_at: int, masterid: int
+    ) -> InlineCallbacksType[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             transaction = conn.begin()
             tbl = self.db.model.buildrequest_claims
 
@@ -222,12 +231,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def unclaimBuildRequests(self, brids):
-        yield self._unclaim_buildrequests_for_master(brids, self.db.master.masterid)
+    def unclaimBuildRequests(self, brids: list[int]) -> InlineCallbacksType[None]:
+        assert self.db.master.masterid is not None  # type: ignore[union-attr]
+        yield self._unclaim_buildrequests_for_master(brids, self.db.master.masterid)  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
-    def _unclaim_buildrequests_for_master(self, brids, masterid):
-        def thd(conn):
+    def _unclaim_buildrequests_for_master(
+        self, brids: list[int], masterid: int
+    ) -> InlineCallbacksType[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             transaction = conn.begin()
             claims_tbl = self.db.model.buildrequest_claims
 
@@ -255,14 +267,19 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def completeBuildRequests(self, brids, results, complete_at=None):
+    def completeBuildRequests(
+        self,
+        brids: list[int],
+        results: int,
+        complete_at: datetime.datetime | None = None,
+    ) -> InlineCallbacksType[None]:
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if complete_at is not None:
-            complete_at = datetime2epoch(complete_at)
+            complete_at_epoch = datetime2epoch(complete_at)
         else:
-            complete_at = int(self.master.reactor.seconds())
+            complete_at_epoch = int(self.master.reactor.seconds())
 
-        def thd(conn):
+        def thd(conn: sa.engine.Connection) -> None:
             transaction = conn.begin()
 
             # the update here is simple, but a number of conditions are
@@ -278,7 +295,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = reqs_tbl.update()
                 q = q.where(reqs_tbl.c.id.in_(batch))
                 q = q.where(reqs_tbl.c.complete != 1)
-                res = conn.execute(q.values(complete=1, results=results, complete_at=complete_at))
+                res = conn.execute(
+                    q.values(complete=1, results=results, complete_at=complete_at_epoch)
+                )
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
@@ -292,8 +311,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do(thd)
 
-    def set_build_requests_priority(self, brids, priority):
-        def thd(conn):
+    def set_build_requests_priority(self, brids: list[int], priority: int) -> defer.Deferred[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             transaction = conn.begin()
 
             # the update here is simple, but a number of conditions are
@@ -309,7 +328,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = reqs_tbl.update()
                 q = q.where(reqs_tbl.c.id.in_(batch))
                 q = q.where(reqs_tbl.c.complete != 1)
-                res = conn.execute(q, priority=priority)
+                res = conn.execute(q, priority=priority)  # type: ignore[call-overload]
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
@@ -324,7 +343,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @staticmethod
-    def _modelFromRow(row):
+    def _modelFromRow(row: Any) -> BuildRequestModel:
         return BuildRequestModel(
             buildrequestid=row.id,
             buildsetid=row.buildsetid,

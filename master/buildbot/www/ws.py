@@ -178,7 +178,7 @@ class WsProtocol(WebSocketServerProtocol):
     def cmd_ping(self, _id: str) -> None:
         self.send_json_message(msg="pong", code=200, _id=_id)
 
-    def connectionLost(self, reason: Any) -> None:
+    def connectionLost(self, reason: Any) -> None:  # type: ignore[override]
         if self.debug:
             log.msg("connection lost", system=self)
         if self.qrefs is not None:
@@ -191,7 +191,7 @@ class WsProtocol(WebSocketServerProtocol):
         return _HAS_SSL and ISSLTransport.providedBy(self.transport)
 
     @defer.inlineCallbacks
-    def onConnect(self, request: ConnectionRequest) -> InlineCallbacksType[None]:
+    def onConnect(self, request: ConnectionRequest) -> InlineCallbacksType[None]:  # type: ignore[override]
         www = self.master.www
         sitepath = get_ws_sitepath(request.path)
 
@@ -202,6 +202,7 @@ class WsProtocol(WebSocketServerProtocol):
             if token is None:
                 user_info = auth.build_anonymous_user_info()
             else:
+                assert www.site is not None and www.site.session_secret is not None
                 user_info = auth.parse_user_info_from_token(token, www.site.session_secret)
 
             yield auth.assert_user_allowed_any_access(www.authz, user_info)

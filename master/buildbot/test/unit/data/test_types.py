@@ -15,13 +15,19 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from twisted.trial import unittest
 
 from buildbot.data import types
 
+if TYPE_CHECKING:
+    _Base = unittest.TestCase
+else:
+    _Base = object
 
-class TypeMixin:
+
+class TypeMixin(_Base):
     klass: type[types.Type] | None = None
     good: list[object] = []
     bad: list[object] = []
@@ -29,28 +35,28 @@ class TypeMixin:
     badStringValues: list[str | bytes] = []
     cmpResults: list[tuple[object, str | bytes, int]] = []
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.ty = self.makeInstance()
 
-    def makeInstance(self):
-        return self.klass()
+    def makeInstance(self) -> types.Type:
+        return self.klass()  # type: ignore[misc]
 
-    def test_valueFromString(self):
+    def test_valueFromString(self) -> None:
         for string, expValue in self.stringValues:
             self.assertEqual(
                 self.ty.valueFromString(string), expValue, f"value of string {string!r}"
             )
         for string in self.badStringValues:
             with self.assertRaises(TypeError):
-                self.ty.valueFromString(string, f"expected error for {string!r}")
+                self.ty.valueFromString(string, f"expected error for {string!r}")  # type: ignore[call-arg]
 
-    def test_cmp(self):
+    def test_cmp(self) -> None:
         for val, string, expResult in self.cmpResults:
             self.assertEqual(
                 self.ty.cmp(val, string), expResult, f"compare of {val!r} and {string!r}"
             )
 
-    def test_validate(self):
+    def test_validate(self) -> None:
         for o in self.good:
             errors = list(self.ty.validate(repr(o), o))
             self.assertEqual(errors, [], f"{o!r} -> {errors}")
@@ -60,7 +66,7 @@ class TypeMixin:
 
 
 class NoneOk(TypeMixin, unittest.TestCase):
-    def makeInstance(self):
+    def makeInstance(self) -> types.Type:
         return types.NoneOk(types.Integer())
 
     good = [None, 1]
@@ -136,7 +142,7 @@ class Boolean(TypeMixin, unittest.TestCase):
 
 
 class Identifier(TypeMixin, unittest.TestCase):
-    def makeInstance(self):
+    def makeInstance(self) -> types.Type:
         return types.Identifier(len=5)
 
     good = ['a', 'abcde', 'a1234']
@@ -151,7 +157,7 @@ class Identifier(TypeMixin, unittest.TestCase):
 
 
 class List(TypeMixin, unittest.TestCase):
-    def makeInstance(self):
+    def makeInstance(self) -> types.Type:
         return types.List(of=types.Integer())
 
     good = [[], [1], [1, 2]]
@@ -178,7 +184,7 @@ class Entity(TypeMixin, unittest.TestCase):
         field1 = types.Integer()
         field2 = types.NoneOk(types.String())
 
-    def makeInstance(self):
+    def makeInstance(self) -> types.Type:
         return self.MyEntity('myentity')
 
     good = [

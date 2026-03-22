@@ -15,13 +15,24 @@
 # Portions Copyright Marius Rieder <marius.rieder@durchmesser.ch>
 
 
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from buildbot.process.build import Build
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class MockStateObserver(logobserver.LogLineObserver):
@@ -30,7 +41,7 @@ class MockStateObserver(logobserver.LogLineObserver):
 
     _line_re = re.compile(r'^.*(Start|Finish): (.*)$')
 
-    def outLineReceived(self, line):
+    def outLineReceived(self, line: str) -> None:
         m = self._line_re.search(line.strip())
         if m:
             if m.group(1) == "Start":
@@ -56,7 +67,9 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
     root = None
     resultdir = None
 
-    def __init__(self, root=None, resultdir=None, **kwargs):
+    def __init__(
+        self, root: str | None = None, resultdir: str | None = None, **kwargs: Any
+    ) -> None:
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super().__init__(**kwargs)
         if root:
@@ -67,23 +80,24 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
         if not self.root:
             config.error("You must specify a mock root")
 
-        self.command = ['mock', '--root', self.root]
+        self.command = ['mock', '--root', cast(str, self.root)]
         if self.resultdir:
             self.command += ['--resultdir', self.resultdir]
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         # Try to remove the old mock logs first.
+        build = cast("Build", self.build)
         if self.resultdir:
             for lname in self.mock_logfiles:
-                self.logfiles[lname] = self.build.path_module.join(self.resultdir, lname)
+                self.logfiles[lname] = build.path_module.join(self.resultdir, lname)
         else:
             for lname in self.mock_logfiles:
                 self.logfiles[lname] = lname
         self.addLogObserver('state.log', MockStateObserver())
 
-        yield self.runRmdir([
-            self.build.path_module.join('build', self.logfiles[l]) for l in self.mock_logfiles
+        yield self.runRmdir([  # type: ignore[arg-type]
+            build.path_module.join('build', self.logfiles[l]) for l in self.mock_logfiles
         ])
 
         cmd = yield self.makeRemoteShellCommand()
@@ -91,7 +105,7 @@ class Mock(buildstep.ShellMixin, buildstep.CommandMixin, buildstep.BuildStep):
 
         return cmd.results()
 
-    def getResultSummary(self):
+    def getResultSummary(self) -> dict[str, str]:
         self.descriptionSuffix = None
         return super().getResultSummary()
 
@@ -107,7 +121,7 @@ class MockBuildSRPM(Mock):
     spec = None
     sources = '.'
 
-    def __init__(self, spec=None, sources=None, **kwargs):
+    def __init__(self, spec: str | None = None, sources: str | None = None, **kwargs: Any) -> None:
         """
         Creates the MockBuildSRPM object.
 
@@ -129,10 +143,16 @@ class MockBuildSRPM(Mock):
         if not self.sources:
             config.error("You must specify a sources dir")
 
-        self.command += ['--buildsrpm', '--spec', self.spec, '--sources', self.sources]
+        cast(list[str], self.command).extend([
+            '--buildsrpm',
+            '--spec',
+            cast(str, self.spec),
+            '--sources',
+            self.sources,
+        ])
         self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    def logConsumer(self):
+    def logConsumer(self) -> Generator[None, tuple[str, str], None]:
         r = re.compile(r"Wrote: .*/([^/]*.src.rpm)")
         while True:
             _, line = yield
@@ -151,7 +171,7 @@ class MockRebuild(Mock):
 
     srpm = None
 
-    def __init__(self, srpm=None, **kwargs):
+    def __init__(self, srpm: str | None = None, **kwargs: Any) -> None:
         """
         Creates the MockRebuildRPM object.
 
@@ -167,4 +187,4 @@ class MockRebuild(Mock):
         if not self.srpm:
             config.error("You must specify a srpm")
 
-        self.command += ['--rebuild', self.srpm]
+        cast(list[str], self.command).extend(['--rebuild', cast(str, self.srpm)])

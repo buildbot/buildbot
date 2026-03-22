@@ -13,11 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.util import service
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class StatsService(service.BuildbotService):
@@ -25,11 +33,11 @@ class StatsService(service.BuildbotService):
     A middleware for passing on statistics data to all storage backends.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.consumers = []
+        self.consumers: list[Any] = []
 
-    def checkConfig(self, storage_backends):
+    def checkConfig(self, storage_backends: list[StatsStorageBase]) -> None:  # type: ignore[override]
         for wfb in storage_backends:
             if not isinstance(wfb, StatsStorageBase):
                 raise TypeError(
@@ -39,12 +47,14 @@ class StatsService(service.BuildbotService):
                 )
 
     @defer.inlineCallbacks
-    def reconfigService(self, storage_backends):
+    def reconfigService(  # type: ignore[override]
+        self, storage_backends: list[StatsStorageBase]
+    ) -> InlineCallbacksType[None]:
         log.msg(f"Reconfiguring StatsService with config: {storage_backends!r}")
 
         self.checkConfig(storage_backends)
 
-        self.registeredStorageServices = []
+        self.registeredStorageServices: list[StatsStorageBase] = []
         for svc in storage_backends:
             self.registeredStorageServices.append(svc)
 
@@ -52,7 +62,7 @@ class StatsService(service.BuildbotService):
         yield self.registerConsumers()
 
     @defer.inlineCallbacks
-    def registerConsumers(self):
+    def registerConsumers(self) -> InlineCallbacksType[None]:
         self.consumers = []
 
         for svc in self.registeredStorageServices:
@@ -63,18 +73,20 @@ class StatsService(service.BuildbotService):
                 self.consumers.append(consumer)
 
     @defer.inlineCallbacks
-    def stopService(self):
+    def stopService(self) -> InlineCallbacksType[None]:
         yield super().stopService()
         yield self.removeConsumers()
 
     @defer.inlineCallbacks
-    def removeConsumers(self):
+    def removeConsumers(self) -> InlineCallbacksType[None]:
         for consumer in self.consumers:
             yield consumer.stopConsuming()
         self.consumers = []
 
     @defer.inlineCallbacks
-    def yieldMetricsValue(self, data_name, post_data, buildid):
+    def yieldMetricsValue(
+        self, data_name: str, post_data: dict[str, Any], buildid: int
+    ) -> InlineCallbacksType[None]:
         """
         A method to allow posting data that is not generated and stored as build-data in
         the database. This method generates the `stats-yield-data` event to the mq layer

@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -22,6 +26,10 @@ from buildbot.db.connector import DBConnector
 from buildbot.test.util.db import thd_clean_database
 from buildbot.util.sautils import hash_columns
 from buildbot.util.twisted import async_to_deferred
+
+if TYPE_CHECKING:
+    from buildbot.test.fakedb.row import Row
+    from buildbot.util.twisted import InlineCallbacksType
 
 from .build_data import BuildData
 from .builders import Builder
@@ -67,7 +75,7 @@ from .workers import ConnectedWorker
 from .workers import Worker
 
 
-def row_bool_to_int(value):
+def row_bool_to_int(value: Any) -> int:
     return 1 if value else 0
 
 
@@ -82,7 +90,14 @@ class FakeDBConnector(DBConnector):
 
     MASTER_ID = 824
 
-    def __init__(self, basedir, testcase, auto_upgrade=False, check_version=True, auto_clean=True):
+    def __init__(
+        self,
+        basedir: str,
+        testcase: Any,
+        auto_upgrade: bool = False,
+        check_version: bool = True,
+        auto_clean: bool = True,
+    ) -> None:
         super().__init__(basedir)
         self.testcase = testcase
         self.auto_upgrade = auto_upgrade
@@ -90,7 +105,7 @@ class FakeDBConnector(DBConnector):
         self.auto_clean = auto_clean
 
     @defer.inlineCallbacks
-    def setup(self):
+    def setup(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         if self.auto_upgrade:
             yield super().setup(check_version=False)
             yield self.pool.do(thd_clean_database)
@@ -105,12 +120,12 @@ class FakeDBConnector(DBConnector):
         await super()._shutdown()
         await self.pool.stop()
 
-    def _match_rows(self, rows, type):
+    def _match_rows(self, rows: list[Row], type: type) -> tuple[list[Any], list[Row]]:
         matched_rows = [r for r in rows if isinstance(r, type)]
         non_matched_rows = [r for r in rows if r not in matched_rows]
         return matched_rows, non_matched_rows
 
-    def _thd_post_insert(self, conn, table):
+    def _thd_post_insert(self, conn: sa.engine.Connection, table: sa.Table) -> None:
         if self.pool.engine.dialect.name == 'postgresql':
             # Explicitly inserting primary row IDs does not bump the primary key
             # sequence on Postgres
@@ -126,13 +141,15 @@ class FakeDBConnector(DBConnector):
 
             if autoincrement_foreign_key_column is not None:
                 r = conn.execute(sa.select(sa.func.max(autoincrement_foreign_key_column)))
-                max_column_id = r.fetchone()[0]
+                max_column_id = r.fetchone()[0]  # type: ignore[index]
                 r.close()
 
                 seq_name = f"{table.name}_{autoincrement_foreign_key_column.name}_seq"
                 conn.execute(sa.text(f"ALTER SEQUENCE {seq_name} RESTART WITH {max_column_id + 1}"))
 
-    def _thd_maybe_insert_build_data(self, conn, rows):
+    def _thd_maybe_insert_build_data(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, BuildData)
         for row in matched_rows:
             conn.execute(
@@ -152,7 +169,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.build_data)
         return non_matched_rows
 
-    def _thd_maybe_insert_builder(self, conn, rows):
+    def _thd_maybe_insert_builder(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Builder)
         for row in matched_rows:
             conn.execute(
@@ -173,7 +190,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.builders)
         return non_matched_rows
 
-    def _thd_maybe_insert_builder_master(self, conn, rows):
+    def _thd_maybe_insert_builder_master(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, BuilderMaster)
         for row in matched_rows:
             conn.execute(
@@ -182,7 +201,9 @@ class FakeDBConnector(DBConnector):
             )
         return non_matched_rows
 
-    def _thd_maybe_insert_builder_tags(self, conn, rows):
+    def _thd_maybe_insert_builder_tags(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, BuildersTags)
         for row in matched_rows:
             conn.execute(
@@ -193,7 +214,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.builders_tags)
         return non_matched_rows
 
-    def _thd_maybe_insert_buildrequest(self, conn, rows):
+    def _thd_maybe_insert_buildrequest(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, BuildRequest)
         for row in matched_rows:
             conn.execute(
@@ -216,7 +239,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.buildrequests)
         return non_matched_rows
 
-    def _thd_maybe_insert_buildrequest_claim(self, conn, rows):
+    def _thd_maybe_insert_buildrequest_claim(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, BuildRequestClaim)
         for row in matched_rows:
             conn.execute(
@@ -231,7 +256,7 @@ class FakeDBConnector(DBConnector):
             )
         return non_matched_rows
 
-    def _thd_maybe_insert_build(self, conn, rows):
+    def _thd_maybe_insert_build(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Build)
         for row in matched_rows:
             conn.execute(
@@ -256,7 +281,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.builds)
         return non_matched_rows
 
-    def _thd_maybe_insert_build_properties(self, conn, rows):
+    def _thd_maybe_insert_build_properties(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, BuildProperty)
         for row in matched_rows:
             conn.execute(
@@ -274,7 +301,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.build_properties)
         return non_matched_rows
 
-    def _thd_maybe_insert_buildset(self, conn, rows):
+    def _thd_maybe_insert_buildset(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, _ = self._match_rows(rows, Buildset)
         for row in matched_rows:
             conn.execute(
@@ -296,7 +323,9 @@ class FakeDBConnector(DBConnector):
             )
         return rows  # filtered by _thd_maybe_insert_buildset_fk_columns
 
-    def _thd_maybe_insert_buildset_fk_columns(self, conn, rows):
+    def _thd_maybe_insert_buildset_fk_columns(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Buildset)
         for row in matched_rows:
             conn.execute(
@@ -309,7 +338,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.buildsets)
         return non_matched_rows
 
-    def _thd_maybe_insert_buildset_property(self, conn, rows):
+    def _thd_maybe_insert_buildset_property(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, BuildsetProperty)
         for row in matched_rows:
             conn.execute(
@@ -326,7 +357,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.buildset_properties)
         return non_matched_rows
 
-    def _thd_maybe_insert_buildset_sourcestamp(self, conn, rows):
+    def _thd_maybe_insert_buildset_sourcestamp(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, BuildsetSourceStamp)
         for row in matched_rows:
             conn.execute(
@@ -343,7 +376,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.buildset_sourcestamps)
         return non_matched_rows
 
-    def _thd_maybe_insert_change(self, conn, rows):
+    def _thd_maybe_insert_change(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Change)
         for row in matched_rows:
             conn.execute(
@@ -371,7 +404,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.changes)
         return non_matched_rows
 
-    def _thd_maybe_insert_change_file(self, conn, rows):
+    def _thd_maybe_insert_change_file(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, ChangeFile)
         for row in matched_rows:
             conn.execute(
@@ -382,7 +417,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.change_files)
         return non_matched_rows
 
-    def _thd_maybe_insert_change_property(self, conn, rows):
+    def _thd_maybe_insert_change_property(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, ChangeProperty)
         for row in matched_rows:
             conn.execute(
@@ -399,7 +436,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.change_properties)
         return non_matched_rows
 
-    def _thd_maybe_insert_change_user(self, conn, rows):
+    def _thd_maybe_insert_change_user(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, ChangeUser)
         for row in matched_rows:
             conn.execute(
@@ -410,7 +449,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.change_users)
         return non_matched_rows
 
-    def _thd_maybe_insert_changesource(self, conn, rows):
+    def _thd_maybe_insert_changesource(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, ChangeSource)
         for row in matched_rows:
             conn.execute(
@@ -427,7 +468,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.changesources)
         return non_matched_rows
 
-    def _thd_maybe_insert_changesource_master(self, conn, rows):
+    def _thd_maybe_insert_changesource_master(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, ChangeSourceMaster)
         for row in matched_rows:
             conn.execute(
@@ -443,7 +486,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.changesource_masters)
         return non_matched_rows
 
-    def _thd_maybe_insert_log(self, conn, rows):
+    def _thd_maybe_insert_log(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Log)
         for row in matched_rows:
             conn.execute(
@@ -464,7 +507,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.logs)
         return non_matched_rows
 
-    def _thd_maybe_insert_log_chunk(self, conn, rows):
+    def _thd_maybe_insert_log_chunk(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, LogChunk)
         for row in matched_rows:
             conn.execute(
@@ -483,7 +526,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.logchunks)
         return non_matched_rows
 
-    def _thd_maybe_insert_master(self, conn, rows):
+    def _thd_maybe_insert_master(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Master)
         for row in matched_rows:
             conn.execute(
@@ -502,7 +545,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.masters)
         return non_matched_rows
 
-    def _thd_maybe_insert_project(self, conn, rows):
+    def _thd_maybe_insert_project(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Project)
         for row in matched_rows:
             conn.execute(
@@ -523,7 +566,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.projects)
         return non_matched_rows
 
-    def _thd_maybe_insert_codebase(self, conn, rows):
+    def _thd_maybe_insert_codebase(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Codebase)
         for row in matched_rows:
             conn.execute(
@@ -542,7 +585,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.codebases)
         return non_matched_rows
 
-    def _thd_maybe_insert_codebase_commit(self, conn, rows):
+    def _thd_maybe_insert_codebase_commit(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, CodebaseCommit)
         for row in matched_rows:
             conn.execute(
@@ -564,7 +609,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.codebase_commits)
         return non_matched_rows
 
-    def _thd_maybe_insert_codebase_branch(self, conn, rows):
+    def _thd_maybe_insert_codebase_branch(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, CodebaseBranch)
         for row in matched_rows:
             conn.execute(
@@ -584,7 +631,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.codebase_branches)
         return non_matched_rows
 
-    def _thd_maybe_insert_scheduler_change(self, conn, rows):
+    def _thd_maybe_insert_scheduler_change(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, SchedulerChange)
         for row in matched_rows:
             conn.execute(
@@ -601,7 +650,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.scheduler_changes)
         return non_matched_rows
 
-    def _thd_maybe_insert_scheduler(self, conn, rows):
+    def _thd_maybe_insert_scheduler(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Scheduler)
         for row in matched_rows:
             conn.execute(
@@ -619,7 +668,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.schedulers)
         return non_matched_rows
 
-    def _thd_maybe_insert_scheduler_master(self, conn, rows):
+    def _thd_maybe_insert_scheduler_master(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, SchedulerMaster)
         for row in matched_rows:
             conn.execute(
@@ -635,7 +686,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.scheduler_masters)
         return non_matched_rows
 
-    def _thd_maybe_insert_patch(self, conn, rows):
+    def _thd_maybe_insert_patch(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Patch)
         for row in matched_rows:
             conn.execute(
@@ -655,7 +706,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.patches)
         return non_matched_rows
 
-    def _thd_maybe_insert_sourcestamp(self, conn, rows):
+    def _thd_maybe_insert_sourcestamp(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, SourceStamp)
         for row in matched_rows:
             conn.execute(
@@ -685,7 +738,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.sourcestamps)
         return non_matched_rows
 
-    def _thd_maybe_insert_object(self, conn, rows):
+    def _thd_maybe_insert_object(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Object)
         for row in matched_rows:
             conn.execute(
@@ -702,7 +755,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.objects)
         return non_matched_rows
 
-    def _thd_maybe_insert_object_state(self, conn, rows):
+    def _thd_maybe_insert_object_state(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, ObjectState)
         for row in matched_rows:
             conn.execute(
@@ -719,7 +774,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.object_state)
         return non_matched_rows
 
-    def _thd_maybe_insert_step(self, conn, rows):
+    def _thd_maybe_insert_step(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Step)
         for row in matched_rows:
             conn.execute(
@@ -744,7 +799,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.steps)
         return non_matched_rows
 
-    def _thd_maybe_insert_tag(self, conn, rows):
+    def _thd_maybe_insert_tag(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Tag)
         for row in matched_rows:
             conn.execute(
@@ -761,7 +816,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.tags)
         return non_matched_rows
 
-    def _thd_maybe_insert_test_result_set(self, conn, rows):
+    def _thd_maybe_insert_test_result_set(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, TestResultSet)
         for row in matched_rows:
             conn.execute(
@@ -785,7 +842,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.test_result_sets)
         return non_matched_rows
 
-    def _thd_maybe_insert_test_name(self, conn, rows):
+    def _thd_maybe_insert_test_name(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, TestName)
         for row in matched_rows:
             conn.execute(
@@ -802,7 +859,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.test_names)
         return non_matched_rows
 
-    def _thd_maybe_insert_test_code_path(self, conn, rows):
+    def _thd_maybe_insert_test_code_path(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, TestCodePath)
         for row in matched_rows:
             conn.execute(
@@ -819,7 +878,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.test_code_paths)
         return non_matched_rows
 
-    def _thd_maybe_insert_test_result(self, conn, rows):
+    def _thd_maybe_insert_test_result(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, TestResult)
         for row in matched_rows:
             conn.execute(
@@ -841,7 +902,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.test_results)
         return non_matched_rows
 
-    def _thd_maybe_insert_user(self, conn, rows):
+    def _thd_maybe_insert_user(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, User)
         for row in matched_rows:
             conn.execute(
@@ -859,7 +920,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.users)
         return non_matched_rows
 
-    def _thd_maybe_insert_user_info(self, conn, rows):
+    def _thd_maybe_insert_user_info(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, UserInfo)
         for row in matched_rows:
             conn.execute(
@@ -876,7 +937,7 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.users_info)
         return non_matched_rows
 
-    def _thd_maybe_insert_worker(self, conn, rows):
+    def _thd_maybe_insert_worker(self, conn: sa.engine.Connection, rows: list[Row]) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, Worker)
         for row in matched_rows:
             conn.execute(
@@ -896,7 +957,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.workers)
         return non_matched_rows
 
-    def _thd_maybe_insert_configured_worker(self, conn, rows):
+    def _thd_maybe_insert_configured_worker(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, ConfiguredWorker)
         for row in matched_rows:
             conn.execute(
@@ -913,7 +976,9 @@ class FakeDBConnector(DBConnector):
             self._thd_post_insert(conn, self.model.configured_workers)
         return non_matched_rows
 
-    def _thd_maybe_insert_connected_worker(self, conn, rows):
+    def _thd_maybe_insert_connected_worker(
+        self, conn: sa.engine.Connection, rows: list[Row]
+    ) -> list[Row]:
         matched_rows, non_matched_rows = self._match_rows(rows, ConnectedWorker)
         for row in matched_rows:
             conn.execute(
@@ -925,10 +990,10 @@ class FakeDBConnector(DBConnector):
         return non_matched_rows
 
     @defer.inlineCallbacks
-    def insert_test_data(self, rows):
+    def insert_test_data(self, rows: list[Row]) -> InlineCallbacksType[None]:
         """Insert a list of Row instances into the database"""
 
-        def thd_insert_rows(conn):
+        def thd_insert_rows(conn: sa.engine.Connection) -> None:
             remaining = rows
             remaining = self._thd_maybe_insert_master(conn, remaining)
             remaining = self._thd_maybe_insert_project(conn, remaining)

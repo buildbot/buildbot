@@ -76,7 +76,7 @@ class MaildirService(service.BuildbotService):
         self.curdir = os.path.join(self.basedir, "cur")
 
     @defer.inlineCallbacks
-    def startService(self) -> InlineCallbacksType[None]:
+    def startService(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
             raise NoSuchMaildir(f"invalid maildir '{self.basedir}'")
         try:

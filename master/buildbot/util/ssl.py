@@ -20,7 +20,11 @@ Modules using this should call ensureHasSSL in order to make sure that the user 
 buildbot[tls]
 """
 
+from __future__ import annotations
+
 import unittest
+from typing import Any
+from typing import Callable
 
 from buildbot.config import error
 
@@ -34,7 +38,7 @@ except ImportError as e:
     has_ssl = False
 
 
-def ensureHasSSL(module):
+def ensureHasSSL(module: str) -> None:
     if not has_ssl:
         error(
             f"TLS dependencies required for {module} are not installed : "
@@ -42,5 +46,5 @@ def ensureHasSSL(module):
         )
 
 
-def skipUnless(f):
+def skipUnless(f: Callable[..., Any]) -> Callable[..., Any]:
     return unittest.skipUnless(has_ssl, "TLS dependencies required")(f)

@@ -29,8 +29,10 @@ from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from typing import Any
     from typing import Literal
+    from typing import TypeVar
 
     from buildbot.data import types
     from buildbot.data.resultspec import ResultSpec
@@ -40,6 +42,9 @@ if TYPE_CHECKING:
     from buildbot.db.steps import StepModel
     from buildbot.db.workers import WorkerModel
     from buildbot.master import BuildMaster
+    from buildbot.util.twisted import InlineCallbacksType
+
+    _F = TypeVar('_F', bound=Callable[..., Any])
 
 
 class EndpointKind(enum.Enum):
@@ -60,7 +65,7 @@ class ResourceType:
         self.master = master
         self.compileEventPathPatterns()
 
-    def compileEventPathPatterns(self):
+    def compileEventPathPatterns(self) -> None:
         # We'll run a single format, to get the final event path tuple
         pathPatterns = self.eventPathPatterns
         if isinstance(pathPatterns, str):
@@ -79,34 +84,34 @@ class ResourceType:
         self.eventPaths = pathPatterns
 
     @functools.lru_cache(1)  # noqa: B019
-    def getEndpoints(self):
-        endpoints = self.endpoints[:]
-        for i, ep in enumerate(endpoints):
+    def getEndpoints(self) -> list[Endpoint]:
+        endpoint_instances: list[Endpoint] = []
+        for ep in self.endpoints:
             if not issubclass(ep, Endpoint):
                 raise TypeError("Not an Endpoint subclass")
-            endpoints[i] = ep(self, self.master)
-        return endpoints
+            endpoint_instances.append(ep(self, self.master))
+        return endpoint_instances
 
     @functools.lru_cache(1)  # noqa: B019
-    def getDefaultEndpoint(self):
+    def getDefaultEndpoint(self) -> Endpoint | None:
         for ep in self.getEndpoints():
             if ep.kind != EndpointKind.COLLECTION:
                 return ep
         return None
 
     @functools.lru_cache(1)  # noqa: B019
-    def getCollectionEndpoint(self):
+    def getCollectionEndpoint(self) -> Endpoint | None:
         for ep in self.getEndpoints():
             if ep.kind == EndpointKind.COLLECTION or ep.isPseudoCollection:
                 return ep
         return None
 
     @staticmethod
-    def sanitizeMessage(msg):
+    def sanitizeMessage(msg: Any) -> Any:
         msg = copy.deepcopy(msg)
         return msg
 
-    def produceEvent(self, msg, event):
+    def produceEvent(self, msg: dict[str, Any] | None, event: str) -> None:
         if msg is not None:
             msg = self.sanitizeMessage(msg)
             for path in self.eventPaths:
@@ -116,9 +121,9 @@ class ResourceType:
 
 
 class SubResource:
-    def __init__(self, rtype):
+    def __init__(self, rtype: ResourceType) -> None:
         self.rtype = rtype
-        self.endpoints = {}
+        self.endpoints: dict[str | None, type[Endpoint]] = {}
         for endpoint in rtype.endpoints:
             if endpoint.kind == EndpointKind.COLLECTION:
                 self.endpoints[rtype.plural] = endpoint
@@ -133,14 +138,14 @@ class Endpoint:
     kind = EndpointKind.SINGLE
     parentMapping: dict[str, str] = {}
 
-    def __init__(self, rtype, master: BuildMaster):
+    def __init__(self, rtype: ResourceType, master: BuildMaster) -> None:
         self.rtype = rtype
         self.master = master
 
-    def get(self, resultSpec: ResultSpec, kwargs: dict[str, Any]):
+    def get(self, resultSpec: ResultSpec, kwargs: dict[str, Any]) -> Any:
         raise NotImplementedError
 
-    async def stream(self, resultSpec: ResultSpec, kwargs: dict[str, Any]):
+    async def stream(self, resultSpec: ResultSpec, kwargs: dict[str, Any]) -> Any:
         """
         This is a prototype interface method for internal use.
         There could be breaking changes to it.
@@ -148,14 +153,14 @@ class Endpoint:
         """
         raise NotImplementedError
 
-    def control(self, action, args, kwargs):
+    def control(self, action: str, args: Any, kwargs: Any) -> Any:
         # we convert the action into a mixedCase method name
         action_method = getattr(self, "action" + action.capitalize(), None)
         if action_method is None:
             raise exceptions.InvalidControlException(f"action: {action} is not supported")
         return action_method(args, kwargs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if isinstance(self.pathPatterns, str):
             self.pathPatterns = self.pathPatterns.split()
         return "endpoint for " + ",".join(self.pathPatterns)
@@ -186,7 +191,7 @@ class NestedBuildDataRetriever:
         'worker_dict',
     )
 
-    def __init__(self, master, args) -> None:
+    def __init__(self, master: BuildMaster, args: dict[str, Any]) -> None:
         self.master = master
         self.args = args
         # False is used as special value as "not set". None is used as "not exists". This solves
@@ -266,7 +271,7 @@ class NestedBuildDataRetriever:
         return None
 
     @async_to_deferred
-    async def get_build_id(self):
+    async def get_build_id(self) -> int | None:
         if 'buildid' in self.args:
             return self.args['buildid']
 
@@ -331,12 +336,12 @@ class NestedBuildDataRetriever:
             self.log_dict = None
             return None
         log_dict = self.log_dict = await self.master.db.logs.getLogBySlug(
-            step_dict.id, self.args.get('log_slug')
+            step_dict.id, self.args['log_slug']
         )
         return log_dict
 
     @async_to_deferred
-    async def get_log_id(self):
+    async def get_log_id(self) -> int | None:
         if 'logid' in self.args:
             return self.args['logid']
 
@@ -368,18 +373,20 @@ class BuildNestingMixin:
     A mixin for methods to decipher the many ways a various entities can be specified.
     """
 
+    master: BuildMaster
+
     @defer.inlineCallbacks
-    def getBuildid(self, kwargs):
+    def getBuildid(self, kwargs: dict[str, Any]) -> InlineCallbacksType[int | None]:
         retriever = NestedBuildDataRetriever(self.master, kwargs)
         return (yield retriever.get_build_id())
 
     @defer.inlineCallbacks
-    def getBuilderId(self, kwargs):
+    def getBuilderId(self, kwargs: dict[str, Any]) -> InlineCallbacksType[int | None]:
         retriever = NestedBuildDataRetriever(self.master, kwargs)
         return (yield retriever.get_builder_id())
 
     # returns Deferred that yields a number
-    def get_project_id(self, kwargs):
+    def get_project_id(self, kwargs: dict[str, Any]) -> defer.Deferred[int | None]:
         if "projectname" in kwargs:
             return self.master.db.projects.find_project_id(kwargs["projectname"], auto_create=False)
         return defer.succeed(kwargs["projectid"])
@@ -388,7 +395,13 @@ class BuildNestingMixin:
 class ListResult(UserList):
     __slots__ = ['limit', 'offset', 'total']
 
-    def __init__(self, values, offset=None, total=None, limit=None):
+    def __init__(
+        self,
+        values: Any,
+        offset: int | None = None,
+        total: int | None = None,
+        limit: int | None = None,
+    ) -> None:
         super().__init__(values)
 
         # if set, this is the index in the overall results of the first element of
@@ -401,13 +414,13 @@ class ListResult(UserList):
         # if set, this is the limit, either from the user or the implementation
         self.limit = limit
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"ListResult({self.data!r}, offset={self.offset!r}, "
             f"total={self.total!r}, limit={self.limit!r})"
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, ListResult):
             return (
                 self.data == other.data
@@ -419,17 +432,17 @@ class ListResult(UserList):
             self.data == other
             and self.offset is None
             and self.limit is None
-            and (self.total is None or self.total == len(other))
+            and (self.total is None or self.total == len(other))  # type: ignore[arg-type]
         )
 
     __hash__ = None
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return not self == other
 
 
-def updateMethod(func):
+def updateMethod(func: _F) -> _F:
     """Decorate this resourceType instance as an update method, made available
     at master.data.updates.$funcname"""
-    func.isUpdateMethod = True
+    func.isUpdateMethod = True  # type: ignore[attr-defined]
     return func

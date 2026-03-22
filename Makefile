@@ -30,11 +30,12 @@ WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_
 WWW_EX_PKGS := www/nestedexample
 WWW_DEP_PKGS := www/plugin_support www/data-module www/ui
 WWW_PURE_DEP_PKGS := www/common-config
-ALL_PKGS := master worker pkg $(WWW_PKGS)
+ALL_PKGS := master worker $(WWW_PKGS)
 
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 WWW_PKGS_FOR_PRETTIER := $(filter-out www/plugin_support www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
 WWW_PKGS_FOR_NPM := $(filter-out www/badges, $(WWW_PURE_DEP_PKGS) $(WWW_DEP_PKGS) $(WWW_PKGS))
+WWW_PKGS_FOR_NPM_BUILD := $(filter-out www/badges, $(WWW_PKGS))
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
 
@@ -78,18 +79,18 @@ frontend_tests: frontend_deps check_for_npm
 	for i in $(WWW_PKGS_FOR_UNIT_TESTS); \
 		do (cd $$i; $(NPM) run build-dev || exit 1; $(NPM) run test || exit 1) || exit 1; done
 
+frontend_build: frontend_deps
+	for i in $(WWW_PKGS_FOR_NPM_BUILD); \
+		do (cd $$i; $(NPM) run build); done
+
 # rebuild front-end from source
-frontend: frontend_deps
-	for i in pkg $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
+frontend: frontend_build
+	for i in $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
 
 # build frontend wheels for installation elsewhere
-frontend_wheels: frontend_deps
-	for i in pkg $(WWW_PKGS); \
+frontend_wheels: frontend_build
+	for i in $(WWW_PKGS); \
 		do (cd $$i; $(VENV_PYTHON) -m build --no-isolation --wheel || exit 1) || exit 1; done
-
-# do installation tests. Test front-end can build and install for all install methods
-frontend_install_tests: frontend_deps
-	trial pkg/test_buildbot_pkg.py
 
 # upgrade FE dependencies
 frontend_npm_upgrade: check_for_npm
@@ -124,13 +125,13 @@ ruff:
 	ruff format .
 
 mypy-master-linux:
-	$(MYPY) --cache-dir ".mypy_cache/master/linux" --platform linux --config-file ./pyproject.toml master/buildbot
+	$(MYPY) --cache-dir ".mypy_cache/master/linux" --platform linux --config-file ./pyproject.toml $(MYPY_EXTRA_FLAGS) master/buildbot
 mypy-master-win32:
-	$(MYPY) --cache-dir ".mypy_cache/master/win32" --platform win32 --config-file ./pyproject.toml master/buildbot
+	$(MYPY) --cache-dir ".mypy_cache/master/win32" --platform win32 --config-file ./pyproject.toml $(MYPY_EXTRA_FLAGS) master/buildbot
 mypy-worker-linux:
-	$(MYPY) --cache-dir ".mypy_cache/worker/linux" --platform linux --config-file ./worker/.mypy.ini worker/buildbot_worker
+	$(MYPY) --cache-dir ".mypy_cache/worker/linux" --platform linux --config-file ./worker/.mypy.ini $(MYPY_EXTRA_FLAGS) worker/buildbot_worker
 mypy-worker-win32:
-	$(MYPY) --cache-dir ".mypy_cache/worker/win32" --platform win32 --config-file ./worker/.mypy.ini worker/buildbot_worker
+	$(MYPY) --cache-dir ".mypy_cache/worker/win32" --platform win32 --config-file ./worker/.mypy.ini $(MYPY_EXTRA_FLAGS) worker/buildbot_worker
 
 mypy: mypy-master-linux mypy-master-win32 mypy-worker-linux mypy-worker-win32
 
@@ -167,11 +168,11 @@ release_notes: $(VENV_NAME)
 	towncrier build --yes  --version $(VERSION) --date `date -u  +%F`
 	git commit -m "Release notes for $(VERSION)"
 
-$(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_deps
+$(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_build
 	. $(VENV_NAME)/$(VENV_BIN_DIR)/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
 
 cleanup_for_tarballs:
-	find master pkg worker www -name VERSION -exec rm {} \;
+	find master worker www -name VERSION -exec rm {} \;
 	rm -rf dist
 	mkdir dist
 .PHONY: cleanup_for_tarballs

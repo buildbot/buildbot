@@ -14,14 +14,22 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 
 from buildbot.test.util.integration import RunMasterBase
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class ShellMaster(RunMasterBase):
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.config import BuilderConfig  # noqa: PLC0415
         from buildbot.plugins import schedulers  # noqa: PLC0415
@@ -39,11 +47,11 @@ class ShellMaster(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_shell(self):
+    def test_shell(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
 
         @defer.inlineCallbacks
-        def newStepCallback(_, data):
+        def newStepCallback(_: tuple[str, ...], data: dict[str, Any]) -> InlineCallbacksType[None]:
             # when the sleep step start, we kill it
             if data['name'] == 'sleep':
                 brs = yield self.master.data.get(('buildrequests',))

@@ -24,7 +24,14 @@ class Master(Row):
     id_column = 'id'
     hashedColumns = [('name_hash', ('name',))]
 
-    def __init__(self, id=None, name=None, name_hash=None, active=1, last_active=9998999):
+    def __init__(
+        self,
+        id: int | None = None,
+        name: str | None = None,
+        name_hash: str | None = None,
+        active: int = 1,
+        last_active: int = 9998999,
+    ) -> None:
         if name is None:
             name = f'master-{id}'
         super().__init__(

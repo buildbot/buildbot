@@ -20,6 +20,7 @@ import binascii
 import os
 import types
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import ClassVar
 
 from twisted.application import strports
@@ -38,6 +39,7 @@ from buildbot.util import service
 from buildbot.util import unicode2bytes
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from collections.abc import Sequence
 
 try:
@@ -57,20 +59,20 @@ class makeTelnetProtocol:
     # this curries the 'portal' argument into a later call to
     # TelnetTransport()
 
-    def __init__(self, portal):
+    def __init__(self, portal: portal.Portal) -> None:
         self.portal = portal
 
-    def __call__(self):
+    def __call__(self) -> telnet.TelnetTransport:
         auth = telnet.AuthenticatingTelnetProtocol
         return telnet.TelnetTransport(auth, self.portal)
 
 
 @implementer(portal.IRealm)
 class _TelnetRealm:
-    def __init__(self, namespace_maker):
+    def __init__(self, namespace_maker: Callable[[], dict[str, Any]]) -> None:
         self.namespace_maker = namespace_maker
 
-    def requestAvatar(self, avatarId, *interfaces):
+    def requestAvatar(self, avatarId: Any, *interfaces: Any) -> tuple[Any, ...]:
         if telnet.ITelnetProtocol in interfaces:
             namespace = self.namespace_maker()
             p = telnet.TelnetBootstrapProtocol(
@@ -84,10 +86,10 @@ class chainedProtocolFactory:
     # this curries the 'namespace' argument into a later call to
     # chainedProtocolFactory()
 
-    def __init__(self, namespace):
+    def __init__(self, namespace: dict[str, Any]) -> None:
         self.namespace = namespace
 
-    def __call__(self):
+    def __call__(self) -> insults.ServerProtocol:
         return insults.ServerProtocol(manhole.ColoredManhole, self.namespace)
 
 
@@ -106,10 +108,10 @@ if SSHPublicKeyDatabase is not None:
         file should have 'ssh-dss ....' lines in it, just like authorized_keys.
         """
 
-        def __init__(self, authorized_keys_file):
+        def __init__(self, authorized_keys_file: str) -> None:
             self.authorized_keys_file = os.path.expanduser(authorized_keys_file)
 
-        def checkKey(self, credentials):
+        def checkKey(self, credentials: Any) -> int:
             with open(self.authorized_keys_file, "rb") as f:
                 for l in f.readlines():
                     l2 = l.split()
@@ -130,7 +132,7 @@ class _BaseManhole(service.AsyncMultiService):
     buildbot developers. Connect to this by running an ssh client.
     """
 
-    def __init__(self, port, checker, ssh_hostkey_dir=None):
+    def __init__(self, port: str | int, checker: Any, ssh_hostkey_dir: str | None = None) -> None:
         """
         @type port: string or int
         @param port: what port should the Manhole listen on? This is a
@@ -165,7 +167,7 @@ class _BaseManhole(service.AsyncMultiService):
         self.port = port  # for comparison later
         self.checker = checker  # to maybe compare later
 
-        def makeNamespace():
+        def makeNamespace() -> dict[str, Any]:
             master = self.master
             namespace = {
                 'master': master,
@@ -173,7 +175,7 @@ class _BaseManhole(service.AsyncMultiService):
             }
             return namespace
 
-        def makeProtocol():
+        def makeProtocol() -> insults.ServerProtocol:
             namespace = makeNamespace()
             p = insults.ServerProtocol(manhole.ColoredManhole, namespace)
             return p
@@ -185,9 +187,9 @@ class _BaseManhole(service.AsyncMultiService):
                 raise ValueError("Most specify a value for ssh_hostkey_dir")
             assert manhole_ssh is not None, "cryptography required for ssh mahole."
             r = manhole_ssh.TerminalRealm()
-            r.chainedProtocolFactory = makeProtocol
-            p = portal.Portal(r, [self.checker])
-            f = manhole_ssh.ConchFactory(p)
+            r.chainedProtocolFactory = makeProtocol  # type: ignore[assignment]
+            p = portal.Portal(r, [self.checker])  # type: ignore[arg-type]
+            f: Any = manhole_ssh.ConchFactory(p)
             assert OpenSSHFactory is not None, "cryptography required for ssh mahole."
             openSSHFactory = OpenSSHFactory()
             openSSHFactory.dataRoot = self.ssh_hostkey_dir
@@ -197,14 +199,14 @@ class _BaseManhole(service.AsyncMultiService):
             f.primes = openSSHFactory.getPrimes()
         else:
             self.using_ssh = False
-            r = _TelnetRealm(makeNamespace)
-            p = portal.Portal(r, [self.checker])
+            telnet_realm = _TelnetRealm(makeNamespace)
+            telnet_portal = portal.Portal(telnet_realm, [self.checker])
             f = protocol.ServerFactory()
-            f.protocol = makeTelnetProtocol(p)
+            f.protocol = makeTelnetProtocol(telnet_portal)
         s = strports.service(self.port, f)
         s.setServiceParent(self)
 
-    def startService(self):
+    def startService(self) -> Any:
         if self.using_ssh:
             via = "via SSH"
         else:
@@ -216,7 +218,7 @@ class _BaseManhole(service.AsyncMultiService):
 class TelnetManhole(_BaseManhole, ComparableMixin):
     compare_attrs: ClassVar[Sequence[str]] = ("port", "username", "password")
 
-    def __init__(self, port, username, password):
+    def __init__(self, port: str | int, username: str, password: str) -> None:
         self.username = username
         self.password = password
 
@@ -229,7 +231,7 @@ class TelnetManhole(_BaseManhole, ComparableMixin):
 class PasswordManhole(_BaseManhole, ComparableMixin):
     compare_attrs: ClassVar[Sequence[str]] = ("port", "username", "password", "ssh_hostkey_dir")
 
-    def __init__(self, port, username, password, ssh_hostkey_dir):
+    def __init__(self, port: str | int, username: str, password: str, ssh_hostkey_dir: str) -> None:
         if not manhole_ssh:
             config.error("cryptography required for ssh mahole.")
         self.username = username
@@ -245,7 +247,7 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
 class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
     compare_attrs: ClassVar[Sequence[str]] = ("port", "keyfile", "ssh_hostkey_dir")
 
-    def __init__(self, port, keyfile, ssh_hostkey_dir):
+    def __init__(self, port: str | int, keyfile: str, ssh_hostkey_dir: str) -> None:
         if not manhole_ssh:
             config.error("cryptography required for ssh mahole.")
 
@@ -262,7 +264,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
 
     compare_attrs: ClassVar[Sequence[str]] = ("port", "checker")
 
-    def __init__(self, port, checker):
+    def __init__(self, port: str | int, checker: Any) -> None:
         """
         @type port: string or int
         @param port: what port should the Manhole listen on? This is a
@@ -283,7 +285,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
 # utility functions for the manhole
 
 
-def show(x):
+def show(x: Any) -> Any:
     """Display the data attributes of an object in a readable format"""
     print(f"data attributes of {x!r}")
     names = dir(x)

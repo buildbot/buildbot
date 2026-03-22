@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -19,32 +24,42 @@ from twisted.spread import pb
 
 from buildbot.util import unicode2bytes
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class Sender:
-    def __init__(self, master, auth=('change', 'changepw'), encoding='utf8'):
+    def __init__(
+        self,
+        master: str,
+        auth: tuple[str, str] = ('change', 'changepw'),
+        encoding: str = 'utf8',
+    ) -> None:
         self.username = unicode2bytes(auth[0])
         self.password = unicode2bytes(auth[1])
-        self.host, self.port = master.split(":")
-        self.port = int(self.port)
+        self.host: str
+        port_str: str
+        self.host, port_str = master.split(":")
+        self.port = int(port_str)
         self.encoding = encoding
 
     @defer.inlineCallbacks
     def send(
         self,
-        branch,
-        revision,
-        comments,
-        files,
-        who=None,
-        category=None,
-        when=None,
-        properties=None,
-        repository='',
-        vc=None,
-        project='',
-        revlink='',
-        codebase=None,
-    ):
+        branch: str | None,
+        revision: str | None,
+        comments: str,
+        files: list[str],
+        who: str | None = None,
+        category: str | None = None,
+        when: float | None = None,
+        properties: dict[str, Any] | None = None,
+        repository: str = '',
+        vc: str | None = None,
+        project: str = '',
+        revlink: str = '',
+        codebase: str | None = None,
+    ) -> InlineCallbacksType[None]:
         if properties is None:
             properties = {}
 
@@ -71,14 +86,14 @@ class Sender:
         for key, value in change.items():
             if isinstance(value, bytes):
                 change[key] = value.decode(self.encoding, 'replace')
-        change['files'] = list(change['files'])
-        for i, file in enumerate(change.get('files', [])):
+        change['files'] = list(change['files'])  # type: ignore[arg-type]
+        for i, file in enumerate(change.get('files', [])):  # type: ignore[arg-type]
             if isinstance(file, bytes):
                 change['files'][i] = file.decode(self.encoding, 'replace')
 
         f = pb.PBClientFactory()
         d = f.login(credentials.UsernamePassword(self.username, self.password))
-        reactor.connectTCP(self.host, self.port, f)
+        reactor.connectTCP(self.host, self.port, f)  # type: ignore[attr-defined]
 
         remote = yield d
         yield remote.callRemote('addChange', change)

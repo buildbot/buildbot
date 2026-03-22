@@ -13,7 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import abc
+from typing import TYPE_CHECKING
+from typing import Any
+
+if TYPE_CHECKING:
+    from buildbot.statistics.capture import Capture
 
 
 class StatsStorageBase:
@@ -24,6 +31,13 @@ class StatsStorageBase:
 
     __metaclass__ = abc.ABCMeta
 
+    captures: list[Capture]
+
     @abc.abstractmethod
-    def thd_postStatsValue(self, post_data, series_name, context=None):
+    def thd_postStatsValue(
+        self,
+        post_data: dict[str, Any],
+        series_name: str,
+        context: dict[str, str] | None = None,
+    ) -> None:
         pass

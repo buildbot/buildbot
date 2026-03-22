@@ -13,10 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.python import log
 
 from buildbot import config
 from buildbot.statistics.storage_backends.base import StatsStorageBase
+
+if TYPE_CHECKING:
+    from buildbot.statistics.capture import Capture
 
 try:
     from influxdb import InfluxDBClient
@@ -29,7 +37,16 @@ class InfluxStorageService(StatsStorageBase):
     Delegates data to InfluxDB
     """
 
-    def __init__(self, url, port, user, password, db, captures, name="InfluxStorageService"):
+    def __init__(
+        self,
+        url: str,
+        port: int,
+        user: str,
+        password: str,
+        db: str,
+        captures: list[Capture],
+        name: str = "InfluxStorageService",
+    ) -> None:
         if not InfluxDBClient:
             config.error("Python client for InfluxDB not installed.")
             return
@@ -44,12 +61,17 @@ class InfluxStorageService(StatsStorageBase):
         self.client = InfluxDBClient(self.url, self.port, self.user, self.password, self.db)
         self._inited = True
 
-    def thd_postStatsValue(self, post_data, series_name, context=None):
+    def thd_postStatsValue(
+        self,
+        post_data: dict[str, Any],
+        series_name: str,
+        context: dict[str, str] | None = None,
+    ) -> None:
         if not self._inited:
             log.err(f"Service {self.name} not initialized")
             return
 
-        data = {'measurement': series_name, 'fields': post_data}
+        data: dict[str, Any] = {'measurement': series_name, 'fields': post_data}
 
         log.msg("Sending data to InfluxDB")
         log.msg(f"post_data: {post_data!r}")

@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 
 from buildbot.process.results import CANCELLED
@@ -21,24 +25,27 @@ from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.util import asyncSleep
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class InterruptCommand(RunMasterBase):
     """Make sure we can interrupt a command"""
 
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {}
         from buildbot.plugins import schedulers  # noqa: PLC0415
         from buildbot.plugins import steps  # noqa: PLC0415
         from buildbot.plugins import util  # noqa: PLC0415
 
-        class SleepAndInterrupt(steps.ShellSequence):
+        class SleepAndInterrupt(steps.ShellSequence):  # type: ignore[name-defined]
             @defer.inlineCallbacks
-            def run(self):
+            def run(self) -> InlineCallbacksType[None]:
                 if self.worker.worker_system == "nt":
                     sleep = "waitfor SomethingThatIsNeverHappening /t 100 >nul 2>&1"
                 else:
-                    sleep = ["sleep", "100"]
+                    sleep = ["sleep", "100"]  # type: ignore[assignment]
                 d = self.runShellSequence([util.ShellArg(sleep)])
                 yield asyncSleep(1)
                 self.interrupt("just testing")
@@ -55,7 +62,7 @@ class InterruptCommand(RunMasterBase):
 
     @flaky(bugNumber=4404, onPlatform='win32')
     @defer.inlineCallbacks
-    def test_interrupt(self):
+    def test_interrupt(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
         build = yield self.doForceBuild(wantSteps=True)
         self.assertEqual(build['steps'][-1]['results'], CANCELLED)

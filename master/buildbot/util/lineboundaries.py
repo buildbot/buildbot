@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from twisted.logger import Logger
 
@@ -33,7 +34,7 @@ class LineBoundaryFinder:
     # and ugly \b+ (use of backspace to implement progress bar)
     newline_re = re.compile(r'(\r\n|\r(?=.)|\033\[u|\033\[[0-9]+;[0-9]+[Hf]|\033\[2J|\x08+)')
 
-    def __init__(self, callback=None) -> None:
+    def __init__(self, callback: Any = None) -> None:
         self.partialLine: str | None = None
         self.warned: bool = False
 

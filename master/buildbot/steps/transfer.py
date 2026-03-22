@@ -18,6 +18,8 @@ from __future__ import annotations
 import json
 import os
 import stat
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -33,8 +35,13 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import flatten
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
-def makeStatusRemoteCommand(step, remote_command, args) -> remotecommand.RemoteCommand:
+
+def makeStatusRemoteCommand(
+    step: Any, remote_command: str, args: dict[str, Any]
+) -> remotecommand.RemoteCommand:
     self = remotecommand.RemoteCommand(remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
     self.useLog(step.stdio_log)
     return self
@@ -51,16 +58,16 @@ class _TransferBuildStep(BuildStep):
     haltOnFailure = True
     flunkOnFailure = True
 
-    def __init__(self, workdir=None, **buildstep_kwargs):
+    def __init__(self, workdir: str | None = None, **buildstep_kwargs: Any) -> None:
         super().__init__(**buildstep_kwargs)
-        self.workdir = workdir
+        self.workdir = workdir  # type: ignore[assignment]
 
     @defer.inlineCallbacks
     def runTransferCommand(
         self,
         cmd: remotecommand.RemoteCommand,
         writer: remotetransfer.FileWriter | None = None,
-    ):
+    ) -> InlineCallbacksType[int]:
         # Run a transfer step, add a callback to extract the command status,
         # add an error handler that cancels the writer.
         self.cmd = cmd
@@ -77,7 +84,7 @@ class _TransferBuildStep(BuildStep):
         return cmd_res
 
     @defer.inlineCallbacks
-    def interrupt(self, reason):
+    def interrupt(self, reason: Any) -> InlineCallbacksType[None]:
         yield self.addCompleteLog('interrupt', str(reason))
         if self.cmd:
             yield self.cmd.interrupt(reason)
@@ -96,17 +103,17 @@ class FileUpload(_TransferBuildStep):
 
     def __init__(
         self,
-        workersrc=None,
-        masterdest=None,
-        workdir=None,
-        maxsize=None,
-        blocksize=256 * 1024,
-        mode=None,
-        keepstamp=False,
-        url=None,
-        urlText=None,
-        **buildstep_kwargs,
-    ):
+        workersrc: str | None = None,
+        masterdest: str | None = None,
+        workdir: str | None = None,
+        maxsize: int | None = None,
+        blocksize: int = 256 * 1024,
+        mode: int | None = None,
+        keepstamp: bool = False,
+        url: str | None = None,
+        urlText: str | None = None,
+        **buildstep_kwargs: Any,
+    ) -> None:
         # Emulate that first two arguments are positional.
         if workersrc is None or masterdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -125,7 +132,7 @@ class FileUpload(_TransferBuildStep):
         self.urlText = urlText
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         self.checkWorkerHasCommand("uploadFile")
         self.stdio_log = yield self.addLog("stdio")
 
@@ -157,13 +164,13 @@ class FileUpload(_TransferBuildStep):
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = (
-                f"This worker ({self.build.workername}) does not support preserving timestamps. "
+                f"This worker ({self.build.workername}) does not support preserving timestamps. "  # type: ignore[union-attr]
                 "Please upgrade the worker."
             )
             raise WorkerSetupError(m)
 
         # default arguments
-        args = {
+        args: dict[str, Any] = {
             'workdir': self.workdir,
             'writer': fileWriter,
             'maxsize': self.maxsize,
@@ -191,16 +198,16 @@ class DirectoryUpload(_TransferBuildStep):
 
     def __init__(
         self,
-        workersrc=None,
-        masterdest=None,
-        workdir=None,
-        maxsize=None,
-        blocksize=16 * 1024,
-        compress=None,
-        url=None,
-        urlText=None,
-        **buildstep_kwargs,
-    ):
+        workersrc: str | None = None,
+        masterdest: str | None = None,
+        workdir: str | None = None,
+        maxsize: int | None = None,
+        blocksize: int = 16 * 1024,
+        compress: str | None = None,
+        url: str | None = None,
+        urlText: str | None = None,
+        **buildstep_kwargs: Any,
+    ) -> None:
         # Emulate that first two arguments are positional.
         if workersrc is None or masterdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -218,7 +225,7 @@ class DirectoryUpload(_TransferBuildStep):
         self.urlText = urlText
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         self.checkWorkerHasCommand("uploadDirectory")
         self.stdio_log = yield self.addLog("stdio")
 
@@ -244,7 +251,7 @@ class DirectoryUpload(_TransferBuildStep):
         dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0o600)
 
         # default arguments
-        args = {
+        args: dict[str, Any] = {
             'workdir': self.workdir,
             'writer': dirWriter,
             'maxsize': self.maxsize,
@@ -270,19 +277,19 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
 
     def __init__(
         self,
-        workersrcs=None,
-        masterdest=None,
-        workdir=None,
-        maxsize=None,
-        blocksize=16 * 1024,
-        glob=False,
-        mode=None,
-        compress=None,
-        keepstamp=False,
-        url=None,
-        urlText=None,
-        **buildstep_kwargs,
-    ):
+        workersrcs: str | list[str] | None = None,
+        masterdest: str | None = None,
+        workdir: str | None = None,
+        maxsize: int | None = None,
+        blocksize: int = 16 * 1024,
+        glob: bool = False,
+        mode: int | None = None,
+        compress: str | None = None,
+        keepstamp: bool = False,
+        url: str | None = None,
+        urlText: str | None = None,
+        **buildstep_kwargs: Any,
+    ) -> None:
         # Emulate that first two arguments are positional.
         if workersrcs is None or masterdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -304,10 +311,10 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         self.url = url
         self.urlText = urlText
 
-    def uploadFile(self, source, masterdest):
+    def uploadFile(self, source: str, masterdest: str) -> Any:
         fileWriter = remotetransfer.FileWriter(masterdest, self.maxsize, self.mode)
 
-        args = {
+        args: dict[str, Any] = {
             'workdir': self.workdir,
             'writer': fileWriter,
             'maxsize': self.maxsize,
@@ -323,10 +330,10 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         return self.runTransferCommand(cmd, fileWriter)
 
-    def uploadDirectory(self, source, masterdest):
+    def uploadDirectory(self, source: str, masterdest: str) -> Any:
         dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0o600)
 
-        args = {
+        args: dict[str, Any] = {
             'workdir': self.workdir,
             'writer': dirWriter,
             'maxsize': self.maxsize,
@@ -343,9 +350,9 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         return self.runTransferCommand(cmd, dirWriter)
 
     @defer.inlineCallbacks
-    def startUpload(self, source, destdir):
+    def startUpload(self, source: str, destdir: str) -> InlineCallbacksType[int]:
         masterdest = os.path.join(destdir, os.path.basename(source))
-        args = {'file': source, 'workdir': self.workdir}
+        args: dict[str, Any] = {'file': source, 'workdir': self.workdir}
 
         cmd = makeStatusRemoteCommand(self, 'stat', args)
         yield self.runCommand(cmd)
@@ -363,14 +370,16 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
             yield self.addCompleteLog('stderr', msg)
             return FAILURE
 
-        yield self.uploadDone(result, source, masterdest)
+        yield self.uploadDone(result, source, masterdest)  # type: ignore[func-returns-value]
         return result
 
-    def uploadDone(self, result, source, masterdest):
+    def uploadDone(self, result: int, source: str, masterdest: str) -> None:
         pass
 
     @defer.inlineCallbacks
-    def allUploadsDone(self, result, sources, masterdest):
+    def allUploadsDone(
+        self, result: int, sources: list[str], masterdest: str
+    ) -> InlineCallbacksType[None]:
         if self.url is not None:
             urlText = self.urlText
 
@@ -380,7 +389,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
             yield self.addURL(urlText, self.url)
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         self.checkWorkerHasCommand("uploadDirectory")
         self.checkWorkerHasCommand("uploadFile")
         self.checkWorkerHasCommand("stat")
@@ -391,7 +400,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = (
-                f"This worker ({self.build.workername}) does not support preserving timestamps. "
+                f"This worker ({self.build.workername}) does not support preserving timestamps. "  # type: ignore[union-attr]
                 "Please upgrade the worker."
             )
             raise WorkerSetupError(m)
@@ -402,7 +411,7 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
         if self.glob:
             results = yield defer.gatherResults(
                 [
-                    self.runGlob(os.path.join(self.workdir, source), abandonOnFailure=False)
+                    self.runGlob(os.path.join(self.workdir, source), abandonOnFailure=False)  # type: ignore[arg-type]
                     for source in sources
                 ],
                 consumeErrors=True,
@@ -439,14 +448,14 @@ class FileDownload(_TransferBuildStep):
 
     def __init__(
         self,
-        mastersrc,
-        workerdest=None,
-        workdir=None,
-        maxsize=None,
-        blocksize=16 * 1024,
-        mode=None,
-        **buildstep_kwargs,
-    ):
+        mastersrc: str,
+        workerdest: str | None = None,
+        workdir: str | None = None,
+        maxsize: int | None = None,
+        blocksize: int = 16 * 1024,
+        mode: int | None = None,
+        **buildstep_kwargs: Any,
+    ) -> None:
         # Emulate that first two arguments are positional.
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -462,7 +471,7 @@ class FileDownload(_TransferBuildStep):
         self.mode = mode
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         self.checkWorkerHasCommand("downloadFile")
         self.stdio_log = yield self.addLog("stdio")
 
@@ -485,7 +494,7 @@ class FileDownload(_TransferBuildStep):
         fileReader = remotetransfer.FileReader(fp)
 
         # default arguments
-        args = {
+        args: dict[str, Any] = {
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
@@ -510,14 +519,14 @@ class StringDownload(_TransferBuildStep):
 
     def __init__(
         self,
-        s,
-        workerdest=None,
-        workdir=None,
-        maxsize=None,
-        blocksize=16 * 1024,
-        mode=None,
-        **buildstep_kwargs,
-    ):
+        s: Any,
+        workerdest: str | None = None,
+        workdir: str | None = None,
+        maxsize: int | None = None,
+        blocksize: int = 16 * 1024,
+        mode: int | None = None,
+        **buildstep_kwargs: Any,
+    ) -> None:
         # Emulate that first two arguments are positional.
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -533,7 +542,7 @@ class StringDownload(_TransferBuildStep):
         self.mode = mode
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         # we use 'downloadFile' remote command on the worker
         self.checkWorkerHasCommand("downloadFile")
         self.stdio_log = yield self.addLog("stdio")
@@ -549,7 +558,7 @@ class StringDownload(_TransferBuildStep):
         fileReader = remotetransfer.StringFileReader(self.s)
 
         # default arguments
-        args = {
+        args: dict[str, Any] = {
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
@@ -570,7 +579,7 @@ class StringDownload(_TransferBuildStep):
 class JSONStringDownload(StringDownload):
     name = "json_download"
 
-    def __init__(self, o, workerdest=None, **buildstep_kwargs):
+    def __init__(self, o: Any, workerdest: str | None = None, **buildstep_kwargs: Any) -> None:
         # Emulate that first two arguments are positional.
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -579,7 +588,7 @@ class JSONStringDownload(StringDownload):
         super().__init__(s=o, workerdest=workerdest, **buildstep_kwargs)
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         self.s = json.dumps(self.s)
         res = yield super().run()
         return res
@@ -588,7 +597,7 @@ class JSONStringDownload(StringDownload):
 class JSONPropertiesDownload(StringDownload):
     name = "json_properties_download"
 
-    def __init__(self, workerdest=None, **buildstep_kwargs):
+    def __init__(self, workerdest: str | None = None, **buildstep_kwargs: Any) -> None:
         # Emulate that first two arguments are positional.
         if workerdest is None:
             raise TypeError("__init__() takes at least 2 arguments")
@@ -597,16 +606,16 @@ class JSONPropertiesDownload(StringDownload):
         super().__init__(s=None, workerdest=workerdest, **buildstep_kwargs)
 
     @defer.inlineCallbacks
-    def run(self):
-        properties = self.build.getProperties()
+    def run(self) -> InlineCallbacksType[int]:
+        properties = self.build.getProperties()  # type: ignore[union-attr]
         props = {}
-        for key, value, _ in properties.asList():
+        for key, value, _ in properties.asList():  # type: ignore[union-attr]
             props[key] = value
 
         self.s = json.dumps(
             {
                 "properties": props,
-                "sourcestamps": [ss.asDict() for ss in self.build.getAllSourceStamps()],
+                "sourcestamps": [ss.asDict() for ss in self.build.getAllSourceStamps()],  # type: ignore[union-attr]
             },
         )
         res = yield super().run()

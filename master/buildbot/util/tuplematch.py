@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
-def matchTuple(routingKey, filter):
+
+def matchTuple(routingKey: tuple[str, ...], filter: tuple[str | None, ...]) -> bool:
     if len(filter) != len(routingKey):
         return False
     for k, f in zip(routingKey, filter):

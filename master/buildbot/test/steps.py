@@ -21,6 +21,7 @@ from io import BytesIO
 from pathlib import PurePosixPath
 from pathlib import PureWindowsPath
 from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -43,14 +44,25 @@ from buildbot.util.eventual import flushEventualQueue
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    import re
+    from collections.abc import Callable
+
     from twisted.trial import unittest
+
+    from buildbot.interfaces import IBuildStepFactory
+    from buildbot.process.buildstep import BuildStep
+    from buildbot.process.remotecommand import RemoteCommand
+    from buildbot.test.fake.connection import FakeConnection
+    from buildbot.util.twisted import InlineCallbacksType
 
     _TestBuildStepMixinBase = unittest.TestCase
 else:
     _TestBuildStepMixinBase = object
 
 
-def _dict_diff(d1, d2):
+def _dict_diff(
+    d1: dict[str, Any], d2: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, Any], list[tuple[str, Any, Any]]]:
     """
     Given two dictionaries describe their difference
     For nested dictionaries, key-paths are concatenated with the '.' operator
@@ -62,9 +74,9 @@ def _dict_diff(d1, d2):
     d2_keys = set(d2.keys())
     both = d1_keys & d2_keys
 
-    missing_in_d1 = {}
-    missing_in_d2 = {}
-    different = []
+    missing_in_d1: dict[str, Any] = {}
+    missing_in_d2: dict[str, Any] = {}
+    different: list[tuple[str, Any, Any]] = []
 
     for k in both:
         if isinstance(d1[k], dict) and isinstance(d2[k], dict):
@@ -88,7 +100,9 @@ def _dict_diff(d1, d2):
     return missing_in_d1, missing_in_d2, different
 
 
-def _describe_cmd_difference(exp_command, exp_args, got_command, got_args):
+def _describe_cmd_difference(
+    exp_command: str, exp_args: dict[str, Any], got_command: str, got_args: dict[str, Any]
+) -> str:
     if exp_command != got_command:
         return f'Expected command type {exp_command} got {got_command}. Expected args {exp_args!r}'
     if exp_args == got_args:
@@ -113,10 +127,10 @@ class ExpectRemoteRef:
     Define an expected RemoteReference in the args to an L{Expect} class
     """
 
-    def __init__(self, rrclass):
+    def __init__(self, rrclass: type) -> None:
         self.rrclass = rrclass
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, self.rrclass)
 
     def __hash__(self) -> int:
@@ -148,7 +162,9 @@ class Expect:
 
     """
 
-    def __init__(self, remote_command, args, interrupted=False):
+    def __init__(
+        self, remote_command: str, args: dict[str, Any], interrupted: bool = False
+    ) -> None:
         """
         Expect a command named C{remote_command}, with args C{args}.
         """
@@ -157,42 +173,44 @@ class Expect:
         self.result = None
         self.interrupted = interrupted
         self.connection_broken = False
-        self.behaviors = []
+        self.behaviors: list[tuple[Any, ...]] = []
 
-    def behavior(self, callable):
+    def behavior(self, callable: Callable[[RemoteCommand], object]) -> Expect:
         self.behaviors.append(('callable', callable))
         return self
 
-    def error(self, error):
+    def error(self, error: Exception) -> Expect:
         self.behaviors.append(('err', error))
         return self
 
-    def log(self, name, **streams):
+    def log(self, name: str, **streams: Any) -> Expect:
         self.behaviors.append(('log', name, streams))
         return self
 
-    def update(self, name, value):
+    def update(self, name: str, value: Any) -> Expect:
         self.behaviors.append(('update', name, value))
         return self
 
-    def stdout(self, output):
+    def stdout(self, output: str) -> Expect:
         self.behaviors.append(('log', 'stdio', {'stdout': output}))
         return self
 
-    def stderr(self, output):
+    def stderr(self, output: str) -> Expect:
         self.behaviors.append(('log', 'stdio', {'stderr': output}))
         return self
 
-    def exit(self, code):
+    def exit(self, code: int) -> Expect:
         self.behaviors.append(('rc', code))
         return self
 
-    def break_connection(self):
+    def break_connection(self) -> Expect:
         self.connection_broken = True
         return self
 
     @defer.inlineCallbacks
-    def runBehavior(self, behavior, args, command):
+    def runBehavior(
+        self, behavior: str, args: tuple[Any, ...], command: RemoteCommand
+    ) -> InlineCallbacksType[None]:
         """
         Implement the given behavior.  Returns a Deferred.
         """
@@ -229,14 +247,14 @@ class Expect:
         return None
 
     @defer.inlineCallbacks
-    def runBehaviors(self, command):
+    def runBehaviors(self, command: RemoteCommand) -> InlineCallbacksType[None]:
         """
         Run all expected behaviors for this command
         """
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
 
-    def _cleanup_args(self, args):
+    def _cleanup_args(self, args: dict[str, Any]) -> dict[str, Any]:
         # we temporarily disable checking of sigtermTime and interruptSignal due to currently
         # ongoing changes to how step testing works. Once all tests are updated for stricter
         # checking this will be removed.
@@ -250,7 +268,7 @@ class Expect:
         args['env'] = env
         return args
 
-    def _check(self, case, command):
+    def _check(self, case: unittest.TestCase, command: RemoteCommand) -> None:
         case.assertEqual(self.interrupted, command.interrupted)
 
         if command.remote_command == self.remote_command and self._cleanup_args(
@@ -263,11 +281,11 @@ class Expect:
         )
         msg = (
             "Command contents different from expected (command index: "
-            f"{case._expected_commands_popped}):\n{cmd_dif}"
+            f"{case._expected_commands_popped}):\n{cmd_dif}"  # type: ignore[attr-defined]
         )
         raise AssertionError(msg)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Expect(" + repr(self.remote_command) + ")"
 
 
@@ -282,21 +300,21 @@ class ExpectShell(Expect):
 
     def __init__(
         self,
-        workdir,
-        command,
-        env=NotSet,
-        want_stdout=1,
-        want_stderr=1,
-        initial_stdin=None,
-        timeout=20 * 60,
-        max_time=None,
-        max_lines=None,
-        sigterm_time=None,
-        logfiles=None,
-        use_pty=False,
-        log_environ=True,
-        interrupt_signal='KILL',
-    ):
+        workdir: str,
+        command: str | list[str],
+        env: dict[str, str] | None | type[ExpectShell.NotSet] = NotSet,
+        want_stdout: int = 1,
+        want_stderr: int = 1,
+        initial_stdin: str | None = None,
+        timeout: int = 20 * 60,
+        max_time: int | None = None,
+        max_lines: int | None = None,
+        sigterm_time: int | None = None,
+        logfiles: dict[str, str] | None = None,
+        use_pty: bool = False,
+        log_environ: bool = True,
+        interrupt_signal: str | None = 'KILL',
+    ) -> None:
         if env is self.NotSet:
             env = {}
         if logfiles is None:
@@ -322,13 +340,15 @@ class ExpectShell(Expect):
             args['interruptSignal'] = interrupt_signal
         super().__init__("shell", args)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "ExpectShell(" + repr(self.remote_command) + repr(self.args['command']) + ")"
 
 
 class ExpectStat(Expect):
-    def __init__(self, file, workdir=None, log_environ=None):
-        args = {'file': file}
+    def __init__(
+        self, file: str, workdir: str | None = None, log_environ: bool | None = None
+    ) -> None:
+        args: dict[str, Any] = {'file': file}
         if workdir is not None:
             args['workdir'] = workdir
         if log_environ is not None:
@@ -337,36 +357,55 @@ class ExpectStat(Expect):
         super().__init__('stat', args)
 
     def stat(
-        self, mode, inode=99, dev=99, nlink=1, uid=0, gid=0, size=99, atime=0, mtime=0, ctime=0
-    ):
+        self,
+        mode: int,
+        inode: int = 99,
+        dev: int = 99,
+        nlink: int = 1,
+        uid: int = 0,
+        gid: int = 0,
+        size: int = 99,
+        atime: int = 0,
+        mtime: int = 0,
+        ctime: int = 0,
+    ) -> ExpectStat:
         self.update('stat', [mode, inode, dev, nlink, uid, gid, size, atime, mtime, ctime])
         return self
 
-    def stat_file(self, mode=0, size=99, atime=0, mtime=0, ctime=0):
+    def stat_file(
+        self, mode: int = 0, size: int = 99, atime: int = 0, mtime: int = 0, ctime: int = 0
+    ) -> ExpectStat:
         self.stat(stat.S_IFREG, size=size, atime=atime, mtime=mtime, ctime=ctime)
         return self
 
-    def stat_dir(self, mode=0, size=99, atime=0, mtime=0, ctime=0):
+    def stat_dir(
+        self, mode: int = 0, size: int = 99, atime: int = 0, mtime: int = 0, ctime: int = 0
+    ) -> ExpectStat:
         self.stat(stat.S_IFDIR, size=size, atime=atime, mtime=mtime, ctime=ctime)
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "ExpectStat(" + repr(self.args['file']) + ")"
 
 
 class ExpectUploadFile(Expect):
     def __init__(
         self,
-        blocksize=None,
-        maxsize=None,
-        workersrc=None,
-        workdir=None,
-        writer=None,
-        keepstamp=None,
-        slavesrc=None,
-        interrupted=False,
-    ):
-        args = {'workdir': workdir, 'writer': writer, 'blocksize': blocksize, 'maxsize': maxsize}
+        blocksize: int | None = None,
+        maxsize: int | None = None,
+        workersrc: str | None = None,
+        workdir: str | None = None,
+        writer: ExpectRemoteRef | None = None,
+        keepstamp: bool | None = None,
+        slavesrc: str | None = None,
+        interrupted: bool = False,
+    ) -> None:
+        args: dict[str, Any] = {
+            'workdir': workdir,
+            'writer': writer,
+            'blocksize': blocksize,
+            'maxsize': maxsize,
+        }
         if keepstamp is not None:
             args['keepstamp'] = keepstamp
         if slavesrc is not None:
@@ -376,8 +415,14 @@ class ExpectUploadFile(Expect):
 
         super().__init__('uploadFile', args, interrupted=interrupted)
 
-    def upload_string(self, string, timestamp=None, out_writers=None, error=None):
-        def behavior(command):
+    def upload_string(
+        self,
+        string: str | bytes,
+        timestamp: tuple[float, float] | None = None,
+        out_writers: list[object] | None = None,
+        error: Exception | None = None,
+    ) -> ExpectUploadFile:
+        def behavior(command: RemoteCommand) -> None:
             writer = command.args['writer']
             if out_writers is not None:
                 out_writers.append(writer)
@@ -394,24 +439,24 @@ class ExpectUploadFile(Expect):
         self.behavior(behavior)
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ExpectUploadFile({self.args['workdir']!r},{self.args['workersrc']!r})"
 
 
 class ExpectUploadDirectory(Expect):
     def __init__(
         self,
-        compress=None,
-        blocksize=None,
-        maxsize=None,
-        workersrc=None,
-        workdir=None,
-        writer=None,
-        keepstamp=None,
-        slavesrc=None,
-        interrupted=False,
-    ):
-        args = {
+        compress: str | None = None,
+        blocksize: int | None = None,
+        maxsize: int | None = None,
+        workersrc: str | None = None,
+        workdir: str | None = None,
+        writer: ExpectRemoteRef | None = None,
+        keepstamp: bool | None = None,
+        slavesrc: str | None = None,
+        interrupted: bool = False,
+    ) -> None:
+        args: dict[str, Any] = {
             'compress': compress,
             'workdir': workdir,
             'writer': writer,
@@ -427,8 +472,14 @@ class ExpectUploadDirectory(Expect):
 
         super().__init__('uploadDirectory', args, interrupted=interrupted)
 
-    def upload_tar_file(self, filename, members, error=None, out_writers=None):
-        def behavior(command):
+    def upload_tar_file(
+        self,
+        filename: str,
+        members: dict[str, str | bytes],
+        error: Exception | None = None,
+        out_writers: list[object] | None = None,
+    ) -> ExpectUploadDirectory:
+        def behavior(command: RemoteCommand) -> None:
             f = BytesIO()
             archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
             for name, content in members.items():
@@ -449,24 +500,24 @@ class ExpectUploadDirectory(Expect):
         self.behavior(behavior)
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ExpectUploadDirectory({self.args['workdir']!r}, {self.args['workersrc']!r})"
 
 
 class ExpectDownloadFile(Expect):
     def __init__(
         self,
-        blocksize=None,
-        maxsize=None,
-        workerdest=None,
-        workdir=None,
-        reader=None,
-        mode=None,
-        interrupted=False,
-        slavesrc=None,
-        slavedest=None,
-    ):
-        args = {
+        blocksize: int | None = None,
+        maxsize: int | None = None,
+        workerdest: str | None = None,
+        workdir: str | None = None,
+        reader: ExpectRemoteRef | None = None,
+        mode: int | None = None,
+        interrupted: bool = False,
+        slavesrc: str | None = None,
+        slavedest: str | None = None,
+    ) -> None:
+        args: dict[str, Any] = {
             'workdir': workdir,
             'reader': reader,
             'mode': mode,
@@ -482,8 +533,13 @@ class ExpectDownloadFile(Expect):
 
         super().__init__('downloadFile', args, interrupted=interrupted)
 
-    def download_string(self, dest_callable, size=1000, timestamp=None):
-        def behavior(command):
+    def download_string(
+        self,
+        dest_callable: Callable[[bytes], object],
+        size: int = 1000,
+        timestamp: tuple[float, float] | None = None,
+    ) -> ExpectDownloadFile:
+        def behavior(command: RemoteCommand) -> bytes:
             reader = command.args['reader']
             read = reader.remote_read(size)
 
@@ -497,25 +553,31 @@ class ExpectDownloadFile(Expect):
         self.behavior(behavior)
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ExpectUploadDirectory({self.args['workdir']!r}, {self.args['workerdest']!r})"
 
 
 class ExpectMkdir(Expect):
-    def __init__(self, dir=None, log_environ=None):
-        args = {'dir': dir}
+    def __init__(self, dir: str | None = None, log_environ: bool | None = None) -> None:
+        args: dict[str, Any] = {'dir': dir}
         if log_environ is not None:
             args['logEnviron'] = log_environ
 
         super().__init__('mkdir', args)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ExpectMkdir({self.args['dir']!r})"
 
 
 class ExpectRmdir(Expect):
-    def __init__(self, dir=None, log_environ=None, timeout=None, path=None):
-        args = {'dir': dir}
+    def __init__(
+        self,
+        dir: str | None = None,
+        log_environ: bool | None = None,
+        timeout: int | None = None,
+        path: str | None = None,
+    ) -> None:
+        args: dict[str, Any] = {'dir': dir}
         if log_environ is not None:
             args['logEnviron'] = log_environ
         if timeout is not None:
@@ -525,13 +587,20 @@ class ExpectRmdir(Expect):
 
         super().__init__('rmdir', args)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ExpectRmdir({self.args['dir']!r})"
 
 
 class ExpectCpdir(Expect):
-    def __init__(self, fromdir=None, todir=None, log_environ=None, timeout=None, max_time=None):
-        args = {'fromdir': fromdir, 'todir': todir}
+    def __init__(
+        self,
+        fromdir: str | None = None,
+        todir: str | None = None,
+        log_environ: bool | None = None,
+        timeout: int | None = None,
+        max_time: int | None = None,
+    ) -> None:
+        args: dict[str, Any] = {'fromdir': fromdir, 'todir': todir}
         if log_environ is not None:
             args['logEnviron'] = log_environ
         if timeout is not None:
@@ -541,57 +610,59 @@ class ExpectCpdir(Expect):
 
         super().__init__('cpdir', args)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ExpectCpdir({self.args['fromdir']!r}, {self.args['todir']!r})"
 
 
 class ExpectGlob(Expect):
-    def __init__(self, path=None, log_environ=None):
-        args = {'path': path}
+    def __init__(self, path: str | None = None, log_environ: bool | None = None) -> None:
+        args: dict[str, Any] = {'path': path}
         if log_environ is not None:
             args['logEnviron'] = log_environ
 
         super().__init__('glob', args)
 
-    def files(self, files=None):
+    def files(self, files: list[str] | None = None) -> ExpectGlob:
         if files is None:
             files = []
         self.update('files', files)
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ExpectGlob({self.args['path']!r})"
 
 
 class ExpectListdir(Expect):
-    def __init__(self, dir=None):
-        args = {'dir': dir}
+    def __init__(self, dir: str | None = None) -> None:
+        args: dict[str, Any] = {'dir': dir}
 
         super().__init__('listdir', args)
 
-    def files(self, files=None):
+    def files(self, files: list[str] | None = None) -> ExpectListdir:
         if files is None:
             files = []
         self.update('files', files)
         return self
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ExpectListdir({self.args['dir']!r})"
 
 
 class ExpectRmfile(Expect):
-    def __init__(self, path=None, log_environ=None):
-        args = {'path': path}
+    def __init__(self, path: str | None = None, log_environ: bool | None = None) -> None:
+        args: dict[str, Any] = {'path': path}
         if log_environ is not None:
             args['logEnviron'] = log_environ
 
         super().__init__('rmfile', args)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ExpectRmfile({self.args['path']!r})"
 
 
-def _check_env_is_expected(test, expected_env, env):
+def _check_env_is_expected(
+    test: unittest.TestCase, expected_env: dict[str, str] | None, env: dict[str, str] | None
+) -> None:
     if expected_env is None:
         return
 
@@ -604,35 +675,41 @@ class ExpectMasterShell:
     _stdout = b""
     _stderr = b""
     _exit = 0
-    _workdir = None
-    _env = None
+    _workdir: str | None = None
+    _env: dict[str, str] | None = None
 
-    def __init__(self, command):
+    def __init__(self, command: list[str]) -> None:
         self._command = command
 
-    def stdout(self, stdout):
+    def stdout(self, stdout: bytes) -> ExpectMasterShell:
         assert isinstance(stdout, bytes)
         self._stdout = stdout
         return self
 
-    def stderr(self, stderr):
+    def stderr(self, stderr: bytes) -> ExpectMasterShell:
         assert isinstance(stderr, bytes)
         self._stderr = stderr
         return self
 
-    def exit(self, exit):
+    def exit(self, exit: int) -> ExpectMasterShell:
         self._exit = exit
         return self
 
-    def workdir(self, workdir):
+    def workdir(self, workdir: str) -> ExpectMasterShell:
         self._workdir = workdir
         return self
 
-    def env(self, env):
+    def env(self, env: dict[str, str]) -> ExpectMasterShell:
         self._env = env
         return self
 
-    def _check(self, test, command, workdir, env):
+    def _check(
+        self,
+        test: unittest.TestCase,
+        command: list[str],
+        workdir: str | None,
+        env: dict[str, str] | None,
+    ) -> tuple[int, bytes, bytes]:
         test.assertDictEqual(
             {'command': command, 'workdir': workdir},
             {'command': self._command, 'workdir': self._workdir},
@@ -642,20 +719,22 @@ class ExpectMasterShell:
         _check_env_is_expected(test, self._env, env)
         return (self._exit, self._stdout, self._stderr)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<ExpectMasterShell(command={self._command})>"
 
 
 class FakeRunProcess:
-    def __init__(self, start_retval, result_rc):
+    def __init__(
+        self, start_retval: int | tuple[int, bytes] | tuple[int, bytes, bytes], result_rc: int
+    ) -> None:
         self.start_retval = start_retval
         self.result_rc = result_rc
-        self.result_signal = None
+        self.result_signal: str | None = None
 
-    def start(self):
+    def start(self) -> defer.Deferred[int | tuple[int, bytes] | tuple[int, bytes, bytes]]:
         return defer.succeed(self.start_retval)
 
-    def interrupt(self, signal_name):
+    def interrupt(self, signal_name: str) -> None:
         pass
 
 
@@ -670,11 +749,11 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
     @defer.inlineCallbacks
     def setup_test_build_step(
         self,
-        want_data=True,
-        want_db=False,
-        want_mq=False,
+        want_data: bool = True,
+        want_db: bool = False,
+        want_mq: bool = False,
         with_secrets: dict | None = None,
-    ):
+    ) -> InlineCallbacksType[None]:
         if not hasattr(self, 'reactor'):
             raise RuntimeError('Reactor has not yet been setup for step')
 
@@ -710,15 +789,15 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         self.patch(runprocess, "create_process", self._patched_create_process)
         self._master_run_process_expect_env: dict[str, str] = {}
 
-        self._worker_version = None
-        self._worker_env = None
-        self._build_files = None
+        self._worker_version: dict[str, str] | None = None
+        self._worker_env: dict[str, str] | None = None
+        self._build_files: list[str] | None = None
 
         self.worker = worker.FakeWorker(self.master)
         self.worker.attached(None)
 
         self._steps: list[buildstep.BuildStep] = []
-        self.build = None
+        self.build: fakebuild.FakeBuild | None = None
 
         # expectations
 
@@ -728,7 +807,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         self._exp_logfiles: dict[int, dict[str, bytes]] = {}
         self._exp_logfiles_stderr: dict[int, dict[str, bytes]] = {}
         self.exp_hidden = False
-        self.exp_exception = None
+        self.exp_exception: type | None = None
         self._exp_test_result_sets: list[tuple[str, str, str]] = []
         self._exp_test_results: list[tuple[int, object, str, str, int, int]] = []
         self._exp_build_data: dict[str, tuple[object, str]] = {}
@@ -737,14 +816,19 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
 
         self.addCleanup(flushEventualQueue)
 
-    def tear_down_test_build_step(self):  # pragma: no cover
+    def tear_down_test_build_step(self) -> None:  # pragma: no cover
         warn_deprecated(
             '4.2.0',
             'tear_down_test_build_step() no longer needs to be called, '
             + 'test tear down is run automatically',
         )
 
-    def _setup_fake_build(self, worker_version, worker_env, build_files):
+    def _setup_fake_build(
+        self,
+        worker_version: dict[str, str] | None,
+        worker_env: dict[str, str] | None,
+        build_files: list[str] | None,
+    ) -> fakebuild.FakeBuild:
         if worker_version is None:
             worker_version = {'*': '99.99'}
 
@@ -755,35 +839,40 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
             build_files = []
 
         build = fakebuild.FakeBuild(master=self.master)
-        build.allFiles = lambda: build_files
+        build.allFiles = lambda: build_files  # type: ignore[method-assign]
         build.master = self.master
 
-        def getWorkerVersion(cmd, oldversion):
+        def getWorkerVersion(cmd: str, oldversion: str) -> str:
             if cmd in worker_version:
                 return worker_version[cmd]
             if '*' in worker_version:
                 return worker_version['*']
             return oldversion
 
-        build.getWorkerCommandVersion = getWorkerVersion
-        build.workerEnvironment = worker_env.copy()
+        build.getWorkerCommandVersion = getWorkerVersion  # type: ignore[attr-defined]
+        build.workerEnvironment = worker_env.copy()  # type: ignore[attr-defined]
         build.env = worker_env.copy()
 
         return build
 
-    def setup_build(self, worker_version=None, worker_env=None, build_files=None):
+    def setup_build(
+        self,
+        worker_version: dict[str, str] | None = None,
+        worker_env: dict[str, str] | None = None,
+        build_files: list[str] | None = None,
+    ) -> None:
         self._worker_version = worker_version
         self._worker_env = worker_env
         self._build_files = build_files
 
     def setup_step(
         self,
-        step,
-        worker_version=None,
-        worker_env=None,
-        build_files=None,
-        want_default_work_dir=True,
-    ):
+        step: BuildStep | IBuildStepFactory,
+        worker_version: dict[str, str] | None = None,
+        worker_env: dict[str, str] | None = None,
+        build_files: list[str] | None = None,
+        want_default_work_dir: bool = True,
+    ) -> buildstep.BuildStep:
         if worker_version is not None:
             warn_deprecated(
                 "4.1.0",
@@ -805,66 +894,77 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
                 worker_version=worker_version, worker_env=worker_env, build_files=build_files
             )
 
-        step = buildstep.create_step_from_step_or_factory(step)
+        step_obj: buildstep.BuildStep = buildstep.create_step_from_step_or_factory(step)  # type: ignore[assignment]
 
         # set defaults
         if want_default_work_dir:
-            step.workdir = step._workdir or 'wkdir'
+            step_obj.workdir = step_obj._workdir or 'wkdir'
 
         if self.build is None:
             self.build = self._setup_fake_build(
                 self._worker_version, self._worker_env, self._build_files
             )
 
-        step.setBuild(self.build)
-        step.progress = mock.Mock(name="progress")
-        step.worker = self.worker
+        step_obj.setBuild(self.build)  # type: ignore[arg-type]
+        step_obj.progress = mock.Mock(name="progress")  # type: ignore[assignment]
+        step_obj.worker = self.worker  # type: ignore[assignment]
 
         # step overrides
 
-        def addLog(name, type='s', logEncoding=None):
+        def addLog(
+            name: str, type: str = 's', logEncoding: str | None = None
+        ) -> defer.Deferred[Any]:
             _log = logfile.FakeLogFile(name)
-            step.logs[name] = _log
-            step._connectPendingLogObservers()
+            step_obj.logs[name] = _log  # type: ignore[assignment]
+            step_obj._connectPendingLogObservers()
             return defer.succeed(_log)
 
-        step.addLog = addLog
+        step_obj.addLog = addLog  # type: ignore[method-assign]
 
-        def addHTMLLog(name, html):
+        def addHTMLLog(name: str, html: str | bytes) -> defer.Deferred[None]:
             _log = logfile.FakeLogFile(name)
             html = bytes2unicode(html)
             _log.addStdout(html)
             return defer.succeed(None)
 
-        step.addHTMLLog = addHTMLLog
+        step_obj.addHTMLLog = addHTMLLog  # type: ignore[method-assign]
 
-        def addCompleteLog(name, text):
+        def addCompleteLog(name: str, text: str) -> defer.Deferred[None]:
             _log = logfile.FakeLogFile(name)
-            if name in step.logs:
+            if name in step_obj.logs:
                 raise RuntimeError(f'Attempt to add log {name} twice to the logs')
-            step.logs[name] = _log
+            step_obj.logs[name] = _log  # type: ignore[assignment]
             _log.addStdout(text)
             return defer.succeed(None)
 
-        step.addCompleteLog = addCompleteLog
+        step_obj.addCompleteLog = addCompleteLog  # type: ignore[method-assign, assignment]
 
-        self._got_test_result_sets = []
+        self._got_test_result_sets: list[tuple[str, str, str]] = []
         self._next_test_result_set_id = 1000
 
-        def add_test_result_set(description, category, value_unit):
+        def add_test_result_set(
+            description: str, category: str, value_unit: str
+        ) -> defer.Deferred[int]:
             self._got_test_result_sets.append((description, category, value_unit))
 
             setid = self._next_test_result_set_id
             self._next_test_result_set_id += 1
             return defer.succeed(setid)
 
-        step.addTestResultSet = add_test_result_set
+        step_obj.addTestResultSet = add_test_result_set  # type: ignore[method-assign]
 
-        self._got_test_results = []
+        self._got_test_results: list[
+            tuple[int, object, str | None, str | None, int | None, int | None]
+        ] = []
 
         def add_test_result(
-            setid, value, test_name=None, test_code_path=None, line=None, duration_ns=None
-        ):
+            setid: int,
+            value: object,
+            test_name: str | None = None,
+            test_code_path: str | None = None,
+            line: int | None = None,
+            duration_ns: int | None = None,
+        ) -> None:
             self._got_test_results.append((
                 setid,
                 value,
@@ -874,85 +974,85 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
                 duration_ns,
             ))
 
-        step.addTestResult = add_test_result
+        step_obj.addTestResult = add_test_result  # type: ignore[method-assign]
 
-        self._got_build_data = {}
+        self._got_build_data: dict[str, tuple[object, str]] = {}
 
-        def set_build_data(name, value, source):
+        def set_build_data(name: str, value: object, source: str) -> defer.Deferred[None]:
             self._got_build_data[name] = (value, source)
             return defer.succeed(None)
 
-        step.setBuildData = set_build_data
+        step_obj.setBuildData = set_build_data  # type: ignore[method-assign]
 
         # check that the step's name is not None
-        self.assertNotEqual(step.name, None)
+        self.assertNotEqual(step_obj.name, None)
 
-        self._steps.append(step)
-        return step
+        self._steps.append(step_obj)
+        return step_obj
 
     @property
-    def step(self):
+    def step(self) -> buildstep.BuildStep:
         warn_deprecated(
             "4.1.0",
             "step attribute has been deprecated, use get_nth_step(0) as a replacement",
         )
         return self.get_nth_step(0)
 
-    def get_nth_step(self, index):
+    def get_nth_step(self, index: int) -> buildstep.BuildStep:
         return self._steps[index]
 
-    def expect_commands(self, *exp):
+    def expect_commands(self, *exp: Expect) -> None:
         self._expected_commands.extend(exp)
 
-    def expect_outcome(self, result, state_string=None):
+    def expect_outcome(self, result: int, state_string: str | None = None) -> None:
         self._exp_results.append((result, state_string))
 
-    def expect_property(self, property, value, source=None):
+    def expect_property(self, property: str, value: object, source: str | None = None) -> None:
         self.exp_properties[property] = (value, source)
 
-    def expect_no_property(self, property):
+    def expect_no_property(self, property: str) -> None:
         self.exp_missing_properties.append(property)
 
-    def expect_log_file(self, logfile, contents, step_index=0):
+    def expect_log_file(self, logfile: str, contents: bytes, step_index: int = 0) -> None:
         self._exp_logfiles.setdefault(step_index, {})[logfile] = contents
 
-    def expect_log_file_stderr(self, logfile, contents, step_index=0):
+    def expect_log_file_stderr(self, logfile: str, contents: bytes, step_index: int = 0) -> None:
         self._exp_logfiles_stderr.setdefault(step_index, {})[logfile] = contents
 
-    def expect_build_data(self, name, value, source):
+    def expect_build_data(self, name: str, value: object, source: str) -> None:
         self._exp_build_data[name] = (value, source)
 
-    def expect_hidden(self, hidden=True):
+    def expect_hidden(self, hidden: bool = True) -> None:
         self.exp_hidden = hidden
 
-    def expect_exception(self, exception_class):
+    def expect_exception(self, exception_class: type) -> None:
         self.exp_exception = exception_class
         self.expect_outcome(EXCEPTION)
 
-    def expect_test_result_sets(self, sets):
+    def expect_test_result_sets(self, sets: list[tuple[str, str, str]]) -> None:
         self._exp_test_result_sets = sets
 
-    def expect_test_results(self, results):
+    def expect_test_results(self, results: list[tuple[int, object, str, str, int, int]]) -> None:
         self._exp_test_results = results
 
-    def expect_result_summary(self, *summaries):
+    def expect_result_summary(self, *summaries: str) -> None:
         self._exp_result_summaries.extend(summaries)
 
-    def expect_build_result_summary(self, *summaries):
+    def expect_build_result_summary(self, *summaries: str) -> None:
         self._exp_build_result_summaries.extend(summaries)
 
-    def add_run_process_expect_env(self, d):
+    def add_run_process_expect_env(self, d: dict[str, str]) -> None:
         self._master_run_process_expect_env.update(d)
 
-    def _dump_logs(self, step):
+    def _dump_logs(self, step: buildstep.BuildStep) -> None:
         for l in step.logs.values():
-            if l.stdout:
-                log.msg(f"{l.name} stdout:\n{l.stdout}")
-            if l.stderr:
-                log.msg(f"{l.name} stderr:\n{l.stderr}")
+            if l.stdout:  # type: ignore[attr-defined]
+                log.msg(f"{l.name} stdout:\n{l.stdout}")  # type: ignore[attr-defined]
+            if l.stderr:  # type: ignore[attr-defined]
+                log.msg(f"{l.name} stderr:\n{l.stderr}")  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def run_step(self):
+    def run_step(self) -> InlineCallbacksType[None]:
         """
         Run the step set up with L{setup_step}, and check the results.
 
@@ -960,13 +1060,16 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         """
         for step_i, step in enumerate(self._steps):
             self.conn = connection.FakeConnection(
-                self, "WorkerForBuilder(connection)", step, self._interrupt_remote_command_numbers
+                self,
+                "WorkerForBuilder(connection)",
+                step,
+                self._interrupt_remote_command_numbers,  # type: ignore[arg-type]
             )
             step.setupProgress()
-            result = yield step.startStep(self.conn)
+            result = yield step.startStep(self.conn)  # type: ignore[arg-type]
 
             # finish up the debounced updateSummary before checking
-            self.reactor.advance(1)
+            self.reactor.advance(1)  # type: ignore[attr-defined]
 
             exp_result, exp_state_string = self._exp_results.pop(0)
 
@@ -1002,7 +1105,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
                 step_build_result_summary = yield step.getBuildResultSummary()
                 self.assertEqual(exp_build_summary, step_build_result_summary)
 
-            properties = self.build.getProperties()
+            properties = self.build.getProperties()  # type: ignore[union-attr]
 
             for pn, (pv, ps) in self.exp_properties.items():
                 self.assertTrue(properties.hasProperty(pn), f"missing property '{pn}'")
@@ -1019,12 +1122,12 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
 
             if step_i in self._exp_logfiles:
                 for l, exp in self._exp_logfiles[step_i].items():
-                    got = step.logs[l].stdout
+                    got = step.logs[l].stdout  # type: ignore[attr-defined]
                     self._match_log(exp, got, 'stdout')
 
             if step_i in self._exp_logfiles_stderr:
                 for l, exp in self._exp_logfiles_stderr[step_i].items():
-                    got = step.logs[l].stderr
+                    got = step.logs[l].stderr  # type: ignore[attr-defined]
                     self._match_log(exp, got, 'stderr')
 
         if self._expected_commands:
@@ -1043,22 +1146,24 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         # XXX TODO: hidden
         # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
 
-    def _match_log(self, exp, got, log_type):
+    def _match_log(self, exp: bytes | re.Pattern[bytes], got: bytes, log_type: str) -> None:
         if hasattr(exp, 'match'):
             if exp.match(got) is None:
-                log.msg(f"Unexpected {log_type} log output:\n{exp}")
-                log.msg(f"Expected {log_type} to match:\n{got}")
+                log.msg(f"Unexpected {log_type} log output:\n{exp!r}")
+                log.msg(f"Expected {log_type} to match:\n{got!r}")
                 raise AssertionError(f"Unexpected {log_type} log output; see logs")
         else:
             if got != exp:
-                log.msg(f"Unexpected {log_type} log output:\n{exp}")
-                log.msg(f"Expected {log_type} log output:\n{got}")
+                log.msg(f"Unexpected {log_type} log output:\n{exp!r}")
+                log.msg(f"Expected {log_type} log output:\n{got!r}")
                 raise AssertionError(f"Unexpected {log_type} log output; see logs")
 
     # callbacks from the running step
 
     @defer.inlineCallbacks
-    def _connection_remote_start_command(self, command, conn, builder_name):
+    def _connection_remote_start_command(
+        self, command: RemoteCommand, conn: FakeConnection, builder_name: str
+    ) -> InlineCallbacksType[None]:
         self.assertEqual(conn, self.conn)
 
         exp = None
@@ -1093,19 +1198,19 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
 
     def _patched_create_process(
         self,
-        reactor,
-        command,
-        workdir=None,
-        env=None,
-        collect_stdout=True,
-        collect_stderr=True,
-        stderr_is_error=False,
-        io_timeout=300,
-        runtime_timeout=3600,
-        sigterm_timeout=5,
-        initial_stdin=None,
-        use_pty=False,
-    ):
+        reactor: Any,
+        command: list[str],
+        workdir: str | None = None,
+        env: dict[str, str] | None = None,
+        collect_stdout: bool | Callable[[bytes], None] = True,
+        collect_stderr: bool | Callable[[bytes], None] = True,
+        stderr_is_error: bool = False,
+        io_timeout: int = 300,
+        runtime_timeout: int = 3600,
+        sigterm_timeout: int = 5,
+        initial_stdin: str | None = None,
+        use_pty: bool = False,
+    ) -> FakeRunProcess:
         _check_env_is_expected(self, self._master_run_process_expect_env, env)
 
         exp = None
@@ -1162,17 +1267,17 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
 
         return FakeRunProcess(start_retval, result_rc)
 
-    def change_worker_system(self, system):
+    def change_worker_system(self, system: str) -> None:
         assert system != 'win32'
         self.worker.worker_system = system
         if system == 'nt':
-            self.build.path_module = namedModule('ntpath')
-            self.build.path_cls = PureWindowsPath
+            self.build.path_module = namedModule('ntpath')  # type: ignore[union-attr]
+            self.build.path_cls = PureWindowsPath  # type: ignore[union-attr]
             self.worker.worker_basedir = '\\wrk'
         else:
-            self.build.path_module = namedModule('posixpath')
-            self.build.path_cls = PurePosixPath
+            self.build.path_module = namedModule('posixpath')  # type: ignore[union-attr]
+            self.build.path_cls = PurePosixPath  # type: ignore[union-attr]
             self.worker.worker_basedir = '/wrk'
 
-    def interrupt_nth_remote_command(self, number):
+    def interrupt_nth_remote_command(self, number: int) -> None:
         self._interrupt_remote_command_numbers.append(number)

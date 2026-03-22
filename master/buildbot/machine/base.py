@@ -13,32 +13,41 @@
 #
 # Portions Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.util import service
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+    from buildbot.worker.base import AbstractWorker
+
 
 @implementer(interfaces.IMachine)
 class Machine(service.BuildbotService):
-    def checkConfig(self, name, **kwargs):
+    def checkConfig(self, name: str, **kwargs: Any) -> None:  # type: ignore[override]
         super().checkConfig(**kwargs)
         self.name = name
-        self.workers = []
+        self.workers: list[AbstractWorker] = []
 
     @defer.inlineCallbacks
-    def reconfigService(self, name, **kwargs):
+    def reconfigService(self, name: str, **kwargs: Any) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield super().reconfigService(**kwargs)
         assert self.name == name
 
-    def registerWorker(self, worker):
+    def registerWorker(self, worker: AbstractWorker) -> None:
         assert worker.machine_name == self.name
         self.workers.append(worker)
 
-    def unregisterWorker(self, worker):
+    def unregisterWorker(self, worker: AbstractWorker) -> None:
         assert worker in self.workers
         self.workers.remove(worker)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Machine '{self.name}' at {id(self)}>"

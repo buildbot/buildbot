@@ -13,12 +13,30 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
+
+if TYPE_CHECKING:
+    from buildbot.locks import BaseLock
+    from buildbot.process.build import Build
+    from buildbot.process.builder import Builder
+    from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 @defer.inlineCallbacks
-def get_real_locks_from_accesses_raw(locks, props, builder, workerforbuilder, config_version):
-    workername = workerforbuilder.worker.workername
+def get_real_locks_from_accesses_raw(
+    locks: Any,
+    props: Any,
+    builder: Builder,
+    workerforbuilder: AbstractWorkerForBuilder,
+    config_version: int | None,
+) -> InlineCallbacksType[list[tuple[BaseLock, Any]]]:
+    workername = workerforbuilder.worker.workername  # type: ignore[union-attr]
 
     if props is not None:
         locks = yield props.render(locks)
@@ -26,11 +44,17 @@ def get_real_locks_from_accesses_raw(locks, props, builder, workerforbuilder, co
     if not locks:
         return []
 
-    locks = yield builder.botmaster.getLockFromLockAccesses(locks, config_version)
+    locks = yield builder.botmaster.getLockFromLockAccesses(locks, config_version)  # type: ignore[union-attr, arg-type]
     return [(l.getLockForWorker(workername), a) for l, a in locks]
 
 
-def get_real_locks_from_accesses(locks, build):
+def get_real_locks_from_accesses(
+    locks: Any, build: Build
+) -> defer.Deferred[list[tuple[BaseLock, Any]]]:
     return get_real_locks_from_accesses_raw(
-        locks, build, build.builder, build.workerforbuilder, build.config_version
+        locks,
+        build,
+        build.builder,
+        build.workerforbuilder,  # type: ignore[arg-type]
+        build.config_version,
     )

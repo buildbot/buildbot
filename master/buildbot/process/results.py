@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import overload
+
 ALL_RESULTS = list(range(7))
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = ALL_RESULTS
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
@@ -27,7 +31,7 @@ MultipleResults = [
 ]
 
 
-def statusToString(status, count=1):
+def statusToString(status: int | None, count: int = 1) -> str:
     if status is None:
         return "not finished"
     if status < 0 or status >= len(Results):
@@ -37,7 +41,19 @@ def statusToString(status, count=1):
     return Results[status]
 
 
-def worst_status(a, b):
+@overload
+def worst_status(a: int, b: int | None) -> int: ...
+
+
+@overload
+def worst_status(a: int | None, b: int) -> int: ...
+
+
+@overload
+def worst_status(a: int | None, b: int | None) -> int | None: ...
+
+
+def worst_status(a: int | None, b: int | None) -> int | None:
     # SKIPPED > SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY > CANCELLED
     # CANCELLED needs to be considered the worst.
     for s in (CANCELLED, RETRY, EXCEPTION, FAILURE, WARNINGS, SUCCESS, SKIPPED):
@@ -46,7 +62,9 @@ def worst_status(a, b):
     return None
 
 
-def computeResultAndTermination(obj, result, previousResult):
+def computeResultAndTermination(
+    obj: ResultComputingConfigMixin, result: int, previousResult: int | None
+) -> tuple[int | None, bool]:
     possible_overall_result = result
     terminate = False
     if result == FAILURE:
@@ -68,8 +86,8 @@ def computeResultAndTermination(obj, result, previousResult):
     elif result in (EXCEPTION, RETRY, CANCELLED):
         terminate = True
 
-    result = worst_status(previousResult, possible_overall_result)
-    return result, terminate
+    final_result = worst_status(previousResult, possible_overall_result)
+    return final_result, terminate
 
 
 class ResultComputingConfigMixin:

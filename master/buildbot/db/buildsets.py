@@ -22,6 +22,7 @@ import json
 from dataclasses import dataclass
 from dataclasses import field
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.internet import defer
@@ -34,6 +35,8 @@ from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
     import datetime
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class BsProps(dict):
@@ -60,7 +63,7 @@ class BuildSetModel:
     sourcestamps: list[int] = field(default_factory=list)
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -81,28 +84,28 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def addBuildset(
         self,
-        sourcestamps,
-        reason,
-        properties,
-        builderids,
-        waited_for,
-        external_idstring=None,
-        submitted_at=None,
-        rebuilt_buildid=None,
-        parent_buildid=None,
-        parent_relationship=None,
-        priority=0,
-    ):
+        sourcestamps: list[Any],
+        reason: str,
+        properties: dict[str, Any],
+        builderids: list[int],
+        waited_for: bool,
+        external_idstring: str | None = None,
+        submitted_at: datetime.datetime | None = None,
+        rebuilt_buildid: int | None = None,
+        parent_buildid: int | None = None,
+        parent_relationship: str | None = None,
+        priority: int = 0,
+    ) -> InlineCallbacksType[tuple[int, dict[int, int]]]:
         # We've gotten this wrong a couple times.
         assert isinstance(waited_for, bool), f'waited_for should be boolean: {waited_for!r}'
 
         if submitted_at is not None:
-            submitted_at = datetime2epoch(submitted_at)
+            submitted_at_epoch = datetime2epoch(submitted_at)
         else:
-            submitted_at = int(self.master.reactor.seconds())
+            submitted_at_epoch = int(self.master.reactor.seconds())
 
         # convert to sourcestamp IDs first, as necessary
-        def toSsid(sourcestamp):
+        def toSsid(sourcestamp: int | dict[str, Any]) -> defer.Deferred[int]:
             if isinstance(sourcestamp, int):
                 return defer.succeed(sourcestamp)
             ssConnector = self.master.db.sourcestamps
@@ -113,7 +116,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         )
         sourcestampids = [r[1] for r in sourcestamps]
 
-        def thd(conn):
+        def thd(conn: sa.engine.Connection) -> tuple[int, dict[int, int]]:
             buildsets_tbl = self.db.model.buildsets
 
             self.checkLength(buildsets_tbl.c.reason, reason)
@@ -125,7 +128,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             r = conn.execute(
                 buildsets_tbl.insert(),
                 {
-                    "submitted_at": submitted_at,
+                    "submitted_at": submitted_at_epoch,
                     "reason": reason,
                     "rebuilt_buildid": rebuilt_buildid,
                     "complete": 0,
@@ -161,7 +164,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # sqlalchemy and the Python DBAPI do not provide a way to recover
             # inserted IDs from a multi-row insert, so this is done one row at
             # a time.
-            brids = {}
+            brids: dict[int, int] = {}
             br_tbl = self.db.model.buildrequests
             ins = br_tbl.insert()
             for builderid in builderids:
@@ -176,7 +179,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                         "claimed_by_incarnation": None,
                         "complete": 0,
                         "results": -1,
-                        "submitted_at": submitted_at,
+                        "submitted_at": submitted_at_epoch,
                         "complete_at": None,
                         "waited_for": 1 if waited_for else 0,
                     },
@@ -191,24 +194,29 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         bsid, brids = yield self.db.pool.do(thd)
 
         # Seed the buildset property cache.
-        self.getBuildsetProperties.cache.put(bsid, BsProps(properties))
+        self.getBuildsetProperties.cache.put(bsid, BsProps(properties))  # type: ignore[attr-defined]
 
         return (bsid, brids)
 
     @defer.inlineCallbacks
-    def completeBuildset(self, bsid, results, complete_at=None):
+    def completeBuildset(
+        self,
+        bsid: int,
+        results: int,
+        complete_at: datetime.datetime | None = None,
+    ) -> InlineCallbacksType[None]:
         if complete_at is not None:
-            complete_at = datetime2epoch(complete_at)
+            complete_at_epoch = datetime2epoch(complete_at)
         else:
-            complete_at = int(self.master.reactor.seconds())
+            complete_at_epoch = int(self.master.reactor.seconds())
 
-        def thd(conn):
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.buildsets
 
             q = tbl.update().where(
                 (tbl.c.id == bsid) & ((tbl.c.complete == NULL) | (tbl.c.complete != 1))
             )
-            res = conn.execute(q.values(complete=1, results=results, complete_at=complete_at))
+            res = conn.execute(q.values(complete=1, results=results, complete_at=complete_at_epoch))
             conn.commit()
 
             if res.rowcount != 1:
@@ -217,8 +225,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do(thd)
 
-    def getBuildset(self, bsid) -> defer.Deferred[BuildSetModel | None]:
-        def thd(conn) -> BuildSetModel | None:
+    def getBuildset(self, bsid: int) -> defer.Deferred[BuildSetModel | None]:
+        def thd(conn: sa.engine.Connection) -> BuildSetModel | None:
             bs_tbl = self.db.model.buildsets
             q = bs_tbl.select().where(bs_tbl.c.id == bsid)
             res = conn.execute(q)
@@ -230,8 +238,12 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getBuildsets(self, complete=None, resultSpec=None):
-        def thd(conn) -> list[BuildSetModel]:
+    def getBuildsets(
+        self,
+        complete: bool | None = None,
+        resultSpec: Any = None,
+    ) -> InlineCallbacksType[list[BuildSetModel]]:
+        def thd(conn: sa.engine.Connection) -> list[BuildSetModel]:
             bs_tbl = self.db.model.buildsets
             q = bs_tbl.select()
             if complete is not None:
@@ -254,11 +266,10 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         repository: str | None = None,
         complete: bool | None = None,
     ) -> defer.Deferred[list[BuildSetModel]]:
-        def thd(conn) -> list[BuildSetModel]:
+        def thd(conn: sa.engine.Connection) -> list[BuildSetModel]:
             bs_tbl = self.db.model.buildsets
             ss_tbl = self.db.model.sourcestamps
-            j = self.db.model.buildsets
-            j = j.join(self.db.model.buildset_sourcestamps)
+            j = self.db.model.buildsets.join(self.db.model.buildset_sourcestamps)
             j = j.join(self.db.model.sourcestamps)
             q = sa.select(bs_tbl).select_from(j).distinct()
             q = q.order_by(sa.desc(bs_tbl.c.submitted_at))
@@ -279,8 +290,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @base.cached("BuildsetProperties")
-    def getBuildsetProperties(self, bsid) -> defer.Deferred[BsProps]:
-        def thd(conn) -> BsProps:
+    def getBuildsetProperties(self, bsid: int) -> defer.Deferred[BsProps]:
+        def thd(conn: sa.engine.Connection) -> BsProps:
             bsp_tbl = self.db.model.buildset_properties
             q = sa.select(
                 bsp_tbl.c.property_name,
@@ -297,7 +308,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _thd_model_from_row(self, conn, row):
+    def _thd_model_from_row(self, conn: sa.engine.Connection, row: Any) -> BuildSetModel:
         # get sourcestamps
         tbl = self.db.model.buildset_sourcestamps
         sourcestamps = [

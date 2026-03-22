@@ -26,11 +26,13 @@ from buildbot.data.resultspec import ResultSpec
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from buildbot.db.builds import BuildModel
     from buildbot.util.twisted import InlineCallbacksType
 
 
-def _db2data(model: BuildModel):
+def _db2data(model: BuildModel) -> dict[str, Any]:
     return {
         'buildid': model.id,
         'number': model.number,
@@ -63,7 +65,9 @@ builds_field_map = {
 }
 
 
-def _generate_filtered_properties(props, filters):
+def _generate_filtered_properties(
+    props: dict[str, Any] | None, filters: Sequence[Any]
+) -> dict[str, Any] | None:
     """
     This method returns Build's properties according to property filters.
 
@@ -90,7 +94,9 @@ class BuildEndpoint(base.BuildNestingMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         if 'buildid' in kwargs:
             dbdict = yield self.master.db.builds.getBuild(kwargs['buildid'])
         else:
@@ -116,7 +122,7 @@ class BuildEndpoint(base.BuildNestingMixin, base.Endpoint):
         return data
 
     @defer.inlineCallbacks
-    def actionStop(self, args, kwargs):
+    def actionStop(self, args: dict[str, Any], kwargs: dict[str, Any]) -> InlineCallbacksType[None]:
         buildid = kwargs.get('buildid')
         if buildid is None:
             bldr = kwargs['builderid']
@@ -129,7 +135,9 @@ class BuildEndpoint(base.BuildNestingMixin, base.Endpoint):
         )
 
     @defer.inlineCallbacks
-    def actionRebuild(self, args, kwargs):
+    def actionRebuild(
+        self, args: dict[str, Any], kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[Any]:
         # we use the self.get and not self.data.get to be able to support all
         # the pathPatterns of this endpoint
         build = yield self.get(ResultSpec(), kwargs)
@@ -163,7 +171,9 @@ class BuildsEndpoint(base.BuildNestingMixin, base.Endpoint):
     rootLinkName = 'builds'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]]]:
         changeid = kwargs.get('changeid')
         if changeid is not None:
             builds = yield self.master.db.builds.getBuildsForChange(changeid)
@@ -231,7 +241,7 @@ class Build(base.ResourceType):
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
-    def generateEvent(self, _id, event):
+    def generateEvent(self, _id: int, event: str) -> InlineCallbacksType[None]:
         # get the build and munge the result for the notification
         build = yield self.master.data.get(('builds', str(_id)))
         self.produceEvent(build, event)
@@ -241,6 +251,7 @@ class Build(base.ResourceType):
     def addBuild(
         self, builderid: int, buildrequestid: int, workerid: int
     ) -> InlineCallbacksType[tuple[int, int]]:
+        assert self.master.masterid is not None
         res = yield self.master.db.builds.addBuild(
             builderid=builderid,
             buildrequestid=buildrequestid,

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.python import deprecate
@@ -44,7 +45,7 @@ class TestResultSetModel:
     complete: bool = False
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -72,10 +73,16 @@ class TestResultSetAlreadyCompleted(Exception):
 
 class TestResultSetsConnectorComponent(base.DBConnectorComponent):
     def addTestResultSet(
-        self, builderid, buildid, stepid, description, category, value_unit
+        self,
+        builderid: int,
+        buildid: int,
+        stepid: int,
+        description: str | None,
+        category: str,
+        value_unit: str,
     ) -> defer.Deferred[int]:
         # Returns the id of the new result set
-        def thd(conn) -> int:
+        def thd(conn: sa.engine.Connection) -> int:
             sets_table = self.db.model.test_result_sets
 
             insert_values = {
@@ -96,7 +103,7 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getTestResultSet(self, test_result_setid: int) -> defer.Deferred[TestResultSetModel | None]:
-        def thd(conn) -> TestResultSetModel | None:
+        def thd(conn: sa.engine.Connection) -> TestResultSetModel | None:
             sets_table = self.db.model.test_result_sets
             q = sets_table.select().where(sets_table.c.id == test_result_setid)
             res = conn.execute(q)
@@ -113,9 +120,9 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
         buildid: int | None = None,
         stepid: int | None = None,
         complete: bool | None = None,
-        result_spec=None,
+        result_spec: Any = None,
     ) -> defer.Deferred[list[TestResultSetModel]]:
-        def thd(conn) -> list[TestResultSetModel]:
+        def thd(conn: sa.engine.Connection) -> list[TestResultSetModel]:
             sets_table = self.db.model.test_result_sets
             q = sets_table.select()
             if builderid is not None:
@@ -137,14 +144,13 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
     async def get_test_result_sets_for_commits(
         self, *, commit_ids: list[int]
     ) -> list[TestResultSetModel]:
-        def thd(conn) -> list[TestResultSetModel]:
+        def thd(conn: sa.engine.Connection) -> list[TestResultSetModel]:
             # FIXME: the code below currently is not sufficiently robust because it relies on
             # revisions being sufficiently random so that they do not repeat across whole Buildbot
             # database. At least the following would be needed to resolve the ambiguities
             #  - attach sourcestamp to a codebase through a codebase ID
             #  - attach sourcestamp to a commit through a commit ID
-            j = self.db.model.codebase_commits
-            j = j.join(
+            j = self.db.model.codebase_commits.join(
                 self.db.model.sourcestamps,
                 self.db.model.codebase_commits.c.revision == self.db.model.sourcestamps.c.revision,
             )
@@ -166,12 +172,15 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
         return await self.db.pool.do(thd)
 
     def completeTestResultSet(
-        self, test_result_setid, tests_passed=None, tests_failed=None
+        self,
+        test_result_setid: int,
+        tests_passed: int | None = None,
+        tests_failed: int | None = None,
     ) -> defer.Deferred[None]:
-        def thd(conn) -> None:
+        def thd(conn: sa.engine.Connection) -> None:
             sets_table = self.db.model.test_result_sets
 
-            values = {'complete': 1}
+            values: dict[str, Any] = {'complete': 1}
             if tests_passed is not None:
                 values['tests_passed'] = tests_passed
             if tests_failed is not None:
@@ -189,7 +198,7 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _model_from_row(self, row):
+    def _model_from_row(self, row: Any) -> TestResultSetModel:
         return TestResultSetModel(
             id=row.id,
             builderid=row.builderid,

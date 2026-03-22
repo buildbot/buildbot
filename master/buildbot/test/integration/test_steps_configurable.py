@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import tempfile
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -29,6 +32,9 @@ from buildbot.steps.source.git import Git
 from buildbot.test.util.git_repository import TestGitRepository
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.worker import Worker
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 buildbot_ci_yml = """\
 language: python
@@ -77,11 +83,11 @@ class BuildbotTestCiTest(RunMasterBase):
     timeout = 300
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield super().setUp()
         try:
             self.repo = TestGitRepository(
-                repository_path=tempfile.mkdtemp(
+                repository_path=tempfile.mkdtemp(  # type: ignore[arg-type]
                     prefix="TestRepository_",
                     dir=os.getcwd(),
                 )
@@ -91,13 +97,13 @@ class BuildbotTestCiTest(RunMasterBase):
 
         self.prepare_repository()
 
-    def prepare_repository(self):
+    def prepare_repository(self) -> None:
         self.repo.create_file_text('.bbtravis.yml', buildbot_ci_yml)
         self.repo.exec_git(['add', '.bbtravis.yml'])
-        self.repo.commit(message='Initial commit', files=['.bbtravis.yml'])
+        self.repo.commit(message='Initial commit', files=['.bbtravis.yml'])  # type: ignore[list-item]
 
     @defer.inlineCallbacks
-    def setup_config(self):
+    def setup_config(self) -> InlineCallbacksType[None]:
         c = {
             'workers': [Worker("local1", "p")],
             'services': [
@@ -122,7 +128,7 @@ class BuildbotTestCiTest(RunMasterBase):
         f.addStep(Git(repourl=repository, codebase=spawner_name, mode='incremental'))
         f.addStep(BuildbotCiSetupSteps())
 
-        c['builders'].append(
+        c['builders'].append(  # type: ignore[attr-defined]
             BuilderConfig(
                 name=job_name,
                 workernames=['local1'],
@@ -132,7 +138,7 @@ class BuildbotTestCiTest(RunMasterBase):
             )
         )
 
-        c['schedulers'].append(
+        c['schedulers'].append(  # type: ignore[attr-defined]
             schedulers.Triggerable(name=job_name, builderNames=[job_name], codebases=codebases)
         )
 
@@ -140,7 +146,7 @@ class BuildbotTestCiTest(RunMasterBase):
         f = factory.BuildFactory()
         f.addStep(Git(repourl=repository, codebase=spawner_name, mode='incremental'))
         f.addStep(BuildbotTestCiTrigger(scheduler=job_name))
-        c['builders'].append(
+        c['builders'].append(  # type: ignore[attr-defined]
             BuilderConfig(
                 name=spawner_name,
                 workernames=['local1'],
@@ -150,7 +156,7 @@ class BuildbotTestCiTest(RunMasterBase):
             )
         )
 
-        c['schedulers'].append(
+        c['schedulers'].append(  # type: ignore[attr-defined]
             schedulers.AnyBranchScheduler(
                 name=spawner_name, builderNames=[spawner_name], codebases=codebases
             )
@@ -161,7 +167,7 @@ class BuildbotTestCiTest(RunMasterBase):
         f.addStep(Git(repourl=repository, codebase=spawner_name, mode='incremental'))
         f.addStep(BuildbotTestCiTrigger(scheduler=job_name))
 
-        c['builders'].append(
+        c['builders'].append(  # type: ignore[attr-defined]
             BuilderConfig(
                 name=try_name,
                 workernames=['local1'],
@@ -174,7 +180,7 @@ class BuildbotTestCiTest(RunMasterBase):
         yield self.setup_master(c)
 
     @defer.inlineCallbacks
-    def test_buildbot_ci(self):
+    def test_buildbot_ci(self) -> InlineCallbacksType[None]:
         yield self.setup_config()
         change = dict(
             branch="main",

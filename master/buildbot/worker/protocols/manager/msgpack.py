@@ -103,7 +103,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     def get_dispatcher(self) -> Dispatcher:
         # This is an instance of class msgpack.Dispatcher set in Dispatcher.__init__().
         # self.factory is set on the protocol instance when creating it in Twisted internals
-        return self.factory.buildbot_dispatcher
+        return self.factory.buildbot_dispatcher  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
     def onOpen(self) -> InlineCallbacksType[None]:
@@ -384,7 +384,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
         return res1
 
     @defer.inlineCallbacks
-    def onConnect(self, request: ConnectionRequest) -> InlineCallbacksType[None]:
+    def onConnect(self, request: ConnectionRequest) -> InlineCallbacksType[None]:  # type: ignore[override]
         if self.debug:
             self._logger.info(f"Client connecting: {request.peer}")
 
@@ -453,12 +453,12 @@ class Dispatcher(BaseDispatcher):
             port = self.DUMMY_PORT
 
         serverFactory = WebSocketServerFactory(f"ws://0.0.0.0:{port}")
-        serverFactory.buildbot_dispatcher = self
+        serverFactory.buildbot_dispatcher = self  # type: ignore[attr-defined]
         serverFactory.protocol = BuildbotWebSocketServerProtocol
         return serverFactory
 
     @async_to_deferred
-    async def startService(self) -> None:
+    async def startService(self) -> None:  # type: ignore[override]
         await super().startService()
 
         if self._zero_port:

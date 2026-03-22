@@ -13,18 +13,26 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from io import BytesIO
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest.mock import Mock
 
 from twisted.internet import defer
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
+
+if TYPE_CHECKING:
+    from twisted.python.failure import Failure
+    from twisted.web.resource import IResource
 from buildbot.util.twisted import async_to_deferred
 
 
 @async_to_deferred
-async def fakeMasterForHooks(testcase) -> fakemaster.FakeMaster:
+async def fakeMasterForHooks(testcase: Any) -> fakemaster.FakeMaster:
     # testcase must derive from TestReactorMixin and setup_test_reactor()
     # must be called before calling this function.
 
@@ -42,10 +50,10 @@ class FakeRequest(Mock):
 
     written = b''
     finished = False
-    redirected_to = None
-    failure = None
+    redirected_to: bytes | None = None
+    failure: Failure | None = None
 
-    def __init__(self, args=None, content=b''):
+    def __init__(self, args: dict[bytes, list[bytes]] | None = None, content: bytes = b'') -> None:
         super().__init__()
 
         if args is None:
@@ -56,34 +64,34 @@ class FakeRequest(Mock):
         self.site = Mock()
         self.site.buildbot_service = Mock()
         self.uri = b'/'
-        self.prepath = []
+        self.prepath: list[bytes] = []
         self.method = b'GET'
-        self.received_headers = {}
+        self.received_headers: dict[str, str] = {}
 
-        self.deferred = defer.Deferred()
+        self.deferred: defer.Deferred[None] = defer.Deferred()
 
-    def getHeader(self, key):
+    def getHeader(self, key: str) -> str | None:
         return self.received_headers.get(key)
 
-    def write(self, data):
+    def write(self, data: bytes) -> None:
         self.written = self.written + data
 
-    def redirect(self, url):
+    def redirect(self, url: bytes) -> None:
         self.redirected_to = url
 
-    def finish(self):
+    def finish(self) -> None:
         self.finished = True
         self.deferred.callback(None)
 
-    def processingFailed(self, f):
+    def processingFailed(self, f: Failure) -> None:
         self.deferred.errback(f)
 
     # work around http://code.google.com/p/mock/issues/detail?id=105
-    def _get_child_mock(self, **kw):
+    def _get_child_mock(self, **kw: Any) -> Mock:
         return Mock(**kw)
 
     # cribed from twisted.web.test._util._render
-    def test_render(self, resource):
+    def test_render(self, resource: IResource) -> defer.Deferred[None]:
         for arg in self.args:
             if not isinstance(arg, bytes):
                 raise ValueError(f"self.args: {self.args!r},  contains values which are not bytes")

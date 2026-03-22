@@ -13,73 +13,77 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import Any
+
 
 class Domain:
-    def __init__(self, name, conn, libvirt_id):
+    def __init__(self, name: str, conn: Any, libvirt_id: int) -> None:
         self.conn = conn
         self._name = name
         self.running = False
         self.libvirt_id = libvirt_id
-        self.metadata = {}
+        self.metadata: dict[str, tuple[Any, ...]] = {}
 
-    def ID(self):
+    def ID(self) -> int:
         return self.libvirt_id
 
-    def name(self):
+    def name(self) -> str:
         return self._name
 
-    def create(self):
+    def create(self) -> None:
         self.running = True
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         self.running = False
 
-    def destroy(self):
+    def destroy(self) -> None:
         self.running = False
         del self.conn[self._name]
 
-    def setMetadata(self, type, metadata, key, uri, flags):
+    def setMetadata(self, type: Any, metadata: str, key: str, uri: str, flags: Any) -> None:
         self.metadata[key] = (type, uri, metadata, flags)
 
 
 class Connection:
-    def __init__(self, uri):
+    def __init__(self, uri: str) -> None:
         self.uri = uri
-        self.domains = {}
+        self.domains: dict[str, Domain] = {}
         self._next_libvirt_id = 1
 
-    def createXML(self, xml, flags):
+    def createXML(self, xml: str, flags: Any) -> Domain:
         # FIXME: This should really parse the name out of the xml, i guess
         d = self.fake_add("instance", self._next_libvirt_id)
         self._next_libvirt_id += 1
         d.running = True
         return d
 
-    def listDomainsID(self):
+    def listDomainsID(self) -> list[str]:
         return list(self.domains)
 
-    def lookupByName(self, name):
+    def lookupByName(self, name: str) -> Domain | None:
         return self.domains.get(name, None)
 
-    def lookupByID(self, ID):
+    def lookupByID(self, ID: int) -> Domain | None:
         for d in self.domains.values():
             if d.ID == ID:
                 return d
         return None
 
-    def fake_add(self, name, libvirt_id):
+    def fake_add(self, name: str, libvirt_id: int) -> Domain:
         d = Domain(name, self, libvirt_id)
         self.domains[name] = d
         return d
 
-    def fake_add_domain(self, name, d):
+    def fake_add_domain(self, name: str, d: Domain) -> None:
         self.domains[name] = d
 
-    def registerCloseCallback(self, c, c2):
+    def registerCloseCallback(self, c: Any, c2: Any) -> None:
         pass
 
 
-def open(uri):
+def open(uri: str) -> Connection:
     raise NotImplementedError('this must be patched in tests')
 
 

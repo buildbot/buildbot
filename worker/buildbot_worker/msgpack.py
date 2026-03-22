@@ -205,6 +205,7 @@ class ConnectionLostError(Exception):
 
 class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     debug = True
+    factory: BuildbotWebSocketClientFactory
 
     MessageType = MutableMapping[str, Any]
 
@@ -309,7 +310,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         try:
             self.contains_msg_key(msg, ('command_id', 'command_name', 'args'))
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.start_command(
+            yield self.factory.buildbot_bot.start_command(  # type: ignore[attr-defined]
                 self, msg['command_id'], msg['command_name'], msg['args']
             )
             result = None
@@ -323,7 +324,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
     def call_shutdown(self, msg: MessageType) -> InlineCallbacksType[None]:
         is_exception = False
         try:
-            yield self.factory.buildbot_bot.remote_shutdown()
+            yield self.factory.buildbot_bot.remote_shutdown()  # type: ignore[func-returns-value]
             result = None
         except Exception as e:
             is_exception = True
@@ -337,7 +338,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
         try:
             self.contains_msg_key(msg, ('command_id', 'why'))
             # send an instance, on which get_message_result will be called
-            yield self.factory.buildbot_bot.interrupt_command(msg['command_id'], msg['why'])
+            yield self.factory.buildbot_bot.interrupt_command(msg['command_id'], msg['why'])  # type: ignore[attr-defined]
             result = None
         except Exception as e:
             is_exception = True

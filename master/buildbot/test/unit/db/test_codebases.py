@@ -50,11 +50,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
     @async_to_deferred
     async def test_find_codebase_id_new(self) -> None:
         id = await self.master.db.codebases.find_codebase_id(projectid=7, name='codebase_not_exist')
-        codebase = await self.master.db.codebases.get_codebase(id)
+        codebase = await self.master.db.codebases.get_codebase(id)  # type: ignore[arg-type]
         self.assertEqual(
             codebase,
             codebases.CodebaseModel(
-                id=id, projectid=7, name='codebase_not_exist', slug='codebase_not_exist'
+                id=id,  # type: ignore[arg-type]
+                projectid=7,
+                name='codebase_not_exist',
+                slug='codebase_not_exist',
             ),
         )
 

@@ -19,9 +19,12 @@ A latent worker that uses EC2 to instantiate the workers on demand.
 Tested with Python boto 1.5c
 """
 
+from __future__ import annotations
+
 import os
 import re
 import time
+from typing import Any
 
 from twisted.internet import defer
 from twisted.internet import threads
@@ -54,34 +57,34 @@ class EC2LatentWorker(AbstractLatentWorker):
 
     def __init__(
         self,
-        name,
-        password,
-        instance_type,
-        ami=None,
-        valid_ami_owners=None,
-        valid_ami_location_regex=None,
-        elastic_ip=None,
-        identifier=None,
-        secret_identifier=None,
-        aws_id_file_path=None,
-        user_data=None,
-        region=None,
-        keypair_name=None,
-        security_name=None,
-        spot_instance=False,
-        max_spot_price=1.6,
-        volumes=None,
-        placement=None,
-        price_multiplier=1.2,
-        tags=None,
-        product_description='Linux/UNIX',
-        subnet_id=None,
-        security_group_ids=None,
-        instance_profile_name=None,
-        block_device_map=None,
-        session=None,
-        **kwargs,
-    ):
+        name: str,
+        password: str,
+        instance_type: str,
+        ami: str | None = None,
+        valid_ami_owners: int | list[int] | tuple[int, ...] | None = None,
+        valid_ami_location_regex: str | None = None,
+        elastic_ip: str | None = None,
+        identifier: str | None = None,
+        secret_identifier: str | None = None,
+        aws_id_file_path: str | None = None,
+        user_data: str | None = None,
+        region: str | None = None,
+        keypair_name: str | None = None,
+        security_name: str | None = None,
+        spot_instance: bool = False,
+        max_spot_price: float | None = 1.6,
+        volumes: list[Any] | None = None,
+        placement: str | None = None,
+        price_multiplier: float | None = 1.2,
+        tags: dict[str, str] | None = None,
+        product_description: str = 'Linux/UNIX',
+        subnet_id: str | list[str] | None = None,
+        security_group_ids: list[str] | None = None,
+        instance_profile_name: str | None = None,
+        block_device_map: list[dict[str, Any]] | None = None,
+        session: Any = None,
+        **kwargs: Any,
+    ) -> None:
         if not boto3:
             config.error("The python module 'boto3' is needed to use a EC2LatentWorker")
 
@@ -126,7 +129,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             if not isinstance(valid_ami_location_regex, str):
                 raise ValueError('valid_ami_location_regex should be a string')
             # pre-compile the regex
-            valid_ami_location_regex = re.compile(valid_ami_location_regex)
+            valid_ami_location_regex = re.compile(valid_ami_location_regex)  # type: ignore[assignment]
         if spot_instance and price_multiplier is None and max_spot_price is None:
             raise ValueError(
                 'You must provide either one, or both, of price_multiplier or max_spot_price'
@@ -146,7 +149,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.product_description = product_description
 
         if None not in [placement, region]:
-            self.placement = f'{region}{placement}'
+            self.placement: str | None = f'{region}{placement}'
         else:
             self.placement = None
         if identifier is None:
@@ -284,7 +287,9 @@ class EC2LatentWorker(AbstractLatentWorker):
             self.create_block_device_mapping(block_device_map) if block_device_map else None
         )
 
-    def create_block_device_mapping(self, mapping_definitions):
+    def create_block_device_mapping(
+        self, mapping_definitions: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         if not isinstance(mapping_definitions, list):
             config.error("EC2LatentWorker: 'block_device_map' must be a list")
 
@@ -294,7 +299,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 ebs.setdefault('DeleteOnTermination', True)
         return mapping_definitions
 
-    def get_image(self):
+    def get_image(self) -> Any:
         # pylint: disable=too-many-nested-blocks
 
         if self.image is not None:
@@ -305,7 +310,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         if self.valid_ami_location_regex:
             level = 0
             options = []
-            get_match = self.valid_ami_location_regex.match
+            get_match = self.valid_ami_location_regex.match  # type: ignore[attr-defined]
             for image in images:
                 # Image must be available
                 if image.state != 'available':
@@ -334,7 +339,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 log.msg(f'sorting images at level {level}')
                 options = [candidate[level:] for candidate in options]
         else:
-            options = [(image.image_location, image.id, image) for image in images]
+            options = [(image.image_location, image.id, image) for image in images]  # type: ignore[misc]
         options.sort()
         images = [f'{candidate[-1].id} ({candidate[-1].image_location})' for candidate in options]
         log.msg(f"sorted images (last is chosen): {', '.join(images)}")
@@ -342,26 +347,26 @@ class EC2LatentWorker(AbstractLatentWorker):
             raise ValueError('no available images match constraints')
         return options[-1][-1]
 
-    def _dns(self):
+    def _dns(self) -> str | None:
         if self.instance is None:
             return None
         return self.instance.public_dns_name
 
     dns = property(_dns)
 
-    def start_instance(self, build):
+    def start_instance(self, build: Any) -> defer.Deferred[Any]:
         if self.instance is not None:
             raise ValueError('instance active')
         if self.spot_instance:
             return threads.deferToThread(self._request_spot_instance)
         return threads.deferToThread(self._start_instance)
 
-    def _remove_none_opts(self, *args, **opts):
+    def _remove_none_opts(self, *args: Any, **opts: Any) -> dict[str, Any]:
         if args:
             opts = args[0]
         return dict((k, v) for k, v in opts.items() if v is not None)
 
-    def _start_instance(self):
+    def _start_instance(self) -> list[str] | None:
         image = self.get_image()
         launch_opts = {
             "ImageId": image.id,
@@ -385,14 +390,14 @@ class EC2LatentWorker(AbstractLatentWorker):
         reservations = self.ec2.create_instances(**launch_opts)
 
         self.instance = reservations[0]
-        instance_id, start_time = self._wait_for_instance()
+        instance_id, start_time = self._wait_for_instance()  # type: ignore[misc]
         if None not in [instance_id, image.id, start_time]:
             return [instance_id, image.id, start_time]
         else:
             self.failed_to_start(self.instance.id, self.instance.state['Name'])
         return None
 
-    def stop_instance(self, fast=False):
+    def stop_instance(self, fast: bool = False) -> defer.Deferred[None]:  # type: ignore[override]
         if self.instance is None:
             # be gentle.  Something may just be trying to alert us that an
             # instance never attached, and it's because, somehow, we never
@@ -402,15 +407,15 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.output = self.instance = None
         return threads.deferToThread(self._stop_instance, instance, fast)
 
-    def _attach_volumes(self):
+    def _attach_volumes(self) -> None:
         for volume_id, device_node in self.volumes:
             vol = self.ec2.Volume(volume_id)
-            vol.attach_to_instance(InstanceId=self.instance.id, Device=device_node)
+            vol.attach_to_instance(InstanceId=self.instance.id, Device=device_node)  # type: ignore[union-attr]
             log.msg(f'Attaching EBS volume {volume_id} to {device_node}.')
 
-    def _stop_instance(self, instance, fast):
+    def _stop_instance(self, instance: Any, fast: bool) -> None:
         if self.elastic_ip is not None:
-            self.elastic_ip.association.delete()
+            self.elastic_ip.association.delete()  # type: ignore[attr-defined]
         instance.reload()
         if instance.state['Name'] not in (SHUTTINGDOWN, TERMINATED):
             instance.terminate()
@@ -420,7 +425,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         duration = 0
         interval = self._poll_resolution
         if fast:
-            goal = (SHUTTINGDOWN, TERMINATED)
+            goal: tuple[str, ...] = (SHUTTINGDOWN, TERMINATED)
             instance.reload()
         else:
             goal = (TERMINATED,)
@@ -438,7 +443,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             f'about {duration // 60} minutes {duration % 60} seconds'
         )
 
-    def _bid_price_from_spot_price_history(self):
+    def _bid_price_from_spot_price_history(self) -> float:
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
         spot_history_starttime = time.strftime('%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
         spot_prices = self.ec2.meta.client.describe_spot_price_history(
@@ -455,10 +460,10 @@ class EC2LatentWorker(AbstractLatentWorker):
         if price_count == 0:
             bid_price = 0.02
         else:
-            bid_price = (price_sum / price_count) * self.price_multiplier
+            bid_price = (price_sum / price_count) * self.price_multiplier  # type: ignore[operator]
         return bid_price
 
-    def _request_spot_instance(self):
+    def _request_spot_instance(self) -> tuple[str, str, str]:
         if self.price_multiplier is None:
             bid_price = self.max_spot_price
         else:
@@ -495,51 +500,51 @@ class EC2LatentWorker(AbstractLatentWorker):
             raise LatentWorkerFailedToSubstantiate()
         instance_id = request['InstanceId']
         self.instance = self.ec2.Instance(instance_id)
-        instance_id, start_time = self._wait_for_instance()
+        instance_id, start_time = self._wait_for_instance()  # type: ignore[misc]
         return instance_id, image.id, start_time
 
-    def _wait_for_instance(self):
+    def _wait_for_instance(self) -> tuple[str, str] | None:
         log.msg(
             f'{self.__class__.__name__} {self.workername} waiting for instance '
-            f'{self.instance.id} to start'
+            f'{self.instance.id} to start'  # type: ignore[union-attr]
         )
         duration = 0
         interval = self._poll_resolution
-        while self.instance.state['Name'] == PENDING:
+        while self.instance.state['Name'] == PENDING:  # type: ignore[union-attr]
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
                 log.msg(
                     f'{self.__class__.__name__} {self.workername} has waited {duration // 60} '
-                    f'minutes for instance {self.instance.id}'
+                    f'minutes for instance {self.instance.id}'  # type: ignore[union-attr]
                 )
-            self.instance.reload()
+            self.instance.reload()  # type: ignore[union-attr]
 
-        if self.instance.state['Name'] == RUNNING:
-            self.properties.setProperty("instance", self.instance.id, "Worker")
-            self.output = self.instance.console_output().get('Output')
+        if self.instance.state['Name'] == RUNNING:  # type: ignore[union-attr]
+            self.properties.setProperty("instance", self.instance.id, "Worker")  # type: ignore[union-attr]
+            self.output = self.instance.console_output().get('Output')  # type: ignore[union-attr]
             minutes = duration // 60
             seconds = duration % 60
             log.msg(
-                f'{self.__class__.__name__} {self.workername} instance {self.instance.id} '
+                f'{self.__class__.__name__} {self.workername} instance {self.instance.id} '  # type: ignore[union-attr]
                 f'started on {self.dns} in about {minutes} minutes {seconds} seconds '
                 f'({self.output})'
             )
             if self.elastic_ip is not None:
-                self.elastic_ip.associate(InstanceId=self.instance.id)
+                self.elastic_ip.associate(InstanceId=self.instance.id)  # type: ignore[union-attr,attr-defined]
             start_time = f'{minutes // 60:02d}:{minutes % 60:02d}:{seconds:02d}'
             if self.volumes:
                 self._attach_volumes()
             if self.tags:
-                self.instance.create_tags(
+                self.instance.create_tags(  # type: ignore[union-attr]
                     Tags=[{"Key": k, "Value": v} for k, v in self.tags.items()]
                 )
-            return self.instance.id, start_time
+            return self.instance.id, start_time  # type: ignore[union-attr]
         else:
-            self.failed_to_start(self.instance.id, self.instance.state['Name'])
+            self.failed_to_start(self.instance.id, self.instance.state['Name'])  # type: ignore[union-attr]
             return None  # This is just to silence warning, above line throws an exception
 
-    def _thd_wait_for_request(self, reservation):
+    def _thd_wait_for_request(self, reservation: dict[str, Any]) -> tuple[dict[str, Any], bool]:
         duration = 0
         interval = self._poll_resolution
 

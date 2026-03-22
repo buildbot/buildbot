@@ -134,7 +134,7 @@ class CodebaseCommit(base.ResourceType):
         when_timestamp: int,
         revision: str,
         parent_commitid: int | None = None,
-    ) -> None:
+    ) -> int:
         commitid = await self.master.db.codebase_commits.add_commit(
             codebaseid=codebaseid,
             author=author,

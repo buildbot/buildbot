@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import dataclasses
 from typing import TYPE_CHECKING
+from typing import Any
 
 import sqlalchemy as sa
 from twisted.python import deprecate
@@ -39,7 +40,7 @@ class UserModel:
     attributes: dict[str, str] | None = None
 
     # For backward compatibility
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         warn_deprecated(
             '4.1.0',
             (
@@ -66,11 +67,13 @@ class UsDict(UserModel):
 
 class UsersConnectorComponent(base.DBConnectorComponent):
     def findUserByAttr(
-        self, identifier: str, attr_type: str, attr_data: str, _race_hook=None
+        self, identifier: str, attr_type: str, attr_data: str, _race_hook: Any = None
     ) -> defer.Deferred[int]:
         # note that since this involves two tables, self.findSomethingId is not
         # helpful
-        def thd(conn, no_recurse=False, identifier=identifier) -> int:
+        def thd(
+            conn: sa.engine.Connection, no_recurse: bool = False, identifier: str = identifier
+        ) -> int:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
@@ -130,7 +133,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
     @base.cached("usdicts")
     def getUser(self, uid: int) -> defer.Deferred[UserModel | None]:
-        def thd(conn) -> UserModel | None:
+        def thd(conn: sa.engine.Connection) -> UserModel | None:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
@@ -148,7 +151,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def _model_from_row(self, users_row, attribute_rows=None):
+    def _model_from_row(self, users_row: Any, attribute_rows: Any = None) -> UserModel:
         attributes = None
         if attribute_rows is not None:
             attributes = {row.attr_type: row.attr_data for row in attribute_rows}
@@ -162,7 +165,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
     # returns a Deferred that returns a value
     def getUserByUsername(self, username: str | None) -> defer.Deferred[UserModel | None]:
-        def thd(conn) -> UserModel | None:
+        def thd(conn: sa.engine.Connection) -> UserModel | None:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
@@ -181,7 +184,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getUsers(self) -> defer.Deferred[list[UserModel]]:
-        def thd(conn) -> list[UserModel]:
+        def thd(conn: sa.engine.Connection) -> list[UserModel]:
             tbl = self.db.model.users
             rows = conn.execute(tbl.select()).fetchall()
 
@@ -198,9 +201,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         bb_password: str | None = None,
         attr_type: str | None = None,
         attr_data: str | None = None,
-        _race_hook=None,
-    ):
-        def thd(conn):
+        _race_hook: Any = None,
+    ) -> defer.Deferred[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
             update_dict = {}
@@ -251,8 +254,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns None
-    def removeUser(self, uid):
-        def thd(conn):
+    def removeUser(self, uid: int) -> defer.Deferred[None]:
+        def thd(conn: sa.engine.Connection) -> None:
             # delete from dependent tables first, followed by 'users'
             for tbl in [
                 self.db.model.change_users,
@@ -264,8 +267,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do_with_transaction(thd)
 
     # returns a Deferred that returns a value
-    def identifierToUid(self, identifier) -> defer.Deferred[int | None]:
-        def thd(conn) -> int | None:
+    def identifierToUid(self, identifier: str) -> defer.Deferred[int | None]:
+        def thd(conn: sa.engine.Connection) -> int | None:
             tbl = self.db.model.users
 
             q = tbl.select().where(tbl.c.identifier == identifier)

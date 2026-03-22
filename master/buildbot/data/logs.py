@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 
@@ -25,12 +26,13 @@ from buildbot.db.logs import LogSlugExistsError
 from buildbot.util import identifiers
 
 if TYPE_CHECKING:
+    from buildbot.data.resultspec import ResultSpec
     from buildbot.db.logs import LogModel
     from buildbot.util.twisted import InlineCallbacksType
 
 
 class EndpointMixin:
-    def db2data(self, model: LogModel):
+    def db2data(self, model: LogModel) -> defer.Deferred[dict[str, Any]]:
         data = {
             'logid': model.id,
             'name': model.name,
@@ -57,7 +59,9 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         if 'logid' in kwargs:
             dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
             return (yield self.db2data(dbdict)) if dbdict else None
@@ -67,7 +71,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         if step_dict is None:
             return None
 
-        dbdict = yield self.master.db.logs.getLogBySlug(step_dict.id, kwargs.get('log_slug'))
+        dbdict = yield self.master.db.logs.getLogBySlug(step_dict.id, kwargs['log_slug'])
         return (yield self.db2data(dbdict)) if dbdict else None
 
 
@@ -84,7 +88,9 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]]]:
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
         step_dict = yield retriever.get_step_dict()
         if step_dict is None:
@@ -117,19 +123,22 @@ class Log(base.ResourceType):
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
-    def generateEvent(self, _id, event):
+    def generateEvent(self, _id: int, event: str) -> InlineCallbacksType[None]:
         # get the build and munge the result for the notification
         build = yield self.master.data.get(('logs', str(_id)))
         self.produceEvent(build, event)
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addLog(self, stepid: int, name: str, type: int) -> InlineCallbacksType[int]:
+    def addLog(self, stepid: int, name: str, type: str) -> InlineCallbacksType[int]:
         slug = identifiers.forceIdentifier(50, name)
         while True:
             try:
                 logid = yield self.master.db.logs.addLog(
-                    stepid=stepid, name=name, slug=slug, type=type
+                    stepid=stepid,
+                    name=name,
+                    slug=slug,
+                    type=type,  # type: ignore[arg-type]
                 )
             except LogSlugExistsError:
                 slug = identifiers.incrementIdentifier(50, slug)

@@ -70,10 +70,6 @@ Installation may need to be done as root.
 This will put the bulk of the code in somewhere like :file:`/usr/lib/pythonx.y/site-packages/buildbot`.
 It will also install the :command:`buildbot` command-line tool in :file:`/usr/bin/buildbot`.
 
-If the environment variable ``$NO_INSTALL_REQS`` is set to ``1``, then :file:`setup.py` will not
-try to install Buildbot's requirements.
-This is usually only useful when building a Buildbot package.
-
 To test this, shift to a different directory (like :file:`/tmp`), and run:
 
 .. code-block:: bash

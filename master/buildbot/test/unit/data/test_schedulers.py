@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -27,13 +30,16 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = schedulers.SchedulerEndpoint
     resourceTypeClass = schedulers.Scheduler
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Master(id=22, active=0),
@@ -46,46 +52,46 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get_existing(self):
+    def test_get_existing(self) -> InlineCallbacksType[None]:
         scheduler = yield self.callGet(('schedulers', 14))
 
         self.validateData(scheduler)
         self.assertEqual(scheduler['name'], 'other:scheduler')
 
     @defer.inlineCallbacks
-    def test_get_no_master(self):
+    def test_get_no_master(self) -> InlineCallbacksType[None]:
         scheduler = yield self.callGet(('schedulers', 13))
 
         self.validateData(scheduler)
         self.assertEqual(scheduler['master'], None)
 
     @defer.inlineCallbacks
-    def test_get_masterid_existing(self):
+    def test_get_masterid_existing(self) -> InlineCallbacksType[None]:
         scheduler = yield self.callGet(('masters', 22, 'schedulers', 14))
 
         self.validateData(scheduler)
         self.assertEqual(scheduler['name'], 'other:scheduler')
 
     @defer.inlineCallbacks
-    def test_get_masterid_no_match(self):
+    def test_get_masterid_no_match(self) -> InlineCallbacksType[None]:
         scheduler = yield self.callGet(('masters', 33, 'schedulers', 13))
 
         self.assertEqual(scheduler, None)
 
     @defer.inlineCallbacks
-    def test_get_masterid_missing(self):
+    def test_get_masterid_missing(self) -> InlineCallbacksType[None]:
         scheduler = yield self.callGet(('masters', 99, 'schedulers', 13))
 
         self.assertEqual(scheduler, None)
 
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         scheduler = yield self.callGet(('schedulers', 99))
 
         self.assertEqual(scheduler, None)
 
     @defer.inlineCallbacks
-    def test_action_enable(self):
+    def test_action_enable(self) -> InlineCallbacksType[None]:
         r = yield self.callControl("enable", {'enabled': False}, ('schedulers', 13))
         self.assertEqual(r, None)
 
@@ -95,7 +101,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     resourceTypeClass = schedulers.Scheduler
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data([
             fakedb.Master(id=22, active=0),
@@ -110,7 +116,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_get(self) -> InlineCallbacksType[None]:
         schedulers = yield self.callGet(('schedulers',))
 
         for m in schedulers:
@@ -119,7 +125,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([m['schedulerid'] for m in schedulers]), [13, 14, 15, 16])
 
     @defer.inlineCallbacks
-    def test_get_masterid(self):
+    def test_get_masterid(self) -> InlineCallbacksType[None]:
         schedulers = yield self.callGet(('masters', 33, 'schedulers'))
 
         for m in schedulers:
@@ -128,7 +134,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([m['schedulerid'] for m in schedulers]), [15, 16])
 
     @defer.inlineCallbacks
-    def test_get_masterid_missing(self):
+    def test_get_masterid_missing(self) -> InlineCallbacksType[None]:
         schedulers = yield self.callGet(('masters', 23, 'schedulers'))
 
         self.assertEqual(schedulers, [])
@@ -136,20 +142,20 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class Scheduler(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantMq=True, wantDb=True, wantData=True)
         self.rtype = schedulers.Scheduler(self.master)
 
-    def test_signature_schedulerEnable(self):
+    def test_signature_schedulerEnable(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.schedulerEnable, self.rtype.schedulerEnable
         )
-        def schedulerEnable(self, schedulerid, v):
+        def schedulerEnable(self: object, schedulerid: int, v: bool) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_schedulerEnable(self):
+    def test_schedulerEnable(self) -> InlineCallbacksType[None]:
         SOMETIME = 1348971992
         yield self.master.db.insert_test_data([
             fakedb.Master(id=22, active=0, last_active=SOMETIME),
@@ -191,30 +197,30 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             )
         ])
 
-    def test_signature_findSchedulerId(self):
+    def test_signature_findSchedulerId(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.findSchedulerId,  # fake
             self.rtype.findSchedulerId,
         )  # real
-        def findSchedulerId(self, name):
+        def findSchedulerId(self: object, name: str) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_findSchedulerId(self):
+    def test_findSchedulerId(self) -> InlineCallbacksType[None]:
         self.master.db.schedulers.findSchedulerId = mock.Mock(return_value=defer.succeed(10))
         self.assertEqual((yield self.rtype.findSchedulerId('sch')), 10)
         self.master.db.schedulers.findSchedulerId.assert_called_with('sch')
 
-    def test_signature_trySetSchedulerMaster(self):
+    def test_signature_trySetSchedulerMaster(self) -> None:
         @self.assertArgSpecMatches(
             self.master.data.updates.trySetSchedulerMaster,  # fake
             self.rtype.trySetSchedulerMaster,
         )  # real
-        def trySetSchedulerMaster(self, schedulerid, masterid):
+        def trySetSchedulerMaster(self: object, schedulerid: int, masterid: int) -> None:
             pass
 
     @defer.inlineCallbacks
-    def test_trySetSchedulerMaster_succeeds(self):
+    def test_trySetSchedulerMaster_succeeds(self) -> InlineCallbacksType[None]:
         self.master.db.schedulers.setSchedulerMaster = mock.Mock(return_value=defer.succeed(None))
 
         result = yield self.rtype.trySetSchedulerMaster(10, 20)
@@ -223,7 +229,7 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.master.db.schedulers.setSchedulerMaster.assert_called_with(10, 20)
 
     @defer.inlineCallbacks
-    def test_trySetSchedulerMaster_fails(self):
+    def test_trySetSchedulerMaster_fails(self) -> InlineCallbacksType[None]:
         d = defer.fail(failure.Failure(schedulers.SchedulerAlreadyClaimedError('oh noes')))
 
         self.master.db.schedulers.setSchedulerMaster = mock.Mock(return_value=d)
@@ -232,7 +238,7 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
         self.assertFalse(result)
 
     @defer.inlineCallbacks
-    def test_trySetSchedulerMaster_raisesOddException(self):
+    def test_trySetSchedulerMaster_raisesOddException(self) -> InlineCallbacksType[None]:
         d = defer.fail(failure.Failure(RuntimeError('oh noes')))
 
         self.master.db.schedulers.setSchedulerMaster = mock.Mock(return_value=d)
@@ -245,7 +251,7 @@ class Scheduler(TestReactorMixin, interfaces.InterfaceTests, unittest.TestCase):
             self.fail("The RuntimeError did not propagate")
 
     @defer.inlineCallbacks
-    def test__masterDeactivated(self):
+    def test__masterDeactivated(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.Master(id=22, active=0),
             fakedb.Scheduler(id=13, name='some:scheduler'),

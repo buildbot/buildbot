@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 from unittest.case import SkipTest
 
 from twisted.internet import defer
@@ -26,6 +29,11 @@ from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.util import kubeclientservice
 from buildbot.worker import kubernetes
+
+if TYPE_CHECKING:
+    from buildbot.interfaces import IBuildStepFactory
+    from buildbot.process.buildstep import BuildStep
+    from buildbot.util.twisted import InlineCallbacksType
 
 # This integration test creates a master and kubernetes worker environment,
 # It requires a kubernetes cluster up and running. It tries to get the config
@@ -51,7 +59,7 @@ NUM_CONCURRENT = int(os.environ.get("KUBE_TEST_NUM_CONCURRENT_BUILD", "1"))
 class KubernetesMaster(RunMasterBase):
     timeout = 200
 
-    def setUp(self):
+    def setUp(self) -> None:
         if "TEST_KUBERNETES" not in os.environ:
             raise SkipTest(
                 "kubernetes integration tests only run when environment "
@@ -64,7 +72,9 @@ class KubernetesMaster(RunMasterBase):
             )
 
     @defer.inlineCallbacks
-    def setup_config(self, num_concurrent, extra_steps=None):
+    def setup_config(
+        self, num_concurrent: int, extra_steps: list[BuildStep | IBuildStepFactory] | None = None
+    ) -> InlineCallbacksType[None]:
         if extra_steps is None:
             extra_steps = []
         c = {}
@@ -109,12 +119,12 @@ class KubernetesMaster(RunMasterBase):
         ]
         # un comment for debugging what happens if things looks locked.
         # c['www'] = {'port': 8080}
-        c['protocols'] = {"pb": {"port": "tcp:9989"}}
+        c['protocols'] = {"pb": {"port": "tcp:9989"}}  # type: ignore[assignment]
 
         yield self.setup_master(c, startWorker=False)
 
     @defer.inlineCallbacks
-    def test_trigger(self):
+    def test_trigger(self) -> InlineCallbacksType[None]:
         yield self.setup_config(num_concurrent=NUM_CONCURRENT)
         yield self.doForceBuild()
 
@@ -126,6 +136,6 @@ class KubernetesMaster(RunMasterBase):
 
 
 class KubernetesMasterTReq(KubernetesMaster):
-    def setup(self):
+    def setup(self) -> None:
         super().setUp()
-        self.patch(kubernetes.KubeClientService, 'PREFER_TREQ', True)
+        self.patch(kubernetes.KubeClientService, 'PREFER_TREQ', True)  # type: ignore[attr-defined]

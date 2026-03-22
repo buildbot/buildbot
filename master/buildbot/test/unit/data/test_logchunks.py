@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import textwrap
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -24,6 +25,9 @@ from buildbot.data import logchunks
 from buildbot.data import resultspec
 from buildbot.test import fakedb
 from buildbot.test.util import endpoint
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
@@ -42,7 +46,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
     log61Lines = [f'{i:08d}' for i in range(100)]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         yield self.setUpEndpoint()
         yield self.master.db.insert_test_data(
             [
@@ -96,7 +100,9 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def do_test_chunks(self, path, logid, expLines):
+    def do_test_chunks(
+        self, path: tuple[str, ...], logid: int, expLines: list[str]
+    ) -> InlineCallbacksType[None]:
         # get the whole thing in one go
         logchunk = yield self.callGet(path)
         self.validateData(logchunk)
@@ -135,33 +141,33 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
             (yield self.callGet(path, resultSpec=resultspec.ResultSpec(offset=10, limit=-1))), None
         )
 
-    def test_get_logid_60(self):
-        return self.do_test_chunks(('logs', 60, self.endpointname), 60, self.log60Lines)
+    def test_get_logid_60(self) -> defer.Deferred[None]:
+        return self.do_test_chunks(('logs', 60, self.endpointname), 60, self.log60Lines)  # type: ignore[arg-type]
 
-    def test_get_logid_61(self):
-        return self.do_test_chunks(('logs', 61, self.endpointname), 61, self.log61Lines)
+    def test_get_logid_61(self) -> defer.Deferred[None]:
+        return self.do_test_chunks(('logs', 61, self.endpointname), 61, self.log61Lines)  # type: ignore[arg-type]
 
 
 class LogChunkEndpoint(LogChunkEndpointBase):
     @defer.inlineCallbacks
-    def test_get_missing(self):
+    def test_get_missing(self) -> InlineCallbacksType[None]:
         logchunk = yield self.callGet(('logs', 99, self.endpointname))
         self.assertEqual(logchunk, None)
 
     @defer.inlineCallbacks
-    def test_get_empty(self):
+    def test_get_empty(self) -> InlineCallbacksType[None]:
         logchunk = yield self.callGet(('logs', 62, self.endpointname))
         self.validateData(logchunk)
         self.assertEqual(logchunk['content'], '')
 
     @defer.inlineCallbacks
-    def test_get_by_stepid(self):
+    def test_get_by_stepid(self) -> InlineCallbacksType[None]:
         logchunk = yield self.callGet(('steps', 50, 'logs', 'errors', self.endpointname))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
     @defer.inlineCallbacks
-    def test_get_by_buildid(self):
+    def test_get_by_buildid(self) -> InlineCallbacksType[None]:
         logchunk = yield self.callGet((
             'builds',
             13,
@@ -175,7 +181,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         self.assertEqual(logchunk['logid'], 60)
 
     @defer.inlineCallbacks
-    def test_get_by_builder(self):
+    def test_get_by_builder(self) -> InlineCallbacksType[None]:
         logchunk = yield self.callGet((
             'builders',
             77,
@@ -191,7 +197,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         self.assertEqual(logchunk['logid'], 61)
 
     @defer.inlineCallbacks
-    def test_get_by_builder_step_name(self):
+    def test_get_by_builder_step_name(self) -> InlineCallbacksType[None]:
         logchunk = yield self.callGet((
             'builders',
             77,
@@ -211,13 +217,15 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
     endpointClass = logchunks.RawLogChunkEndpoint
     endpointname = "raw"
 
-    def validateData(self, data):
+    def validateData(self, data: dict[str, str]) -> None:
         self.assertIsInstance(data['raw'], str)
         self.assertIsInstance(data['mime-type'], str)
         self.assertIsInstance(data['filename'], str)
 
     @defer.inlineCallbacks
-    def do_test_chunks(self, path, logid, expLines):
+    def do_test_chunks(
+        self, path: tuple[str, ...], logid: int, expLines: list[str]
+    ) -> InlineCallbacksType[None]:
         # get the whole thing in one go
         logchunk = yield self.callGet(path)
         self.validateData(logchunk)

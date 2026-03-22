@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.internet import protocol
@@ -27,12 +28,15 @@ from twisted.spread.pb import PBClientFactory
 
 from buildbot.util import bytes2unicode
 
+if TYPE_CHECKING:
+    from twisted.python.failure import Failure
+
 
 class NewCredPerspective(pb.Avatar):
-    def attached(self, mind):
+    def attached(self, mind: object) -> NewCredPerspective:
         return self
 
-    def detached(self, mind):
+    def detached(self, mind: object) -> None:
         pass
 
 
@@ -64,12 +68,12 @@ class ReconnectingPBClientFactory(PBClientFactory, protocol.ReconnectingClientFa
     TCPClient).
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._doingLogin = False
         self._doingGetPerspective = False
 
-    def clientConnectionFailed(self, connector, reason):
+    def clientConnectionFailed(self, connector: Any, reason: Failure) -> None:
         super().clientConnectionFailed(connector, reason)
         # Twisted-1.3 erroneously abandons the connection on non-UserErrors.
         # To avoid this bug, don't upcall, and implement the correct version
@@ -78,12 +82,12 @@ class ReconnectingPBClientFactory(PBClientFactory, protocol.ReconnectingClientFa
             self.connector = connector
             self.retry()
 
-    def clientConnectionLost(self, connector, reason):
+    def clientConnectionLost(self, connector: Any, reason: Failure) -> None:  # type: ignore[override]
         super().clientConnectionLost(connector, reason, reconnecting=True)
         RCF = protocol.ReconnectingClientFactory
         RCF.clientConnectionLost(self, connector, reason)
 
-    def clientConnectionMade(self, broker):
+    def clientConnectionMade(self, broker: pb.Broker) -> None:
         self.resetDelay()
         super().clientConnectionMade(broker)
         if self._doingLogin:
@@ -94,34 +98,39 @@ class ReconnectingPBClientFactory(PBClientFactory, protocol.ReconnectingClientFa
 
     # oldcred methods
 
-    def getPerspective(self, *args):
+    def getPerspective(self, *args: Any) -> None:
         raise RuntimeError("getPerspective is one-shot: use startGettingPerspective instead")
 
     def startGettingPerspective(
-        self, username, password, serviceName, perspectiveName=None, client=None
-    ):
+        self,
+        username: Any,
+        password: Any,
+        serviceName: Any,
+        perspectiveName: Any = None,
+        client: Any = None,
+    ) -> None:
         self._doingGetPerspective = True
         if perspectiveName is None:
             perspectiveName = username
         self._oldcredArgs = (username, password, serviceName, perspectiveName, client)
 
-    def doGetPerspective(self, root):
+    def doGetPerspective(self, root: pb.RemoteReference) -> None:
         # oldcred getPerspective()
         (username, password, serviceName, perspectiveName, client) = self._oldcredArgs
-        d = self._cbAuthIdentity(root, username, password)
-        d.addCallback(self._cbGetPerspective, serviceName, perspectiveName, client)
+        d = self._cbAuthIdentity(root, username, password)  # type: ignore[attr-defined]
+        d.addCallback(self._cbGetPerspective, serviceName, perspectiveName, client)  # type: ignore[attr-defined]
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective)
 
     # newcred methods
-    def login(self, *args):
+    def login(self, *args: Any) -> None:
         raise RuntimeError("login is one-shot: use startLogin instead")
 
-    def startLogin(self, credentials, client=None):
+    def startLogin(self, credentials: Any, client: Any = None) -> None:
         self._credentials = credentials
         self._client = client
         self._doingLogin = True
 
-    def doLogin(self, root):
+    def doLogin(self, root: pb.RemoteReference) -> None:
         # newcred login()
         d = self._cbSendUsername(
             root, self._credentials.username, self._credentials.password, self._client
@@ -129,16 +138,16 @@ class ReconnectingPBClientFactory(PBClientFactory, protocol.ReconnectingClientFa
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective)
 
     # methods to override
-    def gotPerspective(self, perspective):
+    def gotPerspective(self, perspective: pb.RemoteReference) -> None:
         """The remote avatar or perspective (obtained each time this factory
         connects) is now available."""
 
-    def gotRootObject(self, root):
+    def gotRootObject(self, root: pb.RemoteReference) -> None:
         """The remote root object (obtained each time this factory connects)
         is now available. This method will be called each time the connection
         is established and the object reference is retrieved."""
 
-    def failedToGetPerspective(self, why):
+    def failedToGetPerspective(self, why: Failure) -> None:
         """The login process failed, most likely because of an authorization
         failure (bad password), but it is also possible that we lost the new
         connection before we managed to send our credentials.

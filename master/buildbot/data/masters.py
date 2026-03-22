@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
@@ -27,14 +28,16 @@ from buildbot.process.results import RETRY
 from buildbot.util import epoch2datetime
 
 if TYPE_CHECKING:
+    from buildbot.data.resultspec import ResultSpec
     from buildbot.db.masters import MasterModel
+    from buildbot.util.twisted import InlineCallbacksType
 
 # time, in minutes, after which a master that hasn't checked in will be
 # marked as inactive
 EXPIRE_MINUTES = 10
 
 
-def _db2data(model: MasterModel):
+def _db2data(model: MasterModel) -> dict[str, Any]:
     return {
         "masterid": model.id,
         "name": model.name,
@@ -51,7 +54,9 @@ class MasterEndpoint(base.Endpoint):
     ]
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[dict[str, Any] | None]:
         # if a builder is given, only return the master if it's associated with
         # this builder
         if 'builderid' in kwargs:
@@ -71,7 +76,9 @@ class MastersEndpoint(base.Endpoint):
     rootLinkName = 'masters'
 
     @defer.inlineCallbacks
-    def get(self, resultSpec, kwargs):
+    def get(
+        self, resultSpec: ResultSpec, kwargs: dict[str, Any]
+    ) -> InlineCallbacksType[list[dict[str, Any]]]:
         masterlist = yield self.master.db.masters.getMasters()
         if 'builderid' in kwargs:
             builder = yield self.master.db.builders.getBuilder(builderid=kwargs['builderid'])
@@ -101,14 +108,14 @@ class Master(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def masterActive(self, name: str, masterid: int):
+    def masterActive(self, name: str, masterid: int) -> InlineCallbacksType[None]:
         activated = yield self.master.db.masters.setMasterState(masterid=masterid, active=True)
         if activated:
             self.produceEvent({"masterid": masterid, "name": name, "active": True}, 'started')
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def expireMasters(self, forceHouseKeeping: bool = False):
+    def expireMasters(self, forceHouseKeeping: bool = False) -> InlineCallbacksType[None]:
         too_old = epoch2datetime(self.master.reactor.seconds() - 60 * EXPIRE_MINUTES)
         masters = yield self.master.db.masters.getMasters()
         for m in masters:
@@ -124,13 +131,13 @@ class Master(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def masterStopped(self, name: str, masterid: int):
+    def masterStopped(self, name: str, masterid: int) -> InlineCallbacksType[None]:
         deactivated = yield self.master.db.masters.setMasterState(masterid=masterid, active=False)
         if deactivated:
             yield self._masterDeactivated(masterid, name)
 
     @defer.inlineCallbacks
-    def _masterDeactivatedHousekeeping(self, masterid, name):
+    def _masterDeactivatedHousekeeping(self, masterid: int, name: str) -> InlineCallbacksType[None]:
         log.msg(f"doing housekeeping for master {masterid} {name}")
 
         # common code for deactivating a master
@@ -176,7 +183,7 @@ class Master(base.ResourceType):
         )
 
     @defer.inlineCallbacks
-    def _masterDeactivated(self, masterid, name):
+    def _masterDeactivated(self, masterid: int, name: str) -> InlineCallbacksType[None]:
         yield self._masterDeactivatedHousekeeping(masterid, name)
 
         self.produceEvent({"masterid": masterid, "name": name, "active": False}, 'stopped')
