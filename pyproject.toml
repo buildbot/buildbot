@@ -195,7 +195,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.test_wamp_connector",
       "buildbot.test.unit.util.test_kubeclientservice",
       "buildbot.test.unit.util.test_lineboundaries",
-      "buildbot.test.unit.util.test_path_expand_user",
       "buildbot.test.unit.util.test_pathmatch",
       "buildbot.test.unit.util.test_poll",
       "buildbot.test.unit.util.test_private_tempdir",
