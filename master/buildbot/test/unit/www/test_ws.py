@@ -17,6 +17,7 @@ from __future__ import annotations
 import datetime
 import json
 import re
+from typing import TYPE_CHECKING
 from typing import Any
 from unittest import mock
 
@@ -32,28 +33,29 @@ from buildbot.util import bytes2unicode
 from buildbot.www import auth
 from buildbot.www import ws
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = master = yield self.make_master(url="h:/a/b/", wantMq=True, wantGraphql=True)
         self.ws = ws.WsResource(master)
         self.proto = self.ws._factory.buildProtocol("me")
         self.proto.sendMessage = mock.Mock(spec=self.proto.sendMessage)
 
-    def assert_called_with_json(self, obj, expected_json):
+    def assert_called_with_json(self, obj: mock.Mock, expected_json: dict[str, Any]) -> None:
         jsonArg = obj.call_args[0][0]
         jsonArg = bytes2unicode(jsonArg)
         actual_json = json.loads(jsonArg)
 
         keys_to_pop = []
-        for key in expected_json:
-            if hasattr(expected_json[key], 'match'):
+        for key, expected_value in expected_json.items():
+            if hasattr(expected_value, 'match'):
                 keys_to_pop.append(key)
-                regex = expected_json[key]
-                value = actual_json[key]
-                self.assertRegex(value, regex)
+                self.assertRegex(actual_json[key], expected_value)
 
         for key in keys_to_pop:
             expected_json.pop(key)
@@ -61,25 +63,25 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
         self.assertEqual(actual_json, expected_json)
 
-    def test_ping(self):
+    def test_ping(self) -> None:
         self.proto.onMessage(json.dumps({"cmd": 'ping', "_id": 1}), False)
         self.assert_called_with_json(self.proto.sendMessage, {"msg": "pong", "code": 200, "_id": 1})
 
-    def test_bad_cmd(self):
+    def test_bad_cmd(self) -> None:
         self.proto.onMessage(json.dumps({"cmd": 'poing', "_id": 1}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {"_id": 1, "code": 404, "error": "no such command type 'poing'"},
         )
 
-    def test_no_cmd(self):
+    def test_no_cmd(self) -> None:
         self.proto.onMessage(json.dumps({"_id": 1}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {"_id": None, "code": 400, "error": "no 'cmd' in websocket frame"},
         )
 
-    def test_too_many_arguments(self):
+    def test_too_many_arguments(self) -> None:
         self.proto.onMessage(json.dumps({"_id": 1, "cmd": 'ping', "foo": 'bar'}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
@@ -90,7 +92,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             },
         )
 
-    def test_no_id(self):
+    def test_no_id(self) -> None:
         self.proto.onMessage(json.dumps({"cmd": 'ping'}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
@@ -101,7 +103,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             },
         )
 
-    def test_startConsuming(self):
+    def test_startConsuming(self) -> None:
         self.proto.onMessage(
             json.dumps({"cmd": 'startConsuming', "path": 'builds/*/*', "_id": 1}), False
         )
@@ -112,14 +114,14 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             self.proto.sendMessage, {"k": "builds/1/new", "m": {"buildid": 1}}
         )
 
-    def test_startConsumingBadPath(self):
+    def test_startConsumingBadPath(self) -> None:
         self.proto.onMessage(json.dumps({"cmd": 'startConsuming', "path": {}, "_id": 1}), False)
         self.assert_called_with_json(
             self.proto.sendMessage,
             {"_id": 1, "code": 400, "error": "invalid path format '{}'"},
         )
 
-    def test_stopConsumingNotRegistered(self):
+    def test_stopConsumingNotRegistered(self) -> None:
         self.proto.onMessage(
             json.dumps({"cmd": 'stopConsuming', "path": 'builds/*/*', "_id": 1}), False
         )
@@ -128,7 +130,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             {"_id": 1, "code": 400, "error": "path was not consumed 'builds/*/*'"},
         )
 
-    def test_stopConsuming(self):
+    def test_stopConsuming(self) -> None:
         self.proto.onMessage(
             json.dumps({"cmd": 'startConsuming', "path": 'builds/*/*', "_id": 1}), False
         )
@@ -151,7 +153,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_on_connect_no_ssl(self):
+    def test_on_connect_no_ssl(self) -> InlineCallbacksType[None]:
         self.master.www = mock.Mock()
         self.master.www.authz = mock.Mock()
         self.master.www.authz.assertUserAllowed = mock.Mock(return_value=defer.succeed(None))
@@ -173,7 +175,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_on_connect_with_token(self):
+    def test_on_connect_with_token(self) -> InlineCallbacksType[None]:
         self.master.www = mock.Mock()
         self.master.www.site = mock.Mock()
         self.master.www.site.session_secret = 'secret_with_enough_length_for_jwt'
@@ -200,7 +202,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_on_connect_with_expired_token(self):
+    def test_on_connect_with_expired_token(self) -> InlineCallbacksType[None]:
         self.master.www = mock.Mock()
         self.master.www.site = mock.Mock()
         self.master.www.site.session_secret = 'secret_with_enough_length_for_jwt'
@@ -226,7 +228,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(cm.exception.args, (403, 'Forbidden'))
 
     @defer.inlineCallbacks
-    def test_on_connect_invalid_token(self):
+    def test_on_connect_invalid_token(self) -> InlineCallbacksType[None]:
         self.master.www = mock.Mock()
         self.master.www.site = mock.Mock()
         self.master.www.site.session_secret = 'secret_with_enough_length_for_jwt'
@@ -250,7 +252,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(len(self.flushLoggedErrors(jwt.exceptions.DecodeError)), 1)
 
     @defer.inlineCallbacks
-    def test_on_connect_with_ssl(self):
+    def test_on_connect_with_ssl(self) -> InlineCallbacksType[None]:
         self.master.www = mock.Mock()
         self.master.www.site = mock.Mock()
         self.master.www.site.session_secret = 'secret_with_enough_length_for_jwt'
@@ -278,7 +280,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_on_connect_different_path(self):
+    def test_on_connect_different_path(self) -> InlineCallbacksType[None]:
         self.master.www = mock.Mock()
         self.master.www.site = mock.Mock()
         self.master.www.site.session_secret = 'secret_with_enough_length_for_jwt'
@@ -305,7 +307,7 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_on_connect_direct_connection_deny(self):
+    def test_on_connect_direct_connection_deny(self) -> InlineCallbacksType[None]:
         self.master.www = mock.Mock()
         self.master.www.site = mock.Mock()
         self.master.www.site.session_secret = 'secret_with_enough_length_for_jwt'
@@ -332,26 +334,26 @@ class WsResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 
 class TestParseCookies(unittest.TestCase):
-    def test_parse_cookies_single(self):
+    def test_parse_cookies_single(self) -> None:
         result = ws.parse_cookies("name=value")
         self.assertEqual(result, {"name": "value"})
 
-    def test_parse_cookies_multiple_comma(self):
+    def test_parse_cookies_multiple_comma(self) -> None:
         result = ws.parse_cookies("name1=value1,name2=value2")
         self.assertEqual(result, {"name1": "value1", "name2": "value2"})
 
-    def test_parse_cookies_multiple_semicolon(self):
+    def test_parse_cookies_multiple_semicolon(self) -> None:
         result = ws.parse_cookies("name1=value1; name2=value2")
         self.assertEqual(result, {"name1": "value1", "name2": "value2"})
 
-    def test_parse_cookies_mixed_separators(self):
+    def test_parse_cookies_mixed_separators(self) -> None:
         result = ws.parse_cookies("name1=value1,name2=value2; name3=value3")
         self.assertEqual(result, {"name1": "value1", "name2": "value2", "name3": "value3"})
 
-    def test_parse_cookies_malformed(self):
+    def test_parse_cookies_malformed(self) -> None:
         result = ws.parse_cookies("name1=value1; invalid; name2=value2")
         self.assertEqual(result, {"name1": "value1", "name2": "value2"})
 
-    def test_parse_cookies_empty(self):
+    def test_parse_cookies_empty(self) -> None:
         result = ws.parse_cookies("")
         self.assertEqual(result, {})
