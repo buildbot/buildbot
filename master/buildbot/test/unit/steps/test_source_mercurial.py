@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from pathlib import PureWindowsPath
+from typing import TYPE_CHECKING
 
 from twisted.internet import error
 from twisted.python.reflect import namedModule
@@ -33,32 +36,35 @@ from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import ExpectStat
 from buildbot.test.util import sourcesteps
 
+if TYPE_CHECKING:
+    from twisted.internet import defer
+
 
 class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def patch_workerVersionIsOlderThan(self, result):
+    def patch_workerVersionIsOlderThan(self, result: bool) -> None:
         self.patch(mercurial.Mercurial, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
-    def test_no_repourl(self):
+    def test_no_repourl(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             mercurial.Mercurial(mode="full")
 
-    def test_incorrect_mode(self):
+    def test_incorrect_mode(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             mercurial.Mercurial(repourl='http://hg.mozilla.org', mode='invalid')
 
-    def test_incorrect_method(self):
+    def test_incorrect_method(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             mercurial.Mercurial(repourl='http://hg.mozilla.org', method='invalid')
 
-    def test_incorrect_branchType(self):
+    def test_incorrect_branchType(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             mercurial.Mercurial(repourl='http://hg.mozilla.org', branchType='invalid')
 
-    def test_mode_full_clean(self):
+    def test_mode_full_clean(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='clean', branchType='inrepo'
@@ -96,14 +102,14 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_clean_win32path(self):
+    def test_mode_full_clean_win32path(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='clean', branchType='inrepo'
             )
         )
         self.build.path_module = namedModule('ntpath')
-        self.build.path_cls = PureWindowsPath
+        self.build.path_cls = PureWindowsPath  # type: ignore[assignment]
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['hg', '--verbose', '--version']).exit(0),
             ExpectStat(file=r'wkdir\.buildbot-patched', log_environ=True).exit(1),
@@ -136,7 +142,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_clean_timeout(self):
+    def test_mode_full_clean_timeout(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org',
@@ -187,7 +193,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_clean_patch(self):
+    def test_mode_full_clean_patch(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='clean', branchType='inrepo'
@@ -248,7 +254,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_clean_patch_worker_2_16(self):
+    def test_mode_full_clean_patch_worker_2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             mercurial.Mercurial(
@@ -310,7 +316,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_clean_patch_fail(self):
+    def test_mode_full_clean_patch_fail(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='clean', branchType='inrepo'
@@ -364,7 +370,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=FAILURE, state_string="update (failure)")
         return self.run_step()
 
-    def test_mode_full_clean_no_existing_repo(self):
+    def test_mode_full_clean_no_existing_repo(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='clean', branchType='inrepo'
@@ -393,7 +399,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_clobber(self):
+    def test_mode_full_clobber(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='clobber', branchType='inrepo'
@@ -420,7 +426,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_fresh(self):
+    def test_mode_full_fresh(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='fresh', branchType='inrepo'
@@ -458,7 +464,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_fresh_no_existing_repo(self):
+    def test_mode_full_fresh_no_existing_repo(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='fresh', branchType='inrepo'
@@ -487,7 +493,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_fresh_retry(self):
+    def test_mode_full_fresh_retry(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org',
@@ -530,7 +536,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_no_existing_repo_dirname(self):
+    def test_mode_incremental_no_existing_repo_dirname(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='incremental', branchType='dirname'
@@ -558,7 +564,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_retry(self):
+    def test_mode_incremental_retry(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org',
@@ -594,7 +600,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_branch_change_dirname(self):
+    def test_mode_incremental_branch_change_dirname(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org/',
@@ -634,7 +640,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_no_existing_repo_inrepo(self):
+    def test_mode_incremental_no_existing_repo_inrepo(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='incremental', branchType='inrepo'
@@ -668,7 +674,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_existing_repo(self):
+    def test_mode_incremental_existing_repo(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='incremental', branchType='inrepo'
@@ -702,7 +708,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_existing_repo_added_files(self):
+    def test_mode_incremental_existing_repo_added_files(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='incremental', branchType='inrepo'
@@ -722,7 +728,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
             ExpectShell(workdir='wkdir', command=['hg', '--verbose', 'locate', 'set:added()'])
             .stdout('foo\nbar/baz\n')
             .exit(1),
-            ExpectRmdir(dir=['wkdir/foo', 'wkdir/bar/baz'], log_environ=True).exit(0),
+            ExpectRmdir(dir=['wkdir/foo', 'wkdir/bar/baz'], log_environ=True).exit(0),  # type: ignore[arg-type]
             ExpectShell(
                 workdir='wkdir',
                 command=['hg', '--verbose', 'update', '--clean', '--rev', 'default'],
@@ -737,7 +743,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_existing_repo_added_files_old_rmdir(self):
+    def test_mode_incremental_existing_repo_added_files_old_rmdir(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='incremental', branchType='inrepo'
@@ -774,7 +780,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_given_revision(self):
+    def test_mode_incremental_given_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='incremental', branchType='inrepo'
@@ -810,7 +816,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_branch_change(self):
+    def test_mode_incremental_branch_change(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='incremental', branchType='inrepo'
@@ -846,7 +852,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_branch_change_no_clobberOnBranchChange(self):
+    def test_mode_incremental_branch_change_no_clobberOnBranchChange(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org',
@@ -883,7 +889,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_clean_env(self):
+    def test_mode_full_clean_env(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org',
@@ -938,7 +944,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_clean_log_environ(self):
+    def test_mode_full_clean_log_environ(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org',
@@ -993,7 +999,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_command_fails(self):
+    def test_command_fails(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='fresh', branchType='inrepo'
@@ -1005,7 +1011,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_worker_connection_lost(self):
+    def test_worker_connection_lost(self) -> defer.Deferred[None]:
         self.setup_step(
             mercurial.Mercurial(
                 repourl='http://hg.mozilla.org', mode='full', method='clean', branchType='inrepo'
