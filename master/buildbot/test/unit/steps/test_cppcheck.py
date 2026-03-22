@@ -13,7 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import FAILURE
@@ -26,11 +33,11 @@ from buildbot.test.steps import TestBuildStepMixin
 
 
 class Cppcheck(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
         self.expect_commands(
             ExpectShell(
@@ -42,7 +49,7 @@ class Cppcheck(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="cppcheck")
         return self.run_step()
 
-    def test_command_failure(self):
+    def test_command_failure(self) -> defer.Deferred[None]:
         self.setup_step(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
         self.expect_commands(
             ExpectShell(
@@ -54,7 +61,7 @@ class Cppcheck(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE, state_string="cppcheck (failure)")
         return self.run_step()
 
-    def test_warnings(self):
+    def test_warnings(self) -> defer.Deferred[None]:
         self.setup_step(cppcheck.Cppcheck(source=['file1.c'], enable=['warning', 'performance']))
         self.expect_commands(
             ExpectShell(
@@ -74,7 +81,7 @@ class Cppcheck(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         return self.run_step()
 
-    def test_errors(self):
+    def test_errors(self) -> defer.Deferred[None]:
         self.setup_step(cppcheck.Cppcheck(extra_args=['--my-param=5']))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['cppcheck', '.', '--my-param=5'])
@@ -89,7 +96,7 @@ class Cppcheck(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE, state_string="cppcheck error=2 style=1 (failure)")
         return self.run_step()
 
-    def test_renderables(self):
+    def test_renderables(self) -> defer.Deferred[None]:
         P = WithProperties
         self.setup_step(
             cppcheck.Cppcheck(
