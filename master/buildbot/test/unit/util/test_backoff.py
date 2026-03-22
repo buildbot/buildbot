@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import time
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -21,16 +24,19 @@ from twisted.trial import unittest
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import backoff
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestException(Exception):
     pass
 
 
 class ExponentialBackoffEngineAsyncTests(TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
-    def test_construct_asserts(self):
+    def test_construct_asserts(self) -> None:
         with self.assertRaises(ValueError):
             backoff.ExponentialBackoffEngine(-1, 1, 1)
         with self.assertRaises(ValueError):
@@ -39,7 +45,9 @@ class ExponentialBackoffEngineAsyncTests(TestReactorMixin, unittest.TestCase):
             backoff.ExponentialBackoffEngine(1, 1, -1)
 
     @defer.inlineCallbacks
-    def assert_called_after_time(self, d, time):
+    def assert_called_after_time(
+        self, d: defer.Deferred[None], time: float
+    ) -> InlineCallbacksType[None]:
         self.assertFalse(d.called)
 
         self.reactor.advance(time * 0.99)
@@ -50,12 +58,12 @@ class ExponentialBackoffEngineAsyncTests(TestReactorMixin, unittest.TestCase):
         yield d  # throw exceptions stored in d, if any
 
     @defer.inlineCallbacks
-    def assert_called_immediately(self, d):
+    def assert_called_immediately(self, d: defer.Deferred[None]) -> InlineCallbacksType[None]:
         self.assertTrue(d.called)
         yield d
 
     @defer.inlineCallbacks
-    def test_wait_times(self):
+    def test_wait_times(self) -> InlineCallbacksType[None]:
         engine = backoff.ExponentialBackoffEngineAsync(
             self.reactor, start_seconds=10, multiplier=2, max_wait_seconds=1000
         )
@@ -74,7 +82,7 @@ class ExponentialBackoffEngineAsyncTests(TestReactorMixin, unittest.TestCase):
         yield self.assert_called_after_time(engine.wait_on_failure(), 10)
 
     @defer.inlineCallbacks
-    def test_max_wait_seconds(self):
+    def test_max_wait_seconds(self) -> InlineCallbacksType[None]:
         engine = backoff.ExponentialBackoffEngineAsync(
             self.reactor, start_seconds=10, multiplier=2, max_wait_seconds=100
         )
@@ -101,7 +109,7 @@ class ExponentialBackoffEngineAsyncTests(TestReactorMixin, unittest.TestCase):
 class ExponentialBackoffEngineSyncTests(unittest.TestCase):
     # All the complex cases are tested in ExponentialBackoffEngineAsyncTests where we can fake
     # the clock. For the synchronous engine we just need to test that waiting works.
-    def test_wait_on_failure(self):
+    def test_wait_on_failure(self) -> None:
         engine = backoff.ExponentialBackoffEngineSync(
             start_seconds=0.05, multiplier=2, max_wait_seconds=1
         )
