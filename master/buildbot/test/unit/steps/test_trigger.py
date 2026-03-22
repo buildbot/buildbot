@@ -303,7 +303,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_simple(self) -> InlineCallbacksType[None]:
-        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], sourceStamps={}))  # type: ignore[arg-type]
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], sourceStamps={}))
         self.expect_outcome(result=SUCCESS, state_string='triggered a')
         self.expectTriggeredWith(a=(False, [], {}))
         yield self.run_step()
@@ -403,7 +403,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_updateSourceStamp_prop_false(self) -> InlineCallbacksType[None]:
         yield self.setup_step(
-            trigger.Trigger(schedulerNames=['a'], updateSourceStamp=properties.Property('usess')),  # type: ignore[arg-type]
+            trigger.Trigger(schedulerNames=['a'], updateSourceStamp=properties.Property('usess')),
             sourcestampsInBuild=[FakeSourceStamp(codebase='', repository='x', revision=11111)],
             gotRevisionsInBuild={'': 23456},
         )
@@ -418,7 +418,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_updateSourceStamp_prop_true(self) -> InlineCallbacksType[None]:
         yield self.setup_step(
-            trigger.Trigger(schedulerNames=['a'], updateSourceStamp=properties.Property('usess')),  # type: ignore[arg-type]
+            trigger.Trigger(schedulerNames=['a'], updateSourceStamp=properties.Property('usess')),
             sourcestampsInBuild=[FakeSourceStamp(codebase='', repository='x', revision=11111)],
             gotRevisionsInBuild={'': 23456},
         )
@@ -444,7 +444,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_alwaysUseLatest_prop_false(self) -> InlineCallbacksType[None]:
         yield self.setup_step(
-            trigger.Trigger(schedulerNames=['b'], alwaysUseLatest=properties.Property('aul')),  # type: ignore[arg-type]
+            trigger.Trigger(schedulerNames=['b'], alwaysUseLatest=properties.Property('aul')),
             sourcestampsInBuild=[FakeSourceStamp(codebase='', repository='x', revision=11111)],
         )
         self.build.setProperty('aul', False, 'me')
@@ -458,7 +458,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_alwaysUseLatest_prop_true(self) -> InlineCallbacksType[None]:
         yield self.setup_step(
-            trigger.Trigger(schedulerNames=['b'], alwaysUseLatest=properties.Property('aul')),  # type: ignore[arg-type]
+            trigger.Trigger(schedulerNames=['b'], alwaysUseLatest=properties.Property('aul')),
             sourcestampsInBuild=[FakeSourceStamp(codebase='', repository='x', revision=11111)],
         )
         self.build.setProperty('aul', True, 'me')

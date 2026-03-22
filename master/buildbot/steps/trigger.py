@@ -37,6 +37,7 @@ from buildbot.reporters.utils import getURLForBuild
 from buildbot.reporters.utils import getURLForBuildrequest
 
 if TYPE_CHECKING:
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -59,9 +60,9 @@ class Trigger(BuildStep):
         self,
         schedulerNames: list[str] | None = None,
         sourceStamp: dict[str, Any] | None = None,
-        sourceStamps: list[dict[str, Any]] | None = None,
-        updateSourceStamp: bool | None = None,
-        alwaysUseLatest: bool = False,
+        sourceStamps: list[dict[str, Any]] | dict[str, Any] | None = None,
+        updateSourceStamp: IMaybeRenderableType[bool] | None = None,
+        alwaysUseLatest: IMaybeRenderableType[bool] = False,
         waitForFinish: bool = False,
         set_properties: dict[str, Any] | None = None,
         copy_properties: list[str] | None = None,
@@ -94,7 +95,10 @@ class Trigger(BuildStep):
 
         self.schedulerNames = schedulerNames
         self.unimportantSchedulerNames = unimportantSchedulerNames
-        self.sourceStamps = sourceStamps or []
+        normalized_sourceStamps: list[dict[str, Any]] = (
+            list(sourceStamps) if isinstance(sourceStamps, list) else []
+        )
+        self.sourceStamps = normalized_sourceStamps
         if sourceStamp:
             self.sourceStamps.append(sourceStamp)
         if updateSourceStamp is not None:
