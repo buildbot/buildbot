@@ -13,10 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import os
 import warnings
 import webbrowser
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 import twisted
@@ -39,6 +43,9 @@ from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.site import SiteWithClose
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 try:
     import requests
 except ImportError:
@@ -52,16 +59,16 @@ else:
 
 
 class FakeResponse:
-    def __init__(self, _json):
+    def __init__(self, _json: Any) -> None:
         self.json = lambda: _json
         self.content = json.dumps(_json)
 
-    def raise_for_status(self):
+    def raise_for_status(self) -> None:
         pass
 
 
 class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
@@ -71,29 +78,29 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         self.patch(requests, 'get', mock.Mock(spec=requests.get))
 
     @defer.inlineCallbacks
-    def setup_google_auth(self):
+    def setup_google_auth(self) -> InlineCallbacksType[Any]:
         auth = oauth2.GoogleAuth("ggclientID", "clientSECRET")
         master = yield self.make_master(url='h:/a/b/', auth=auth)
         auth.reconfigAuth(master, master.config)
         return auth
 
     @defer.inlineCallbacks
-    def setup_github_auth(self):
+    def setup_github_auth(self) -> InlineCallbacksType[Any]:
         auth = oauth2.GitHubAuth("ghclientID", "clientSECRET")
         master = yield self.make_master(url='h:/a/b/', auth=auth)
         auth.reconfigAuth(master, master.config)
         return auth
 
     @defer.inlineCallbacks
-    def setup_github_auth_v4(self):
+    def setup_github_auth_v4(self) -> InlineCallbacksType[Any]:
         auth = oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=4)
         master = yield self.make_master(url='h:/a/b/', auth=auth)
         auth.reconfigAuth(master, master.config)
         return auth
 
     @defer.inlineCallbacks
-    def setup_github_auth_v4_secret(self):
-        auth = oauth2.GitHubAuth(Secret("client-id"), Secret("client-secret"), apiVersion=4)
+    def setup_github_auth_v4_secret(self) -> InlineCallbacksType[Any]:
+        auth = oauth2.GitHubAuth(Secret("client-id"), Secret("client-secret"), apiVersion=4)  # type: ignore[arg-type]
         master = yield self.make_master(url='h:/a/b/', auth=auth)
         fake_storage_service = FakeSecretStorage()
         fake_storage_service.reconfigService(
@@ -106,7 +113,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         return auth
 
     @defer.inlineCallbacks
-    def setup_github_auth_v4_teams(self):
+    def setup_github_auth_v4_teams(self) -> InlineCallbacksType[Any]:
         auth = oauth2.GitHubAuth(
             "ghclientID", "clientSECRET", apiVersion=4, getTeamsMembership=True
         )
@@ -115,7 +122,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         return auth
 
     @defer.inlineCallbacks
-    def setup_github_auth_enterprise(self):
+    def setup_github_auth_enterprise(self) -> InlineCallbacksType[Any]:
         auth = oauth2.GitHubAuth(
             "ghclientID", "clientSECRET", serverURL="https://git.corp.fakecorp.com"
         )
@@ -124,7 +131,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         return auth
 
     @defer.inlineCallbacks
-    def setup_github_auth_enterprise_v4(self):
+    def setup_github_auth_enterprise_v4(self) -> InlineCallbacksType[Any]:
         auth = oauth2.GitHubAuth(
             "ghclientID",
             "clientSECRET",
@@ -137,21 +144,21 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         return auth
 
     @defer.inlineCallbacks
-    def setup_gitlab_auth(self):
+    def setup_gitlab_auth(self) -> InlineCallbacksType[Any]:
         auth = oauth2.GitLabAuth("https://gitlab.test/", "glclientID", "clientSECRET")
         master = yield self.make_master(url='h:/a/b/', auth=auth)
         auth.reconfigAuth(master, master.config)
         return auth
 
     @defer.inlineCallbacks
-    def setup_bitbucket_auth(self):
+    def setup_bitbucket_auth(self) -> InlineCallbacksType[Any]:
         auth = oauth2.BitbucketAuth("bbclientID", "clientSECRET")
         master = yield self.make_master(url='h:/a/b/', auth=auth)
         auth.reconfigAuth(master, master.config)
         return auth
 
     @defer.inlineCallbacks
-    def test_getGoogleLoginURL(self):
+    def test_getGoogleLoginURL(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_google_auth()
         res = yield auth.getLoginURL('http://redir')
         exp = (
@@ -173,7 +180,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
-    def test_getGithubLoginURL(self):
+    def test_getGithubLoginURL(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_github_auth()
         res = yield auth.getLoginURL('http://redir')
         exp = (
@@ -192,7 +199,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
-    def test_getGithubLoginURL_with_secret(self):
+    def test_getGithubLoginURL_with_secret(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_github_auth_v4_secret()
         res = yield auth.getLoginURL('http://redir')
         exp = (
@@ -211,7 +218,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
-    def test_getGithubELoginURL(self):
+    def test_getGithubELoginURL(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_github_auth_enterprise()
 
         res = yield auth.getLoginURL('http://redir')
@@ -231,7 +238,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
-    def test_getGithubLoginURL_v4(self):
+    def test_getGithubLoginURL_v4(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_github_auth_enterprise_v4()
 
         res = yield auth.getLoginURL('http://redir')
@@ -251,7 +258,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
-    def test_getGitLabLoginURL(self):
+    def test_getGitLabLoginURL(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_gitlab_auth()
 
         res = yield auth.getLoginURL('http://redir')
@@ -273,7 +280,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
-    def test_getBitbucketLoginURL(self):
+    def test_getBitbucketLoginURL(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_bitbucket_auth()
 
         res = yield auth.getLoginURL('http://redir')
@@ -295,7 +302,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
-    def test_GoogleVerifyCode(self):
+    def test_GoogleVerifyCode(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_google_auth()
 
         requests.get.side_effect = []
@@ -315,14 +322,14 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
     @defer.inlineCallbacks
-    def test_GithubVerifyCode(self):
+    def test_GithubVerifyCode(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_github_auth()
 
         test = self
         requests.get.side_effect = []
         requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
 
-        def fake_get(self, ep, **kwargs):
+        def fake_get(self: Any, ep: str, **kwargs: Any) -> Any:
             test.assertEqual(
                 self.headers,
                 {
@@ -358,7 +365,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
     @defer.inlineCallbacks
-    def test_GithubVerifyCode_v4(self):
+    def test_GithubVerifyCode_v4(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_github_auth_v4()
 
         requests.get.side_effect = []
@@ -391,7 +398,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
     @defer.inlineCallbacks
-    def test_GithubVerifyCode_v4_teams(self):
+    def test_GithubVerifyCode_v4_teams(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_github_auth_v4_teams()
 
         requests.get.side_effect = []
@@ -462,12 +469,12 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             res,
         )
 
-    def test_GitHubAuthBadApiVersion(self):
+    def test_GitHubAuthBadApiVersion(self) -> None:
         for bad_api_version in (2, 5, 'a'):
             with self.assertRaisesConfigError('GitHubAuth apiVersion must be 3 or 4 not '):
-                oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=bad_api_version)
+                oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=bad_api_version)  # type: ignore[arg-type]
 
-    def test_GitHubAuthRaiseErrorWithApiV3AndGetTeamMembership(self):
+    def test_GitHubAuthRaiseErrorWithApiV3AndGetTeamMembership(self) -> None:
         with self.assertRaisesConfigError(
             'Retrieving team membership information using '
             'GitHubAuth is only possible using GitHub api v4.'
@@ -475,7 +482,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=3, getTeamsMembership=True)
 
     @defer.inlineCallbacks
-    def test_GitlabVerifyCode(self):
+    def test_GitlabVerifyCode(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_gitlab_auth()
 
         requests.get.side_effect = []
@@ -509,7 +516,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
     @defer.inlineCallbacks
-    def test_BitbucketVerifyCode(self):
+    def test_BitbucketVerifyCode(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_bitbucket_auth()
 
         requests.get.side_effect = []
@@ -538,7 +545,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
     @defer.inlineCallbacks
-    def test_loginResource(self):
+    def test_loginResource(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_github_auth()
 
         class fakeAuth:
@@ -566,7 +573,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         rsrc.auth.getLoginURL.assert_called_once()
 
     @defer.inlineCallbacks
-    def test_getConfig_github(self):
+    def test_getConfig_github(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_github_auth()
         self.assertEqual(
             auth.getConfigDict(),
@@ -574,7 +581,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
     @defer.inlineCallbacks
-    def test_getConfig_google(self):
+    def test_getConfig_google(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_google_auth()
         self.assertEqual(
             auth.getConfigDict(),
@@ -582,7 +589,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
     @defer.inlineCallbacks
-    def test_getConfig_gitlab(self):
+    def test_getConfig_gitlab(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_gitlab_auth()
         self.assertEqual(
             auth.getConfigDict(),
@@ -590,7 +597,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         )
 
     @defer.inlineCallbacks
-    def test_getConfig_bitbucket(self):
+    def test_getConfig_bitbucket(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_bitbucket_auth()
         self.assertEqual(
             auth.getConfigDict(),
@@ -599,7 +606,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
 
 
 class TestKeyCloakAuth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
@@ -609,14 +616,14 @@ class TestKeyCloakAuth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, un
         self.patch(requests, 'get', mock.Mock(spec=requests.get))
 
     @defer.inlineCallbacks
-    def setup_keycloak_auth(self):
+    def setup_keycloak_auth(self) -> InlineCallbacksType[Any]:
         auth = oauth2.KeyCloakAuth("instance_uri", "realm", "client_id", "client_secret")
         master = yield self.make_master(url='http://localhost:5000/', auth=auth)
         auth.reconfigAuth(master, master.config)
         return auth
 
     @defer.inlineCallbacks
-    def test_get_key_cloak_verify_code(self):
+    def test_get_key_cloak_verify_code(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_keycloak_auth()
 
         res = yield auth.getLoginURL('http://redir')
@@ -636,7 +643,7 @@ class TestKeyCloakAuth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, un
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
-    def test_key_cloak_verify_code(self):
+    def test_key_cloak_verify_code(self) -> InlineCallbacksType[None]:
         auth = yield self.setup_keycloak_auth()
 
         requests.get.side_effect = []
@@ -699,11 +706,11 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
     timeout = 60
     ssl_verify = True
 
-    def _instantiateAuth(self, cls, config):
+    def _instantiateAuth(self, cls: Any, config: dict[str, str]) -> Any:
         return cls(config["CLIENTID"], config["CLIENTSECRET"])
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
 
         if requests is None:
@@ -728,27 +735,27 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         master = yield self.make_master(url='http://localhost:5000/', auth=self.auth)
         self.auth.reconfigAuth(master, master.config)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         from twisted.internet.tcp import Server  # noqa: PLC0415
 
         # browsers has the bad habit on not closing the persistent
         # connections, so we need to hack them away to make trial happy
         f = failure.Failure(Exception("test end"))
-        for reader in reactor.getReaders():
+        for reader in reactor.getReaders():  # type: ignore[attr-defined]
             if isinstance(reader, Server):
                 reader.connectionLost(f)
 
     @defer.inlineCallbacks
-    def test_E2E(self):
-        d = defer.Deferred()
-        twisted.web.http._logDateTimeUsers = 1
+    def test_E2E(self) -> InlineCallbacksType[None]:
+        d: defer.Deferred[Any] = defer.Deferred()
+        twisted.web.http._logDateTimeUsers = 1  # type: ignore[attr-defined]
 
         class HomePage(Resource):
             isLeaf = True
 
-            def render_GET(self, request):
+            def render_GET(self, request: Any) -> bytes:
                 info = request.getSession().user_info
-                reactor.callLater(0, d.callback, info)
+                reactor.callLater(0, d.callback, info)  # type: ignore[attr-defined]
                 return (
                     b"<html><script>setTimeout(close,1000)</script><body>WORKED: "
                     + str(info).encode('utf-8')
@@ -756,10 +763,10 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
                 )
 
         class MySite(SiteWithClose):
-            def makeSession(self):
+            def makeSession(self) -> Any:
                 uid = self._mkuid()
                 session = self.sessions[uid] = self.sessionFactory(self, uid)
-                session.updateSession = mock.Mock()
+                session.updateSession = mock.Mock()  # type: ignore[attr-defined]
                 return session
 
         root = Resource()
@@ -768,9 +775,9 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         root.putChild(b'auth', auth)
         auth.putChild(b'login', self.auth.getLoginResource())
         site = MySite(root)
-        listener = reactor.listenTCP(5000, site)
+        listener = reactor.listenTCP(5000, site)  # type: ignore[attr-defined]
 
-        def thd():
+        def thd() -> None:
             self.assertTrue(
                 webbrowser.open('http://localhost:5000/auth/login'), "Could not open web browser"
             )
@@ -781,7 +788,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             twistedDeferToThread(thd)
             res = yield d
         yield listener.stopListening()
-        yield site.stopFactory()
+        yield site.stopFactory()  # type: ignore[func-returns-value]
         yield site.close_connections()
 
         self.assertIn("full_name", res)
@@ -796,7 +803,7 @@ class OAuth2AuthGoogleE2E(OAuth2AuthGitHubE2E):
 class OAuth2AuthGitLabE2E(OAuth2AuthGitHubE2E):
     authClass = "GitLabAuth"
 
-    def _instantiateAuth(self, cls, config):
+    def _instantiateAuth(self, cls: Any, config: dict[str, str]) -> Any:
         return cls(config["INSTANCEURI"], config["CLIENTID"], config["CLIENTSECRET"])
 
 
@@ -804,7 +811,7 @@ class OAuth2AuthKeyCloakE2E(OAuth2AuthGitHubE2E):
     authClass = "KeyCloakAuth"
     ssl_verify = False
 
-    def _instantiateAuth(self, cls, config):
+    def _instantiateAuth(self, cls: Any, config: dict[str, str]) -> Any:
         return cls(
             config["INSTANCEURI"],
             config["REALM"],
