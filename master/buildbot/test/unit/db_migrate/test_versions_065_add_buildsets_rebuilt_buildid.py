@@ -13,21 +13,29 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
 from sqlalchemy.inspection import inspect
+from twisted.internet.defer import Deferred
 from twisted.trial import unittest
 
 from buildbot.test.util import migration
 from buildbot.util import sautils
 
+if TYPE_CHECKING:
+    from sqlalchemy.engine.base import Connection
+    from twisted.internet.defer import Deferred
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> Deferred[None]:  # type: ignore[override]
         return self.setUpMigrateTest()
 
-    def create_tables_thd(self, conn):
+    def create_tables_thd(self, conn: Connection) -> None:
         metadata = sa.MetaData()
-        metadata.bind = conn
 
         # parent_buildid foreign key is removed for the purposes of the test
         buildsets = sautils.Table(
@@ -76,13 +84,12 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         )
         conn.commit()
 
-    def test_update(self):
-        def setup_thd(conn):
+    def test_update(self) -> Deferred[None]:
+        def setup_thd(conn: Connection) -> None:
             self.create_tables_thd(conn)
 
-        def verify_thd(conn):
+        def verify_thd(conn: Connection) -> None:
             metadata = sa.MetaData()
-            metadata.bind = conn
 
             # check that builsets.rebuilt_buildid has been added
             buildsets = sautils.Table('buildsets', metadata, autoload_with=conn)
