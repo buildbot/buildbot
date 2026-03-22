@@ -196,7 +196,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.util.test_kubeclientservice",
       "buildbot.test.unit.util.test_test_result_submitter",
       "buildbot.test.unit.util.test_test_util_runprocess",
-      "buildbot.test.unit.util.test_tuplematch",
       "buildbot.test.unit.util.test_watchdog",
       "buildbot.test.unit.www.test_avatar",
       "buildbot.test.unit.www.test_config",
