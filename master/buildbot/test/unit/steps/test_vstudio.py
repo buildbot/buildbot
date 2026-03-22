@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest.mock import Mock
 
 from twisted.internet import defer
@@ -30,6 +34,9 @@ from buildbot.steps import vstudio
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 real_log = r"""
 1>------ Build started: Project: lib1, Configuration: debug Win32 ------
@@ -54,60 +61,62 @@ real_log = r"""
 
 
 class TestAddEnvPath(unittest.TestCase):
-    def do_test(self, initial_env, name, value, expected_env):
+    def do_test(
+        self, initial_env: dict[str, str], name: str, value: str, expected_env: dict[str, str]
+    ) -> None:
         step = create_step_from_step_or_factory(vstudio.VisualStudio())
-        step.env = initial_env
-        step.add_env_path(name, value)
-        self.assertEqual(step.env, expected_env)
+        step.env = initial_env  # type: ignore[attr-defined]
+        step.add_env_path(name, value)  # type: ignore[attr-defined]
+        self.assertEqual(step.env, expected_env)  # type: ignore[attr-defined]
 
-    def test_new(self):
+    def test_new(self) -> None:
         self.do_test({}, 'PATH', r'C:\NOTHING', {'PATH': r'C:\NOTHING;'})
 
-    def test_new_semi(self):
+    def test_new_semi(self) -> None:
         self.do_test({}, 'PATH', r'C:\NOTHING;', {'PATH': r'C:\NOTHING;'})
 
-    def test_existing(self):
+    def test_existing(self) -> None:
         self.do_test({'PATH': '/bin'}, 'PATH', r'C:\NOTHING', {'PATH': r'/bin;C:\NOTHING;'})
 
-    def test_existing_semi(self):
+    def test_existing_semi(self) -> None:
         self.do_test({'PATH': '/bin;'}, 'PATH', r'C:\NOTHING', {'PATH': r'/bin;C:\NOTHING;'})
 
-    def test_existing_both_semi(self):
+    def test_existing_both_semi(self) -> None:
         self.do_test({'PATH': '/bin;'}, 'PATH', r'C:\NOTHING;', {'PATH': r'/bin;C:\NOTHING;'})
 
 
 class MSLogLineObserver(unittest.TestCase):
-    def setUp(self):
-        self.warnings = []
+    def setUp(self) -> None:
+        self.warnings = []  # type: ignore[var-annotated]
         lw = Mock()
         lw.addStdout = lambda l: self.warnings.append(l.rstrip())
 
-        self.errors = []
-        self.errors_stderr = []
+        self.errors = []  # type: ignore[var-annotated]
+        self.errors_stderr = []  # type: ignore[var-annotated]
         le = Mock()
         le.addStdout = lambda l: self.errors.append(('o', l.rstrip()))
         le.addStderr = lambda l: self.errors.append(('e', l.rstrip()))
 
         self.llo = vstudio.MSLogLineObserver(lw, le)
 
-        self.progress = {}
+        self.progress = {}  # type: ignore[var-annotated]
         self.llo.step = Mock()
         self.llo.step.setProgress = self.progress.__setitem__
 
-    def receiveLines(self, *lines):
+    def receiveLines(self, *lines: str) -> None:
         for line in lines:
             self.llo.outLineReceived(line)
 
     def assertResult(
         self,
-        nbFiles=0,
-        nbProjects=0,
-        nbWarnings=0,
-        nbErrors=0,
-        errors=None,
-        warnings=None,
-        progress=None,
-    ):
+        nbFiles: int = 0,
+        nbProjects: int = 0,
+        nbWarnings: int = 0,
+        nbErrors: int = 0,
+        errors: list[tuple[str, str]] | None = None,
+        warnings: list[str] | None = None,
+        progress: dict[str, int] | None = None,
+    ) -> None:
         if errors is None:
             errors = []
         if warnings is None:
@@ -135,11 +144,11 @@ class MSLogLineObserver(unittest.TestCase):
             },
         )
 
-    def test_outLineReceived_empty(self):
+    def test_outLineReceived_empty(self) -> None:
         self.llo.outLineReceived('abcd\r\n')
         self.assertResult()
 
-    def test_outLineReceived_projects(self):
+    def test_outLineReceived_projects(self) -> None:
         lines = [
             "123>----- some project 1 -----",
             "123>----- some project 2 -----",
@@ -149,7 +158,7 @@ class MSLogLineObserver(unittest.TestCase):
             nbProjects=2, progress={"projects": 2}, errors=[('o', l) for l in lines], warnings=lines
         )
 
-    def test_outLineReceived_files(self):
+    def test_outLineReceived_files(self) -> None:
         lines = [
             "123>SomeClass.cpp",
             "123>SomeStuff.c",
@@ -158,7 +167,7 @@ class MSLogLineObserver(unittest.TestCase):
         self.receiveLines(*lines)
         self.assertResult(nbFiles=2, progress={"files": 2})
 
-    def test_outLineReceived_warnings(self):
+    def test_outLineReceived_warnings(self) -> None:
         lines = [
             "abc: warning ABC123: xyz!",
             "def : warning DEF456: wxy!",
@@ -166,7 +175,7 @@ class MSLogLineObserver(unittest.TestCase):
         self.receiveLines(*lines)
         self.assertResult(nbWarnings=2, progress={"warnings": 2}, warnings=lines)
 
-    def test_outLineReceived_errors(self):
+    def test_outLineReceived_errors(self) -> None:
         lines = [
             "error ABC123: foo",
             " error DEF456 : bar",
@@ -183,7 +192,7 @@ class MSLogLineObserver(unittest.TestCase):
             ],
         )
 
-    def test_outLineReceived_real(self):
+    def test_outLineReceived_real(self) -> None:
         # based on a real logfile donated by Ben Allard
         lines = real_log.split("\n")
         self.receiveLines(*lines)
@@ -217,7 +226,7 @@ class MSLogLineObserver(unittest.TestCase):
 
 
 class VCx(vstudio.VisualStudio):
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
         self.command = ["command", "here"]
         return super().run()
 
@@ -227,42 +236,42 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     Test L{VisualStudio} with a simple subclass, L{VCx}.
     """
 
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_default_config(self):
+    def test_default_config(self) -> None:
         vs = vstudio.VisualStudio()
         self.assertEqual(vs.config, 'release')
 
-    def test_simple(self):
+    def test_simple(self) -> defer.Deferred[None]:
         self.setup_step(VCx())
         self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_skipped(self):
+    def test_skipped(self) -> defer.Deferred[None]:
         self.setup_step(VCx(doStepIf=False))
         self.expect_commands()
         self.expect_outcome(result=SKIPPED, state_string="")
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_installdir(self):
+    def test_installdir(self) -> InlineCallbacksType[None]:
         self.setup_step(VCx(installdir=r'C:\I'))
-        self.get_nth_step(0).exp_installdir = r'C:\I'
+        self.get_nth_step(0).exp_installdir = r'C:\I'  # type: ignore[attr-defined]
         self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
-        self.assertEqual(self.get_nth_step(0).installdir, r'C:\I')
+        self.assertEqual(self.get_nth_step(0).installdir, r'C:\I')  # type: ignore[attr-defined]
 
-    def test_evaluate_result_failure(self):
+    def test_evaluate_result_failure(self) -> defer.Deferred[None]:
         self.setup_step(VCx())
         self.expect_commands(ExpectShell(workdir='wkdir', command=['command', 'here']).exit(1))
         self.expect_outcome(result=FAILURE, state_string="compile 0 projects 0 files (failure)")
         return self.run_step()
 
-    def test_evaluate_result_errors(self):
+    def test_evaluate_result_errors(self) -> defer.Deferred[None]:
         self.setup_step(VCx())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['command', 'here'])
@@ -274,7 +283,7 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         return self.run_step()
 
-    def test_evaluate_result_warnings(self):
+    def test_evaluate_result_warnings(self) -> defer.Deferred[None]:
         self.setup_step(VCx())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['command', 'here'])
@@ -286,7 +295,7 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         return self.run_step()
 
-    def test_env_setup(self):
+    def test_env_setup(self) -> defer.Deferred[None]:
         self.setup_step(
             VCx(
                 INCLUDE=[r'c:\INC1', r'c:\INC2'],
@@ -308,7 +317,7 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_env_setup_existing(self):
+    def test_env_setup_existing(self) -> defer.Deferred[None]:
         self.setup_step(
             VCx(
                 INCLUDE=[r'c:\INC1', r'c:\INC2'],
@@ -331,8 +340,8 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_rendering(self):
-        self.setup_step(VCx(projectfile=Property('a'), config=Property('b'), project=Property('c')))
+    def test_rendering(self) -> InlineCallbacksType[None]:
+        self.setup_step(VCx(projectfile=Property('a'), config=Property('b'), project=Property('c')))  # type: ignore[arg-type]
         self.build.setProperty('a', 'aa', 'Test')
         self.build.setProperty('b', 'bb', 'Test')
         self.build.setProperty('c', 'cc', 'Test')
@@ -341,15 +350,17 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.run_step()
 
         step = self.get_nth_step(0)
-        self.assertEqual([step.projectfile, step.config, step.project], ['aa', 'bb', 'cc'])
+        self.assertEqual([step.projectfile, step.config, step.project], ['aa', 'bb', 'cc'])  # type: ignore[attr-defined]
 
 
 class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def getExpectedEnv(self, installdir, LIB=None, p=None, i=None):
+    def getExpectedEnv(
+        self, installdir: str, LIB: str | None = None, p: str | None = None, i: str | None = None
+    ) -> dict[str, str]:
         include = [
             installdir + r'\VC98\INCLUDE;',
             installdir + r'\VC98\ATL\INCLUDE;',
@@ -377,7 +388,7 @@ class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             "PATH": ''.join(path),
         }
 
-    def test_args(self):
+    def test_args(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
             ExpectShell(
@@ -389,7 +400,7 @@ class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_clean(self):
+    def test_clean(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg', project='pj', mode='clean'))
         self.expect_commands(
             ExpectShell(
@@ -401,7 +412,7 @@ class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_noproj_build(self):
+    def test_noproj_build(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC6(projectfile='pf', config='cfg', mode='build'))
         self.expect_commands(
             ExpectShell(
@@ -413,7 +424,7 @@ class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_env_prepend(self):
+    def test_env_prepend(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.VC6(
                 projectfile='pf', config='cfg', project='pj', PATH=['p'], INCLUDE=['i'], LIB=['l']
@@ -440,11 +451,13 @@ class TestVC6(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def getExpectedEnv(self, installdir, LIB=None, p=None, i=None):
+    def getExpectedEnv(
+        self, installdir: str, LIB: str | None = None, p: str | None = None, i: str | None = None
+    ) -> dict[str, str]:
         include = [
             installdir + r'\VC7\INCLUDE;',
             installdir + r'\VC7\ATLMFC\INCLUDE;',
@@ -475,7 +488,7 @@ class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             "PATH": ''.join(path),
         }
 
-    def test_args(self):
+    def test_args(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
             ExpectShell(
@@ -487,7 +500,7 @@ class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_clean(self):
+    def test_clean(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg', project='pj', mode='clean'))
         self.expect_commands(
             ExpectShell(
@@ -499,7 +512,7 @@ class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_noproj_build(self):
+    def test_noproj_build(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC7(projectfile='pf', config='cfg', mode='build'))
         self.expect_commands(
             ExpectShell(
@@ -511,7 +524,7 @@ class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_env_prepend(self):
+    def test_env_prepend(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.VC7(
                 projectfile='pf', config='cfg', project='pj', PATH=['p'], INCLUDE=['i'], LIB=['l']
@@ -533,7 +546,14 @@ class TestVC7(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 class VC8ExpectedEnvMixin:
     # used for VC8 and VC9Express
 
-    def getExpectedEnv(self, installdir, x64=False, LIB=None, i=None, p=None):
+    def getExpectedEnv(
+        self,
+        installdir: str,
+        x64: bool = False,
+        LIB: str | None = None,
+        i: str | None = None,
+        p: str | None = None,
+    ) -> dict[str, str]:
         include = [
             installdir + r'\VC\INCLUDE;',
             installdir + r'\VC\ATLMFC\include;',
@@ -572,11 +592,11 @@ class VC8ExpectedEnvMixin:
 
 
 class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_args(self):
+    def test_args(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', project='pj', arch='arch'))
         self.expect_commands(
             ExpectShell(
@@ -588,7 +608,7 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_args_x64(self):
+    def test_args_x64(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', project='pj', arch='x64'))
         self.expect_commands(
             ExpectShell(
@@ -600,7 +620,7 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_clean(self):
+    def test_clean(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', project='pj', mode='clean'))
         self.expect_commands(
             ExpectShell(
@@ -613,8 +633,8 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_rendering(self):
-        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', arch=Property('a')))
+    def test_rendering(self) -> InlineCallbacksType[None]:
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', arch=Property('a')))  # type: ignore[arg-type]
         self.build.setProperty('a', 'x64', 'Test')
         self.expect_commands(
             ExpectShell(
@@ -626,15 +646,15 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         yield self.run_step()
 
-        self.assertEqual(self.get_nth_step(0).arch, 'x64')
+        self.assertEqual(self.get_nth_step(0).arch, 'x64')  # type: ignore[attr-defined]
 
 
 class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_args(self):
+    def test_args(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VCExpress9(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
             ExpectShell(
@@ -649,7 +669,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, 
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_clean(self):
+    def test_clean(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.VCExpress9(projectfile='pf', config='cfg', project='pj', mode='clean')
         )
@@ -666,7 +686,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, 
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_mode_build_env(self):
+    def test_mode_build_env(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.VCExpress9(
                 projectfile='pf', config='cfg', project='pj', mode='build', INCLUDE=['i']
@@ -684,11 +704,11 @@ class TestVCExpress9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, 
 
 
 class TestVC9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_installdir(self):
+    def test_installdir(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC9(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
             ExpectShell(
@@ -702,11 +722,11 @@ class TestVC9(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
 
 
 class TestVC10(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_installdir(self):
+    def test_installdir(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC10(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
             ExpectShell(
@@ -720,11 +740,11 @@ class TestVC10(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unitte
 
 
 class TestVC11(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_installdir(self):
+    def test_installdir(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.VC11(projectfile='pf', config='cfg', project='pj'))
         self.expect_commands(
             ExpectShell(
@@ -738,21 +758,21 @@ class TestVC11(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unitte
 
 
 class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
     @defer.inlineCallbacks
-    def test_no_platform(self):
+    def test_no_platform(self) -> InlineCallbacksType[None]:
         self.setup_step(
-            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')
+            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')  # type: ignore[arg-type]
         )
 
         self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
         yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
-    def test_rebuild_project(self):
+    def test_rebuild_project(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild(projectfile='pf', config='cfg', platform='Win32', project='pj')
         )
@@ -767,7 +787,7 @@ class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
-    def test_build_project(self):
+    def test_build_project(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild(
                 projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'
@@ -784,7 +804,7 @@ class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
-    def test_clean_project(self):
+    def test_clean_project(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild(
                 projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'
@@ -801,7 +821,7 @@ class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
-    def test_rebuild_project_with_defines(self):
+    def test_rebuild_project_with_defines(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild(
                 projectfile='pf',
@@ -822,7 +842,7 @@ class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="built pj for cfg|Win32")
         return self.run_step()
 
-    def test_rebuild_solution(self):
+    def test_rebuild_solution(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.MsBuild(projectfile='pf', config='cfg', platform='x64'))
 
         self.expect_commands(
@@ -837,21 +857,21 @@ class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
     @defer.inlineCallbacks
-    def test_no_platform(self):
+    def test_no_platform(self) -> InlineCallbacksType[None]:
         self.setup_step(
-            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')
+            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')  # type: ignore[arg-type]
         )
 
         self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
         yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(config.ConfigErrors)), 1)
 
-    def test_rebuild_project(self):
+    def test_rebuild_project(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild141(projectfile='pf', config='cfg', platform='Win32', project='pj')
         )
@@ -869,7 +889,7 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_build_project(self):
+    def test_build_project(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild141(
                 projectfile='pf', config='cfg', platform='Win32', project='pj', mode='build'
@@ -889,7 +909,7 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_clean_project(self):
+    def test_clean_project(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild141(
                 projectfile='pf', config='cfg', platform='Win32', project='pj', mode='clean'
@@ -909,7 +929,7 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_rebuild_project_with_defines(self):
+    def test_rebuild_project_with_defines(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild141(
                 projectfile='pf',
@@ -933,10 +953,10 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def _callable_property(build):
+    def _callable_property(build: Any) -> str:
         return '%BasePath%\\' + build.getProperty('path2suffix')
 
-    def test_rebuild_project_with_properties(self):
+    def test_rebuild_project_with_properties(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild141(
                 projectfile='pf',
@@ -966,7 +986,7 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_rebuild_solution(self):
+    def test_rebuild_solution(self) -> defer.Deferred[None]:
         self.setup_step(vstudio.MsBuild141(projectfile='pf', config='cfg', platform='x64'))
 
         self.expect_commands(
@@ -982,16 +1002,16 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="compile 0 projects 0 files")
         return self.run_step()
 
-    def test_aliases_MsBuild15(self):
+    def test_aliases_MsBuild15(self) -> None:
         self.assertIdentical(vstudio.MsBuild141, vstudio.MsBuild15)
 
 
 class TestMsBuild16(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_version_range_is_correct(self):
+    def test_version_range_is_correct(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild16(projectfile='pf', config='cfg', platform='Win32', project='pj')
         )
@@ -1011,11 +1031,11 @@ class TestMsBuild16(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestMsBuild17(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_version_range_is_correct(self):
+    def test_version_range_is_correct(self) -> defer.Deferred[None]:
         self.setup_step(
             vstudio.MsBuild17(projectfile='pf', config='cfg', platform='Win32', project='pj')
         )
@@ -1035,17 +1055,17 @@ class TestMsBuild17(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class Aliases(unittest.TestCase):
-    def test_vs2003(self):
+    def test_vs2003(self) -> None:
         self.assertIdentical(vstudio.VS2003, vstudio.VC7)
 
-    def test_vs2005(self):
+    def test_vs2005(self) -> None:
         self.assertIdentical(vstudio.VS2005, vstudio.VC8)
 
-    def test_vs2008(self):
+    def test_vs2008(self) -> None:
         self.assertIdentical(vstudio.VS2008, vstudio.VC9)
 
-    def test_vs2010(self):
+    def test_vs2010(self) -> None:
         self.assertIdentical(vstudio.VS2010, vstudio.VC10)
 
-    def test_vs2012(self):
+    def test_vs2012(self) -> None:
         self.assertIdentical(vstudio.VS2012, vstudio.VC11)
