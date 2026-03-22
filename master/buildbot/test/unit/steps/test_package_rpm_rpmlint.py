@@ -13,7 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.package.rpm import rpmlint
@@ -23,17 +30,17 @@ from buildbot.test.steps import TestBuildStepMixin
 
 
 class TestRpmLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(rpmlint.RpmLint())
         self.expect_commands(ExpectShell(workdir='wkdir', command=['rpmlint', '-i', '.']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string='Finished checking RPM/SPEC issues')
         return self.run_step()
 
-    def test_fileloc_success(self):
+    def test_fileloc_success(self) -> defer.Deferred[None]:
         self.setup_step(rpmlint.RpmLint(fileloc='RESULT'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['rpmlint', '-i', 'RESULT']).exit(0)
@@ -41,7 +48,7 @@ class TestRpmLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_config_success(self):
+    def test_config_success(self) -> defer.Deferred[None]:
         self.setup_step(rpmlint.RpmLint(config='foo.cfg'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['rpmlint', '-i', '-f', 'foo.cfg', '.']).exit(0)
