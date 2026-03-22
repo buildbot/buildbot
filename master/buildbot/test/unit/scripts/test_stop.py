@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import signal
 import time
+from typing import Any
 
 from twisted.trial import unittest
 
@@ -25,35 +28,41 @@ from buildbot.test.util import misc
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 
-def mkconfig(**kwargs):
-    config = {"quiet": False, "clean": False, "basedir": os.path.abspath('basedir')}
+def mkconfig(**kwargs: Any) -> dict[str, Any]:
+    config: dict[str, Any] = {"quiet": False, "clean": False, "basedir": os.path.abspath('basedir')}
     config['no-wait'] = kwargs.pop('no_wait', False)
     config.update(kwargs)
     return config
 
 
 class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setUpDirs('basedir')
         self.setUpStdoutAssertions()
 
     # tests
 
-    def do_test_stop(self, config, kill_sequence, is_running=True, **kwargs):
+    def do_test_stop(
+        self,
+        config: dict[str, Any],
+        kill_sequence: list[Any],
+        is_running: bool = True,
+        **kwargs: Any,
+    ) -> int:
         with open(os.path.join('basedir', 'buildbot.tac'), "w", encoding='utf-8') as f:
             f.write("Application('buildmaster')")
         if is_running:
             with open("basedir/twistd.pid", "w", encoding='utf-8') as f:
                 f.write('1234')
 
-        def sleep(t):
+        def sleep(t: float) -> None:
             self.assertTrue(kill_sequence, f"unexpected sleep: {t}")
             what, exp_t = kill_sequence.pop(0)
             self.assertEqual((what, exp_t), ('sleep', t))
 
         self.patch(time, 'sleep', sleep)
 
-        def kill(pid, signal):
+        def kill(pid: int, signal: int) -> None:
             self.assertTrue(kill_sequence, f"unexpected signal: {signal}")
             exp_sig, result = kill_sequence.pop(0)
             self.assertEqual((pid, signal), (1234, exp_sig))
@@ -67,13 +76,13 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         return rv
 
     @skipUnlessPlatformIs('posix')
-    def test_stop_not_running(self):
+    def test_stop_not_running(self) -> None:
         rv = self.do_test_stop(mkconfig(no_wait=True), [], is_running=False)
         self.assertInStdout('not running')
         self.assertEqual(rv, 0)
 
     @skipUnlessPlatformIs('posix')
-    def test_stop_dead_but_pidfile_remains(self):
+    def test_stop_dead_but_pidfile_remains(self) -> None:
         rv = self.do_test_stop(
             mkconfig(no_wait=True), [(signal.SIGTERM, OSError(3, 'No such process'))]
         )
@@ -82,7 +91,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertInStdout('not running')
 
     @skipUnlessPlatformIs('posix')
-    def test_stop_dead_but_pidfile_remains_quiet(self):
+    def test_stop_dead_but_pidfile_remains_quiet(self) -> None:
         rv = self.do_test_stop(
             mkconfig(quiet=True, no_wait=True),
             [(signal.SIGTERM, OSError(3, 'No such process'))],
@@ -92,7 +101,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertWasQuiet()
 
     @skipUnlessPlatformIs('posix')
-    def test_stop_dead_but_pidfile_remains_wait(self):
+    def test_stop_dead_but_pidfile_remains_wait(self) -> None:
         rv = self.do_test_stop(
             mkconfig(no_wait=True), [(signal.SIGTERM, OSError(3, 'No such process'))], wait=True
         )
@@ -100,7 +109,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join('basedir', 'twistd.pid')))
 
     @skipUnlessPlatformIs('posix')
-    def test_stop_slow_death_wait(self):
+    def test_stop_slow_death_wait(self) -> None:
         rv = self.do_test_stop(
             mkconfig(no_wait=True),
             [
@@ -120,7 +129,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertEqual(rv, 0)
 
     @skipUnlessPlatformIs('posix')
-    def test_stop_slow_death_wait_timeout(self):
+    def test_stop_slow_death_wait_timeout(self) -> None:
         rv = self.do_test_stop(
             mkconfig(no_wait=True),
             [
@@ -138,7 +147,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertEqual(rv, 1)
 
     @skipUnlessPlatformIs('posix')
-    def test_stop_slow_death_config_wait_timeout(self):
+    def test_stop_slow_death_config_wait_timeout(self) -> None:
         rv = self.do_test_stop(
             mkconfig(),
             [
@@ -155,11 +164,11 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertEqual(rv, 1)
 
     @skipUnlessPlatformIs('posix')
-    def test_stop_clean(self):
+    def test_stop_clean(self) -> None:
         rv = self.do_test_stop(
             mkconfig(clean=True, no_wait=True),
             [
-                (signal.SIGUSR1, None),
+                (signal.SIGUSR1, None),  # type: ignore[attr-defined, unused-ignore]
             ],
             wait=False,
         )
