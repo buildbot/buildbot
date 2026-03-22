@@ -95,10 +95,9 @@ class Trigger(BuildStep):
 
         self.schedulerNames = schedulerNames
         self.unimportantSchedulerNames = unimportantSchedulerNames
-        normalized_sourceStamps: list[dict[str, Any]] = (
+        self.sourceStamps: list[dict[str, Any]] = (
             list(sourceStamps) if isinstance(sourceStamps, list) else []
         )
-        self.sourceStamps = normalized_sourceStamps
         if sourceStamp:
             self.sourceStamps.append(sourceStamp)
         if updateSourceStamp is not None:

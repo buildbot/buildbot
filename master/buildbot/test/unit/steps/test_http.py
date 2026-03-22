@@ -64,7 +64,7 @@ class TestPage(Resource):
         elif request.uri == b'/redirect':
             return redirectTo(b'/redirected-path', request)
         elif request.uri == b"/header":
-            return b"".join(request.requestHeaders.getRawHeaders(b"X-Test"))  # type: ignore[arg-type]
+            return b"".join(request.requestHeaders.getRawHeaders(b"X-Test") or [])
         return b"OK"
 
     def render_POST(self, request: Request) -> bytes:
