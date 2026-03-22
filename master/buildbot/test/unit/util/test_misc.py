@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -20,17 +24,20 @@ from buildbot import util
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import misc
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class deferredLocked(unittest.TestCase):
-    def test_name(self):
+    def test_name(self) -> None:
         self.assertEqual(util.deferredLocked, misc.deferredLocked)
 
     @defer.inlineCallbacks
-    def test_fn(self):
+    def test_fn(self) -> InlineCallbacksType[None]:
         lock = defer.DeferredLock()
 
         @util.deferredLocked(lock)
-        def check_locked(arg1, arg2):
+        def check_locked(arg1: int, arg2: int) -> defer.Deferred[None]:
             self.assertEqual([lock.locked, arg1, arg2], [True, 1, 2])
             return defer.succeed(None)
 
@@ -39,11 +46,11 @@ class deferredLocked(unittest.TestCase):
         self.assertFalse(lock.locked)
 
     @defer.inlineCallbacks
-    def test_fn_fails(self):
+    def test_fn_fails(self) -> InlineCallbacksType[None]:
         lock = defer.DeferredLock()
 
         @util.deferredLocked(lock)
-        def do_fail():
+        def do_fail() -> defer.Deferred[None]:
             return defer.fail(RuntimeError("oh noes"))
 
         try:
@@ -53,11 +60,11 @@ class deferredLocked(unittest.TestCase):
             self.assertFalse(lock.locked)
 
     @defer.inlineCallbacks
-    def test_fn_exception(self):
+    def test_fn_exception(self) -> InlineCallbacksType[None]:
         lock = defer.DeferredLock()
 
-        @util.deferredLocked(lock)
-        def do_fail():
+        @util.deferredLocked(lock)  # type: ignore[arg-type]
+        def do_fail() -> None:
             raise RuntimeError("oh noes")
 
         # using decorators confuses pylint and gives a false positive below
@@ -68,33 +75,33 @@ class deferredLocked(unittest.TestCase):
             self.assertFalse(lock.locked)
 
     @defer.inlineCallbacks
-    def test_method(self):
+    def test_method(self) -> InlineCallbacksType[None]:
         testcase = self
 
         class C:
             @util.deferredLocked('aLock')
-            def check_locked(self, arg1, arg2):
-                testcase.assertEqual([self.aLock.locked, arg1, arg2], [True, 1, 2])
+            def check_locked(self, arg1: int, arg2: int) -> defer.Deferred[None]:
+                testcase.assertEqual([self.aLock.locked, arg1, arg2], [True, 1, 2])  # type: ignore[attr-defined]
                 return defer.succeed(None)
 
         obj = C()
-        obj.aLock = defer.DeferredLock()
+        obj.aLock = defer.DeferredLock()  # type: ignore[attr-defined]
         yield obj.check_locked(1, 2)
 
-        self.assertFalse(obj.aLock.locked)
+        self.assertFalse(obj.aLock.locked)  # type: ignore[attr-defined]
 
 
 class TestCancelAfter(TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
-        self.d = defer.Deferred()
+        self.d = defer.Deferred()  # type: ignore[var-annotated]
 
-    def test_succeeds(self):
+    def test_succeeds(self) -> None:
         d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertIdentical(d, self.d)
 
         @d.addCallback
-        def check(r):
+        def check(r: str) -> None:
             self.assertEqual(r, "result")
 
         self.assertFalse(d.called)
@@ -102,7 +109,7 @@ class TestCancelAfter(TestReactorMixin, unittest.TestCase):
         self.assertTrue(d.called)
 
     @defer.inlineCallbacks
-    def test_fails(self):
+    def test_fails(self) -> InlineCallbacksType[None]:
         d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertFalse(d.called)
         self.d.errback(RuntimeError("oh noes"))
@@ -111,7 +118,7 @@ class TestCancelAfter(TestReactorMixin, unittest.TestCase):
             yield d
 
     @defer.inlineCallbacks
-    def test_timeout_succeeds(self):
+    def test_timeout_succeeds(self) -> InlineCallbacksType[None]:
         d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertFalse(d.called)
         self.reactor.advance(11)
@@ -121,7 +128,7 @@ class TestCancelAfter(TestReactorMixin, unittest.TestCase):
             yield d
 
     @defer.inlineCallbacks
-    def test_timeout_fails(self):
+    def test_timeout_fails(self) -> InlineCallbacksType[None]:
         d = misc.cancelAfter(10, self.d, self.reactor)
         self.assertFalse(d.called)
         self.reactor.advance(11)
@@ -132,7 +139,7 @@ class TestCancelAfter(TestReactorMixin, unittest.TestCase):
 
 
 class TestChunkifyList(unittest.TestCase):
-    def test_all(self):
+    def test_all(self) -> None:
         self.assertEqual(list(misc.chunkify_list([], 0)), [])
         self.assertEqual(list(misc.chunkify_list([], 1)), [])
         self.assertEqual(list(misc.chunkify_list([1], 0)), [[1]])
