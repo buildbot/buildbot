@@ -19,7 +19,7 @@ hyperlink==21.0.0
 idna==3.10;  python_version < "3.8"  # pyup: ignore
 idna==3.11;  python_version >= "3.8"
 incremental==22.10.0;  python_version < "3.8" # pyup: ignore
-incremental==24.7.2;  python_version >= "3.8"
+incremental==24.11.0;  python_version >= "3.8"
 mock==5.2.0
 parameterized==0.9.0
 pbr==7.0.3
