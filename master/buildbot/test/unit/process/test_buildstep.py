@@ -498,7 +498,7 @@ class TestBuildStep(
         step = self.setup_step(self.FakeBuildStep(locks=[lock.access("exclusive")]))
 
         lock_list = yield get_real_locks_from_accesses([lock.access("counting")], self.build)  # type: ignore[arg-type]
-        self.build._locks_to_acquire = lock_list  # type: ignore[union-attr]
+        self.build._locks_to_acquire = lock_list
 
         with self.assertRaises(RuntimeError) as e:
             yield step._setup_locks()
@@ -739,7 +739,7 @@ class TestBuildStep(
     @defer.inlineCallbacks
     def test_step_renders_flunkOnFailure(self) -> InlineCallbacksType[None]:
         self.setup_step(TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))
-        self.build.setProperty('fOF', 'yes', 'test')  # type: ignore[union-attr]
+        self.build.setProperty('fOF', 'yes', 'test')
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
         self.assertEqual(self.get_nth_step(0).flunkOnFailure, 'yes')
@@ -1338,7 +1338,7 @@ class TestShellMixin(
     @defer.inlineCallbacks
     def test_build_workdir(self) -> InlineCallbacksType[None]:
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
-        self.build.workdir = '/alternate'  # type: ignore[union-attr]
+        self.build.workdir = '/alternate'
         self.expect_commands(ExpectShell(workdir='/alternate', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
@@ -1346,7 +1346,7 @@ class TestShellMixin(
     @defer.inlineCallbacks
     def test_build_workdir_callable(self) -> InlineCallbacksType[None]:
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
-        self.build.workdir = lambda x: '/alternate'  # type: ignore[union-attr]
+        self.build.workdir = lambda x: '/alternate'  # type: ignore[assignment]
         self.expect_commands(ExpectShell(workdir='/alternate', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
@@ -1354,7 +1354,7 @@ class TestShellMixin(
     @defer.inlineCallbacks
     def test_build_workdir_callable_error(self) -> InlineCallbacksType[None]:
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
-        self.build.workdir = lambda x: (  # type: ignore[union-attr]
+        self.build.workdir = lambda x: (  # type: ignore[assignment]
             x.nosuchattribute
         )  # will raise AttributeError
         self.expect_exception(buildstep.CallableAttributeError)
@@ -1363,8 +1363,8 @@ class TestShellMixin(
     @defer.inlineCallbacks
     def test_build_workdir_renderable(self) -> InlineCallbacksType[None]:
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg']), want_default_work_dir=False)
-        self.build.workdir = properties.Property("myproperty")  # type: ignore[union-attr]
-        self.build.setProperty("myproperty", "/myproperty", "test")  # type: ignore[union-attr]
+        self.build.workdir = properties.Property("myproperty")  # type: ignore[assignment]
+        self.build.setProperty("myproperty", "/myproperty", "test")
         self.expect_commands(ExpectShell(workdir='/myproperty', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
@@ -1372,7 +1372,7 @@ class TestShellMixin(
     @defer.inlineCallbacks
     def test_step_workdir(self) -> InlineCallbacksType[None]:
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], workdir='/stepdir'))
-        self.build.workdir = '/builddir'  # type: ignore[union-attr]
+        self.build.workdir = '/builddir'
         self.expect_commands(ExpectShell(workdir='/stepdir', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
@@ -1384,7 +1384,7 @@ class TestShellMixin(
             return '/stepdir'
 
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], workdir=rendered_workdir))
-        self.build.workdir = '/builddir'  # type: ignore[union-attr]
+        self.build.workdir = '/builddir'
         self.expect_commands(ExpectShell(workdir='/stepdir', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
@@ -1398,7 +1398,7 @@ class TestShellMixin(
                 make_cmd_kwargs={'workdir': '/overridden'},
             )
         )
-        self.build.workdir = '/builddir'  # type: ignore[union-attr]
+        self.build.workdir = '/builddir'
         self.expect_commands(ExpectShell(workdir='/overridden', command=['cmd', 'arg']).exit(0))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
@@ -1500,7 +1500,7 @@ class TestShellMixin(
     @defer.inlineCallbacks
     def test_env(self) -> InlineCallbacksType[None]:
         self.setup_step(SimpleShellCommand(command=['cmd', 'arg'], env={'BAR': 'BAR'}))
-        self.build.env = {'FOO': 'FOO'}  # type: ignore[union-attr]
+        self.build.env = {'FOO': 'FOO'}
         self.expect_commands(
             ExpectShell(
                 workdir='wkdir', command=['cmd', 'arg'], env={'FOO': 'FOO', 'BAR': 'BAR'}
