@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.trial import unittest
 
 from buildbot import config
@@ -22,17 +26,20 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
 
+if TYPE_CHECKING:
+    from twisted.internet import defer
+
 
 class TestDebLintian(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_no_fileloc(self):
+    def test_no_fileloc(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             lintian.DebLintian()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(lintian.DebLintian('foo_0.23_i386.changes'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['lintian', '-v', 'foo_0.23_i386.changes']).exit(0)
@@ -40,7 +47,7 @@ class TestDebLintian(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="Lintian")
         return self.run_step()
 
-    def test_success_suppressTags(self):
+    def test_success_suppressTags(self) -> defer.Deferred[None]:
         self.setup_step(
             lintian.DebLintian(
                 'foo_0.23_i386.changes', suppressTags=['bad-distribution-in-changes-file']
