@@ -28,5 +28,5 @@ click==8.3.1; python_version >= "3.10"
 docutils==0.21.2  # pyup: ignore (sphinx-rtd-theme 2.0.0 requires docutils<0.21)
 imagesize==1.5.0; python_version == "3.9"  # pyup: ignore (2.0.0 requires Python >= 3.10)
 imagesize==2.0.0; python_version >= "3.10"
-pyenchant==3.2.2
+pyenchant==3.3.0
 snowballstemmer==3.0.1
