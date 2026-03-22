@@ -219,7 +219,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 
 class TestBuildbotSite(unittest.SynchronousTestCase):
-    SECRET = 'secret'
+    SECRET = 'secret_with_enough_length_for_jwt'
 
     def setUp(self):
         self.site = service.BuildbotSite(None, "logs", 0, 0)

@@ -59,7 +59,7 @@ pyasn1==0.6.3
 pyasn1-modules==0.4.2
 pycparser==2.22; python_version < "3.10"  # pyup: ignore
 pycparser==3.0; python_version >= "3.10"
-PyJWT==2.10.1
+PyJWT==2.12.1
 pyOpenSSL==26.0.0
 pypugjs==6.0.1
 python-dateutil==2.9.0.post0
