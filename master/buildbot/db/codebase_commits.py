@@ -273,7 +273,7 @@ class CodebaseCommitsConnectorComponent(base.DBConnectorComponent):
                 )
             )
             conn.commit()
-            got_id = r.inserted_primary_key[0]
+            got_id = r.inserted_primary_key[0]  # type: ignore[index]
             r.close()
 
             return got_id

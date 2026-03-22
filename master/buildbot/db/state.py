@@ -77,7 +77,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
                 objects_tbl.insert().values(name=truncated_name, class_name=class_name)
             )
             conn.commit()
-            return res.inserted_primary_key[0]
+            return res.inserted_primary_key[0]  # type: ignore[index]
 
         # we want to try selecting, then inserting, but if the insert fails
         # then try selecting again.  We include an invocation of a hook

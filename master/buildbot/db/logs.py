@@ -348,7 +348,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     },
                 )
                 conn.commit()
-                return r.inserted_primary_key[0]
+                return r.inserted_primary_key[0]  # type: ignore[index]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 conn.rollback()
                 raise LogSlugExistsError(

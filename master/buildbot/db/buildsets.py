@@ -139,7 +139,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                     "parent_relationship": parent_relationship,
                 },
             )
-            bsid = r.inserted_primary_key[0]
+            bsid = r.inserted_primary_key[0]  # type: ignore[index]
 
             # add any properties
             if properties:
@@ -185,7 +185,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                     },
                 )
 
-                brids[builderid] = r.inserted_primary_key[0]
+                brids[builderid] = r.inserted_primary_key[0]  # type: ignore[index]
 
             transaction.commit()
 

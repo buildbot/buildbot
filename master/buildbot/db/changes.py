@@ -208,7 +208,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 insert_value['changeid'] = _test_changeid
 
             r = conn.execute(ch_tbl.insert(), [insert_value])
-            changeid = r.inserted_primary_key[0]
+            changeid = r.inserted_primary_key[0]  # type: ignore[index]
             if files:
                 tbl = self.db.model.change_files
                 for f in files:
