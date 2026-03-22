@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -21,6 +25,9 @@ from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.www import change_hook
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 # Sample Gitorious commit payload
 # source: http://gitorious.org/gitorious/pages/WebHooks
@@ -63,7 +70,7 @@ gitJsonPayload = b"""
 
 class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         dialects = {'gitorious': True}
         master = yield fakeMasterForHooks(self)
@@ -72,7 +79,7 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
     # Test 'base' hook with attributes. We should get a json string
     # representing a Change object as a dictionary. All values show be set.
     @defer.inlineCallbacks
-    def testGitWithChange(self):
+    def testGitWithChange(self) -> InlineCallbacksType[None]:
         changeDict = {b"payload": [gitJsonPayload]}
         self.request = FakeRequest(changeDict)
         self.request.uri = b"/change_hook/gitorious"
@@ -94,7 +101,7 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         self.assertEqual(change["revlink"], revlink)
 
     @defer.inlineCallbacks
-    def testGitWithNoJson(self):
+    def testGitWithNoJson(self) -> InlineCallbacksType[None]:
         self.request = FakeRequest()
         self.request.uri = b"/change_hook/gitorious"
         self.request.method = b"GET"
