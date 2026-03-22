@@ -759,7 +759,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
 
         self._interrupt_remote_command_numbers: list[int] = []
 
-        self._expected_commands: list[Expect] = []
+        self._expected_commands: list[Expect | ExpectMasterShell] = []
         self._expected_commands_popped = 0
 
         self.master = yield fakemaster.make_master(
@@ -1001,7 +1001,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
     def get_nth_step(self, index: int) -> buildstep.BuildStep:
         return self._steps[index]
 
-    def expect_commands(self, *exp: Expect) -> None:
+    def expect_commands(self, *exp: Expect | ExpectMasterShell) -> None:
         self._expected_commands.extend(exp)
 
     def expect_outcome(self, result: int, state_string: str | None = None) -> None:
