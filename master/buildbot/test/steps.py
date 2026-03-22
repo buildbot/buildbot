@@ -1260,6 +1260,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         elif callable(collect_stderr):
             collect_stderr(stderr)
 
+        start_retval: int | tuple[int, bytes] | tuple[int, bytes, bytes]
         if return_stdout is not None and return_stderr is not None:
             start_retval = (rc, return_stdout, return_stderr)
         elif return_stdout is not None:
