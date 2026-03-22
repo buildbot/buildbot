@@ -193,7 +193,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.test_util.test_db",
       "buildbot.test.unit.test_version",
       "buildbot.test.unit.test_wamp_connector",
-      "buildbot.test.unit.util.test_deferwaiter",
       "buildbot.test.unit.util.test_eventual",
       "buildbot.test.unit.util.test_git_credential",
       "buildbot.test.unit.util.test_git",
