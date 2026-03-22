@@ -49,7 +49,7 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(mock.Mock(root='TESTROOT'))
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/build.log', 'build/root.log', 'build/state.log'],  # type: ignore[arg-type]
+                dir=['build/build.log', 'build/root.log', 'build/state.log'],
                 log_environ=False,
             ).exit(0),
             ExpectShell(
@@ -69,7 +69,7 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(mock.Mock(root='TESTROOT', resultdir='RESULT'))
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/RESULT/build.log', 'build/RESULT/root.log', 'build/RESULT/state.log'],  # type: ignore[arg-type]
+                dir=['build/RESULT/build.log', 'build/RESULT/root.log', 'build/RESULT/state.log'],
                 log_environ=False,
             ).exit(0),
             ExpectShell(
@@ -95,7 +95,7 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/RESULT/build.log', 'build/RESULT/root.log', 'build/RESULT/state.log'],  # type: ignore[arg-type]
+                dir=['build/RESULT/build.log', 'build/RESULT/root.log', 'build/RESULT/state.log'],
                 log_environ=False,
             ).exit(0),
             ExpectShell(
@@ -125,7 +125,7 @@ class TestMockBuildSRPM(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
         self.setup_step(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/build.log', 'build/root.log', 'build/state.log'],  # type: ignore[arg-type]
+                dir=['build/build.log', 'build/root.log', 'build/state.log'],
                 log_environ=False,
             ).exit(0),
             ExpectShell(
@@ -164,7 +164,7 @@ class TestMockRebuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.setup_step(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/build.log', 'build/root.log', 'build/state.log'],  # type: ignore[arg-type]
+                dir=['build/build.log', 'build/root.log', 'build/state.log'],
                 log_environ=False,
             ).exit(0),
             ExpectShell(

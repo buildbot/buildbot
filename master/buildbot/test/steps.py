@@ -572,7 +572,7 @@ class ExpectMkdir(Expect):
 class ExpectRmdir(Expect):
     def __init__(
         self,
-        dir: str | None = None,
+        dir: str | list[str] | None = None,
         log_environ: bool | None = None,
         timeout: int | None = None,
         path: str | None = None,
