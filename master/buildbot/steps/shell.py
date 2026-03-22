@@ -40,6 +40,9 @@ from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import join_list
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 _hush_pyflakes = [
@@ -258,7 +261,9 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
         directoryEnterPattern: str | None = None,
         directoryLeavePattern: str | None = None,
         suppressionFile: str | None = None,
-        suppressionList: list[Any] | None = None,
+        suppressionList: Sequence[Sequence[Any]]
+        | IMaybeRenderableType[Sequence[Sequence[Any]]]
+        | None = None,
         **kwargs: Any,
     ) -> None:
         # See if we've been given a regular expression to use to match
@@ -300,7 +305,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
                 'stdio', logobserver.LineConsumerLogObserver(self.warningLogConsumer)
             )
 
-    def addSuppression(self, suppressionList: list[Any]) -> None:
+    def addSuppression(self, suppressionList: Sequence[Sequence[Any]]) -> None:
         """
         This method can be used to add patters of warnings that should
         not be counted.
@@ -328,18 +333,21 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
                 warnRe = re.compile(warnRe)
             self.suppressions.append((fileRe, warnRe, start, end))
 
-    def warnExtractWholeLine(self, line: str, match: re.Match[str]) -> tuple[None, None, str]:
+    def warnExtractWholeLine(
+        self, line: str, match: re.Match[str] | None
+    ) -> tuple[None, None, str]:
         """
         Extract warning text as the whole line.
         No file names or line numbers."""
         return (None, None, line)
 
     def warnExtractFromRegexpGroups(
-        self, line: str, match: re.Match[str]
+        self, line: str, match: re.Match[str] | None
     ) -> tuple[str | None, int | None, str | None]:
         """
         Extract file name, line number, and warning text as groups (1,2,3)
         of warningPattern match."""
+        assert match is not None
         file = match.group(1)
         lineNo = match.group(2)
         if lineNo is not None:
@@ -414,7 +422,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
     @defer.inlineCallbacks
     def setup_suppression(self) -> InlineCallbacksType[None]:
         if self.suppressionList is not None:
-            self.addSuppression(self.suppressionList)
+            self.addSuppression(self.suppressionList)  # type: ignore[arg-type]
 
         if self.suppressionFile is not None:
             # Create a temporary file to avoid reading everything into memory at once.
