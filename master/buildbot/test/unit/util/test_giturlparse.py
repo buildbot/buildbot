@@ -13,114 +13,124 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.util import giturlparse
 
 
 class Tests(unittest.TestCase):
-    def test_github(self):
+    def test_github(self) -> None:
         for u in [
             "https://github.com/buildbot/buildbot",
             "https://github.com/buildbot/buildbot.git",
             "ssh://git@github.com:buildbot/buildbot.git",
             "git://github.com/buildbot/buildbot.git",
         ]:
-            u = giturlparse(u)
-            self.assertIn(u.user, (None, "git"))
-            self.assertEqual(u.domain, "github.com")
-            self.assertEqual(u.owner, "buildbot")
-            self.assertEqual(u.repo, "buildbot")
-            self.assertIsNone(u.port)
+            parsed = giturlparse(u)
+            assert parsed is not None
+            self.assertIn(parsed.user, (None, "git"))
+            self.assertEqual(parsed.domain, "github.com")
+            self.assertEqual(parsed.owner, "buildbot")
+            self.assertEqual(parsed.repo, "buildbot")
+            self.assertIsNone(parsed.port)
 
-    def test_gitlab(self):
+    def test_gitlab(self) -> None:
         for u in [
             "ssh://git@mygitlab.com/group/subgrouptest/testproject.git",
             "https://mygitlab.com/group/subgrouptest/testproject.git",
             "git@mygitlab.com:group/subgrouptest/testproject.git",
             "git://mygitlab.com/group/subgrouptest/testproject.git",
         ]:
-            u = giturlparse(u)
-            self.assertIsNone(u.port)
-            self.assertIn(u.user, (None, "git"))
-            self.assertEqual(u.domain, "mygitlab.com")
-            self.assertEqual(u.owner, "group/subgrouptest")
-            self.assertEqual(u.repo, "testproject")
+            parsed = giturlparse(u)
+            assert parsed is not None
+            self.assertIsNone(parsed.port)
+            self.assertIn(parsed.user, (None, "git"))
+            self.assertEqual(parsed.domain, "mygitlab.com")
+            self.assertEqual(parsed.owner, "group/subgrouptest")
+            self.assertEqual(parsed.repo, "testproject")
 
-    def test_gitlab_subsubgroup(self):
+    def test_gitlab_subsubgroup(self) -> None:
         for u in [
             "ssh://git@mygitlab.com/group/subgrouptest/subsubgroup/testproject.git",
             "https://mygitlab.com/group/subgrouptest/subsubgroup/testproject.git",
             "git://mygitlab.com/group/subgrouptest/subsubgroup/testproject.git",
         ]:
-            u = giturlparse(u)
-            self.assertIn(u.user, (None, "git"))
-            self.assertIsNone(u.port)
-            self.assertEqual(u.domain, "mygitlab.com")
-            self.assertEqual(u.owner, "group/subgrouptest/subsubgroup")
-            self.assertEqual(u.repo, "testproject")
+            parsed = giturlparse(u)
+            assert parsed is not None
+            self.assertIn(parsed.user, (None, "git"))
+            self.assertIsNone(parsed.port)
+            self.assertEqual(parsed.domain, "mygitlab.com")
+            self.assertEqual(parsed.owner, "group/subgrouptest/subsubgroup")
+            self.assertEqual(parsed.repo, "testproject")
 
-    def test_gitlab_user(self):
+    def test_gitlab_user(self) -> None:
         for u in [
             "ssh://buildbot@mygitlab.com:group/subgrouptest/testproject.git",
             "https://buildbot@mygitlab.com/group/subgrouptest/testproject.git",
         ]:
-            u = giturlparse(u)
-            self.assertEqual(u.domain, "mygitlab.com")
-            self.assertIsNone(u.port)
-            self.assertEqual(u.user, "buildbot")
-            self.assertEqual(u.owner, "group/subgrouptest")
-            self.assertEqual(u.repo, "testproject")
+            parsed = giturlparse(u)
+            assert parsed is not None
+            self.assertEqual(parsed.domain, "mygitlab.com")
+            self.assertIsNone(parsed.port)
+            self.assertEqual(parsed.user, "buildbot")
+            self.assertEqual(parsed.owner, "group/subgrouptest")
+            self.assertEqual(parsed.repo, "testproject")
 
-    def test_gitlab_port(self):
+    def test_gitlab_port(self) -> None:
         for u in ["ssh://buildbot@mygitlab.com:1234/group/subgrouptest/testproject.git"]:
-            u = giturlparse(u)
-            self.assertEqual(u.domain, "mygitlab.com")
-            self.assertEqual(u.port, 1234)
-            self.assertEqual(u.user, "buildbot")
-            self.assertEqual(u.owner, "group/subgrouptest")
-            self.assertEqual(u.repo, "testproject")
+            parsed = giturlparse(u)
+            assert parsed is not None
+            self.assertEqual(parsed.domain, "mygitlab.com")
+            self.assertEqual(parsed.port, 1234)
+            self.assertEqual(parsed.user, "buildbot")
+            self.assertEqual(parsed.owner, "group/subgrouptest")
+            self.assertEqual(parsed.repo, "testproject")
 
-    def test_bitbucket(self):
+    def test_bitbucket(self) -> None:
         for u in [
             "https://bitbucket.org/org/repo.git",
             "ssh://git@bitbucket.org:org/repo.git",
             "git@bitbucket.org:org/repo.git",
         ]:
-            u = giturlparse(u)
-            self.assertIn(u.user, (None, "git"))
-            self.assertEqual(u.domain, "bitbucket.org")
-            self.assertEqual(u.owner, "org")
-            self.assertEqual(u.repo, "repo")
+            parsed = giturlparse(u)
+            assert parsed is not None
+            self.assertIn(parsed.user, (None, "git"))
+            self.assertEqual(parsed.domain, "bitbucket.org")
+            self.assertEqual(parsed.owner, "org")
+            self.assertEqual(parsed.repo, "repo")
 
-    def test_no_owner(self):
+    def test_no_owner(self) -> None:
         for u in [
             "https://example.org/repo.git",
             "ssh://example.org:repo.git",
             "ssh://git@example.org:repo.git",
             "git@example.org:repo.git",
         ]:
-            u = giturlparse(u)
-            self.assertIn(u.user, (None, "git"))
-            self.assertEqual(u.domain, "example.org")
-            self.assertIsNone(u.owner)
-            self.assertEqual(u.repo, "repo")
+            parsed = giturlparse(u)
+            assert parsed is not None
+            self.assertIn(parsed.user, (None, "git"))
+            self.assertEqual(parsed.domain, "example.org")
+            self.assertIsNone(parsed.owner)
+            self.assertEqual(parsed.repo, "repo")
 
-    def test_protos(self):
-        self.assertEqual(giturlparse("https://bitbucket.org/org/repo.git").proto, "https")
-        self.assertEqual(giturlparse("git://bitbucket.org/org/repo.git").proto, "git")
-        self.assertEqual(giturlparse("ssh://git@bitbucket.org:org/repo.git").proto, "ssh")
-        self.assertEqual(giturlparse("git@bitbucket.org:org/repo.git").proto, "ssh")
+    def test_protos(self) -> None:
+        self.assertEqual(giturlparse("https://bitbucket.org/org/repo.git").proto, "https")  # type: ignore[union-attr]
+        self.assertEqual(giturlparse("git://bitbucket.org/org/repo.git").proto, "git")  # type: ignore[union-attr]
+        self.assertEqual(giturlparse("ssh://git@bitbucket.org:org/repo.git").proto, "ssh")  # type: ignore[union-attr]
+        self.assertEqual(giturlparse("git@bitbucket.org:org/repo.git").proto, "ssh")  # type: ignore[union-attr]
 
-    def test_user_password(self):
+    def test_user_password(self) -> None:
         for u, expected_user, expected_password in [
             ("https://user@github.com/buildbot/buildbot", "user", None),
             ("https://user:password@github.com/buildbot/buildbot", "user", "password"),
         ]:
-            u = giturlparse(u)
-            self.assertEqual(u.user, expected_user)
-            self.assertEqual(u.password, expected_password)
-            self.assertEqual(u.domain, "github.com")
-            self.assertEqual(u.owner, "buildbot")
-            self.assertEqual(u.repo, "buildbot")
-            self.assertIsNone(u.port)
+            parsed = giturlparse(u)
+            assert parsed is not None
+            self.assertEqual(parsed.user, expected_user)
+            self.assertEqual(parsed.password, expected_password)
+            self.assertEqual(parsed.domain, "github.com")
+            self.assertEqual(parsed.owner, "buildbot")
+            self.assertEqual(parsed.repo, "buildbot")
+            self.assertIsNone(parsed.port)
