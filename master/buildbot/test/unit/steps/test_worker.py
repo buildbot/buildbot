@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import stat
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -39,19 +43,24 @@ from buildbot.test.steps import ExpectStat
 from buildbot.test.steps import ExpectUploadFile
 from buildbot.test.steps import TestBuildStepMixin
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_simple(self):
+    def test_simple(self) -> defer.Deferred[None]:
         self.setup_step(
             worker.SetPropertiesFromEnv(
                 variables=["one", "two", "three", "five", "six"], source="me"
             )
         )
-        self.worker.worker_environ = {"one": "1", "two": None, "six": "6", "FIVE": "555"}
+        self.worker.worker_environ = {"one": "1", "two": None, "six": "6", "FIVE": "555"}  # type: ignore[attr-defined]
         self.worker.worker_system = 'linux'
         self.build.setProperty("four", 4, "them")
         self.build.setProperty("five", 5, "them")
@@ -66,9 +75,9 @@ class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin, unittest.Te
         self.expect_log_file("properties", "one = '1'\nsix = '6'")
         return self.run_step()
 
-    def test_case_folding(self):
+    def test_case_folding(self) -> defer.Deferred[None]:
         self.setup_step(worker.SetPropertiesFromEnv(variables=["eNv"], source="me"))
-        self.worker.worker_environ = {"ENV": 'EE'}
+        self.worker.worker_environ = {"ENV": 'EE'}  # type: ignore[attr-defined]
         self.worker.worker_system = 'nt'
         self.expect_outcome(result=SUCCESS, state_string="Set")
         self.expect_property('eNv', 'EE', source='me')
@@ -77,37 +86,37 @@ class TestSetPropertiesFromEnv(TestBuildStepMixin, TestReactorMixin, unittest.Te
 
 
 class TestFileExists(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_found(self):
+    def test_found(self) -> defer.Deferred[None]:
         self.setup_step(worker.FileExists(file="x"))
         self.expect_commands(ExpectStat(file='x').stat_file().exit(0))
         self.expect_outcome(result=SUCCESS, state_string="File found.")
         return self.run_step()
 
-    def test_not_found(self):
+    def test_not_found(self) -> defer.Deferred[None]:
         self.setup_step(worker.FileExists(file="x"))
         self.expect_commands(ExpectStat(file='x').stat(mode=0).exit(0))
         self.expect_outcome(result=FAILURE, state_string="Not a file. (failure)")
         return self.run_step()
 
-    def test_failure(self):
+    def test_failure(self) -> defer.Deferred[None]:
         self.setup_step(worker.FileExists(file="x"))
         self.expect_commands(ExpectStat(file='x').exit(1))
         self.expect_outcome(result=FAILURE, state_string="File not found. (failure)")
         return self.run_step()
 
-    def test_render(self):
-        self.setup_step(worker.FileExists(file=properties.Property("x")))
+    def test_render(self) -> defer.Deferred[None]:
+        self.setup_step(worker.FileExists(file=properties.Property("x")))  # type: ignore[arg-type]
         self.build.setProperty('x', 'XXX', 'here')
         self.expect_commands(ExpectStat(file='XXX').exit(1))
         self.expect_outcome(result=FAILURE, state_string="File not found. (failure)")
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_old_version(self):
+    def test_old_version(self) -> InlineCallbacksType[None]:
         self.setup_build(worker_version={})
         self.setup_step(worker.FileExists(file="x"))
         self.expect_outcome(result=EXCEPTION, state_string="finished (exception)")
@@ -116,37 +125,37 @@ class TestFileExists(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestCopyDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(worker.CopyDirectory(src="s", dest="d"))
         self.expect_commands(ExpectCpdir(fromdir='s', todir='d', timeout=120).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="Copied s to d")
         return self.run_step()
 
-    def test_timeout(self):
+    def test_timeout(self) -> defer.Deferred[None]:
         self.setup_step(worker.CopyDirectory(src="s", dest="d", timeout=300))
         self.expect_commands(ExpectCpdir(fromdir='s', todir='d', timeout=300).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="Copied s to d")
         return self.run_step()
 
-    def test_maxTime(self):
+    def test_maxTime(self) -> defer.Deferred[None]:
         self.setup_step(worker.CopyDirectory(src="s", dest="d", maxTime=10))
         self.expect_commands(ExpectCpdir(fromdir='s', todir='d', max_time=10, timeout=120).exit(0))
         self.expect_outcome(result=SUCCESS, state_string="Copied s to d")
         return self.run_step()
 
-    def test_failure(self):
+    def test_failure(self) -> defer.Deferred[None]:
         self.setup_step(worker.CopyDirectory(src="s", dest="d"))
         self.expect_commands(ExpectCpdir(fromdir='s', todir='d', timeout=120).exit(1))
         self.expect_outcome(result=FAILURE, state_string="Copying s to d failed. (failure)")
         return self.run_step()
 
-    def test_render(self):
+    def test_render(self) -> defer.Deferred[None]:
         self.setup_step(
-            worker.CopyDirectory(src=properties.Property("x"), dest=properties.Property("y"))
+            worker.CopyDirectory(src=properties.Property("x"), dest=properties.Property("y"))  # type: ignore[arg-type]
         )
         self.build.setProperty('x', 'XXX', 'here')
         self.build.setProperty('y', 'YYY', 'here')
@@ -156,24 +165,24 @@ class TestCopyDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
 
 class TestRemoveDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(worker.RemoveDirectory(dir="d"))
         self.expect_commands(ExpectRmdir(dir='d').exit(0))
         self.expect_outcome(result=SUCCESS, state_string="Deleted")
         return self.run_step()
 
-    def test_failure(self):
+    def test_failure(self) -> defer.Deferred[None]:
         self.setup_step(worker.RemoveDirectory(dir="d"))
         self.expect_commands(ExpectRmdir(dir='d').exit(1))
         self.expect_outcome(result=FAILURE, state_string="Delete failed. (failure)")
         return self.run_step()
 
-    def test_render(self):
-        self.setup_step(worker.RemoveDirectory(dir=properties.Property("x")))
+    def test_render(self) -> defer.Deferred[None]:
+        self.setup_step(worker.RemoveDirectory(dir=properties.Property("x")))  # type: ignore[arg-type]
         self.build.setProperty('x', 'XXX', 'here')
         self.expect_commands(ExpectRmdir(dir='XXX').exit(0))
         self.expect_outcome(result=SUCCESS, state_string="Deleted")
@@ -181,24 +190,24 @@ class TestRemoveDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
 
 class TestMakeDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(worker.MakeDirectory(dir="d"))
         self.expect_commands(ExpectMkdir(dir='d').exit(0))
         self.expect_outcome(result=SUCCESS, state_string="Created")
         return self.run_step()
 
-    def test_failure(self):
+    def test_failure(self) -> defer.Deferred[None]:
         self.setup_step(worker.MakeDirectory(dir="d"))
         self.expect_commands(ExpectMkdir(dir='d').exit(1))
         self.expect_outcome(result=FAILURE, state_string="Create failed. (failure)")
         return self.run_step()
 
-    def test_render(self):
-        self.setup_step(worker.MakeDirectory(dir=properties.Property("x")))
+    def test_render(self) -> defer.Deferred[None]:
+        self.setup_step(worker.MakeDirectory(dir=properties.Property("x")))  # type: ignore[arg-type]
         self.build.setProperty('x', 'XXX', 'here')
         self.expect_commands(ExpectMkdir(dir='XXX').exit(0))
         self.expect_outcome(result=SUCCESS, state_string="Created")
@@ -206,38 +215,38 @@ class TestMakeDirectory(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
 
 class CompositeUser(buildstep.BuildStep, worker.CompositeStepMixin):
-    def __init__(self, payload):
+    def __init__(self, payload: Callable[[Any], Any]) -> None:
         self.payload = payload
         self.logEnviron = False
         super().__init__()
 
     @defer.inlineCallbacks
-    def run(self):
+    def run(self) -> InlineCallbacksType[int]:
         yield self.addLogForRemoteCommands('stdio')
         res = yield self.payload(self)
         return FAILURE if res else SUCCESS
 
 
 class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_runRemoteCommand(self):
+    def test_runRemoteCommand(self) -> None:
         cmd_args = ('foo', {'bar': False})
 
-        def testFunc(x):
+        def testFunc(x: Any) -> None:
             x.runRemoteCommand(*cmd_args)
 
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(Expect(*cmd_args).exit(0))
         self.expect_outcome(result=SUCCESS)
 
-    def test_runRemoteCommandFail(self):
+    def test_runRemoteCommandFail(self) -> defer.Deferred[None]:
         cmd_args = ('foo', {'bar': False})
 
         @defer.inlineCallbacks
-        def testFunc(x):
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
             yield x.runRemoteCommand(*cmd_args)
 
         self.setup_step(CompositeUser(testFunc))
@@ -246,47 +255,47 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_runRemoteCommandFailNoAbandon(self):
+    def test_runRemoteCommandFailNoAbandon(self) -> InlineCallbacksType[None]:
         cmd_args = ('foo', {'bar': False})
 
         @defer.inlineCallbacks
-        def testFunc(x):
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
             yield x.runRemoteCommand(*cmd_args, **{"abandonOnFailure": False})
-            testFunc.ran = True
+            testFunc.ran = True  # type: ignore[attr-defined]
 
         self.setup_step(CompositeUser(testFunc))
         self.expect_commands(Expect(*cmd_args).exit(1))
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
-        self.assertTrue(testFunc.ran)
+        self.assertTrue(testFunc.ran)  # type: ignore[attr-defined]
 
-    def test_rmfile(self):
+    def test_rmfile(self) -> defer.Deferred[None]:
         self.setup_step(CompositeUser(lambda x: x.runRmFile("d")))
         self.expect_commands(ExpectRmfile(path='d', log_environ=False).exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mkdir(self):
+    def test_mkdir(self) -> defer.Deferred[None]:
         self.setup_step(CompositeUser(lambda x: x.runMkdir("d")))
         self.expect_commands(ExpectMkdir(dir='d', log_environ=False).exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_rmdir(self):
+    def test_rmdir(self) -> defer.Deferred[None]:
         self.setup_step(CompositeUser(lambda x: x.runRmdir("d")))
         self.expect_commands(ExpectRmdir(dir='d', log_environ=False).exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mkdir_fail(self):
+    def test_mkdir_fail(self) -> defer.Deferred[None]:
         self.setup_step(CompositeUser(lambda x: x.runMkdir("d")))
         self.expect_commands(ExpectMkdir(dir='d', log_environ=False).exit(1))
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_glob(self):
+    def test_glob(self) -> defer.Deferred[None]:
         @defer.inlineCallbacks
-        def testFunc(x):
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
             res = yield x.runGlob("*.pyc")
             self.assertEqual(res, ["one.pyc", "two.pyc"])
 
@@ -297,15 +306,15 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_glob_fail(self):
+    def test_glob_fail(self) -> defer.Deferred[None]:
         self.setup_step(CompositeUser(lambda x: x.runGlob("*.pyc")))
         self.expect_commands(ExpectGlob(path='*.pyc', log_environ=False).exit(1))
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_abandonOnFailure(self):
+    def test_abandonOnFailure(self) -> defer.Deferred[None]:
         @defer.inlineCallbacks
-        def testFunc(x):
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
             yield x.runMkdir("d")
             yield x.runMkdir("d")
 
@@ -314,9 +323,9 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_notAbandonOnFailure(self):
+    def test_notAbandonOnFailure(self) -> defer.Deferred[None]:
         @defer.inlineCallbacks
-        def testFunc(x):
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
             yield x.runMkdir("d", abandonOnFailure=False)
             yield x.runMkdir("d", abandonOnFailure=False)
 
@@ -328,9 +337,9 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_getFileContentFromWorker(self):
+    def test_getFileContentFromWorker(self) -> defer.Deferred[None]:
         @defer.inlineCallbacks
-        def testFunc(x):
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
             res = yield x.getFileContentFromWorker("file.txt")
             self.assertEqual(res, "Hello world!")
 
@@ -349,9 +358,9 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_getFileContentFromWorker2_16(self):
+    def test_getFileContentFromWorker2_16(self) -> defer.Deferred[None]:
         @defer.inlineCallbacks
-        def testFunc(x):
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
             res = yield x.getFileContentFromWorker("file.txt")
             self.assertEqual(res, "Hello world!")
 
@@ -371,9 +380,9 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_downloadFileContentToWorker(self):
+    def test_downloadFileContentToWorker(self) -> defer.Deferred[None]:
         @defer.inlineCallbacks
-        def testFunc(x):
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
             res = yield x.downloadFileContentToWorker("/path/dest1", "file text")
             self.assertEqual(res, None)
 
@@ -391,9 +400,9 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_downloadFileContentToWorkerWithFilePermissions(self):
+    def test_downloadFileContentToWorkerWithFilePermissions(self) -> defer.Deferred[None]:
         @defer.inlineCallbacks
-        def testFunc(x):
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
             res = yield x.downloadFileContentToWorker("/path/dest1", "file text", mode=stat.S_IRUSR)
             self.assertEqual(res, None)
 
