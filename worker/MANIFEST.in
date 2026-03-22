@@ -9,5 +9,4 @@ exclude .git_archival.txt
 
 exclude ruff.toml tox.ini .mypy.ini Dockerfile
 exclude docker/**
-exclude contrib/systemd/buildbot-worker@.service
 exclude contrib/README.txt
