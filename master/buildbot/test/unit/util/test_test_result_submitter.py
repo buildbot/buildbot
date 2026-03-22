@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -21,10 +26,13 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util.test_result_submitter import TestResultSubmitter
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True)
         yield self.master.startService()
@@ -43,7 +51,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_complete_empty(self):
+    def test_complete_empty(self) -> InlineCallbacksType[None]:
         sub = TestResultSubmitter()
         yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
 
@@ -89,7 +97,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_submit_result(self):
+    def test_submit_result(self) -> InlineCallbacksType[None]:
         sub = TestResultSubmitter(batch_n=3)
         yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
         sub.add_test_result('1', 'name1')
@@ -133,27 +141,27 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    def filter_results_value_name(self, results):
+    def filter_results_value_name(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [{'test_name': r['test_name'], 'value': r['value']} for r in results]
 
     @defer.inlineCallbacks
-    def test_submit_result_wrong_argument_types(self):
+    def test_submit_result_wrong_argument_types(self) -> InlineCallbacksType[None]:
         sub = TestResultSubmitter()
         yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
 
         with self.assertRaises(TypeError):
-            sub.add_test_result(1, 'name1')
+            sub.add_test_result(1, 'name1')  # type: ignore[arg-type]
         with self.assertRaises(TypeError):
-            sub.add_test_result('1', test_name=123)
+            sub.add_test_result('1', test_name=123)  # type: ignore[arg-type]
         with self.assertRaises(TypeError):
-            sub.add_test_result('1', 'name1', test_code_path=123)
+            sub.add_test_result('1', 'name1', test_code_path=123)  # type: ignore[arg-type]
         with self.assertRaises(TypeError):
-            sub.add_test_result('1', 'name1', line='123')
+            sub.add_test_result('1', 'name1', line='123')  # type: ignore[arg-type]
         with self.assertRaises(TypeError):
-            sub.add_test_result('1', 'name1', duration_ns='123')
+            sub.add_test_result('1', 'name1', duration_ns='123')  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_batchs_last_batch_full(self):
+    def test_batchs_last_batch_full(self) -> InlineCallbacksType[None]:
         sub = TestResultSubmitter(batch_n=3)
         yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
         sub.add_test_result('1', 'name1')
@@ -181,7 +189,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_batchs_last_batch_not_full(self):
+    def test_batchs_last_batch_not_full(self) -> InlineCallbacksType[None]:
         sub = TestResultSubmitter(batch_n=3)
         yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'cat', 'unit')
         sub.add_test_result('1', 'name1')
@@ -207,7 +215,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_counts_pass_fail(self):
+    def test_counts_pass_fail(self) -> InlineCallbacksType[None]:
         sub = TestResultSubmitter(batch_n=3)
         yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'pass_fail', 'boolean')
         sub.add_test_result('0', 'name1')
@@ -238,7 +246,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_counts_pass_fail_invalid_values(self):
+    def test_counts_pass_fail_invalid_values(self) -> InlineCallbacksType[None]:
         sub = TestResultSubmitter(batch_n=3)
         yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'pass_fail', 'boolean')
         sub.add_test_result('0', 'name1')
@@ -285,7 +293,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         self.flushLoggedErrors(ValueError)
 
     @defer.inlineCallbacks
-    def test_counts_pass_only(self):
+    def test_counts_pass_only(self) -> InlineCallbacksType[None]:
         sub = TestResultSubmitter(batch_n=3)
         yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'pass_only', 'some_unit')
         sub.add_test_result('string1', 'name1')
@@ -331,7 +339,7 @@ class TestTestResultSubmitter(TestReactorMixin, unittest.TestCase):
         self.flushLoggedErrors(ValueError)
 
     @defer.inlineCallbacks
-    def test_counts_fail_only(self):
+    def test_counts_fail_only(self) -> InlineCallbacksType[None]:
         sub = TestResultSubmitter(batch_n=3)
         yield sub.setup_by_ids(self.master, 88, 30, 131, 'desc', 'fail_only', 'some_unit')
         sub.add_test_result('string1', 'name1')
