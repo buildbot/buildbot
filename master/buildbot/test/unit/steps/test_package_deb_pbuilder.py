@@ -13,9 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import time
+from typing import TYPE_CHECKING
 
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot import config
 from buildbot.process.properties import Interpolate
@@ -29,11 +35,11 @@ from buildbot.test.steps import TestBuildStepMixin
 
 
 class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_new(self):
+    def test_new(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz').exit(1),
@@ -70,7 +76,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='built')
         return self.run_step()
 
-    def test_update(self):
+    def test_update(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz').stat_file().exit(0),
@@ -103,7 +109,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_buildonly_and_property(self):
+    def test_buildonly_and_property(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz')
@@ -131,7 +137,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('deb-changes', 'somefilename.changes', 'DebPbuilder')
         return self.run_step()
 
-    def test_architecture(self):
+    def test_architecture(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder(architecture='amd64'))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-amd64-buildbot.tgz').exit(1),
@@ -172,8 +178,8 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_architecture_renderable(self):
-        self.setup_step(pbuilder.DebPbuilder(architecture=Interpolate('amd64')))
+    def test_architecture_renderable(self) -> defer.Deferred[None]:
+        self.setup_step(pbuilder.DebPbuilder(architecture=Interpolate('amd64')))  # type: ignore[arg-type]
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-amd64-buildbot.tgz').exit(1),
             ExpectShell(
@@ -213,7 +219,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_distribution(self):
+    def test_distribution(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder(distribution='woody'))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/woody-local-buildbot.tgz').exit(1),
@@ -250,7 +256,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_basetgz(self):
+    def test_basetgz(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder(basetgz='/buildbot/stable-local.tgz'))
         self.expect_commands(
             ExpectStat(file='/buildbot/stable-local.tgz').exit(1),
@@ -287,7 +293,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mirror(self):
+    def test_mirror(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder(mirror='http://apt:9999/debian'))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz').exit(1),
@@ -324,7 +330,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_extrapackages(self):
+    def test_extrapackages(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder(extrapackages=['buildbot']))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz').exit(1),
@@ -365,7 +371,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_keyring(self):
+    def test_keyring(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder(keyring='/builbot/buildbot.gpg'))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz').exit(1),
@@ -404,7 +410,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_components(self):
+    def test_components(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder(components='main universe'))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz').exit(1),
@@ -443,7 +449,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_othermirror(self):
+    def test_othermirror(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebPbuilder(othermirror=['http://apt:9999/debian']))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.tgz').exit(1),
@@ -484,11 +490,11 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestDebCowbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_new(self):
+    def test_new(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebCowbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/').exit(1),
@@ -525,7 +531,7 @@ class TestDebCowbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_update(self):
+    def test_update(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebCowbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/').stat_dir().exit(0),
@@ -558,7 +564,7 @@ class TestDebCowbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_buildonly(self):
+    def test_buildonly(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.DebCowbuilder())
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-local-buildbot.cow/')
@@ -583,7 +589,7 @@ class TestDebCowbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_update_reg(self):
+    def test_update_reg(self) -> defer.Deferred[None]:
         self.setup_step(
             pbuilder.DebCowbuilder(basetgz='/var/cache/pbuilder/stable-local-buildbot.cow')
         )
@@ -603,7 +609,7 @@ class TestDebCowbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
         self.expect_outcome(result=FAILURE, state_string='built (failure)')
         return self.run_step()
 
-    def test_buildonly_reg(self):
+    def test_buildonly_reg(self) -> defer.Deferred[None]:
         self.setup_step(
             pbuilder.DebCowbuilder(basetgz='/var/cache/pbuilder/stable-local-buildbot.cow')
         )
@@ -632,15 +638,15 @@ class TestDebCowbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
 
 class TestUbuPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_no_distribution(self):
+    def test_no_distribution(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             pbuilder.UbuPbuilder()
 
-    def test_new(self):
+    def test_new(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.UbuPbuilder(distribution='oneiric'))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/oneiric-local-buildbot.tgz').exit(1),
@@ -681,15 +687,15 @@ class TestUbuPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestUbuCowbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_no_distribution(self):
+    def test_no_distribution(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             pbuilder.UbuCowbuilder()
 
-    def test_new(self):
+    def test_new(self) -> defer.Deferred[None]:
         self.setup_step(pbuilder.UbuCowbuilder(distribution='oneiric'))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/oneiric-local-buildbot.cow/').exit(1),
