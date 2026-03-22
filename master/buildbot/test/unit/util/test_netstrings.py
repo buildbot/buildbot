@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 from twisted.protocols import basic
 from twisted.trial import unittest
 
@@ -21,12 +23,12 @@ from buildbot.util import netstrings
 
 
 class NetstringParser(unittest.TestCase):
-    def test_valid_netstrings(self):
+    def test_valid_netstrings(self) -> None:
         p = netstrings.NetstringParser()
         p.feed("5:hello,5:world,")
         self.assertEqual(p.strings, [b'hello', b'world'])
 
-    def test_valid_netstrings_byte_by_byte(self):
+    def test_valid_netstrings_byte_by_byte(self) -> None:
         # (this is really testing twisted's support, but oh well)
         p = netstrings.NetstringParser()
 
@@ -35,12 +37,12 @@ class NetstringParser(unittest.TestCase):
 
         self.assertEqual(p.strings, [b'hello', b'world'])
 
-    def test_invalid_netstring(self):
+    def test_invalid_netstring(self) -> None:
         p = netstrings.NetstringParser()
         with self.assertRaises(basic.NetstringParseError):
             p.feed("5-hello!")
 
-    def test_incomplete_netstring(self):
+    def test_incomplete_netstring(self) -> None:
         p = netstrings.NetstringParser()
         p.feed("11:hello world,6:foob")
         # note that the incomplete 'foobar' does not appear here
