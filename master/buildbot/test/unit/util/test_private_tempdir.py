@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import shutil
 import tempfile
@@ -27,23 +29,23 @@ class TestTemporaryDirectory(unittest.TestCase):
     # In this test we want to also check potential platform differences, so
     # we don't mock the filesystem access
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.tempdir = tempfile.mkdtemp()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         shutil.rmtree(self.tempdir)
 
-    def test_simple(self):
+    def test_simple(self) -> None:
         with PrivateTemporaryDirectory(dir=self.tempdir) as dir:
             self.assertTrue(os.path.isdir(dir))
         self.assertFalse(os.path.isdir(dir))
 
     @skipUnlessPlatformIs('posix')
-    def test_mode(self):
+    def test_mode(self) -> None:
         with PrivateTemporaryDirectory(dir=self.tempdir, mode=0o700) as dir:
             self.assertEqual(0o40700, os.stat(dir).st_mode)
 
-    def test_cleanup(self):
+    def test_cleanup(self) -> None:
         ctx = PrivateTemporaryDirectory(dir=self.tempdir)
         self.assertTrue(os.path.isdir(ctx.name))
         ctx.cleanup()
