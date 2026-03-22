@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -21,14 +25,17 @@ from buildbot.process.properties import Property
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.util.git_credential import GitCredentialInputRenderer
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestGitCredentialInputRenderer(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
 
     @defer.inlineCallbacks
-    def test_render(self):
+    def test_render(self) -> InlineCallbacksType[None]:
         self.props.setProperty("password", "property_password", "test")
         renderer = GitCredentialInputRenderer(
             username="user",
