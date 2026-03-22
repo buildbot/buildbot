@@ -13,9 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import textwrap
+from typing import TYPE_CHECKING
 
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot.process.properties import Property
 from buildbot.process.results import FAILURE
@@ -92,11 +98,11 @@ FAILED (failures=8)
 
 
 class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_run_env(self):
+    def test_run_env(self) -> defer.Deferred[None]:
         self.setup_step(
             python_twisted.Trial(
                 workdir='build', tests='testname', testpath=None, env={'PYTHONPATH': 'somepath'}
@@ -115,7 +121,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='no tests run')
         return self.run_step()
 
-    def test_run_env_supplement(self):
+    def test_run_env_supplement(self) -> defer.Deferred[None]:
         self.setup_step(
             python_twisted.Trial(
                 workdir='build',
@@ -129,7 +135,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='build',
                 command=['trial', '--reporter=bwverbose', 'testname'],
                 logfiles={'test.log': '_trial_temp/test.log'},
-                env={"PYTHONPATH": ['path1', 'path2', 'path3']},
+                env={"PYTHONPATH": ['path1', 'path2', 'path3']},  # type: ignore[dict-item]
             )
             .stdout("Ran 0 tests\n")
             .exit(0)
@@ -137,7 +143,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='no tests run')
         return self.run_step()
 
-    def test_run_env_nodupe(self):
+    def test_run_env_nodupe(self) -> defer.Deferred[None]:
         self.setup_step(
             python_twisted.Trial(
                 workdir='build',
@@ -151,7 +157,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='build',
                 command=['trial', '--reporter=bwverbose', 'testname'],
                 logfiles={'test.log': '_trial_temp/test.log'},
-                env={"PYTHONPATH": ['path1', 'path2']},
+                env={"PYTHONPATH": ['path1', 'path2']},  # type: ignore[dict-item]
             )
             .stdout("Ran 0 tests\n")
             .exit(0)
@@ -159,7 +165,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='no tests run')
         return self.run_step()
 
-    def test_run_singular(self):
+    def test_run_singular(self) -> defer.Deferred[None]:
         self.setup_step(python_twisted.Trial(workdir='build', tests='testname', testpath=None))
         self.expect_commands(
             ExpectShell(
@@ -173,7 +179,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='1 test passed')
         return self.run_step()
 
-    def test_run_plural(self):
+    def test_run_plural(self) -> defer.Deferred[None]:
         self.setup_step(python_twisted.Trial(workdir='build', tests='testname', testpath=None))
         self.expect_commands(
             ExpectShell(
@@ -187,7 +193,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
-    def test_run_failure(self):
+    def test_run_failure(self) -> defer.Deferred[None]:
         self.setup_step(python_twisted.Trial(workdir='build', tests='testname', testpath=None))
         self.expect_commands(
             ExpectShell(
@@ -200,7 +206,8 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         self.expect_outcome(result=FAILURE, state_string='tests 8 failures (failure)')
         self.expect_log_file(
-            'problems', failureLog.split('\n\n', 1)[1][:-1] + '\nprogram finished with exit code 1'
+            'problems',
+            failureLog.split('\n\n', 1)[1][:-1] + '\nprogram finished with exit code 1',
         )
         self.expect_log_file(
             'warnings',
@@ -213,12 +220,11 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         return self.run_step()
 
-    def test_renderable_properties(self):
+    def test_renderable_properties(self) -> defer.Deferred[None]:
         self.setup_step(
-            python_twisted.Trial(workdir='build', tests=Property('test_list'), testpath=None)
+            python_twisted.Trial(workdir='build', tests=Property('test_list'), testpath=None)  # type: ignore[arg-type]
         )
         self.build.setProperty('test_list', ['testname'], 'Test')
-
         self.expect_commands(
             ExpectShell(
                 workdir='build',
@@ -231,7 +237,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
-    def test_build_changed_files(self):
+    def test_build_changed_files(self) -> defer.Deferred[None]:
         self.setup_build(build_files=['my/test/file.py', 'my/test/file2.py'])
         self.setup_step(
             python_twisted.Trial(workdir='build', testChanges=True, testpath=None),
@@ -254,7 +260,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
-    def test_test_path_env_python_path(self):
+    def test_test_path_env_python_path(self) -> defer.Deferred[None]:
         self.setup_step(
             python_twisted.Trial(
                 workdir='build',
@@ -269,7 +275,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                 workdir='build',
                 command=['trial', '--reporter=bwverbose', 'testname'],
                 logfiles={'test.log': '_trial_temp/test.log'},
-                env={'PYTHONPATH': ['custom/test/path', '/existing/pypath']},
+                env={'PYTHONPATH': ['custom/test/path', '/existing/pypath']},  # type: ignore[dict-item]
             )
             .stdout("Ran 2 tests\n")
             .exit(0)
@@ -277,7 +283,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
-    def test_custom_reactor(self):
+    def test_custom_reactor(self) -> defer.Deferred[None]:
         self.setup_step(
             python_twisted.Trial(
                 workdir='build', reactor='customreactor', tests='testname', testpath=None
@@ -296,7 +302,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='2 tests passed (custom)')
         return self.run_step()
 
-    def test_custom_python(self):
+    def test_custom_python(self) -> defer.Deferred[None]:
         self.setup_step(
             python_twisted.Trial(
                 workdir='build', tests='testname', python='/bin/mypython', testpath=None
@@ -315,7 +321,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
-    def test_randomly(self):
+    def test_randomly(self) -> defer.Deferred[None]:
         self.setup_step(
             python_twisted.Trial(workdir='build', randomly=True, tests='testname', testpath=None)
         )
@@ -332,7 +338,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='2 tests passed')
         return self.run_step()
 
-    def test_run_jobs(self):
+    def test_run_jobs(self) -> defer.Deferred[None]:
         """
         The C{jobs} kwarg should correspond to trial's -j option (
         included since Twisted 12.3.0), and make corresponding changes to
@@ -361,17 +367,19 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='1 test passed')
         return self.run_step()
 
-    def test_run_jobsProperties(self):
+    def test_run_jobsProperties(self) -> defer.Deferred[None]:
         """
         C{jobs} should accept Properties
         """
         self.setup_step(
             python_twisted.Trial(
-                workdir='build', tests='testname', jobs=Property('jobs_count'), testpath=None
+                workdir='build',
+                tests='testname',
+                jobs=Property('jobs_count'),  # type: ignore[arg-type]
+                testpath=None,
             )
         )
         self.build.setProperty('jobs_count', '2', 'Test')
-
         self.expect_commands(
             ExpectShell(
                 workdir='build',
@@ -393,11 +401,11 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_run_ok(self):
+    def test_run_ok(self) -> defer.Deferred[None]:
         self.setup_build(build_files=['foo.xhtml'])
         self.setup_step(python_twisted.HLint(workdir='build'))
         self.expect_commands(
@@ -412,7 +420,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='0 hlints')
         return self.run_step()
 
-    def test_custom_python(self):
+    def test_custom_python(self) -> defer.Deferred[None]:
         self.setup_build(build_files=['foo.xhtml'])
         self.setup_step(python_twisted.HLint(workdir='build', python='/bin/mypython'))
         self.expect_commands(
@@ -425,7 +433,7 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='0 hlints')
         return self.run_step()
 
-    def test_command_failure(self):
+    def test_command_failure(self) -> defer.Deferred[None]:
         self.setup_build(build_files=['foo.xhtml'])
         self.setup_step(python_twisted.HLint(workdir='build'))
         self.expect_commands(
@@ -438,12 +446,12 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE, state_string='hlint (failure)')
         return self.run_step()
 
-    def test_no_build_files(self):
+    def test_no_build_files(self) -> defer.Deferred[None]:
         self.setup_step(python_twisted.HLint(workdir='build'))
         self.expect_outcome(result=SKIPPED, state_string='hlint (skipped)')
         return self.run_step()
 
-    def test_run_warnings(self):
+    def test_run_warnings(self) -> defer.Deferred[None]:
         self.setup_build(build_files=['foo.xhtml'])
         self.setup_step(python_twisted.HLint(workdir='build'))
         self.expect_commands(
@@ -459,11 +467,11 @@ class HLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class RemovePYCs(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_run_ok(self):
+    def test_run_ok(self) -> defer.Deferred[None]:
         self.setup_step(python_twisted.RemovePYCs())
         self.expect_commands(
             ExpectShell(
