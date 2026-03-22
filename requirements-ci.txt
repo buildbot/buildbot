@@ -23,7 +23,7 @@ pywin32==311; platform_system=="Windows"
 
 alembic==1.16.5; python_version < "3.10"  # pyup: ignore
 alembic==1.18.4; python_version >= "3.10"
-attrs==25.3.0
+attrs==26.1.0
 autobahn==24.4.2; python_version < "3.11"  # pyup: ignore
 autobahn==25.12.2; python_version >= "3.11"
 Automat==25.4.16
