@@ -191,11 +191,11 @@ class Expect:
         self.behaviors.append(('update', name, value))
         return self
 
-    def stdout(self, output: str) -> Expect:
+    def stdout(self, output: str | bytes) -> Expect:
         self.behaviors.append(('log', 'stdio', {'stdout': output}))
         return self
 
-    def stderr(self, output: str) -> Expect:
+    def stderr(self, output: str | bytes) -> Expect:
         self.behaviors.append(('log', 'stdio', {'stderr': output}))
         return self
 
