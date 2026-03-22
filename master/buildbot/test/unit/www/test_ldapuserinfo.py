@@ -13,7 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+
+from __future__ import annotations
+
 import types
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -24,13 +29,16 @@ from buildbot.test.util.www import WwwTestMixin
 from buildbot.www import avatar
 from buildbot.www import ldapuserinfo
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 try:
     import ldap3
 except ImportError:
     ldap3 = None
 
 
-def get_config_parameter(p):
+def get_config_parameter(p: str) -> str:
     params = {'DEFAULT_SERVER_ENCODING': 'utf-8'}
     return params[p]
 
@@ -41,8 +49,10 @@ fake_ldap.get_config_parameter = get_config_parameter  # type: ignore[attr-defin
 
 
 class FakeLdap:
-    def __init__(self):
-        def search(base, filterstr='f', scope=None, attributes=None):
+    def __init__(self) -> None:
+        def search(
+            base: str, filterstr: str = 'f', scope: Any = None, attributes: Any = None
+        ) -> None:
             pass
 
         self.search = mock.Mock(spec=search)
@@ -55,34 +65,36 @@ class CommonTestCase(unittest.TestCase):
     it to run the unit tests
     """
 
+    userInfoProvider: Any
+
     if not ldap3:
         skip = 'ldap3 is required for LdapUserInfo tests'
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.ldap = FakeLdap()
         self.makeUserInfoProvider()
         self.userInfoProvider.connectLdap = lambda: self.ldap
 
-        def search(base, filterstr='f', attributes=None):
+        def search(base: str, filterstr: str = 'f', attributes: Any = None) -> None:
             pass
 
         self.userInfoProvider.search = mock.Mock(spec=search)
 
-    def makeUserInfoProvider(self):
+    def makeUserInfoProvider(self) -> None:
         """To be implemented by subclasses"""
         raise NotImplementedError
 
-    def _makeSearchSideEffect(self, attribute_type, ret):
+    def _makeSearchSideEffect(self, attribute_type: str, ret: list[Any]) -> None:
         ret = [[{'dn': i[0], attribute_type: i[1]} for i in r] for r in ret]
         self.userInfoProvider.search.side_effect = ret
 
-    def makeSearchSideEffect(self, ret):
+    def makeSearchSideEffect(self, ret: list[Any]) -> None:
         return self._makeSearchSideEffect('attributes', ret)
 
-    def makeRawSearchSideEffect(self, ret):
+    def makeRawSearchSideEffect(self, ret: list[Any]) -> None:
         return self._makeSearchSideEffect('raw_attributes', ret)
 
-    def assertSearchCalledWith(self, exp):
+    def assertSearchCalledWith(self, exp: list[Any]) -> None:
         got = self.userInfoProvider.search.call_args_list
         self.assertEqual(len(exp), len(got))
         for i, val in enumerate(exp):
@@ -92,7 +104,7 @@ class CommonTestCase(unittest.TestCase):
 
 
 class LdapUserInfo(CommonTestCase):
-    def makeUserInfoProvider(self):
+    def makeUserInfoProvider(self) -> None:
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
             uri="ldap://uri",
             bindUser="user",
@@ -110,7 +122,7 @@ class LdapUserInfo(CommonTestCase):
         )
 
     @defer.inlineCallbacks
-    def test_updateUserInfoNoResults(self):
+    def test_updateUserInfoNoResults(self) -> InlineCallbacksType[None]:
         self.makeSearchSideEffect([[], [], []])
 
         try:
@@ -123,7 +135,7 @@ class LdapUserInfo(CommonTestCase):
             self.fail("should have raised a key error")
 
     @defer.inlineCallbacks
-    def test_updateUserInfoNoGroups(self):
+    def test_updateUserInfoNoGroups(self) -> InlineCallbacksType[None]:
         self.makeSearchSideEffect([
             [("cn", {"accountFullName": "me too", "accountEmail": "mee@too"})],
             [],
@@ -139,7 +151,7 @@ class LdapUserInfo(CommonTestCase):
         )
 
     @defer.inlineCallbacks
-    def test_updateUserInfoGroups(self):
+    def test_updateUserInfoGroups(self) -> InlineCallbacksType[None]:
         self.makeSearchSideEffect([
             [("cn", {"accountFullName": "me too", "accountEmail": "mee@too"})],
             [("cn", {"groupName": ["group"]}), ("cn", {"groupName": ["group2"]})],
@@ -157,7 +169,7 @@ class LdapUserInfo(CommonTestCase):
         )
 
     @defer.inlineCallbacks
-    def test_updateUserInfoGroupsUnicodeDn(self):
+    def test_updateUserInfoGroupsUnicodeDn(self) -> InlineCallbacksType[None]:
         # In case of non Ascii DN, ldap3 lib returns an UTF-8 str
         dn = "cn=Sébastien,dc=example,dc=org"
         # If groupMemberPattern is an str, and dn is not decoded,
@@ -184,7 +196,7 @@ class LdapUserInfo(CommonTestCase):
 
 class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         CommonTestCase.setUp(self)
         self.setup_test_reactor()
 
@@ -195,7 +207,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
 
         yield self.master.startService()
 
-    def makeUserInfoProvider(self):
+    def makeUserInfoProvider(self) -> None:
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
             uri="ldap://uri",
             bindUser="user",
@@ -213,7 +225,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
         )
 
     @defer.inlineCallbacks
-    def _getUserAvatar(self, mimeTypeAndData):
+    def _getUserAvatar(self, mimeTypeAndData: tuple[bytes, bytes]) -> InlineCallbacksType[Any]:
         _, data = mimeTypeAndData
         self.makeRawSearchSideEffect([[("cn", {"picture": [data]})]])
         res = yield self.render_resource(self.rsrc, b'/?email=me')
@@ -223,32 +235,32 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
         return res
 
     @defer.inlineCallbacks
-    def test_getUserAvatarPNG(self):
+    def test_getUserAvatarPNG(self) -> InlineCallbacksType[None]:
         mimeTypeAndData = (b'image/png', b'\x89PNG lljklj')
         yield self._getUserAvatar(mimeTypeAndData)
         self.assertRequest(contentType=mimeTypeAndData[0], content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
-    def test_getUserAvatarJPEG(self):
+    def test_getUserAvatarJPEG(self) -> InlineCallbacksType[None]:
         mimeTypeAndData = (b'image/jpeg', b'\xff\xd8\xff lljklj')
         yield self._getUserAvatar(mimeTypeAndData)
         self.assertRequest(contentType=mimeTypeAndData[0], content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
-    def test_getUserAvatarGIF(self):
+    def test_getUserAvatarGIF(self) -> InlineCallbacksType[None]:
         mimeTypeAndData = (b'image/gif', b'GIF8 lljklj')
         yield self._getUserAvatar(mimeTypeAndData)
         self.assertRequest(contentType=mimeTypeAndData[0], content=mimeTypeAndData[1])
 
     @defer.inlineCallbacks
-    def test_getUserAvatarUnknownType(self):
+    def test_getUserAvatarUnknownType(self) -> InlineCallbacksType[None]:
         mimeTypeAndData = (b'', b'unknown image format')
         res = yield self._getUserAvatar(mimeTypeAndData)
         # Unknown format means data won't be sent
         self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
-    def test_getUsernameAvatar(self):
+    def test_getUsernameAvatar(self) -> InlineCallbacksType[None]:
         mimeType = b'image/gif'
         data = b'GIF8 lljklj'
         self.makeRawSearchSideEffect([[("cn", {"picture": [data]})]])
@@ -259,7 +271,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
         self.assertRequest(contentType=mimeType, content=data)
 
     @defer.inlineCallbacks
-    def test_getUnknownUsernameAvatar(self):
+    def test_getUnknownUsernameAvatar(self) -> InlineCallbacksType[None]:
         self.makeSearchSideEffect([[], [], []])
         res = yield self.render_resource(self.rsrc, b'/?username=other')
         self.assertSearchCalledWith([
@@ -269,7 +281,7 @@ class LdapAvatar(CommonTestCase, TestReactorMixin, WwwTestMixin):
 
 
 class LdapUserInfoNotEscCharsDn(CommonTestCase):
-    def makeUserInfoProvider(self):
+    def makeUserInfoProvider(self) -> None:
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
             uri="ldap://uri",
             bindUser="user",
@@ -286,8 +298,9 @@ class LdapUserInfoNotEscCharsDn(CommonTestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getUserInfoGroupsNotEscCharsDn(self):
+    def test_getUserInfoGroupsNotEscCharsDn(self) -> InlineCallbacksType[None]:
         dn = "cn=Lastname, Firstname \28UIDxxx\29,dc=example,dc=org"
+        assert self.userInfoProvider.groupMemberPattern is not None
         pattern = self.userInfoProvider.groupMemberPattern % {"dn": dn}
         self.makeSearchSideEffect([
             [(dn, {"accountFullName": "Lastname, Firstname (UIDxxx)", "accountEmail": "mee@too"})],
@@ -311,7 +324,7 @@ class LdapUserInfoNotEscCharsDn(CommonTestCase):
 
 
 class LdapUserInfoNoGroups(CommonTestCase):
-    def makeUserInfoProvider(self):
+    def makeUserInfoProvider(self) -> None:
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
             uri="ldap://uri",
             bindUser="user",
@@ -326,7 +339,7 @@ class LdapUserInfoNoGroups(CommonTestCase):
         )
 
     @defer.inlineCallbacks
-    def test_updateUserInfo(self):
+    def test_updateUserInfo(self) -> InlineCallbacksType[None]:
         self.makeSearchSideEffect([
             [("cn", {"accountFullName": "me too", "accountEmail": "mee@too"})],
             [],
@@ -345,7 +358,7 @@ class Config(unittest.TestCase):
     if not ldap3:
         skip = 'ldap3 is required for LdapUserInfo tests'
 
-    def test_missing_group_name(self):
+    def test_missing_group_name(self) -> None:
         with self.assertRaises(ValueError):
             ldapuserinfo.LdapUserInfo(
                 groupMemberPattern="member=%(dn)s",
@@ -359,7 +372,7 @@ class Config(unittest.TestCase):
                 accountEmail="accountEmail",
             )
 
-    def test_missing_group_base(self):
+    def test_missing_group_base(self) -> None:
         with self.assertRaises(ValueError):
             ldapuserinfo.LdapUserInfo(
                 groupMemberPattern="member=%(dn)s",
@@ -373,7 +386,7 @@ class Config(unittest.TestCase):
                 accountEmail="accountEmail",
             )
 
-    def test_missing_two_params(self):
+    def test_missing_two_params(self) -> None:
         with self.assertRaises(ValueError):
             ldapuserinfo.LdapUserInfo(
                 groupName="group",
