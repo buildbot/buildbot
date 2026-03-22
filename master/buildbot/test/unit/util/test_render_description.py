@@ -13,20 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.util.render_description import render_description
 
 
 class TestRaml(unittest.TestCase):
-    def test_plain(self):
+    def test_plain(self) -> None:
         self.assertIsNone(render_description("description", None))
 
-    def test_unknown(self):
+    def test_unknown(self) -> None:
         with self.assertRaises(RuntimeError):
             render_description("description", "unknown")
 
-    def test_markdown(self):
+    def test_markdown(self) -> None:
         self.assertEqual(
             render_description("# description\ntext", "markdown"),
             "<h1>description</h1>\n<p>text</p>",
