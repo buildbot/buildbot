@@ -804,8 +804,8 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         self._exp_results: list[tuple[int, str | None]] = []
         self.exp_properties: dict[str, tuple[object, str | None]] = {}
         self.exp_missing_properties: list[str] = []
-        self._exp_logfiles: dict[int, dict[str, bytes]] = {}
-        self._exp_logfiles_stderr: dict[int, dict[str, bytes]] = {}
+        self._exp_logfiles: dict[int, dict[str, str | re.Pattern[str]]] = {}
+        self._exp_logfiles_stderr: dict[int, dict[str, str | re.Pattern[str]]] = {}
         self.exp_hidden = False
         self.exp_exception: type | None = None
         self._exp_test_result_sets: list[tuple[str, str, str]] = []
@@ -1013,10 +1013,14 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
     def expect_no_property(self, property: str) -> None:
         self.exp_missing_properties.append(property)
 
-    def expect_log_file(self, logfile: str, contents: bytes, step_index: int = 0) -> None:
+    def expect_log_file(
+        self, logfile: str, contents: str | re.Pattern[str], step_index: int = 0
+    ) -> None:
         self._exp_logfiles.setdefault(step_index, {})[logfile] = contents
 
-    def expect_log_file_stderr(self, logfile: str, contents: bytes, step_index: int = 0) -> None:
+    def expect_log_file_stderr(
+        self, logfile: str, contents: str | re.Pattern[str], step_index: int = 0
+    ) -> None:
         self._exp_logfiles_stderr.setdefault(step_index, {})[logfile] = contents
 
     def expect_build_data(self, name: str, value: object, source: str) -> None:
@@ -1146,7 +1150,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         # XXX TODO: hidden
         # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
 
-    def _match_log(self, exp: bytes | re.Pattern[bytes], got: bytes, log_type: str) -> None:
+    def _match_log(self, exp: str | re.Pattern[str], got: str, log_type: str) -> None:
         if hasattr(exp, 'match'):
             if exp.match(got) is None:
                 log.msg(f"Unexpected {log_type} log output:\n{exp!r}")
