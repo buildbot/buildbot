@@ -146,7 +146,7 @@ class TestSource(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCas
 
     @defer.inlineCallbacks
     def test_start_with_codebase_and_descriptionSuffix(self) -> InlineCallbacksType[None]:
-        step = self.setup_step(Source(codebase='my-code', descriptionSuffix='suffix'))  # type: ignore[arg-type]
+        step = self.setup_step(Source(codebase='my-code', descriptionSuffix='suffix'))
         step.branch = 'branch'
         step.run_vc = self.setup_deferred_mock()
         step.build.getSourceStamp = mock.Mock()
@@ -180,8 +180,8 @@ class TestSourceDescription(TestBuildStepMixin, TestReactorMixin, unittest.TestC
     def test_constructor_args_strings(self) -> None:
         step = Source(
             workdir='build',
-            description='svn update (running)',  # type: ignore[arg-type]
-            descriptionDone='svn update',  # type: ignore[arg-type]
+            description='svn update (running)',
+            descriptionDone='svn update',
         )
         self.assertEqual(step.description, ['svn update (running)'])
         self.assertEqual(step.descriptionDone, ['svn update'])
