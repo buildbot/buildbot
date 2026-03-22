@@ -210,7 +210,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.www.test_rest",
       "buildbot.test.unit.www.test_roles",
       "buildbot.test.unit.www.test_service",
-      "buildbot.test.unit.www.test_sse",
       "buildbot.test.unit.www.test_ws",
       "buildbot.test.util.changesource",
       "buildbot.test.util.config",
