@@ -38,6 +38,7 @@ from buildbot.steps.shell import WarningCountingShellCommand
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -80,7 +81,7 @@ class DebPbuilder(WarningCountingShellCommand):
 
     def __init__(
         self,
-        architecture: str | None = None,
+        architecture: IMaybeRenderableType[str] | None = None,
         distribution: str | None = None,
         basetgz: str | None = None,
         mirror: str | None = None,
@@ -130,7 +131,7 @@ class DebPbuilder(WarningCountingShellCommand):
 
         self.command = ['pdebuild', '--buildresult', '.', '--pbuilder', self.pbuilder]
         if self.architecture:
-            self.command += ['--architecture', self.architecture]
+            self.command += ['--architecture', cast(str, self.architecture)]
         self.command += ['--', '--buildresult', '.', self.baseOption, self.basetgz]
         if self.extrapackages:
             self.command += ['--extrapackages', " ".join(self.extrapackages)]
@@ -164,7 +165,7 @@ class DebPbuilder(WarningCountingShellCommand):
             if self.othermirror:
                 command += ['--othermirror', self.othermirror]
             if self.architecture:
-                command += ['--architecture', self.architecture]
+                command += ['--architecture', cast(str, self.architecture)]
             if self.extrapackages:
                 command += ['--extrapackages', " ".join(self.extrapackages)]
             if self.keyring:

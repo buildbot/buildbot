@@ -179,7 +179,7 @@ class TestDebPbuilder(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     def test_architecture_renderable(self) -> defer.Deferred[None]:
-        self.setup_step(pbuilder.DebPbuilder(architecture=Interpolate('amd64')))  # type: ignore[arg-type]
+        self.setup_step(pbuilder.DebPbuilder(architecture=Interpolate('amd64')))
         self.expect_commands(
             ExpectStat(file='/var/cache/pbuilder/stable-amd64-buildbot.tgz').exit(1),
             ExpectShell(
