@@ -13,7 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import error
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
+
 from twisted.trial import unittest
 
 from buildbot import config
@@ -32,27 +40,27 @@ from buildbot.test.util import sourcesteps
 
 
 class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_no_empty_step_config(self):
+    def test_no_empty_step_config(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             darcs.Darcs()
 
-    def test_incorrect_method(self):
+    def test_incorrect_method(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             darcs.Darcs(repourl='http://localhost/darcs', mode='full', method='fresh')
 
-    def test_incremental_invalid_method(self):
+    def test_incremental_invalid_method(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             darcs.Darcs(repourl='http://localhost/darcs', mode='incremental', method='fresh')
 
-    def test_no_repo_url(self):
+    def test_no_repo_url(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             darcs.Darcs(mode='full', method='fresh')
 
-    def test_mode_full_clobber(self):
+    def test_mode_full_clobber(self) -> defer.Deferred[None]:
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs', mode='full', method='clobber')
         )
@@ -80,7 +88,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_mode_full_copy(self):
+    def test_mode_full_copy(self) -> defer.Deferred[None]:
         self.setup_step(darcs.Darcs(repourl='http://localhost/darcs', mode='full', method='copy'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['darcs', '--version']).exit(0),
@@ -97,7 +105,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_mode_full_no_method(self):
+    def test_mode_full_no_method(self) -> defer.Deferred[None]:
         self.setup_step(darcs.Darcs(repourl='http://localhost/darcs', mode='full'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['darcs', '--version']).exit(0),
@@ -114,7 +122,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_mode_incremental(self):
+    def test_mode_incremental(self) -> defer.Deferred[None]:
         self.setup_step(darcs.Darcs(repourl='http://localhost/darcs', mode='incremental'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['darcs', '--version']).exit(0),
@@ -129,7 +137,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_mode_incremental_patched(self):
+    def test_mode_incremental_patched(self) -> defer.Deferred[None]:
         self.setup_step(darcs.Darcs(repourl='http://localhost/darcs', mode='incremental'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['darcs', '--version']).exit(0),
@@ -148,7 +156,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_mode_incremental_patch(self):
+    def test_mode_incremental_patch(self) -> defer.Deferred[None]:
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs', mode='incremental'), patch=(1, 'patch')
         )
@@ -194,7 +202,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_mode_full_clobber_retry(self):
+    def test_mode_full_clobber_retry(self) -> defer.Deferred[None]:
         self.setup_step(
             darcs.Darcs(
                 repourl='http://localhost/darcs', mode='full', method='clobber', retry=(0, 2)
@@ -250,7 +258,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_mode_full_clobber_revision(self):
+    def test_mode_full_clobber_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs', mode='full', method='clobber'),
             {"revision": 'abcdef01'},
@@ -289,7 +297,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_mode_full_clobber_revision_worker_2_16(self):
+    def test_mode_full_clobber_revision_worker_2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs', mode='full', method='clobber'),
@@ -329,7 +337,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_mode_incremental_no_existing_repo(self):
+    def test_mode_incremental_no_existing_repo(self) -> defer.Deferred[None]:
         self.setup_step(darcs.Darcs(repourl='http://localhost/darcs', mode='incremental'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['darcs', '--version']).exit(0),
@@ -355,7 +363,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_property('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.run_step()
 
-    def test_worker_connection_lost(self):
+    def test_worker_connection_lost(self) -> defer.Deferred[None]:
         self.setup_step(
             darcs.Darcs(repourl='http://localhost/darcs', mode='full', method='clobber')
         )
