@@ -33,6 +33,9 @@ from buildbot.process.properties import Interpolate
 from buildbot.steps.source import Source
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 # Notes:
@@ -68,16 +71,16 @@ class P4(Source):
         self,
         mode: str = 'incremental',
         method: str | None = None,
-        p4base: str | None = None,
-        p4branch: str | None = None,
+        p4base: IMaybeRenderableType[str] | None = None,
+        p4branch: IMaybeRenderableType[str] | None = None,
         p4port: str | None = None,
         p4user: str | None = None,
         p4passwd: str | None = None,
-        p4extra_views: tuple[tuple[str, str], ...] = (),
+        p4extra_views: Sequence[tuple[str, str]] = (),
         p4line_end: str = 'local',
-        p4viewspec: list[tuple[str, str]] | None = None,
-        p4viewspec_suffix: str = '...',
-        p4client: Interpolate | None = None,
+        p4viewspec: Sequence[Any] | None = None,
+        p4viewspec_suffix: str | None = '...',
+        p4client: IMaybeRenderableType[str] | None = None,
         p4client_spec_options: str | None = 'allwrite rmdir',
         p4client_type: str | None = None,
         p4extra_args: list[str] | None = None,
@@ -129,13 +132,13 @@ class P4(Source):
                 "p4viewspec must not be a string, and should be a sequence of 2 element sequences"
             )
 
-        if not interfaces.IRenderable.providedBy(p4base) and p4base and not p4base.startswith('/'):
+        if not interfaces.IRenderable.providedBy(p4base) and p4base and not p4base.startswith('/'):  # type: ignore[union-attr]
             config.error(f'p4base should start with // [p4base = {p4base}]')
 
-        if not interfaces.IRenderable.providedBy(p4base) and p4base and p4base.endswith('/'):
+        if not interfaces.IRenderable.providedBy(p4base) and p4base and p4base.endswith('/'):  # type: ignore[union-attr]
             config.error(f'p4base should not end with a trailing / [p4base = {p4base}]')
 
-        if not interfaces.IRenderable.providedBy(p4branch) and p4branch and p4branch.endswith('/'):
+        if not interfaces.IRenderable.providedBy(p4branch) and p4branch and p4branch.endswith('/'):  # type: ignore[union-attr]
             config.error(f'p4branch should not end with a trailing / [p4branch = {p4branch}]')
 
         if stream:
