@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -25,6 +29,9 @@ from buildbot.steps import python
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 log_output_success = """\
 Making output directory...
@@ -124,11 +131,11 @@ Warning: Unable to extract the base list for
 
 
 class BuildEPYDoc(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_sample(self):
+    def test_sample(self) -> defer.Deferred[None]:
         self.setup_step(python.BuildEPYDoc())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['make', 'epydocs']).stdout(epydoc_output).exit(1),
@@ -138,12 +145,12 @@ class BuildEPYDoc(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
     @parameterized.expand([('no_results', True), ('with_results', False)])
-    def test_success(self, name, store_results):
+    def test_success(self, name: str, store_results: bool) -> defer.Deferred[None]:
         self.setup_step(python.PyLint(command=['pylint'], store_results=store_results))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
@@ -157,7 +164,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     @parameterized.expand([('no_results', True), ('with_results', False)])
-    def test_error(self, name, store_results):
+    def test_error(self, name: str, store_results: bool) -> defer.Deferred[None]:
         self.setup_step(python.PyLint(command=['pylint'], store_results=store_results))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
@@ -175,7 +182,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             # note that no results are submitted for tests where we don't know the location
         return self.run_step()
 
-    def test_header_output(self):
+    def test_header_output(self) -> defer.Deferred[None]:
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
@@ -185,7 +192,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='pylint')
         return self.run_step()
 
-    def test_failure(self):
+    def test_failure(self) -> defer.Deferred[None]:
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
@@ -200,7 +207,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-fatal', 1)
         return self.run_step()
 
-    def test_failure_zero_returncode(self):
+    def test_failure_zero_returncode(self) -> defer.Deferred[None]:
         # Make sure that errors result in a failed step when pylint's
         # return code is 0, e.g. when run through a wrapper script.
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
@@ -217,7 +224,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-error', 1)
         return self.run_step()
 
-    def test_regex_text(self):
+    def test_regex_text(self) -> defer.Deferred[None]:
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
@@ -235,7 +242,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-total', 2)
         return self.run_step()
 
-    def test_regex_text_0_24(self):
+    def test_regex_text_0_24(self) -> defer.Deferred[None]:
         # pylint >= 0.24.0 prints out column offsets when using text format
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
@@ -254,7 +261,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-total', 2)
         return self.run_step()
 
-    def test_regex_text_1_3_1(self):
+    def test_regex_text_1_3_1(self) -> defer.Deferred[None]:
         # at least pylint 1.3.1 prints out space padded column offsets when
         # using text format
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
@@ -275,7 +282,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     @parameterized.expand([('no_results', True), ('with_results', False)])
-    def test_regex_text_2_0_0(self, name, store_results):
+    def test_regex_text_2_0_0(self, name: str, store_results: bool) -> defer.Deferred[None]:
         # pylint 2.0.0 changed default format to include file path
         self.setup_step(python.PyLint(command=['pylint'], store_results=store_results))
 
@@ -298,7 +305,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         if store_results:
             self.expect_test_result_sets([('Pylint warnings', 'code_issue', 'message')])
             self.expect_test_results([
-                (
+                (  # type: ignore[list-item]
                     1000,
                     'test.py:9:4: W0311: Bad indentation. Found 6 spaces, expected 4 '
                     + '(bad-indentation)',
@@ -307,7 +314,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
                     9,
                     None,
                 ),
-                (
+                (  # type: ignore[list-item]
                     1000,
                     'test.py:1:0: C0114: Missing module docstring (missing-module-docstring)',
                     None,
@@ -318,7 +325,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             ])
         return self.run_step()
 
-    def test_regex_text_2_0_0_invalid_line(self):
+    def test_regex_text_2_0_0_invalid_line(self) -> defer.Deferred[None]:
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
 
         stdout = 'test.py:abc:0: C0114: Missing module docstring (missing-module-docstring)\n'
@@ -334,7 +341,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-total', 0)
         return self.run_step()
 
-    def test_regex_text_ids(self):
+    def test_regex_text_ids(self) -> defer.Deferred[None]:
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
@@ -349,7 +356,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-total', 2)
         return self.run_step()
 
-    def test_regex_text_ids_0_24(self):
+    def test_regex_text_ids_0_24(self) -> defer.Deferred[None]:
         # pylint >= 0.24.0 prints out column offsets when using text format
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
@@ -366,7 +373,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     @parameterized.expand([('no_results', True), ('with_results', False)])
-    def test_regex_parseable_ids(self, name, store_results):
+    def test_regex_parseable_ids(self, name: str, store_results: bool) -> defer.Deferred[None]:
         self.setup_step(python.PyLint(command=['pylint'], store_results=store_results))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
@@ -385,12 +392,12 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         if store_results:
             self.expect_test_result_sets([('Pylint warnings', 'code_issue', 'message')])
             self.expect_test_results([
-                (1000, 'test.py:9: [W0311] Bad indentation.', None, 'test.py', 9, None),
-                (1000, 'test.py:3: [C0111, foo123] Missing docstring', None, 'test.py', 3, None),
+                (1000, 'test.py:9: [W0311] Bad indentation.', None, 'test.py', 9, None),  # type: ignore[list-item]
+                (1000, 'test.py:3: [C0111, foo123] Missing docstring', None, 'test.py', 3, None),  # type: ignore[list-item]
             ])
         return self.run_step()
 
-    def test_regex_parseable(self):
+    def test_regex_parseable(self) -> defer.Deferred[None]:
         self.setup_step(python.PyLint(command=['pylint'], store_results=False))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['pylint'])
@@ -405,7 +412,7 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pylint-total', 2)
         return self.run_step()
 
-    def test_regex_parseable_1_3_1(self):
+    def test_regex_parseable_1_3_1(self) -> defer.Deferred[None]:
         """In pylint 1.3.1, output parseable is deprecated, but looks like
         that, this is also the new recommended format string:
             --msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
@@ -432,17 +439,17 @@ class PyLint(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(python.PyFlakes())
         self.expect_commands(ExpectShell(workdir='wkdir', command=['make', 'pyflakes']).exit(0))
         self.expect_outcome(result=SUCCESS, state_string='pyflakes')
         return self.run_step()
 
-    def test_content_in_header(self):
+    def test_content_in_header(self) -> defer.Deferred[None]:
         self.setup_step(python.PyFlakes())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
@@ -453,7 +460,7 @@ class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=0, state_string='pyflakes')
         return self.run_step()
 
-    def test_unused(self):
+    def test_unused(self) -> defer.Deferred[None]:
         self.setup_step(python.PyFlakes())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
@@ -465,7 +472,7 @@ class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pyflakes-total', 1)
         return self.run_step()
 
-    def test_undefined(self):
+    def test_undefined(self) -> defer.Deferred[None]:
         self.setup_step(python.PyFlakes())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
@@ -477,7 +484,7 @@ class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pyflakes-total', 1)
         return self.run_step()
 
-    def test_redefs(self):
+    def test_redefs(self) -> defer.Deferred[None]:
         self.setup_step(python.PyFlakes())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
@@ -489,7 +496,7 @@ class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pyflakes-total', 1)
         return self.run_step()
 
-    def test_importstar(self):
+    def test_importstar(self) -> defer.Deferred[None]:
         self.setup_step(python.PyFlakes())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
@@ -501,7 +508,7 @@ class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('pyflakes-total', 1)
         return self.run_step()
 
-    def test_misc(self):
+    def test_misc(self) -> defer.Deferred[None]:
         self.setup_step(python.PyFlakes())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'])
@@ -515,19 +522,19 @@ class PyFlakes(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_builddir_required(self):
+    def test_builddir_required(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             python.Sphinx()
 
-    def test_bad_mode(self):
+    def test_bad_mode(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             python.Sphinx(sphinx_builddir="_build", mode="don't care")
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(python.Sphinx(sphinx_builddir="_build"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['sphinx-build', '.', '_build'])
@@ -537,7 +544,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="sphinx 0 warnings")
         return self.run_step()
 
-    def test_failure(self):
+    def test_failure(self) -> defer.Deferred[None]:
         self.setup_step(python.Sphinx(sphinx_builddir="_build"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['sphinx-build', '.', '_build'])
@@ -547,7 +554,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE, state_string="sphinx 0 warnings (failure)")
         return self.run_step()
 
-    def test_strict_warnings(self):
+    def test_strict_warnings(self) -> defer.Deferred[None]:
         self.setup_step(python.Sphinx(sphinx_builddir="_build", strict_warnings=True))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['sphinx-build', '-W', '.', '_build'])
@@ -557,7 +564,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE, state_string="sphinx 1 warnings (failure)")
         return self.run_step()
 
-    def test_nochange(self):
+    def test_nochange(self) -> defer.Deferred[None]:
         self.setup_step(python.Sphinx(sphinx_builddir="_build"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['sphinx-build', '.', '_build'])
@@ -568,7 +575,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_warnings(self):
+    def test_warnings(self) -> InlineCallbacksType[None]:
         self.setup_step(python.Sphinx(sphinx_builddir="_build"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['sphinx-build', '.', '_build'])
@@ -581,7 +588,7 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(self.get_nth_step(0).statistics, {'warnings': 2})
 
-    def test_constr_args(self):
+    def test_constr_args(self) -> defer.Deferred[None]:
         self.setup_step(
             python.Sphinx(
                 sphinx_sourcedir='src',
