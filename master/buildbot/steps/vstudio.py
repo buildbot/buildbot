@@ -29,6 +29,7 @@ from buildbot.process import results
 from buildbot.process.logobserver import LogLineObserver
 
 if TYPE_CHECKING:
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -104,10 +105,10 @@ class VisualStudio(buildstep.ShellMixin, buildstep.BuildStep):
         self,
         installdir: str | None = None,
         mode: str = "rebuild",
-        projectfile: str | None = None,
-        config: str = 'release',
+        projectfile: IMaybeRenderableType[str] | None = None,
+        config: IMaybeRenderableType[str] = 'release',
         useenv: bool = False,
-        project: str | None = None,
+        project: IMaybeRenderableType[str] | None = None,
         INCLUDE: list[str] | None = None,
         LIB: list[str] | None = None,
         PATH: list[str] | None = None,
@@ -327,7 +328,7 @@ class VC8(VC7):
 
     renderables = ['arch']
 
-    def __init__(self, arch: str = "x86", **kwargs: Any) -> None:
+    def __init__(self, arch: IMaybeRenderableType[str] = "x86", **kwargs: Any) -> None:
         self.arch = arch
 
         # always upcall !
@@ -462,7 +463,9 @@ def _msbuild_format_properties_parameters(build: Any, properties: dict[str, Any]
     return command
 
 
-def _msbuild_format_target_parameter(mode: str | None, project: str | None) -> str:
+def _msbuild_format_target_parameter(
+    mode: str | None, project: IMaybeRenderableType[str] | None
+) -> str:
     modestring = None
     if mode == "clean":
         modestring = 'Clean'
@@ -493,7 +496,7 @@ class MsBuild4(VisualStudio):
 
     def __init__(
         self,
-        platform: str,
+        platform: str | None,
         defines: list[str] | None = None,
         properties: dict[str, Any] | None = None,
         **kwargs: Any,
@@ -562,7 +565,7 @@ class MsBuild141(VisualStudio):
 
     def __init__(
         self,
-        platform: str,
+        platform: str | None,
         defines: list[str] | None = None,
         properties: dict[str, Any] | None = None,
         **kwargs: Any,
