@@ -86,5 +86,6 @@ Werkzeug==3.1.6
 xmltodict==1.0.4
 zope.event==6.0; python_version < "3.10"  # pyup: ignore (6.1+ requires Python >= 3.10)
 zope.event==6.1; python_version >= "3.10"
-zope.interface==7.2
+zope.interface==7.2; python_version < "3.10"  # pyup: ignore (8.0+ requires Python >= 3.10)
+zope.interface==8.2; python_version >= "3.10"
 zope.schema==7.0.1
