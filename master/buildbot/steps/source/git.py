@@ -35,6 +35,7 @@ from buildbot.util.git_credential import GitCredentialOptions
 from buildbot.util.git_credential import add_user_password_to_credentials
 
 if TYPE_CHECKING:
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.interfaces import IRenderable
     from buildbot.process.buildrequest import TempChange
     from buildbot.util.twisted import InlineCallbacksType
@@ -86,7 +87,7 @@ class Git(Source, GitStepMixin):
 
     def __init__(
         self,
-        repourl: str | None = None,
+        repourl: IMaybeRenderableType[str] | None = None,
         port: int = 22,
         branch: str = 'HEAD',
         mode: str = 'incremental',
@@ -626,7 +627,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     def __init__(
         self,
         workdir: str | None = None,
-        repourl: str | None = None,
+        repourl: IMaybeRenderableType[str] | None = None,
         port: int = 22,
         branch: str | None = None,
         force: bool = False,
