@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
 import textwrap
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -35,33 +39,36 @@ from buildbot.test.steps import ExpectUploadFile
 from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestShellCommandExecution(
     TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_doStepIf_False(self):
+    def test_doStepIf_False(self) -> defer.Deferred[None]:
         self.setup_step(shell.ShellCommand(command="echo hello", doStepIf=False))
         self.expect_outcome(result=SKIPPED, state_string="'echo hello' (skipped)")
         return self.run_step()
 
-    def test_constructor_args_validity(self):
+    def test_constructor_args_validity(self) -> None:
         # this checks that an exception is raised for invalid arguments
         with self.assertRaisesConfigError("Invalid argument(s) passed to ShellCommand: "):
             shell.ShellCommand(
                 workdir='build', command="echo Hello World", wrongArg1=1, wrongArg2='two'
             )
 
-    def test_run_simple(self):
+    def test_run_simple(self) -> defer.Deferred[None]:
         self.setup_step(shell.ShellCommand(workdir='build', command="echo hello"))
         self.expect_commands(ExpectShell(workdir='build', command='echo hello').exit(0))
         self.expect_outcome(result=SUCCESS, state_string="'echo hello'")
         return self.run_step()
 
-    def test_run_list(self):
+    def test_run_list(self) -> defer.Deferred[None]:
         self.setup_step(
             shell.ShellCommand(workdir='build', command=['trial', '-b', '-B', 'buildbot.test'])
         )
@@ -71,7 +78,7 @@ class TestShellCommandExecution(
         self.expect_outcome(result=SUCCESS, state_string="'trial -b ...'")
         return self.run_step()
 
-    def test_run_nested_description(self):
+    def test_run_nested_description(self) -> defer.Deferred[None]:
         self.setup_step(
             shell.ShellCommand(
                 workdir='build',
@@ -86,7 +93,7 @@ class TestShellCommandExecution(
         self.expect_outcome(result=SUCCESS, state_string='test done suff ix')
         return self.run_step()
 
-    def test_run_nested_command(self):
+    def test_run_nested_command(self) -> defer.Deferred[None]:
         self.setup_step(
             shell.ShellCommand(workdir='build', command=['trial', ['-b', '-B'], 'buildbot.test'])
         )
@@ -96,7 +103,7 @@ class TestShellCommandExecution(
         self.expect_outcome(result=SUCCESS, state_string="'trial -b ...'")
         return self.run_step()
 
-    def test_run_nested_deeply_command(self):
+    def test_run_nested_deeply_command(self) -> defer.Deferred[None]:
         self.setup_step(
             shell.ShellCommand(
                 workdir='build', command=[['trial', ['-b', ['-B']]], 'buildbot.test']
@@ -108,7 +115,7 @@ class TestShellCommandExecution(
         self.expect_outcome(result=SUCCESS, state_string="'trial -b ...'")
         return self.run_step()
 
-    def test_run_nested_empty_command(self):
+    def test_run_nested_empty_command(self) -> defer.Deferred[None]:
         self.setup_step(
             shell.ShellCommand(workdir='build', command=['trial', [], '-b', [], 'buildbot.test'])
         )
@@ -118,7 +125,7 @@ class TestShellCommandExecution(
         self.expect_outcome(result=SUCCESS, state_string="'trial -b ...'")
         return self.run_step()
 
-    def test_run_env(self):
+    def test_run_env(self) -> defer.Deferred[None]:
         self.setup_build(worker_env={"DEF": 'HERE'})
         self.setup_step(shell.ShellCommand(workdir='build', command="echo hello"))
         self.expect_commands(
@@ -127,7 +134,7 @@ class TestShellCommandExecution(
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_run_env_override(self):
+    def test_run_env_override(self) -> defer.Deferred[None]:
         self.setup_build(worker_env={"ABC": 'XXX', "DEF": 'HERE'})
         self.setup_step(
             shell.ShellCommand(workdir='build', env={'ABC': '123'}, command="echo hello"),
@@ -140,7 +147,7 @@ class TestShellCommandExecution(
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_run_usePTY(self):
+    def test_run_usePTY(self) -> defer.Deferred[None]:
         self.setup_step(shell.ShellCommand(workdir='build', command="echo hello", usePTY=False))
         self.expect_commands(
             ExpectShell(workdir='build', command='echo hello', use_pty=False).exit(0)
@@ -148,14 +155,16 @@ class TestShellCommandExecution(
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_run_usePTY_old_worker(self):
+    def test_run_usePTY_old_worker(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={"shell": '1.1'})
         self.setup_step(shell.ShellCommand(workdir='build', command="echo hello", usePTY=True))
         self.expect_commands(ExpectShell(workdir='build', command='echo hello').exit(0))
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_run_decodeRC(self, rc=1, results=WARNINGS, extra_text=" (warnings)"):
+    def test_run_decodeRC(
+        self, rc: int = 1, results: int = WARNINGS, extra_text: str = " (warnings)"
+    ) -> defer.Deferred[None]:
         self.setup_step(
             shell.ShellCommand(workdir='build', command="echo hello", decodeRC={1: WARNINGS})
         )
@@ -163,24 +172,24 @@ class TestShellCommandExecution(
         self.expect_outcome(result=results, state_string="'echo hello'" + extra_text)
         return self.run_step()
 
-    def test_run_decodeRC_defaults(self):
+    def test_run_decodeRC_defaults(self) -> defer.Deferred[None]:
         return self.test_run_decodeRC(2, FAILURE, extra_text=" (failure)")
 
-    def test_run_decodeRC_defaults_0_is_failure(self):
+    def test_run_decodeRC_defaults_0_is_failure(self) -> defer.Deferred[None]:
         return self.test_run_decodeRC(0, FAILURE, extra_text=" (failure)")
 
-    def test_missing_command_error(self):
+    def test_missing_command_error(self) -> None:
         # this checks that an exception is raised for invalid arguments
         with self.assertRaisesConfigError("ShellCommand's `command' argument is not specified"):
             shell.ShellCommand()
 
 
 class TreeSize(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_run_success(self):
+    def test_run_success(self) -> defer.Deferred[None]:
         self.setup_step(shell.TreeSize())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['du', '-s', '-k', '.'])
@@ -191,7 +200,7 @@ class TreeSize(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('tree-size-KiB', 9292)
         return self.run_step()
 
-    def test_run_misparsed(self):
+    def test_run_misparsed(self) -> defer.Deferred[None]:
         self.setup_step(shell.TreeSize())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['du', '-s', '-k', '.']).stdout('abcdef\n').exit(0)
@@ -199,7 +208,7 @@ class TreeSize(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=WARNINGS, state_string="treesize unknown (warnings)")
         return self.run_step()
 
-    def test_run_failed(self):
+    def test_run_failed(self) -> defer.Deferred[None]:
         self.setup_step(shell.TreeSize())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['du', '-s', '-k', '.']).stderr('abcdef\n').exit(1)
@@ -209,15 +218,15 @@ class TreeSize(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_constructor_conflict(self):
+    def test_constructor_conflict(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             shell.SetPropertyFromCommand(property='foo', extract_fn=lambda: None)
 
-    def test_run_property(self):
+    def test_run_property(self) -> defer.Deferred[None]:
         self.setup_step(shell.SetPropertyFromCommand(property="res", command="cmd"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd").stdout('\n\nabcdef\n').exit(0)
@@ -227,7 +236,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_log_file('property changes', r"res: " + repr('abcdef'))
         return self.run_step()
 
-    def test_renderable_workdir(self):
+    def test_renderable_workdir(self) -> defer.Deferred[None]:
         self.setup_step(
             shell.SetPropertyFromCommand(
                 property="res", command="cmd", workdir=properties.Interpolate('wkdir')
@@ -241,7 +250,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_log_file('property changes', r"res: " + repr('abcdef'))
         return self.run_step()
 
-    def test_run_property_no_strip(self):
+    def test_run_property_no_strip(self) -> defer.Deferred[None]:
         self.setup_step(shell.SetPropertyFromCommand(property="res", command="cmd", strip=False))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd").stdout('\n\nabcdef\n').exit(0)
@@ -251,7 +260,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_log_file('property changes', r"res: " + repr('\n\nabcdef\n'))
         return self.run_step()
 
-    def test_run_failure(self):
+    def test_run_failure(self) -> defer.Deferred[None]:
         self.setup_step(shell.SetPropertyFromCommand(property="res", command="blarg"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="blarg")
@@ -262,8 +271,8 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_no_property("res")
         return self.run_step()
 
-    def test_run_extract_fn(self):
-        def extract_fn(rc, stdout, stderr):
+    def test_run_extract_fn(self) -> defer.Deferred[None]:
+        def extract_fn(rc: int, stdout: str, stderr: str) -> dict[str, int]:
             self.assertEqual((rc, stdout, stderr), (0, 'startend\n', 'STARTEND\n'))
             return {"a": 1, "b": 2}
 
@@ -282,8 +291,8 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_property("b", 2)
         return self.run_step()
 
-    def test_run_extract_fn_cmdfail(self):
-        def extract_fn(rc, stdout, stderr):
+    def test_run_extract_fn_cmdfail(self) -> defer.Deferred[None]:
+        def extract_fn(rc: int, stdout: str, stderr: str) -> dict[str, int]:
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
             return {"a": 1, "b": 2}
 
@@ -294,8 +303,8 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_log_file('property changes', 'a: 1\nb: 2')
         return self.run_step()
 
-    def test_run_extract_fn_cmdfail_empty(self):
-        def extract_fn(rc, stdout, stderr):
+    def test_run_extract_fn_cmdfail_empty(self) -> defer.Deferred[None]:
+        def extract_fn(rc: int, stdout: str, stderr: str) -> dict[str, int]:
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
             return {}
 
@@ -306,8 +315,8 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_run_extract_fn_exception(self):
-        def extract_fn(rc, stdout, stderr):
+    def test_run_extract_fn_exception(self) -> InlineCallbacksType[None]:
+        def extract_fn(rc: int, stdout: str, stderr: str) -> None:
             raise RuntimeError("oh noes")
 
         self.setup_step(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
@@ -317,7 +326,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         yield self.run_step()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    def test_error_both_set(self):
+    def test_error_both_set(self) -> None:
         """
         If both ``extract_fn`` and ``property`` are defined,
         ``SetPropertyFromCommand`` reports a config error.
@@ -329,7 +338,7 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
                 extract_fn=lambda x: {"propname": "hello"},
             )
 
-    def test_error_none_set(self):
+    def test_error_none_set(self) -> None:
         """
         If neither ``extract_fn`` and ``property`` are defined,
         ``SetPropertyFromCommand`` reports a config error.
@@ -339,11 +348,11 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
 
 class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_new_version_success(self):
+    def test_new_version_success(self) -> defer.Deferred[None]:
         self.setup_step(shell.PerlModuleTest(command="cmd"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
@@ -361,7 +370,7 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='20 tests 20 passed')
         return self.run_step()
 
-    def test_new_version_warnings(self):
+    def test_new_version_warnings(self) -> defer.Deferred[None]:
         self.setup_step(shell.PerlModuleTest(command="cmd", warningPattern='^OHNOES'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
@@ -384,7 +393,7 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
         return self.run_step()
 
-    def test_new_version_failed(self):
+    def test_new_version_failed(self) -> defer.Deferred[None]:
         self.setup_step(shell.PerlModuleTest(command="cmd"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
@@ -418,7 +427,7 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE, state_string='4 tests 3 passed 1 failed (failure)')
         return self.run_step()
 
-    def test_old_version_success(self):
+    def test_old_version_success(self) -> defer.Deferred[None]:
         self.setup_step(shell.PerlModuleTest(command="cmd"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
@@ -433,7 +442,7 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='20 tests 20 passed')
         return self.run_step()
 
-    def test_old_version_failed(self):
+    def test_old_version_failed(self) -> defer.Deferred[None]:
         self.setup_step(shell.PerlModuleTest(command="cmd"))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command="cmd")
@@ -449,15 +458,15 @@ class PerlModuleTest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class Configure(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_class_attrs(self):
+    def test_class_attrs(self) -> None:
         step = shell.Configure()
         self.assertEqual(step.command, ['./configure'])
 
-    def test_run(self):
+    def test_run(self) -> defer.Deferred[None]:
         self.setup_step(shell.Configure())
 
         self.expect_commands(ExpectShell(workdir='wkdir', command=["./configure"]).exit(0))
@@ -468,11 +477,11 @@ class Configure(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 class WarningCountingShellCommand(
     TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_no_warnings(self):
+    def test_no_warnings(self) -> defer.Deferred[None]:
         self.setup_step(shell.WarningCountingShellCommand(workdir='w', command=['make']))
         self.expect_commands(
             ExpectShell(workdir='w', command=["make"]).stdout('blarg success!').exit(0)
@@ -481,7 +490,7 @@ class WarningCountingShellCommand(
         self.expect_property("warnings-count", 0)
         return self.run_step()
 
-    def test_default_pattern(self):
+    def test_default_pattern(self) -> defer.Deferred[None]:
         self.setup_step(shell.WarningCountingShellCommand(command=['make']))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=["make"])
@@ -493,7 +502,7 @@ class WarningCountingShellCommand(
         self.expect_log_file("warnings (2)", "warning: blarg!\nWARNING: blarg!\n")
         return self.run_step()
 
-    def test_custom_pattern(self):
+    def test_custom_pattern(self) -> defer.Deferred[None]:
         self.setup_step(
             shell.WarningCountingShellCommand(command=['make'], warningPattern=r"scary:.*")
         )
@@ -507,7 +516,7 @@ class WarningCountingShellCommand(
         self.expect_log_file("warnings (2)", "scary: foo\nscary: bar\n")
         return self.run_step()
 
-    def test_maxWarnCount(self):
+    def test_maxWarnCount(self) -> defer.Deferred[None]:
         self.setup_step(shell.WarningCountingShellCommand(command=['make'], maxWarnCount=9))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=["make"]).stdout('warning: noo!\n' * 10).exit(0)
@@ -516,7 +525,7 @@ class WarningCountingShellCommand(
         self.expect_property("warnings-count", 10)
         return self.run_step()
 
-    def test_fail_with_warnings(self):
+    def test_fail_with_warnings(self) -> defer.Deferred[None]:
         self.setup_step(shell.WarningCountingShellCommand(command=['make']))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=["make"]).stdout('warning: I might fail').exit(3)
@@ -526,7 +535,7 @@ class WarningCountingShellCommand(
         self.expect_log_file("warnings (1)", "warning: I might fail\n")
         return self.run_step()
 
-    def test_warn_with_decoderc(self):
+    def test_warn_with_decoderc(self) -> defer.Deferred[None]:
         self.setup_step(shell.WarningCountingShellCommand(command=['make'], decodeRC={3: WARNINGS}))
         self.expect_commands(
             ExpectShell(
@@ -542,14 +551,14 @@ class WarningCountingShellCommand(
 
     def do_test_suppressions(
         self,
-        step,
-        supps_file='',
-        stdout='',
-        exp_warning_count=0,
-        exp_warning_log='',
-        exp_exception=False,
-        props=None,
-    ):
+        step: shell.WarningCountingShellCommand,
+        supps_file: str | None = '',
+        stdout: str = '',
+        exp_warning_count: int = 0,
+        exp_warning_log: str = '',
+        exp_exception: bool = False,
+        props: dict[str, Any] | None = None,
+    ) -> defer.Deferred[None]:
         self.setup_step(step)
 
         if props is not None:
@@ -586,7 +595,7 @@ class WarningCountingShellCommand(
             self.expect_property("warnings-count", exp_warning_count)
         return self.run_step()
 
-    def test_suppressions(self):
+    def test_suppressions(self) -> defer.Deferred[None]:
         step = shell.WarningCountingShellCommand(command=['make'], suppressionFile='supps')
         supps_file = textwrap.dedent("""\
             # example suppressions file
@@ -610,8 +619,10 @@ class WarningCountingShellCommand(
         """)
         return self.do_test_suppressions(step, supps_file, stdout, 1, exp_warning_log)
 
-    def test_suppressions_directories(self):
-        def warningExtractor(step, line, match):
+    def test_suppressions_directories(self) -> defer.Deferred[None]:
+        def warningExtractor(
+            step: shell.WarningCountingShellCommand, line: str, match: re.Match[str]
+        ) -> list[str]:
             return line.split(':', 2)
 
         step = shell.WarningCountingShellCommand(
@@ -643,8 +654,10 @@ class WarningCountingShellCommand(
         """)
         return self.do_test_suppressions(step, supps_file, stdout, 2, exp_warning_log)
 
-    def test_suppressions_directories_custom(self):
-        def warningExtractor(step, line, match):
+    def test_suppressions_directories_custom(self) -> defer.Deferred[None]:
+        def warningExtractor(
+            step: shell.WarningCountingShellCommand, line: str, match: re.Match[str]
+        ) -> list[str]:
             return line.split(':', 2)
 
         step = shell.WarningCountingShellCommand(
@@ -664,8 +677,10 @@ class WarningCountingShellCommand(
             """)
         return self.do_test_suppressions(step, supps_file, stdout, 0, '')
 
-    def test_suppressions_linenos(self):
-        def warningExtractor(step, line, match):
+    def test_suppressions_linenos(self) -> defer.Deferred[None]:
+        def warningExtractor(
+            step: shell.WarningCountingShellCommand, line: str, match: re.Match[str]
+        ) -> list[str]:
             return line.split(':', 2)
 
         step = shell.WarningCountingShellCommand(
@@ -685,8 +700,10 @@ class WarningCountingShellCommand(
         return self.do_test_suppressions(step, supps_file, stdout, 2, exp_warning_log)
 
     @defer.inlineCallbacks
-    def test_suppressions_warningExtractor_exc(self):
-        def warningExtractor(step, line, match):
+    def test_suppressions_warningExtractor_exc(self) -> InlineCallbacksType[None]:
+        def warningExtractor(
+            step: shell.WarningCountingShellCommand, line: str, match: re.Match[str]
+        ) -> None:
             raise RuntimeError("oh noes")
 
         step = shell.WarningCountingShellCommand(
@@ -698,14 +715,16 @@ class WarningCountingShellCommand(
         yield self.do_test_suppressions(step, supps_file, stdout, exp_exception=True)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    def test_suppressions_addSuppression(self):
+    def test_suppressions_addSuppression(self) -> defer.Deferred[None]:
         # call addSuppression "manually" from a subclass
         class MyWCSC(shell.WarningCountingShellCommand):
-            def run(self):
+            def run(self) -> defer.Deferred[int]:
                 self.addSuppression([('.*', '.*unseen.*', None, None)])
                 return super().run()
 
-        def warningExtractor(step, line, match):
+        def warningExtractor(
+            step: shell.WarningCountingShellCommand, line: str, match: re.Match[str]
+        ) -> list[str]:
             return line.split(':', 2)
 
         step = MyWCSC(command=['make'], suppressionFile='supps', warningExtractor=warningExtractor)
@@ -720,8 +739,10 @@ class WarningCountingShellCommand(
             """)
         return self.do_test_suppressions(step, '', stdout, 2, exp_warning_log)
 
-    def test_suppressions_suppressionsParameter(self):
-        def warningExtractor(step, line, match):
+    def test_suppressions_suppressionsParameter(self) -> defer.Deferred[None]:
+        def warningExtractor(
+            step: shell.WarningCountingShellCommand, line: str, match: re.Match[str]
+        ) -> list[str]:
             return line.split(':', 2)
 
         supps = (
@@ -729,7 +750,9 @@ class WarningCountingShellCommand(
             ("def.c", ".*", 22, 22),
         )
         step = shell.WarningCountingShellCommand(
-            command=['make'], suppressionList=supps, warningExtractor=warningExtractor
+            command=['make'],
+            suppressionList=supps,  # type: ignore[arg-type]
+            warningExtractor=warningExtractor,
         )
         stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
@@ -743,8 +766,10 @@ class WarningCountingShellCommand(
             """)
         return self.do_test_suppressions(step, None, stdout, 2, exp_warning_log)
 
-    def test_suppressions_suppressionsRenderableParameter(self):
-        def warningExtractor(step, line, match):
+    def test_suppressions_suppressionsRenderableParameter(self) -> defer.Deferred[None]:
+        def warningExtractor(
+            step: shell.WarningCountingShellCommand, line: str, match: re.Match[str]
+        ) -> list[str]:
             return line.split(':', 2)
 
         supps = (
@@ -754,7 +779,7 @@ class WarningCountingShellCommand(
 
         step = shell.WarningCountingShellCommand(
             command=['make'],
-            suppressionList=properties.Property("suppressionsList"),
+            suppressionList=properties.Property("suppressionsList"),  # type: ignore[arg-type]
             warningExtractor=warningExtractor,
         )
 
@@ -772,7 +797,7 @@ class WarningCountingShellCommand(
             step, None, stdout, 2, exp_warning_log, props={"suppressionsList": supps}
         )
 
-    def test_warnExtractFromRegexpGroups(self):
+    def test_warnExtractFromRegexpGroups(self) -> None:
         step = shell.WarningCountingShellCommand(command=['make'])
         we = shell.WarningCountingShellCommand.warnExtractFromRegexpGroups
         line, pat, exp_file, exp_lineNo, exp_text = (
@@ -782,9 +807,9 @@ class WarningCountingShellCommand(
             123,
             'text',
         )
-        self.assertEqual(we(step, line, re.match(pat, line)), (exp_file, exp_lineNo, exp_text))
+        self.assertEqual(we(step, line, re.match(pat, line)), (exp_file, exp_lineNo, exp_text))  # type: ignore[arg-type]
 
-    def test_missing_command_error(self):
+    def test_missing_command_error(self) -> None:
         # this checks that an exception is raised for invalid arguments
         with self.assertRaisesConfigError(
             "WarningCountingShellCommand's 'command' argument is not specified"
@@ -793,11 +818,11 @@ class WarningCountingShellCommand(
 
 
 class Compile(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_class_args(self):
+    def test_class_args(self) -> None:
         # since this step is just a pre-configured WarningCountingShellCommand,
         # there' not much to test!
         step = self.setup_step(shell.Compile())
@@ -806,17 +831,17 @@ class Compile(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertTrue(step.flunkOnFailure)
         self.assertEqual(step.description, ["compiling"])
         self.assertEqual(step.descriptionDone, ["compile"])
-        self.assertEqual(step.command, ["make", "all"])
+        self.assertEqual(step.command, ["make", "all"])  # type: ignore[attr-defined]
 
 
 class Test(TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         self.setup_test_build_step()
 
-    def test_setTestResults(self):
+    def test_setTestResults(self) -> None:
         step = self.setup_step(shell.Test())
-        step.setTestResults(total=10, failed=3, passed=5, warnings=3)
+        step.setTestResults(total=10, failed=3, passed=5, warnings=3)  # type: ignore[attr-defined]
         self.assertEqual(
             step.statistics,
             {
@@ -827,7 +852,7 @@ class Test(TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, 
             },
         )
         # ensure that they're additive
-        step.setTestResults(total=1, failed=2, passed=3, warnings=4)
+        step.setTestResults(total=1, failed=2, passed=3, warnings=4)  # type: ignore[attr-defined]
         self.assertEqual(
             step.statistics,
             {
@@ -838,13 +863,13 @@ class Test(TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, 
             },
         )
 
-    def test_describe_not_done(self):
+    def test_describe_not_done(self) -> None:
         step = self.setup_step(shell.Test())
         step.results = SUCCESS
         step.rendered = True
         self.assertEqual(step.getResultSummary(), {'step': 'test'})
 
-    def test_describe_done(self):
+    def test_describe_done(self) -> None:
         step = self.setup_step(shell.Test())
         step.rendered = True
         step.results = SUCCESS
@@ -856,7 +881,7 @@ class Test(TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, 
             step.getResultSummary(), {'step': '93 tests 20 passed 30 warnings 10 failed'}
         )
 
-    def test_describe_done_no_total(self):
+    def test_describe_done_no_total(self) -> None:
         step = self.setup_step(shell.Test())
         step.rendered = True
         step.results = SUCCESS
