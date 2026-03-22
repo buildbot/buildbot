@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -27,6 +32,9 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.www import change_hook
 from buildbot.www.hooks.gitlab import _HEADER_EVENT
 from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 # Sample GITLAB commit payload from https://docs.gitlab.com/ce/user/project/integrations/webhooks.html
 # Added "modified" and "removed", and change email
@@ -1007,23 +1015,25 @@ gitJsonPayloadMR_commented = b"""
 """
 
 
-def FakeRequestMR(content):
+def FakeRequestMR(content: bytes) -> FakeRequest:
     request = FakeRequest(content=content)
     request.uri = b"/change_hook/gitlab"
     request.args = {b'codebase': [b'MyCodebase']}
-    request.received_headers[_HEADER_EVENT] = b"Merge Request Hook"
+    request.received_headers[_HEADER_EVENT] = b"Merge Request Hook"  # type: ignore[index,assignment]
     request.method = b"POST"
     return request
 
 
 class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         master = yield fakeMasterForHooks(self)
         self.changeHook = change_hook.ChangeHookResource(dialects={'gitlab': True}, master=master)
 
-    def check_changes_tag_event(self, r, project='', codebase=None):
+    def check_changes_tag_event(
+        self, r: Any, project: str = '', codebase: str | None = None
+    ) -> None:
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
         change = self.changeHook.master.data.updates.changesAdded[0]
 
@@ -1032,8 +1042,13 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         self.assertEqual(change["branch"], "v1.0.0")
 
     def check_changes_mr_event(
-        self, r, project='awesome_project', codebase=None, timestamp=1526309644, source_repo=None
-    ):
+        self,
+        r: Any,
+        project: str = 'awesome_project',
+        codebase: str | None = None,
+        timestamp: int = 1526309644,
+        source_repo: str | None = None,
+    ) -> None:
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
 
@@ -1056,15 +1071,15 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
 
     def check_changes_mr_event_by_comment(
         self,
-        r,
-        project='awesome_project',
-        codebase=None,
-        timestamp=1526309644,
-        source_repo=None,
-        repo='https://gitlab.example.com/mmusterman/awesome_project.git',
-        source_branch='ms-viewport',
-        target_branch='master',
-    ):
+        r: Any,
+        project: str = 'awesome_project',
+        codebase: str | None = None,
+        timestamp: int = 1526309644,
+        source_repo: str | None = None,
+        repo: str = 'https://gitlab.example.com/mmusterman/awesome_project.git',
+        source_branch: str = 'ms-viewport',
+        target_branch: str = 'master',
+    ) -> None:
         self.maxDiff = None
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
@@ -1082,7 +1097,9 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         self.assertEqual(change["category"], "note")
         self.assertEqual(change.get("project"), project)
 
-    def check_changes_push_event(self, r, project='diaspora', codebase=None):
+    def check_changes_push_event(
+        self, r: Any, project: str = 'diaspora', codebase: str | None = None
+    ) -> None:
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
         change = self.changeHook.master.data.updates.changesAdded[0]
 
@@ -1118,50 +1135,50 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
     # Test 'base' hook with attributes. We should get a json string representing
     # a Change object as a dictionary. All values show be set.
     @defer.inlineCallbacks
-    def testGitWithChange(self):
+    def testGitWithChange(self) -> InlineCallbacksType[None]:
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
-        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
+        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"  # type: ignore[index,assignment]
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_push_event(res)
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithProjectToo(self):
+    def testGitWithChange_WithProjectToo(self) -> InlineCallbacksType[None]:
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.uri = b"/change_hook/gitlab"
         self.request.args = {b'project': [b'Diaspora']}
-        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
+        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"  # type: ignore[index,assignment]
         self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_push_event(res, project="Diaspora")
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithCodebaseToo(self):
+    def testGitWithChange_WithCodebaseToo(self) -> InlineCallbacksType[None]:
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.uri = b"/change_hook/gitlab"
         self.request.args = {b'codebase': [b'MyCodebase']}
-        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
+        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"  # type: ignore[index,assignment]
         self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_push_event(res, codebase="MyCodebase")
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithPushTag(self):
+    def testGitWithChange_WithPushTag(self) -> InlineCallbacksType[None]:
         self.request = FakeRequest(content=gitJsonPayloadTag)
         self.request.uri = b"/change_hook/gitlab"
         self.request.args = {b'codebase': [b'MyCodebase']}
-        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
+        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"  # type: ignore[index,assignment]
         self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_tag_event(res, codebase="MyCodebase")
 
     @defer.inlineCallbacks
-    def testGitWithNoJson(self):
+    def testGitWithNoJson(self) -> InlineCallbacksType[None]:
         self.request = FakeRequest()
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
-        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
+        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"  # type: ignore[index,assignment]
         yield self.request.test_render(self.changeHook)
 
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
@@ -1169,9 +1186,9 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         self.request.setResponseCode.assert_called_with(400, mock.ANY)
 
     @defer.inlineCallbacks
-    def test_event_property(self):
+    def test_event_property(self) -> InlineCallbacksType[None]:
         self.request = FakeRequest(content=gitJsonPayload)
-        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
+        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"  # type: ignore[index,assignment]
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
         yield self.request.test_render(self.changeHook)
@@ -1181,7 +1198,7 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         self.assertEqual(change["category"], "Push Hook")
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithMR_open(self):
+    def testGitWithChange_WithMR_open(self) -> InlineCallbacksType[None]:
         self.request = FakeRequestMR(content=gitJsonPayloadMR_open)
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_mr_event(res, codebase="MyCodebase")
@@ -1189,13 +1206,13 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         self.assertEqual(change["category"], "merge_request")
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithMR_editdesc(self):
+    def testGitWithChange_WithMR_editdesc(self) -> InlineCallbacksType[None]:
         self.request = FakeRequestMR(content=gitJsonPayloadMR_editdesc)
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithMR_addcommit(self):
+    def testGitWithChange_WithMR_addcommit(self) -> InlineCallbacksType[None]:
         self.request = FakeRequestMR(content=gitJsonPayloadMR_addcommit)
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_mr_event(res, codebase="MyCodebase", timestamp=1526395871)
@@ -1203,13 +1220,13 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         self.assertEqual(change["category"], "merge_request")
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithMR_close(self):
+    def testGitWithChange_WithMR_close(self) -> InlineCallbacksType[None]:
         self.request = FakeRequestMR(content=gitJsonPayloadMR_close)
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithMR_reopen(self):
+    def testGitWithChange_WithMR_reopen(self) -> InlineCallbacksType[None]:
         self.request = FakeRequestMR(content=gitJsonPayloadMR_reopen)
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_mr_event(res, codebase="MyCodebase", timestamp=1526395871)
@@ -1217,7 +1234,7 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         self.assertEqual(change["category"], "merge_request")
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithMR_open_forked(self):
+    def testGitWithChange_WithMR_open_forked(self) -> InlineCallbacksType[None]:
         self.request = FakeRequestMR(content=gitJsonPayloadMR_open_forked)
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_mr_event(
@@ -1230,7 +1247,7 @@ class TestChangeHookConfiguredWithGitChange(TestReactorMixin, unittest.TestCase)
         self.assertEqual(change["category"], "merge_request")
 
     @defer.inlineCallbacks
-    def testGitWithChange_WithMR_commented(self):
+    def testGitWithChange_WithMR_commented(self) -> InlineCallbacksType[None]:
         self.request = FakeRequestMR(content=gitJsonPayloadMR_commented)
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_mr_event_by_comment(
@@ -1247,7 +1264,7 @@ class TestChangeHookConfiguredWithSecret(TestReactorMixin, unittest.TestCase):
     _SECRET = 'thesecret'
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakeMasterForHooks(self)
 
@@ -1263,22 +1280,22 @@ class TestChangeHookConfiguredWithSecret(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_missing_secret(self):
+    def test_missing_secret(self) -> InlineCallbacksType[None]:
         self.request = FakeRequest(content=gitJsonPayloadTag)
         self.request.uri = b"/change_hook/gitlab"
         self.request.args = {b'codebase': [b'MyCodebase']}
         self.request.method = b"POST"
-        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
+        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"  # type: ignore[index,assignment]
         yield self.request.test_render(self.changeHook)
         expected = b'Invalid secret'
         self.assertEqual(self.request.written, expected)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
-    def test_valid_secret(self):
+    def test_valid_secret(self) -> InlineCallbacksType[None]:
         self.request = FakeRequest(content=gitJsonPayload)
-        self.request.received_headers[_HEADER_GITLAB_TOKEN] = self._SECRET
-        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
+        self.request.received_headers[_HEADER_GITLAB_TOKEN] = self._SECRET  # type: ignore[index]
+        self.request.received_headers[_HEADER_EVENT] = b"Push Hook"  # type: ignore[index,assignment]
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
         yield self.request.test_render(self.changeHook)
