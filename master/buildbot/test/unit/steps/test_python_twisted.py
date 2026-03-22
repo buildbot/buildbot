@@ -222,7 +222,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     def test_renderable_properties(self) -> defer.Deferred[None]:
         self.setup_step(
-            python_twisted.Trial(workdir='build', tests=Property('test_list'), testpath=None)  # type: ignore[arg-type]
+            python_twisted.Trial(workdir='build', tests=Property('test_list'), testpath=None)
         )
         self.build.setProperty('test_list', ['testname'], 'Test')
         self.expect_commands(
@@ -375,7 +375,7 @@ class Trial(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             python_twisted.Trial(
                 workdir='build',
                 tests='testname',
-                jobs=Property('jobs_count'),  # type: ignore[arg-type]
+                jobs=Property('jobs_count'),
                 testpath=None,
             )
         )

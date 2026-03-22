@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
     from twisted.internet.base import ReactorBase
 
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.process import remotecommand
     from buildbot.util.twisted import InlineCallbacksType
 
@@ -199,13 +200,13 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
     trialMode = ["--reporter=bwverbose"]  # requires Twisted-2.1.0 or newer
     # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
     trialArgs: list[str] = []
-    jobs: int | None = None
+    jobs: IMaybeRenderableType[int] | None = None
     testpath: str | None | tuple[()] = UNSPECIFIED  # required (but can be None)
     testChanges = False  # TODO: needs better name
     recurse = False
     reactor: ReactorBase | None = None
     randomly = False
-    tests: list[str] | None = None  # required
+    tests: IMaybeRenderableType[list[str]] | IMaybeRenderableType[str] | None = None  # required
 
     description = 'testing'
     descriptionDone = 'tests'
@@ -216,13 +217,13 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         python: list[str] | str | None = None,
         trial: str | None = None,
         testpath: str | None | tuple[()] = UNSPECIFIED,
-        tests: list[str] | str | None = None,
+        tests: IMaybeRenderableType[list[str]] | IMaybeRenderableType[str] | None = None,
         testChanges: bool | None = None,
         recurse: bool | None = None,
         randomly: bool | None = None,
         trialMode: list[str] | None = None,
         trialArgs: list[str] | None = None,
-        jobs: int | None = None,
+        jobs: IMaybeRenderableType[int] | None = None,
         **kwargs: Any,
     ) -> None:
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
@@ -264,7 +265,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
             self.reactor = reactor
 
         if tests is not None:
-            self.tests = tests  # type: ignore[assignment]
+            self.tests = tests
         if isinstance(self.tests, str):
             self.tests = [self.tests]
         if testChanges is not None:
@@ -328,7 +329,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         command.extend(self.trialArgs)
 
         if self.jobs is not None:
-            self.jobs = int(self.jobs)
+            self.jobs = int(self.jobs)  # type: ignore[arg-type]
             command.append(f"--jobs={self.jobs}")
 
             # using -j/--jobs flag produces more than one test log.
