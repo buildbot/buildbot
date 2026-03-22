@@ -195,7 +195,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.test_wamp_connector",
       "buildbot.test.unit.util.test_kubeclientservice",
       "buildbot.test.unit.www.test_graphql",
-      "buildbot.test.unit.www.test_hooks_base",
       "buildbot.test.unit.www.test_hooks_bitbucket",
       "buildbot.test.unit.www.test_hooks_bitbucketcloud",
       "buildbot.test.unit.www.test_rest",
