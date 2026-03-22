@@ -13,7 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.properties import Interpolate
@@ -23,19 +30,19 @@ from buildbot.test.util import config as configmixin
 
 
 class TestBuildStep(BuildStep):
-    def run(self):
+    def run(self) -> defer.Deferred[int]:
         self.setProperty('name', self.name)
-        return 0
+        return 0  # type: ignore[return-value]
 
 
 class TestBuildStepNameIsRenderable(
     TestBuildStepMixin, TestReactorMixin, configmixin.ConfigErrorsMixin, unittest.TestCase
 ):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_name_is_renderable(self):
+    def test_name_is_renderable(self) -> defer.Deferred[None]:
         step = TestBuildStep(name=Interpolate('%(kw:foo)s', foo='bar'))
         self.setup_step(step)
         self.expect_property('name', 'bar')
