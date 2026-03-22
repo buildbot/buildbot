@@ -13,6 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -25,17 +32,19 @@ from buildbot.www import avatar
 
 
 class TestAvatar(avatar.AvatarBase):
-    def getUserAvatar(self, email, username, size, defaultAvatarUrl):
+    def getUserAvatar(
+        self, email: bytes, username: bytes | None, size: int, defaultAvatarUrl: str
+    ) -> defer.Deferred[tuple[bytes, bytes] | None]:
         user_avatar = f'{email!r} {size!r} {defaultAvatarUrl!r}'.encode()
         return defer.succeed((b"image/png", user_avatar))
 
 
 class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
     @defer.inlineCallbacks
-    def test_default(self):
+    def test_default(self) -> InlineCallbacksType[None]:
         master = yield self.make_master(url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[])
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
@@ -44,7 +53,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, {"redirected": avatar.AvatarResource.defaultAvatarUrl})
 
     @defer.inlineCallbacks
-    def test_gravatar(self):
+    def test_gravatar(self) -> InlineCallbacksType[None]:
         master = yield self.make_master(
             url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[avatar.AvatarGravatar()]
         )
@@ -61,7 +70,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_avatar_call(self):
+    def test_avatar_call(self) -> InlineCallbacksType[None]:
         master = yield self.make_master(
             url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[TestAvatar()]
         )
@@ -72,7 +81,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, b"b'foo' 32 'http://a/b/img/nobody.png'")
 
     @defer.inlineCallbacks
-    def test_custom_size(self):
+    def test_custom_size(self) -> InlineCallbacksType[None]:
         master = yield self.make_master(
             url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[TestAvatar()]
         )
@@ -83,7 +92,7 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, b"b'foo' 64 'http://a/b/img/nobody.png'")
 
     @defer.inlineCallbacks
-    def test_invalid_size(self):
+    def test_invalid_size(self) -> InlineCallbacksType[None]:
         master = yield self.make_master(
             url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[TestAvatar()]
         )
@@ -94,14 +103,16 @@ class AvatarResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, b"b'foo' 32 'http://a/b/img/nobody.png'")
 
     @defer.inlineCallbacks
-    def test_custom_not_found(self):
+    def test_custom_not_found(self) -> InlineCallbacksType[None]:
         # use gravatar if the custom avatar fail to return a response
         class CustomAvatar(avatar.AvatarBase):
-            def getUserAvatar(self, email, username, size, defaultAvatarUrl):
+            def getUserAvatar(
+                self, email: bytes, username: bytes | None, size: int, defaultAvatarUrl: str
+            ) -> defer.Deferred[tuple[bytes, bytes] | None]:
                 return defer.succeed(None)
 
         master = yield self.make_master(
-            url=b'http://a/b/',
+            url=b'http://a/b/',  # type: ignore[arg-type]
             auth=auth.NoAuth(),
             avatar_methods=[CustomAvatar(), avatar.AvatarGravatar()],
         )
@@ -521,7 +532,7 @@ github_commit_search_not_found_reply = {"total_count": 0, "incomplete_results": 
 
 class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
 
         master = yield self.make_master(
@@ -549,7 +560,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.addCleanup(self.master.stopService)
 
     @defer.inlineCallbacks
-    def test_username(self):
+    def test_username(self) -> InlineCallbacksType[None]:
         username_search_endpoint = '/users/defunkt'
         self._http.expect(
             'get',
@@ -563,7 +574,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_username_not_found(self):
+    def test_username_not_found(self) -> InlineCallbacksType[None]:
         username_search_endpoint = '/users/inexistent'
         self._http.expect(
             'get',
@@ -576,7 +587,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
-    def test_username_error(self):
+    def test_username_error(self) -> InlineCallbacksType[None]:
         username_search_endpoint = '/users/error'
         self._http.expect(
             'get',
@@ -588,7 +599,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
-    def test_username_cached(self):
+    def test_username_cached(self) -> InlineCallbacksType[None]:
         username_search_endpoint = '/users/defunkt'
         self._http.expect(
             'get',
@@ -607,7 +618,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_email(self):
+    def test_email(self) -> InlineCallbacksType[None]:
         email_search_endpoint = '/search/users?q=defunkt%40defunkt.com+in%3Aemail'
         self._http.expect(
             'get',
@@ -621,7 +632,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_email_commit(self):
+    def test_email_commit(self) -> InlineCallbacksType[None]:
         email_search_endpoint = '/search/users?q=defunkt%40defunkt.com+in%3Aemail'
         self._http.expect(
             'get',
@@ -646,7 +657,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_email_commit_no_user(self):
+    def test_email_commit_no_user(self) -> InlineCallbacksType[None]:
         email_search_endpoint = '/search/users?q=defunkt%40defunkt.com+in%3Aemail'
         self._http.expect(
             'get',
@@ -669,7 +680,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
-    def test_email_not_found(self):
+    def test_email_not_found(self) -> InlineCallbacksType[None]:
         email_search_endpoint = '/search/users?q=notfound%40defunkt.com+in%3Aemail'
         self._http.expect(
             'get',
@@ -692,7 +703,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, {"redirected": b'img/nobody.png'})
 
     @defer.inlineCallbacks
-    def test_email_error(self):
+    def test_email_error(self) -> InlineCallbacksType[None]:
         email_search_endpoint = '/search/users?q=error%40defunkt.com+in%3Aemail'
         self._http.expect(
             'get',
@@ -717,7 +728,7 @@ class GitHubAvatar(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
 
         avatar_method = avatar.AvatarGitHub(client_id="oauth_id", client_secret="oauth_secret")
@@ -744,18 +755,18 @@ class GitHubAvatarBasicAuth(TestReactorMixin, www.WwwTestMixin, unittest.TestCas
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
-    def test_incomplete_credentials(self):
+    def test_incomplete_credentials(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             avatar.AvatarGitHub(client_id="oauth_id")
         with self.assertRaises(config.ConfigErrors):
             avatar.AvatarGitHub(client_secret="oauth_secret")
 
-    def test_token_and_client_credentials(self):
+    def test_token_and_client_credentials(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             avatar.AvatarGitHub(client_id="oauth_id", client_secret="oauth_secret", token="token")
 
     @defer.inlineCallbacks
-    def test_username(self):
+    def test_username(self) -> InlineCallbacksType[None]:
         username_search_endpoint = '/users/defunkt'
         self._http.expect(
             'get',
