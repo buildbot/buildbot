@@ -30,13 +30,13 @@ class ComparableMixin(unittest.TestCase):
     class Foo(util.ComparableMixin):
         compare_attrs: ClassVar[Sequence[str]] = ("a", "b")
 
-        def __init__(self, a, b, c):
+        def __init__(self, a: int, b: int, c: int) -> None:
             self.a, self.b, self.c = a, b, c
 
     class Bar(Foo, util.ComparableMixin):
         compare_attrs: ClassVar[Sequence[str]] = ("b", "c")
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.f123 = self.Foo(1, 2, 3)
         self.f124 = self.Foo(1, 2, 4)
         self.f134 = self.Foo(1, 3, 4)
@@ -44,44 +44,44 @@ class ComparableMixin(unittest.TestCase):
         self.b223 = self.Bar(2, 2, 3)
         self.b213 = self.Bar(2, 1, 3)
 
-    def test_equality_identity(self):
+    def test_equality_identity(self) -> None:
         self.assertEqual(self.f123, self.f123)
 
-    def test_equality_same(self):
+    def test_equality_same(self) -> None:
         another_f123 = self.Foo(1, 2, 3)
         self.assertEqual(self.f123, another_f123)
 
-    def test_equality_unimportantDifferences(self):
+    def test_equality_unimportantDifferences(self) -> None:
         self.assertEqual(self.f123, self.f124)
 
-    def test_inequality_unimportantDifferences_subclass(self):
+    def test_inequality_unimportantDifferences_subclass(self) -> None:
         # verify that the parent class's compare_attrs does
         # affect the subclass
         self.assertNotEqual(self.b123, self.b223)
 
-    def test_inequality_importantDifferences(self):
+    def test_inequality_importantDifferences(self) -> None:
         self.assertNotEqual(self.f123, self.f134)
 
-    def test_inequality_importantDifferences_subclass(self):
+    def test_inequality_importantDifferences_subclass(self) -> None:
         self.assertNotEqual(self.b123, self.b213)
 
-    def test_inequality_differentClasses(self):
+    def test_inequality_differentClasses(self) -> None:
         self.assertNotEqual(self.f123, self.b123)
 
-    def test_instance_attribute_not_used(self):
+    def test_instance_attribute_not_used(self) -> None:
         # setting compare_attrs as an instance method doesn't
         # affect the outcome of the comparison
         another_f123 = self.Foo(1, 2, 3)
-        another_f123.compare_attrs = ("b", "a")
+        another_f123.compare_attrs = ("b", "a")  # type: ignore[misc]
         self.assertEqual(self.f123, another_f123)
 
-    def test_ne_importantDifferences(self):
+    def test_ne_importantDifferences(self) -> None:
         self.assertNotEqual(self.f123, self.f134)
 
-    def test_ne_differentClasses(self):
+    def test_ne_differentClasses(self) -> None:
         self.assertNotEqual(self.f123, self.b123)
 
-    def test_compare(self):
+    def test_compare(self) -> None:
         self.assertEqual(self.f123, self.f123)
         self.assertNotEqual(self.b223, self.b213)
         self.assertGreater(self.b223, self.b213)
