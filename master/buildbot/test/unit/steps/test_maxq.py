@@ -13,7 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot import config
 from buildbot.process.results import FAILURE
@@ -25,15 +32,15 @@ from buildbot.test.steps import TestBuildStepMixin
 
 
 class TestShellCommandExecution(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_testdir_required(self):
+    def test_testdir_required(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             maxq.MaxQ()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(maxq.MaxQ(testdir='x'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"])
@@ -43,7 +50,7 @@ class TestShellCommandExecution(TestBuildStepMixin, TestReactorMixin, unittest.T
         self.expect_outcome(result=SUCCESS, state_string='success')
         return self.run_step()
 
-    def test_nonzero_rc_no_failures(self):
+    def test_nonzero_rc_no_failures(self) -> defer.Deferred[None]:
         self.setup_step(maxq.MaxQ(testdir='x'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"])
@@ -53,7 +60,7 @@ class TestShellCommandExecution(TestBuildStepMixin, TestReactorMixin, unittest.T
         self.expect_outcome(result=FAILURE, state_string='1 maxq failures')
         return self.run_step()
 
-    def test_failures(self):
+    def test_failures(self) -> defer.Deferred[None]:
         self.setup_step(maxq.MaxQ(testdir='x'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=["run_maxq.py", "x"])
