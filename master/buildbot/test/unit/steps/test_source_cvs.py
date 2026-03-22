@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-import time
+from __future__ import annotations
 
+import time
+from typing import Any
+
+from twisted.internet import defer
 from twisted.internet import error
 from twisted.trial import unittest
 
@@ -36,22 +40,22 @@ from buildbot.test.util import sourcesteps
 
 
 class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def setup_step(self, step, *args, **kwargs):
+    def setup_step(self, step: Any, *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
         super().setup_step(step, *args, **kwargs)
 
         # make parseGotRevision return something consistent, patching the class
         # instead of the object since a new object is constructed by runTest.
-        def parseGotRevision(self):
+        def parseGotRevision(self: cvs.CVS) -> None:
             self.updateSourceProperty('got_revision', '2012-09-09 12:00:39 +0000')
 
         self.patch(cvs.CVS, 'parseGotRevision', parseGotRevision)
 
-    def test_parseGotRevision(self):
-        def gmtime():
+    def test_parseGotRevision(self) -> None:
+        def gmtime() -> time.struct_time:
             return time.struct_time((2012, 9, 9, 12, 9, 33, 6, 253, 0))
 
         self.patch(time, 'gmtime', gmtime)
@@ -61,15 +65,15 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         )
         props = []
 
-        def updateSourceProperty(prop, name):
+        def updateSourceProperty(prop: str, name: str) -> None:
             props.append((prop, name))
 
-        step.updateSourceProperty = updateSourceProperty
+        step.updateSourceProperty = updateSourceProperty  # type: ignore[attr-defined]
 
-        step.parseGotRevision()
+        step.parseGotRevision()  # type: ignore[attr-defined]
         self.assertEqual(props, [('got_revision', '2012-09-09 12:09:33 +0000')])
 
-    def test_cvsEntriesContainStickyDates(self):
+    def test_cvsEntriesContainStickyDates(self) -> None:
         step = cvs.CVS(cvsroot="x", cvsmodule="m", mode='full', method='clean')
         self.assertEqual(step._cvsEntriesContainStickyDates('D'), False)
         self.assertEqual(
@@ -92,7 +96,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             True,
         )
 
-    def test_mode_full_clean_and_login(self):
+    def test_mode_full_clean_and_login(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -150,7 +154,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clean_and_login_worker_2_16(self):
+    def test_mode_full_clean_and_login_worker_2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             cvs.CVS(
@@ -210,7 +214,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clean_patch(self):
+    def test_mode_full_clean_patch(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -287,7 +291,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clean_patch_worker_2_16(self):
+    def test_mode_full_clean_patch_worker_2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             cvs.CVS(
@@ -365,7 +369,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clean_timeout(self):
+    def test_mode_full_clean_timeout(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -415,7 +419,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clean_branch(self):
+    def test_mode_full_clean_branch(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -465,7 +469,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clean_branch_sourcestamp(self):
+    def test_mode_full_clean_branch_sourcestamp(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -515,7 +519,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_fresh(self):
+    def test_mode_full_fresh(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -562,7 +566,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clobber(self):
+    def test_mode_full_clobber(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -593,7 +597,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clobber_retry(self):
+    def test_mode_full_clobber_retry(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -653,7 +657,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_copy(self):
+    def test_mode_full_copy(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -702,7 +706,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_copy_wrong_repo(self):
+    def test_mode_full_copy_wrong_repo(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -746,7 +750,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental(self):
+    def test_mode_incremental(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -791,7 +795,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_sticky_date(self):
+    def test_mode_incremental_sticky_date(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -848,7 +852,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_password_windows(self):
+    def test_mode_incremental_password_windows(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:dustin:secrets@cvs-mirror.mozilla.org:/cvsroot",
@@ -894,7 +898,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_branch(self):
+    def test_mode_incremental_branch(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -942,7 +946,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_special_case(self):
+    def test_mode_incremental_special_case(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1000,7 +1004,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_branch_sourcestamp(self):
+    def test_mode_incremental_branch_sourcestamp(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1048,7 +1052,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_not_loggedin(self):
+    def test_mode_incremental_not_loggedin(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1093,7 +1097,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_no_existing_repo(self):
+    def test_mode_incremental_no_existing_repo(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -1129,7 +1133,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_retry(self):
+    def test_mode_incremental_retry(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -1180,7 +1184,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_wrong_repo(self):
+    def test_mode_incremental_wrong_repo(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -1218,7 +1222,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_wrong_module(self):
+    def test_mode_incremental_wrong_module(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -1265,7 +1269,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clean_no_existing_repo(self):
+    def test_mode_full_clean_no_existing_repo(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1302,7 +1306,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_clean_wrong_repo(self):
+    def test_mode_full_clean_wrong_repo(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1341,7 +1345,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_full_no_method(self):
+    def test_mode_full_no_method(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1387,7 +1391,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_with_options(self):
+    def test_mode_incremental_with_options(self) -> defer.Deferred[None]:
         step = cvs.CVS(
             cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
             cvsmodule="mozilla/browser/",
@@ -1427,7 +1431,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_mode_incremental_with_env_log_environ(self):
+    def test_mode_incremental_with_env_log_environ(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1481,7 +1485,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.run_step()
 
-    def test_command_fails(self):
+    def test_command_fails(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1494,7 +1498,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_cvsdiscard_fails(self):
+    def test_cvsdiscard_fails(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -1541,7 +1545,7 @@ class TestCVS(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_worker_connection_lost(self):
+    def test_worker_connection_lost(self) -> defer.Deferred[None]:
         self.setup_step(
             cvs.CVS(
                 cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
