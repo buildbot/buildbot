@@ -20,6 +20,8 @@ import pprint
 import re
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Union
+from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -35,6 +37,7 @@ from buildbot.util import runprocess
 if TYPE_CHECKING:
     from twisted.python.failure import Failure
 
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -53,7 +56,9 @@ class MasterShellCommand(BuildStep):
     haltOnFailure = True
     flunkOnFailure = True
 
-    def __init__(self, command: str | list[str], **kwargs: Any) -> None:
+    def __init__(
+        self, command: IMaybeRenderableType[str] | IMaybeRenderableType[list[str]], **kwargs: Any
+    ) -> None:
         self.env = kwargs.pop('env', None)
         self.usePTY = kwargs.pop('usePTY', 0)
         self.interruptSignal = kwargs.pop('interruptSignal', 'KILL')
@@ -70,7 +75,7 @@ class MasterShellCommand(BuildStep):
     @defer.inlineCallbacks
     def run(self) -> InlineCallbacksType[int]:
         # render properties
-        command = self.command
+        command = cast(Union[str, list[str]], self.command)
         # set up argv
         if isinstance(command, (str, bytes)):
             if runtime.platformType == 'win32':

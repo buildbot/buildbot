@@ -172,7 +172,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
     def test_prop_rendering(self) -> defer.Deferred[None]:
         self.setup_step(
             master.MasterShellCommand(
-                command=Interpolate('%(prop:project)s-BUILD'),  # type: ignore[arg-type]
+                command=Interpolate('%(prop:project)s-BUILD'),
                 workdir='build',
             )
         )
