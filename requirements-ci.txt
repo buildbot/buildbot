@@ -83,7 +83,7 @@ unidiff==0.7.5
 urllib3==1.26.19; python_version <= "3.9"  # pyup: ignore
 urllib3==2.6.3; python_version > "3.9"
 Werkzeug==3.1.6
-xmltodict==0.14.2
+xmltodict==1.0.4
 zope.event==6.0
 zope.interface==7.2
 zope.schema==7.0.1
