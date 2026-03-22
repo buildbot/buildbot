@@ -19,11 +19,18 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.python.failure import Failure
 from twisted.trial import unittest
 
 from buildbot.util import Notifier
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class TestException(Exception):
@@ -33,30 +40,30 @@ class TestException(Exception):
 
 
 class Tests(unittest.TestCase):
-    def test_wait(self):
+    def test_wait(self) -> None:
         """
         Calling `Notifier.wait` returns a deferred that hasn't fired.
         """
-        n = Notifier()
+        n: Notifier[object] = Notifier()
         self.assertNoResult(n.wait())
 
-    def test_notify_no_waiters(self):
+    def test_notify_no_waiters(self) -> None:
         """
         Calling `Notifier.notify` when there are no waiters does not
         raise.
         """
-        n = Notifier()
+        n: Notifier[object] = Notifier()
         n.notify(object())
         # Does not raise.
 
     @defer.inlineCallbacks
-    def test_notify_multiple_waiters(self):
+    def test_notify_multiple_waiters(self) -> InlineCallbacksType[None]:
         """
         If there all multiple waiters, `Notifier.notify` fires all
         the deferreds with the same value.
         """
         value = object()
-        n = Notifier()
+        n: Notifier[object] = Notifier()
         ds = [n.wait(), n.wait()]
         n.notify(value)
 
@@ -64,16 +71,16 @@ class Tests(unittest.TestCase):
         self.assertEqual((yield ds[1]), value)
 
     @defer.inlineCallbacks
-    def test_new_waiters_not_notified(self):
+    def test_new_waiters_not_notified(self) -> InlineCallbacksType[None]:
         """
         If a new waiter is added while notifying, it won't be
         notified until the next notification.
         """
         value = object()
-        n = Notifier()
+        n: Notifier[object] = Notifier()
         box = []
 
-        def add_new_waiter(_):
+        def add_new_waiter(_: object) -> None:
             box.append(n.wait())
 
         n.wait().addCallback(add_new_waiter)
@@ -86,37 +93,37 @@ class Tests(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_notify_failure(self):
+    def test_notify_failure(self) -> InlineCallbacksType[None]:
         """
         If a failure is passed to `Notifier.notify` then the waiters
         are errback'd.
         """
-        n = Notifier()
+        n: Notifier[object] = Notifier()
         d = n.wait()
         n.notify(Failure(TestException()))
         with self.assertRaises(TestException):
             yield d
 
-    def test_nonzero_waiters(self):
+    def test_nonzero_waiters(self) -> None:
         """
         If there are waiters, ``Notifier`` evaluates as `True`.
         """
-        n = Notifier()
+        n: Notifier[object] = Notifier()
         n.wait()
         self.assertTrue(n)
 
-    def test_nonzero_no_waiters(self):
+    def test_nonzero_no_waiters(self) -> None:
         """
         If there no waiters, ``Notifier`` evaluates as `False`.
         """
-        n = Notifier()
+        n: Notifier[object] = Notifier()
         self.assertFalse(n)
 
-    def test_nonzero_cleared_waiters(self):
+    def test_nonzero_cleared_waiters(self) -> None:
         """
         After notifying waiters, ``Notifier`` evaluates as `False`.
         """
-        n = Notifier()
+        n: Notifier[object] = Notifier()
         n.wait()
         n.notify(object())
         self.assertFalse(n)
