@@ -13,74 +13,76 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.util import pathmatch
 
 
 class Matcher(unittest.TestCase):
-    def setUp(self):
-        self.m = pathmatch.Matcher()
+    def setUp(self) -> None:
+        self.m: pathmatch.Matcher[int | str] = pathmatch.Matcher()
 
-    def test_dupe_path(self):
-        def set():
-            self.m[('abc,')] = 1
+    def test_dupe_path(self) -> None:
+        def set() -> None:
+            self.m[('abc,')] = 1  # type: ignore[index]
 
         set()
         with self.assertRaises(AssertionError):
             set()
 
-    def test_empty(self):
+    def test_empty(self) -> None:
         with self.assertRaises(KeyError):
             self.m[('abc',)]
 
-    def test_diff_length(self):
+    def test_diff_length(self) -> None:
         self.m[('abc', 'def')] = 2
         self.m[('ab', 'cd', 'ef')] = 3
         self.assertEqual(self.m[('abc', 'def')], (2, {}))
 
-    def test_same_length(self):
+    def test_same_length(self) -> None:
         self.m[('abc', 'def')] = 2
         self.m[('abc', 'efg')] = 3
         self.assertEqual(self.m[('abc', 'efg')], (3, {}))
 
-    def test_pattern_variables(self):
+    def test_pattern_variables(self) -> None:
         self.m[('A', ':a', 'B', ':b')] = 'AB'
         self.assertEqual(self.m[('A', 'a', 'B', 'b')], ('AB', {"a": 'a', "b": 'b'}))
 
-    def test_pattern_variables_underscore(self):
+    def test_pattern_variables_underscore(self) -> None:
         self.m[('A', ':a_a_a')] = 'AB'
         self.assertEqual(self.m[('A', 'a')], ('AB', {"a_a_a": 'a'}))
 
-    def test_pattern_variables_num(self):
+    def test_pattern_variables_num(self) -> None:
         self.m[('A', 'n:a', 'B', 'n:b')] = 'AB'
         self.assertEqual(self.m[('A', '10', 'B', '-20')], ('AB', {"a": 10, "b": -20}))
 
-    def test_pattern_variables_ident(self):
+    def test_pattern_variables_ident(self) -> None:
         self.m[('A', 'i:a', 'B', 'i:b')] = 'AB'
         self.assertEqual(self.m[('A', 'abc', 'B', 'x-z-B')], ('AB', {"a": 'abc', "b": 'x-z-B'}))
 
-    def test_pattern_variables_string(self):
+    def test_pattern_variables_string(self) -> None:
         self.m[('A', 's:a')] = 'A'
         self.assertEqual(self.m[('A', 'unicode \N{SNOWMAN}')], ('A', {"a": 'unicode \N{SNOWMAN}'}))
 
-    def test_pattern_variables_num_invalid(self):
+    def test_pattern_variables_num_invalid(self) -> None:
         self.m[('A', 'n:a')] = 'AB'
         with self.assertRaises(KeyError):
             self.m[('A', '1x0')]
 
-    def test_pattern_variables_ident_invalid(self):
+    def test_pattern_variables_ident_invalid(self) -> None:
         self.m[('A', 'i:a')] = 'AB'
         with self.assertRaises(KeyError):
             self.m[('A', '10')]
 
-    def test_pattern_variables_ident_num_distinguised(self):
+    def test_pattern_variables_ident_num_distinguised(self) -> None:
         self.m[('A', 'n:a')] = 'num'
         self.m[('A', 'i:a')] = 'ident'
         self.assertEqual(self.m[('A', '123')], ('num', {"a": 123}))
         self.assertEqual(self.m[('A', 'abc')], ('ident', {"a": 'abc'}))
 
-    def test_prefix_matching(self):
+    def test_prefix_matching(self) -> None:
         self.m[('A', ':a')] = 'A'
         self.m[('A', ':a', 'B', ':b')] = 'AB'
         self.assertEqual(
@@ -88,7 +90,7 @@ class Matcher(unittest.TestCase):
             (('AB', {"a": 'a1', "b": 'b'}), ('A', {"a": 'a2'})),
         )
 
-    def test_dirty_again(self):
+    def test_dirty_again(self) -> None:
         self.m[('abc', 'def')] = 2
         self.assertEqual(self.m[('abc', 'def')], (2, {}))
         self.m[('abc', 'efg')] = 3
