@@ -67,7 +67,7 @@ pytz==2026.1.post1
 PyYAML==6.0.3
 requests==2.32.5
 responses==0.26.0
-ruff==0.14.14
+ruff==0.15.7
 s3transfer==0.16.0
 service-identity==24.2.0
 six==1.17.0

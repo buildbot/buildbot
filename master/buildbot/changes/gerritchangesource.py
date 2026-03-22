@@ -720,7 +720,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         self._poll_handler = deferwaiter.NonRepeatedActionHandler(
             self.master.reactor,
             self._deferwaiter,
-            lambda: self._poll_connector.do_poll(),  # type: ignore[union-attr]
+            lambda: self._poll_connector.do_poll(),  # type: ignore[union-attr]  # noqa: PLW0108
         )
 
         if http_url is not None:

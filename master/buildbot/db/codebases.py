@@ -79,7 +79,7 @@ class CodebasesConnectorComponent(base.DBConnectorComponent):
             if projectid is not None:
                 q = q.where(tbl.c.projectid == projectid)
             if result_spec is not None:
-                return result_spec.thd_execute(conn, q, lambda row: self._model_from_row(row))  # type: ignore[return-value]
+                return result_spec.thd_execute(conn, q, self._model_from_row)  # type: ignore[return-value]
             res = conn.execute(q)
             return [self._model_from_row(row) for row in res.fetchall()]
 
