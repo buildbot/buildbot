@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import error
 from twisted.trial import unittest
 
@@ -32,6 +36,9 @@ from buildbot.test.steps import ExpectStat
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 
+if TYPE_CHECKING:
+    from twisted.internet import defer
+
 
 class TestMonotone(
     sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
@@ -40,11 +47,11 @@ class TestMonotone(
     REVID = '95215e2a9a9f8b6f5c9664e3807cd34617ea928c'
     MTN_VER = 'monotone 1.0 (base revision: UNKNOWN_REV)'
 
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_mode_full_clean(self):
+    def test_mode_full_clean(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clean', branch='master'
@@ -73,7 +80,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -86,7 +93,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_full_clean_patch(self):
+    def test_mode_full_clean_patch(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clean', branch='master'
@@ -116,7 +123,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -158,7 +165,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_full_clean_patch_worker_2_16(self):
+    def test_mode_full_clean_patch_worker_2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             mtn.Monotone(
@@ -189,7 +196,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -231,7 +238,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_full_clean_patch_fail(self):
+    def test_mode_full_clean_patch_fail(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clean', branch='master'
@@ -261,7 +268,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -299,7 +306,7 @@ class TestMonotone(
         self.expect_outcome(result=FAILURE, state_string="update (failure)")
         return self.run_step()
 
-    def test_mode_full_clean_no_existing_db(self):
+    def test_mode_full_clean_no_existing_db(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clean', branch='master'
@@ -326,7 +333,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -339,7 +346,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_full_clean_no_existing_checkout(self):
+    def test_mode_full_clean_no_existing_checkout(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clean', branch='master'
@@ -378,7 +385,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_full_clean_from_scratch(self):
+    def test_mode_full_clean_from_scratch(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clean', branch='master'
@@ -415,7 +422,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_full_clobber(self):
+    def test_mode_full_clobber(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clobber', branch='master'
@@ -452,7 +459,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_full_clobber_no_existing_db(self):
+    def test_mode_full_clobber_no_existing_db(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clobber', branch='master'
@@ -487,7 +494,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_incremental_no_existing_db(self):
+    def test_mode_incremental_no_existing_db(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master')
         )
@@ -521,7 +528,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_incremental_no_existing_checkout(self):
+    def test_mode_incremental_no_existing_checkout(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master')
         )
@@ -558,7 +565,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_incremental_from_scratch(self):
+    def test_mode_incremental_from_scratch(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master')
         )
@@ -593,7 +600,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_incremental(self):
+    def test_mode_incremental(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master')
         )
@@ -629,7 +636,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_incremental_retry(self):
+    def test_mode_incremental_retry(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone',
@@ -681,7 +688,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_full_fresh(self):
+    def test_mode_full_fresh(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='fresh', branch='master'
@@ -714,7 +721,8 @@ class TestMonotone(
             .stdout('file3\nfile4')
             .exit(0),
             ExpectRmdir(
-                dir=['wkdir/file1', 'wkdir/file2', 'wkdir/file3', 'wkdir/file4'], log_environ=True
+                dir=['wkdir/file1', 'wkdir/file2', 'wkdir/file3', 'wkdir/file4'],  # type: ignore[arg-type]
+                log_environ=True,
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -728,7 +736,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_incremental_given_revision(self):
+    def test_mode_incremental_given_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master'),
             {"revision": 'abcdef01'},
@@ -765,7 +773,7 @@ class TestMonotone(
         self.expect_property('got_revision', 'abcdef019a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.run_step()
 
-    def test_mode_full_copy(self):
+    def test_mode_full_copy(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='copy', branch='master'
@@ -804,7 +812,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_mode_full_no_method(self):
+    def test_mode_full_no_method(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='full', branch='master')
         )
@@ -841,7 +849,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_incorrect_method(self):
+    def test_incorrect_method(self) -> None:
         with self.assertRaisesConfigError("Invalid method for mode == full"):
             mtn.Monotone(
                 repourl='mtn://localhost/monotone',
@@ -850,7 +858,7 @@ class TestMonotone(
                 branch='master',
             )
 
-    def test_incremental_invalid_method(self):
+    def test_incremental_invalid_method(self) -> None:
         with self.assertRaisesConfigError("Incremental mode does not require method"):
             mtn.Monotone(
                 repourl='mtn://localhost/monotone',
@@ -859,18 +867,18 @@ class TestMonotone(
                 branch="master",
             )
 
-    def test_repourl(self):
+    def test_repourl(self) -> None:
         with self.assertRaisesConfigError("must provide repourl"):
             mtn.Monotone(mode="full", branch="master")
 
-    def test_branch(self):
+    def test_branch(self) -> None:
         with self.assertRaisesConfigError("must provide branch"):
             mtn.Monotone(
                 repourl='mtn://localhost/monotone',
                 mode="full",
             )
 
-    def test_mode_incremental_patched(self):
+    def test_mode_incremental_patched(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master')
         )
@@ -896,7 +904,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
             ExpectStat(file='wkdir/_MTN', log_environ=True).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -910,7 +918,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_worker_connection_lost(self):
+    def test_worker_connection_lost(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(
                 repourl='mtn://localhost/monotone', mode='full', method='clean', branch='master'
@@ -925,7 +933,7 @@ class TestMonotone(
         self.expect_outcome(result=RETRY, state_string="update (retry)")
         return self.run_step()
 
-    def test_database_migration(self):
+    def test_database_migration(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master')
         )
@@ -962,7 +970,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_database_invalid(self):
+    def test_database_invalid(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master')
         )
@@ -977,7 +985,7 @@ class TestMonotone(
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_database_too_new(self):
+    def test_database_too_new(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master')
         )
@@ -1015,7 +1023,7 @@ class TestMonotone(
         self.expect_property('got_revision', self.REVID, 'Monotone')
         return self.run_step()
 
-    def test_database_empty(self):
+    def test_database_empty(self) -> defer.Deferred[None]:
         self.setup_step(
             mtn.Monotone(repourl='mtn://localhost/monotone', mode='incremental', branch='master')
         )
