@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -21,10 +23,10 @@ from buildbot.util import lineboundaries
 
 
 class TestLineBoundaryFinder(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.lbf = lineboundaries.LineBoundaryFinder()
 
-    def test_already_terminated(self):
+    def test_already_terminated(self) -> None:
         res = self.lbf.append('abcd\ndefg\n')
         self.assertEqual(res, 'abcd\ndefg\n')
         res = self.lbf.append('xyz\n')
@@ -32,13 +34,13 @@ class TestLineBoundaryFinder(unittest.TestCase):
         res = self.lbf.flush()
         self.assertEqual(res, None)
 
-    def test_partial_line(self):
+    def test_partial_line(self) -> None:
         res = self.lbf.append('hello\nworld')
         self.assertEqual(res, 'hello\n')
         res = self.lbf.flush()
         self.assertEqual(res, 'world\n')
 
-    def test_empty_appends(self):
+    def test_empty_appends(self) -> None:
         res = self.lbf.append('hello ')
         self.assertEqual(res, None)
 
@@ -51,7 +53,7 @@ class TestLineBoundaryFinder(unittest.TestCase):
         res = self.lbf.append('')
         self.assertEqual(res, None)
 
-    def test_embedded_newlines(self):
+    def test_embedded_newlines(self) -> None:
         res = self.lbf.append('hello, ')
         self.assertEqual(res, None)
 
@@ -61,7 +63,7 @@ class TestLineBoundaryFinder(unittest.TestCase):
         res = self.lbf.flush()
         self.assertEqual(res, 'world\n')
 
-    def test_windows_newlines_folded(self):
+    def test_windows_newlines_folded(self) -> None:
         r"Windows' \r\n is treated as and converted to a newline"
         res = self.lbf.append('hello, ')
         self.assertEqual(res, None)
@@ -72,19 +74,19 @@ class TestLineBoundaryFinder(unittest.TestCase):
         res = self.lbf.flush()
         self.assertEqual(res, 'world\n')
 
-    def test_bare_cr_folded(self):
+    def test_bare_cr_folded(self) -> None:
         r"a bare \r is treated as and converted to a newline"
         self.lbf.append('1%\r5%\r15%\r100%\nfinished')
         res = self.lbf.flush()
         self.assertEqual(res, 'finished\n')
 
-    def test_backspace_folded(self):
+    def test_backspace_folded(self) -> None:
         r"a lot of \b is treated as and converted to a newline"
         self.lbf.append('1%\b\b5%\b\b15%\b\b\b100%\nfinished')
         res = self.lbf.flush()
         self.assertEqual(res, 'finished\n')
 
-    def test_mixed_consecutive_newlines(self):
+    def test_mixed_consecutive_newlines(self) -> None:
         r"mixing newline styles back-to-back doesn't collapse them"
         res = self.lbf.append('1\r\n\n\r')
         self.assertEqual(res, '1\n\n')
@@ -92,7 +94,7 @@ class TestLineBoundaryFinder(unittest.TestCase):
         res = self.lbf.append('2\n\r\n')
         self.assertEqual(res, '\n2\n\n')
 
-    def test_split_newlines(self):
+    def test_split_newlines(self) -> None:
         r"multi-character newlines, split across chunks, are converted"
         input = 'a\nb\r\nc\rd\n\re'
         result = []
@@ -103,13 +105,13 @@ class TestLineBoundaryFinder(unittest.TestCase):
             result.append(self.lbf.flush())
 
             result = [e for e in result if e is not None]
-            res = ''.join(result)
+            res = ''.join(result)  # type: ignore[arg-type]
 
             log.msg(f'feeding {a!r}, {b!r} gives {res!r}')
             self.assertEqual(res, 'a\nb\nc\nd\n\ne\n')
             result.clear()
 
-    def test_split_terminal_control(self):
+    def test_split_terminal_control(self) -> None:
         """terminal control characters are converted"""
         res = self.lbf.append('1234\033[u4321')
         self.assertEqual(res, '1234\n')
@@ -129,17 +131,17 @@ class TestLineBoundaryFinder(unittest.TestCase):
         res = self.lbf.flush()
         self.assertEqual(res, '4321\n')
 
-    def test_long_lines(self):
+    def test_long_lines(self) -> None:
         """long lines are split"""
         res = []
         for _ in range(4):
             res.append(self.lbf.append('12' * 1000))
         res = [e for e in res if e is not None]
-        res = ''.join(res)
+        res = ''.join(res)  # type: ignore[assignment,arg-type]
         # a split at 4096 + the remaining chars
         self.assertEqual(res, '12' * 2048 + '\n' + '12' * 952 + '\n')
 
-    def test_huge_lines(self):
+    def test_huge_lines(self) -> None:
         """huge lines are split"""
         res = []
         res.append(self.lbf.append('12' * 32768))
@@ -147,6 +149,6 @@ class TestLineBoundaryFinder(unittest.TestCase):
         res = [e for e in res if e is not None]
         self.assertEqual(res, [('12' * 2048 + '\n') * 16])
 
-    def test_empty_flush(self):
+    def test_empty_flush(self) -> None:
         res = self.lbf.flush()
         self.assertEqual(res, None)

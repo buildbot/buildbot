@@ -13,12 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.util.async_sort import async_sort
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class AsyncSort(unittest.TestCase, LoggingMixin):
@@ -27,19 +33,19 @@ class AsyncSort(unittest.TestCase, LoggingMixin):
         return super().setUp()
 
     @defer.inlineCallbacks
-    def test_sync_call(self):
+    def test_sync_call(self) -> InlineCallbacksType[None]:
         l = ["b", "c", "a"]
         yield async_sort(l, lambda x: x)
         return self.assertEqual(l, ["a", "b", "c"])
 
     @defer.inlineCallbacks
-    def test_async_call(self):
+    def test_async_call(self) -> InlineCallbacksType[None]:
         l = ["b", "c", "a"]
         yield async_sort(l, defer.succeed)
         self.assertEqual(l, ["a", "b", "c"])
 
     @defer.inlineCallbacks
-    def test_async_fail(self):
+    def test_async_fail(self) -> InlineCallbacksType[None]:
         l = ["b", "c", "a"]
 
         class SortFail(Exception):

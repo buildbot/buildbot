@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import failure
@@ -23,29 +25,29 @@ from buildbot.util import debounce
 
 
 class DebouncedClass:
-    def __init__(self, reactor):
-        self.callDeferred = None
+    def __init__(self, reactor: task.Clock) -> None:
+        self.callDeferred: defer.Deferred[None] | None = None
         self.calls = 0
         self.expCalls = 0
-        self.stopDeferreds = []
+        self.stopDeferreds: list[defer.Deferred[None]] = []
         self.reactor = reactor
 
     @debounce.method(wait=4.0, get_reactor=lambda self: self.reactor)
-    def maybe(self):
-        return self._maybe()
+    def maybe(self) -> None:
+        return self._maybe()  # type: ignore[return-value]
 
     @debounce.method(wait=4.0, until_idle=True, get_reactor=lambda self: self.reactor)
-    def maybe_until_idle(self):
-        return self._maybe()
+    def maybe_until_idle(self) -> None:
+        return self._maybe()  # type: ignore[return-value]
 
-    def _maybe(self):
+    def _maybe(self) -> defer.Deferred[None] | None:
         assert not self.callDeferred
         self.calls += 1
         log.msg('debounced function called')
         self.callDeferred = defer.Deferred()
 
         @self.callDeferred.addBoth
-        def unset(x):
+        def unset(x: None | failure.Failure) -> None | failure.Failure:
             log.msg('debounced function complete')
             self.callDeferred = None
             return x
@@ -54,10 +56,10 @@ class DebouncedClass:
 
 
 class DebounceTest(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.clock = task.Clock()
 
-    def scenario(self, events):
+    def scenario(self, events: list[tuple[int, float, str]]) -> None:
         dbs = dict((k, DebouncedClass(self.clock)) for k in {n for n, _, _ in events})
         while events:
             n, t, e = events.pop(0)
@@ -72,12 +74,12 @@ class DebounceTest(unittest.TestCase):
             elif e == 'called':
                 db.expCalls += 1
             elif e == 'complete':
-                db.callDeferred.callback(None)
+                db.callDeferred.callback(None)  # type: ignore[union-attr]
             elif e == 'complete-and-called':
-                db.callDeferred.callback(None)
+                db.callDeferred.callback(None)  # type: ignore[union-attr]
                 db.expCalls += 1
             elif e == 'fail':
-                db.callDeferred.errback(failure.Failure(RuntimeError()))
+                db.callDeferred.errback(failure.Failure(RuntimeError()))  # type: ignore[union-attr]
             elif e == 'failure_logged':
                 self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
             elif e == 'check':
@@ -98,7 +100,7 @@ class DebounceTest(unittest.TestCase):
             for db in dbs.values():
                 self.assertEqual(db.calls, db.expCalls)
 
-    def test_called_once(self):
+    def test_called_once(self) -> None:
         """The debounced method is called only after 4 seconds"""
         self.scenario([
             (1, 0.0, 'maybe'),
@@ -109,7 +111,7 @@ class DebounceTest(unittest.TestCase):
             (1, 7.0, 'check'),
         ])
 
-    def test_coalesce_calls(self):
+    def test_coalesce_calls(self) -> None:
         """Multiple calls are coalesced during 4 seconds, but the function
         runs 4 seconds after the first call."""
         self.scenario([
@@ -123,7 +125,7 @@ class DebounceTest(unittest.TestCase):
             (1, 7.0, 'check'),
         ])
 
-    def test_coalesce_calls_until_idle(self):
+    def test_coalesce_calls_until_idle(self) -> None:
         """Multiple calls are coalesced during 4 seconds, but the function
         runs 4 seconds after the last call."""
         self.scenario([
@@ -138,7 +140,7 @@ class DebounceTest(unittest.TestCase):
             (1, 10.0, 'check'),
         ])
 
-    def test_second_call_during_first(self):
+    def test_second_call_during_first(self) -> None:
         """If the debounced method is called after an execution has begun, then
         a second execution will take place 4 seconds after the execution
         finishes, with intervening calls coalesced."""
@@ -153,7 +155,7 @@ class DebounceTest(unittest.TestCase):
             (1, 11.0, 'check'),
         ])
 
-    def test_failure_logged(self):
+    def test_failure_logged(self) -> None:
         """If the debounced method fails, the error is logged, but otherwise it
         behaves as if it had succeeded."""
         self.scenario([
@@ -166,7 +168,7 @@ class DebounceTest(unittest.TestCase):
             (1, 11.0, 'check'),
         ])
 
-    def test_instance_independence(self):
+    def test_instance_independence(self) -> None:
         """The timers for two instances are independent."""
         self.scenario([
             (1, 0.0, 'maybe'),
@@ -178,14 +180,14 @@ class DebounceTest(unittest.TestCase):
             (1, 7.0, 'check'),
         ])
 
-    def test_start_when_started(self):
+    def test_start_when_started(self) -> None:
         """Calling meth.start when already started has no effect"""
         self.scenario([
             (1, 0.0, 'start'),
             (1, 1.0, 'start'),
         ])
 
-    def test_stop_while_idle(self):
+    def test_stop_while_idle(self) -> None:
         """If the debounced method is stopped while idle, subsequent calls do
         nothing."""
         self.scenario([
@@ -195,7 +197,7 @@ class DebounceTest(unittest.TestCase):
             (1, 6.0, 'check'),  # not called
         ])
 
-    def test_stop_while_waiting(self):
+    def test_stop_while_waiting(self) -> None:
         """If the debounced method is stopped while waiting, the waiting call
         occurs immediately, stop returns immediately, and subsequent calls do
         nothing."""
@@ -208,7 +210,7 @@ class DebounceTest(unittest.TestCase):
             (1, 8.0, 'check'),  # not called
         ])
 
-    def test_stop_while_running(self):
+    def test_stop_while_running(self) -> None:
         """If the debounced method is stopped while running, the running call
         completes, stop returns only after the call completes, and subsequent
         calls do nothing."""
@@ -223,7 +225,7 @@ class DebounceTest(unittest.TestCase):
             (1, 10.0, 'check'),  # not called
         ])
 
-    def test_multiple_stops(self):
+    def test_multiple_stops(self) -> None:
         """Multiple stop calls will return individually when the method
         completes."""
         self.scenario([
@@ -239,7 +241,7 @@ class DebounceTest(unittest.TestCase):
             (1, 10.0, 'check'),  # not called
         ])
 
-    def test_stop_while_running_queued(self):
+    def test_stop_while_running_queued(self) -> None:
         """If the debounced method is stopped while running with another call
         queued, the running call completes, stop returns only after the call
         completes, the queued call still occurs, and subsequent calls do
@@ -257,7 +259,7 @@ class DebounceTest(unittest.TestCase):
             (1, 10.0, 'check'),  # not called
         ])
 
-    def test_start_after_stop(self):
+    def test_start_after_stop(self) -> None:
         """After a stop and subsequent start, a call to the debounced method
         causes an invocation 4 seconds later."""
         self.scenario([

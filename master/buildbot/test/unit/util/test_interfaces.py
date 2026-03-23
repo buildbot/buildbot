@@ -13,24 +13,27 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.test.util import interfaces
 
 
 class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
-    def test_simple_decorator(self):
-        def myfunc(x, y=2, *args):
+    def test_simple_decorator(self) -> None:
+        def myfunc(x: object, y: int = 2, *args: object) -> None:
             pass
 
         @self.assertArgSpecMatches(myfunc)
-        def myfunc2(x, y=2, *args):
+        def myfunc2(x: object, y: int = 2, *args: object) -> None:
             pass
 
+        error: Exception | None
         try:
 
             @self.assertArgSpecMatches(myfunc)
-            def myfunc3(x, y=3, *args):
+            def myfunc3(x: object, y: int = 3, *args: object) -> None:
                 pass
 
         except Exception as e:
@@ -39,26 +42,27 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(error.args, ('Expected: (x, y=3, *args); got: (x, y=2, *args)',))
+        self.assertEqual(error.args, ('Expected: (x, y=3, *args); got: (x, y=2, *args)',))  # type: ignore[union-attr]
 
-    def test_double_decorator(self):
-        def myfunc(x, y):
+    def test_double_decorator(self) -> None:
+        def myfunc(x: object, y: object) -> None:
             pass
 
-        def myfunc2(x, y):
+        def myfunc2(x: object, y: object) -> None:
             pass
 
-        def myfunc3(x, yy):
+        def myfunc3(x: object, yy: object) -> None:
             pass
 
         @self.assertArgSpecMatches(myfunc, myfunc2)
-        def myfunc4(x, y):
+        def myfunc4(x: object, y: object) -> None:
             pass
 
+        error: Exception | None
         try:
 
             @self.assertArgSpecMatches(myfunc, myfunc3)
-            def myfunc5(x, y):
+            def myfunc5(x: object, y: object) -> None:
                 pass
 
         except Exception as e:
@@ -67,12 +71,13 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(error.args, ('Expected: (x, y); got: (x, yy)',))
+        self.assertEqual(error.args, ('Expected: (x, y); got: (x, yy)',))  # type: ignore[union-attr]
 
+        error = None
         try:
 
             @self.assertArgSpecMatches(myfunc, myfunc3)
-            def myfunc6(xx, yy):
+            def myfunc6(xx: object, yy: object) -> None:
                 pass
 
         except Exception as e:
@@ -81,20 +86,21 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(error.args, ('Expected: (x, y); got: (x, yy)',))
+        self.assertEqual(error.args, ('Expected: (x, y); got: (x, yy)',))  # type: ignore[union-attr]
 
-    def test_function_style(self):
-        def myfunc(x, y=2, *args):
+    def test_function_style(self) -> None:
+        def myfunc(x: object, y: int = 2, *args: object) -> None:
             pass
 
-        def myfunc2(x, y=2, *args):
+        def myfunc2(x: object, y: int = 2, *args: object) -> None:
             pass
 
-        def myfunc3(x, y=3, *args):
+        def myfunc3(x: object, y: int = 3, *args: object) -> None:
             pass
 
         self.assertArgSpecMatches(myfunc, myfunc2)
 
+        error: Exception | None
         try:
             self.assertArgSpecMatches(myfunc, myfunc3)
         except Exception as e:
@@ -103,4 +109,4 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(error.args, ('Expected: (x, y=2, *args); got: (x, y=3, *args)',))
+        self.assertEqual(error.args, ('Expected: (x, y=2, *args); got: (x, y=3, *args)',))  # type: ignore[union-attr]

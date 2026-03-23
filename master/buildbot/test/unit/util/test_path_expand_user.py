@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 
 from parameterized import parameterized
@@ -114,7 +116,7 @@ class TestExpanduser(unittest.TestCase):
             'C:\\Users\\eric',
         ),
     ])
-    def test_nt(self, name, path, env, result):
+    def test_nt(self, name: str, path: str, env: dict[str, str], result: str) -> None:
         self.assertEqual(path_expand_user.nt_expanduser(path, env), result)
 
     @parameterized.expand([
@@ -134,14 +136,14 @@ class TestExpanduser(unittest.TestCase):
         ('home_triple_slash_tilde_slash', '~/', {'HOME': '///'}, '/'),
         ('home_triple_slash_tilde_slash_name', '~/test_path', {'HOME': '///'}, '/test_path'),
     ])
-    def test_posix(self, name, path, env, result):
+    def test_posix(self, name: str, path: str, env: dict[str, str], result: str) -> None:
         self.assertEqual(path_expand_user.posix_expanduser(path, env), result)
 
     @skipUnlessPlatformIs('posix')
-    def test_posix_no_home(self):
+    def test_posix_no_home(self) -> None:
         import pwd  # noqa: PLC0415
 
-        home = pwd.getpwuid(os.getuid()).pw_dir
+        home = pwd.getpwuid(os.getuid()).pw_dir  # type: ignore[attr-defined,unused-ignore]
         # $HOME can end with a trailing /, so strip it (see cpython #17809)
         home = home.rstrip("/") or '/'
         self.assertEqual(path_expand_user.posix_expanduser("~", {}), home)

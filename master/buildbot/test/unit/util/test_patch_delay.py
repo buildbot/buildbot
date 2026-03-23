@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import Any
+
 from twisted.internet import defer
 from twisted.trial.unittest import SynchronousTestCase
 
@@ -23,11 +27,13 @@ class TestException(Exception):
     pass
 
 
-def fun_to_patch(*args, **kwargs):
+def fun_to_patch(
+    *args: Any, **kwargs: Any
+) -> defer.Deferred[tuple[tuple[Any, ...], dict[str, Any]]]:
     return defer.succeed((args, kwargs))
 
 
-def fun_to_patch_exception():
+def fun_to_patch_exception() -> None:
     raise TestException()
 
 
@@ -35,17 +41,17 @@ non_callable = 1
 
 
 class Tests(SynchronousTestCase):
-    def test_raises_not_found(self):
+    def test_raises_not_found(self) -> None:
         with self.assertRaises(RuntimeError):
             with patchForDelay(__name__ + '.notfound'):
                 pass
 
-    def test_raises_not_callable(self):
+    def test_raises_not_callable(self) -> None:
         with self.assertRaises(RuntimeError):
             with patchForDelay(__name__ + '.non_callable'):
                 pass
 
-    def test_patches_within_context(self):
+    def test_patches_within_context(self) -> None:
         d = fun_to_patch()
         self.assertTrue(d.called)
 
@@ -60,14 +66,14 @@ class Tests(SynchronousTestCase):
         d = fun_to_patch()
         self.assertTrue(d.called)
 
-    def test_auto_fires_unfired_delay(self):
+    def test_auto_fires_unfired_delay(self) -> None:
         with patchForDelay(__name__ + '.fun_to_patch') as delay:
             d = fun_to_patch()
             self.assertEqual(len(delay), 1)
             self.assertFalse(d.called)
         self.assertTrue(d.called)
 
-    def test_auto_fires_unfired_delay_exception(self):
+    def test_auto_fires_unfired_delay_exception(self) -> None:
         try:
             with patchForDelay(__name__ + '.fun_to_patch') as delay:
                 d = fun_to_patch()
@@ -78,7 +84,7 @@ class Tests(SynchronousTestCase):
             pass
         self.assertTrue(d.called)
 
-    def test_passes_arguments(self):
+    def test_passes_arguments(self) -> None:
         with patchForDelay(__name__ + '.fun_to_patch') as delay:
             d = fun_to_patch('arg', kw='kwarg')
             self.assertEqual(len(delay), 1)
@@ -87,9 +93,9 @@ class Tests(SynchronousTestCase):
 
         self.assertEqual(args, (('arg',), {'kw': 'kwarg'}))
 
-    def test_passes_exception(self):
+    def test_passes_exception(self) -> None:
         with patchForDelay(__name__ + '.fun_to_patch_exception') as delay:
-            d = fun_to_patch_exception()
+            d = fun_to_patch_exception()  # type: ignore[func-returns-value]
             self.assertEqual(len(delay), 1)
             delay.fire()
             f = self.failureResultOf(d)

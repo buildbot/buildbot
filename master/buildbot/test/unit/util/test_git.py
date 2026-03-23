@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from parameterized import parameterized
 from twisted.trial import unittest
 
@@ -26,29 +28,29 @@ from buildbot.util.git import scp_style_to_url_syntax
 
 
 class TestEscapeShellArgIfNeeded(unittest.TestCase):
-    def assert_escapes(self, arg):
+    def assert_escapes(self, arg: str) -> None:
         escaped = f'"{arg}"'
         self.assertEqual(escapeShellArgIfNeeded(arg), escaped)
 
-    def assert_does_not_escape(self, arg):
+    def assert_does_not_escape(self, arg: str) -> None:
         self.assertEqual(escapeShellArgIfNeeded(arg), arg)
 
-    def test_empty(self):
+    def test_empty(self) -> None:
         self.assert_escapes('')
 
-    def test_spaces(self):
+    def test_spaces(self) -> None:
         self.assert_escapes(' ')
         self.assert_escapes('a ')
         self.assert_escapes(' a')
         self.assert_escapes('a b')
 
-    def test_special(self):
+    def test_special(self) -> None:
         self.assert_escapes('a=b')
         self.assert_escapes('a%b')
         self.assert_escapes('a(b')
         self.assert_escapes('a[b')
 
-    def test_no_escape(self):
+    def test_no_escape(self) -> None:
         self.assert_does_not_escape('abc')
         self.assert_does_not_escape('a_b')
         self.assert_does_not_escape('-opt')
@@ -83,7 +85,14 @@ class TestSetUpGit(unittest.TestCase, config.ConfigErrorsMixin):
             'only one of sshKnownHosts and sshHostKey can be provided',
         ),
     ])
-    def test_config(self, name, private_key, host_key, known_hosts, config_error):
+    def test_config(
+        self,
+        name: str,
+        private_key: str | None,
+        host_key: str | None,
+        known_hosts: str | None,
+        config_error: str | None,
+    ) -> None:
         if config_error is None:
             check_ssh_config(
                 'TestSetUpGit',
@@ -102,10 +111,10 @@ class TestSetUpGit(unittest.TestCase, config.ConfigErrorsMixin):
 
 
 class TestParseGitFeatures(GitMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setupGit()
 
-    def test_no_output(self):
+    def test_no_output(self) -> None:
         self.parseGitFeatures('')
         self.assertFalse(self.gitInstalled)
         self.assertFalse(self.supportsBranch)
@@ -116,7 +125,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supports_lsremote_symref)
         self.assertFalse(self.supports_credential_store)
 
-    def test_git_noversion(self):
+    def test_git_noversion(self) -> None:
         self.parseGitFeatures('git')
         self.assertFalse(self.gitInstalled)
         self.assertFalse(self.supportsBranch)
@@ -127,7 +136,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supports_lsremote_symref)
         self.assertFalse(self.supports_credential_store)
 
-    def test_git_zero_version(self):
+    def test_git_zero_version(self) -> None:
         self.parseGitFeatures('git version 0.0.0')
         self.assertTrue(self.gitInstalled)
         self.assertFalse(self.supportsBranch)
@@ -138,7 +147,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supports_lsremote_symref)
         self.assertFalse(self.supports_credential_store)
 
-    def test_git_2_10_0(self):
+    def test_git_2_10_0(self) -> None:
         self.parseGitFeatures('git version 2.10.0')
         self.assertTrue(self.gitInstalled)
         self.assertTrue(self.supportsBranch)
@@ -151,18 +160,18 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
 
 
 class TestAdjustCommandParamsForSshPrivateKey(GitMixin, unittest.TestCase):
-    def test_throws_when_wrapper_not_given(self):
+    def test_throws_when_wrapper_not_given(self) -> None:
         self.gitInstalled = True
 
-        command = []
-        env = {}
+        command: list[str] = []
+        env: dict[str, str] = {}
         with self.assertRaises(RuntimeError):
             self.setupGit()
             self.adjustCommandParamsForSshPrivateKey(command, env, 'path/to/key')
 
 
 class TestGetSshKnownHostsContents(unittest.TestCase):
-    def test(self):
+    def test(self) -> None:
         key = 'ssh-rsa AAAA<...>WsHQ=='
 
         expected = '* ssh-rsa AAAA<...>WsHQ=='
@@ -170,7 +179,7 @@ class TestGetSshKnownHostsContents(unittest.TestCase):
 
 
 class TestensureSshKeyNewline(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.sshGoodPrivateKey = """-----BEGIN SSH PRIVATE KEY-----
 base64encodedkeydata
 -----END SSH PRIVATE KEY-----
@@ -179,11 +188,11 @@ base64encodedkeydata
 base64encodedkeydata
 -----END SSH PRIVATE KEY-----"""
 
-    def test_good_key(self):
+    def test_good_key(self) -> None:
         """Don't break good keys"""
         self.assertEqual(self.sshGoodPrivateKey, ensureSshKeyNewline(self.sshGoodPrivateKey))
 
-    def test_missing_newline(self):
+    def test_missing_newline(self) -> None:
         """Add missing newline to stripped keys"""
         self.assertEqual(
             self.sshGoodPrivateKey, ensureSshKeyNewline(self.sshMissingNewlinePrivateKey)
@@ -197,5 +206,5 @@ class TestScpStyleToUrlSyntax(unittest.TestCase):
         ('windows_path', 'C:\\path\\to\\git', 'C:\\path\\to\\git'),
         ('scp_path', 'host:path/to/git', 'ssh://host:23/path/to/git'),
     ])
-    def test(self, name, url, expected):
+    def test(self, name: str, url: str, expected: str) -> None:
         self.assertEqual(scp_style_to_url_syntax(url, port=23), expected)

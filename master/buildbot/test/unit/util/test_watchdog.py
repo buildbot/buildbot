@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from unittest import mock
 
 from twisted.trial import unittest
@@ -22,17 +24,17 @@ from buildbot.util.watchdog import Watchdog
 
 
 class TestWatchdog(TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
-    def test_not_started_no_calls(self):
+    def test_not_started_no_calls(self) -> None:
         m = mock.Mock()
         w = Watchdog(self.reactor, m, 10)
         self.reactor.pump([1] * 100)
         self.assertEqual(m.call_count, 0)
         del w  # to silence unused variable warnings
 
-    def test_started_calls(self):
+    def test_started_calls(self) -> None:
         m = mock.Mock()
         w = Watchdog(self.reactor, m, 10)
         w.start()
@@ -44,7 +46,7 @@ class TestWatchdog(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(20)
         self.assertEqual(m.call_count, 1)
 
-    def test_two_starts_single_call(self):
+    def test_two_starts_single_call(self) -> None:
         m = mock.Mock()
         w = Watchdog(self.reactor, m, 10)
         w.start()
@@ -57,7 +59,7 @@ class TestWatchdog(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(20)
         self.assertEqual(m.call_count, 1)
 
-    def test_started_stopped_does_not_call(self):
+    def test_started_stopped_does_not_call(self) -> None:
         m = mock.Mock()
         w = Watchdog(self.reactor, m, 10)
         w.start()
@@ -66,7 +68,7 @@ class TestWatchdog(TestReactorMixin, unittest.TestCase):
         self.reactor.pump([1] * 100)
         self.assertEqual(m.call_count, 0)
 
-    def test_triggers_repeatedly(self):
+    def test_triggers_repeatedly(self) -> None:
         m = mock.Mock()
         w = Watchdog(self.reactor, m, 10)
 
@@ -88,7 +90,7 @@ class TestWatchdog(TestReactorMixin, unittest.TestCase):
         self.reactor.advance(0.2)
         self.assertEqual(m.call_count, 3)
 
-    def test_notify_delays_trigger(self):
+    def test_notify_delays_trigger(self) -> None:
         m = mock.Mock()
         w = Watchdog(self.reactor, m, 10)
 

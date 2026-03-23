@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import re
 
 from parameterized import parameterized
@@ -25,21 +27,21 @@ from buildbot.util.ssfilter import extract_filter_values_regex
 
 
 class TestSourceStampFilter(unittest.TestCase):
-    def test_extract_filter_values(self):
+    def test_extract_filter_values(self) -> None:
         self.assertEqual(extract_filter_values([], 'name'), [])
         self.assertEqual(extract_filter_values(['value'], 'name'), ['value'])
         self.assertEqual(extract_filter_values('value', 'name'), ['value'])
 
         with self.assertRaises(ValueError):
-            extract_filter_values({'value'}, 'name')
+            extract_filter_values({'value'}, 'name')  # type: ignore[arg-type]
         with self.assertRaises(ValueError):
-            extract_filter_values(None, 'name')
+            extract_filter_values(None, 'name')  # type: ignore[arg-type]
         with self.assertRaises(ValueError):
-            extract_filter_values([{'value'}], 'name')
+            extract_filter_values([{'value'}], 'name')  # type: ignore[list-item]
         with self.assertRaises(ValueError):
-            extract_filter_values([None], 'name')
+            extract_filter_values([None], 'name')  # type: ignore[list-item]
 
-    def test_extract_filter_values_branch(self):
+    def test_extract_filter_values_branch(self) -> None:
         self.assertEqual(extract_filter_values_branch([], 'name'), [])
         self.assertEqual(extract_filter_values_branch(['value'], 'name'), ['value'])
         self.assertEqual(extract_filter_values_branch('value', 'name'), ['value'])
@@ -47,11 +49,11 @@ class TestSourceStampFilter(unittest.TestCase):
         self.assertEqual(extract_filter_values_branch(None, 'name'), [None])
 
         with self.assertRaises(ValueError):
-            extract_filter_values({'value'}, 'name')
+            extract_filter_values({'value'}, 'name')  # type: ignore[arg-type]
         with self.assertRaises(ValueError):
-            extract_filter_values([{'value'}], 'name')
+            extract_filter_values([{'value'}], 'name')  # type: ignore[list-item]
 
-    def test_extract_filter_values_regex(self):
+    def test_extract_filter_values_regex(self) -> None:
         self.assertEqual(extract_filter_values_regex([], 'name'), [])
         self.assertEqual(extract_filter_values_regex(['value'], 'name'), ['value'])
         self.assertEqual(extract_filter_values_regex('value', 'name'), ['value'])
@@ -63,9 +65,9 @@ class TestSourceStampFilter(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError):
-            extract_filter_values({'value'}, 'name')
+            extract_filter_values({'value'}, 'name')  # type: ignore[arg-type]
         with self.assertRaises(ValueError):
-            extract_filter_values([{'value'}], 'name')
+            extract_filter_values([{'value'}], 'name')  # type: ignore[list-item]
 
     @parameterized.expand([
         ('match', {'project': 'p', 'codebase': 'c', 'repository': 'r', 'branch': 'b'}, True),
@@ -87,7 +89,9 @@ class TestSourceStampFilter(unittest.TestCase):
             False,
         ),
     ])
-    def test_filter_is_matched_eq_or_re(self, name, ss, expected):
+    def test_filter_is_matched_eq_or_re(
+        self, name: str, ss: dict[str, str | None], expected: bool
+    ) -> None:
         filter = SourceStampFilter(
             project_eq='p', codebase_eq='c', repository_eq='r', branch_eq='b'
         )
@@ -126,7 +130,9 @@ class TestSourceStampFilter(unittest.TestCase):
         ('not_branch', {'project': 'p', 'codebase': 'c', 'repository': 'r', 'branch': 'b0'}, False),
         ('none_branch', {'project': 'p', 'codebase': 'c', 'repository': 'r', 'branch': None}, True),
     ])
-    def test_filter_is_matched_not_eq_or_re(self, name, ss, expected):
+    def test_filter_is_matched_not_eq_or_re(
+        self, name: str, ss: dict[str, str | None], expected: bool
+    ) -> None:
         filter = SourceStampFilter(
             project_not_eq='p0', codebase_not_eq='c0', repository_not_eq='r0', branch_not_eq='b0'
         )
@@ -148,7 +154,7 @@ class TestSourceStampFilter(unittest.TestCase):
         )
         self.assertEqual(filter.is_matched(ss), expected)
 
-    def test_filter_repr(self):
+    def test_filter_repr(self) -> None:
         filter = SourceStampFilter(
             project_eq='p',
             codebase_eq='c',

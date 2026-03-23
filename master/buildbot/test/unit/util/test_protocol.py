@@ -13,37 +13,39 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.util.protocol import LineProcessProtocol
 
 
 class FakeLineProcessProtocol(LineProcessProtocol):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.out_lines = []
-        self.err_lines = []
+        self.out_lines: list[bytes] = []
+        self.err_lines: list[bytes] = []
 
-    def outLineReceived(self, line):
+    def outLineReceived(self, line: bytes) -> None:
         self.out_lines.append(line)
 
-    def errLineReceived(self, line):
+    def errLineReceived(self, line: bytes) -> None:
         self.err_lines.append(line)
 
 
 class TestLineProcessProtocol(unittest.TestCase):
-    def test_stdout(self):
+    def test_stdout(self) -> None:
         p = FakeLineProcessProtocol()
         p.outReceived(b'\nline2\nline3\nli')
         p.outReceived(b'ne4\nli')
         self.assertEqual(p.out_lines, [b'', b'line2', b'line3', b'line4'])
-        p.processEnded(0)
+        p.processEnded(0)  # type: ignore[arg-type]
         self.assertEqual(p.out_lines, [b'', b'line2', b'line3', b'line4', b'li'])
 
-    def test_stderr(self):
+    def test_stderr(self) -> None:
         p = FakeLineProcessProtocol()
         p.errReceived(b'\nline2\nline3\nli')
         p.errReceived(b'ne4\nli')
         self.assertEqual(p.err_lines, [b'', b'line2', b'line3', b'line4'])
-        p.processEnded(0)
+        p.processEnded(0)  # type: ignore[arg-type]
         self.assertEqual(p.err_lines, [b'', b'line2', b'line3', b'line4', b'li'])
