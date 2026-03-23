@@ -162,7 +162,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             try:
                 r = conn.execute(self.db.model.steps.insert(), insert_row)
                 conn.commit()
-                got_id = r.inserted_primary_key[0]
+                got_id = r.inserted_primary_key[0]  # type: ignore[index]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 conn.rollback()
                 got_id = None
@@ -185,7 +185,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             insert_row['name'] = newname
             r = conn.execute(self.db.model.steps.insert(), insert_row)
             conn.commit()
-            got_id = r.inserted_primary_key[0]
+            got_id = r.inserted_primary_key[0]  # type: ignore[index]
             return (got_id, number, newname)
 
         return self.db.pool.do(thd)

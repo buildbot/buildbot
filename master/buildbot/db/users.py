@@ -100,7 +100,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             inserted_user = False
             try:
                 r = conn.execute(tbl.insert(), {"identifier": identifier})
-                uid = r.inserted_primary_key[0]
+                uid = r.inserted_primary_key[0]  # type: ignore[index]
                 inserted_user = True
 
                 conn.execute(

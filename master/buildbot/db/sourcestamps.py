@@ -171,7 +171,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                     },
                 )
                 conn.commit()
-                patchid = r.inserted_primary_key[0]
+                patchid = r.inserted_primary_key[0]  # type: ignore[index]
             return patchid
 
         patchid = yield self.db.pool.do(thd)

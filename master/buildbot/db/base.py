@@ -157,7 +157,7 @@ class DBConnectorComponent(service.AsyncService):
             try:
                 r = conn.execute(tbl.insert(), [insert_values])
                 conn.commit()
-                return r.inserted_primary_key[0], False
+                return r.inserted_primary_key[0], False  # type: ignore[index]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 conn.rollback()
                 # try it all over again, in case there was an overlapping,

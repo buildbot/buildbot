@@ -289,7 +289,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     if 'duplicate key value violates unique constraint "builds_pkey"' not in str(e):
                         new_number += 1
                     continue
-                return r.inserted_primary_key[0], new_number
+                return r.inserted_primary_key[0], new_number  # type: ignore[index]
 
         return self.db.pool.do(thd)
 

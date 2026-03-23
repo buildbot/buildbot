@@ -98,7 +98,7 @@ class TestResultSetsConnectorComponent(base.DBConnectorComponent):
             q = sets_table.insert().values(insert_values)
             r = conn.execute(q)
             conn.commit()
-            return r.inserted_primary_key[0]
+            return r.inserted_primary_key[0]  # type: ignore[index]
 
         return self.db.pool.do(thd)
 

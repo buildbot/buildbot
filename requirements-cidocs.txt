@@ -1,7 +1,7 @@
 Sphinx==7.4.7;  python_version == "3.9" # pyup: ignore
-Sphinx==8.2.3;  python_version >= "3.10"
+Sphinx==9.1.0;  python_version >= "3.10"
 sphinx-jinja==2.0.2
-sphinx-rtd-theme==3.0.2
+sphinx-rtd-theme==3.1.0
 sphinxcontrib-applehelp==2.0.0
 sphinxcontrib-devhelp==2.0.0
 sphinxcontrib-htmlhelp==2.1.0
@@ -10,7 +10,7 @@ sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
 sphinxcontrib-spelling==8.0.0; python_version == "3.9"
-sphinxcontrib-spelling==8.0.1; python_version >= "3.10"
+sphinxcontrib-spelling==8.0.2; python_version >= "3.10"
 sphinxcontrib-websupport==2.0.0
 Pygments==2.19.2
 towncrier==25.8.0
@@ -22,10 +22,11 @@ towncrier==25.8.0
 
 alabaster==1.0.0; python_version >= "3.10"
 alabaster==0.7.16; python_version == "3.9" # pyup: ignore 1.0.0 dropped support for Python 3.9 and earlier
-Babel==2.17.0
+Babel==2.18.0
 click==8.1.8; python_version == "3.9"
-click==8.2.1; python_version >= "3.10"
+click==8.3.1; python_version >= "3.10"
 docutils==0.21.2  # pyup: ignore (sphinx-rtd-theme 2.0.0 requires docutils<0.21)
-imagesize==1.4.1
-pyenchant==3.2.2
+imagesize==1.5.0; python_version == "3.9"  # pyup: ignore (2.0.0 requires Python >= 3.10)
+imagesize==2.0.0; python_version >= "3.10"
+pyenchant==3.3.0
 snowballstemmer==3.0.1

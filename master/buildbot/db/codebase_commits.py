@@ -219,7 +219,7 @@ class CodebaseCommitsConnectorComponent(base.DBConnectorComponent):
             q = tbl.select().where(tbl.c.codebaseid == codebaseid)
 
             if result_spec is not None:
-                return result_spec.thd_execute(conn, q, lambda row: self._model_from_row(row))  # type: ignore[return-value]
+                return result_spec.thd_execute(conn, q, self._model_from_row)  # type: ignore[return-value]
 
             res = conn.execute(q)
             rv = [self._model_from_row(row) for row in res.fetchall()]
@@ -273,7 +273,7 @@ class CodebaseCommitsConnectorComponent(base.DBConnectorComponent):
                 )
             )
             conn.commit()
-            got_id = r.inserted_primary_key[0]
+            got_id = r.inserted_primary_key[0]  # type: ignore[index]
             r.close()
 
             return got_id

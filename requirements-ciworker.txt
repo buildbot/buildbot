@@ -1,5 +1,6 @@
 attrs==24.2.0;  python_version < "3.8"  # pyup: ignore
-attrs==25.3.0;  python_version >= "3.8"
+attrs==25.3.0;  python_version == "3.8"  # pyup: ignore
+attrs==26.1.0;  python_version >= "3.9"
 autobahn==25.12.2;  python_version >= "3.11"
 autobahn==24.4.2;  python_version >= "3.9" and python_version < "3.11"  # pyup: ignore
 autobahn==22.7.1;  python_version < "3.9"  # pyup: ignore
@@ -18,12 +19,12 @@ hyperlink==21.0.0
 idna==3.10;  python_version < "3.8"  # pyup: ignore
 idna==3.11;  python_version >= "3.8"
 incremental==22.10.0;  python_version < "3.8" # pyup: ignore
-incremental==24.7.2;  python_version >= "3.8"
+incremental==24.11.0;  python_version >= "3.8"
 mock==5.2.0
 parameterized==0.9.0
 pbr==7.0.3
 PyHamcrest==2.1.0
-psutil==7.0.0
+psutil==7.2.2
 pycparser==2.21;  python_version < "3.8" # pyup: ignore
 pycparser==2.22;  python_version >= "3.8" and python_version < "3.10"  # pyup: ignore
 pycparser==3.0;  python_version >= "3.10"
@@ -35,8 +36,9 @@ txaio==23.6.1; python_version >= "3.9" and python_version < "3.11"  # pyup: igno
 txaio==25.12.2; python_version >= "3.11"
 typing-extensions==4.7.1;  python_version < "3.8" # pyup: ignore
 typing-extensions==4.13.2;  python_version >= "3.8" and python_version < "3.9"
-typing-extensions==4.14.0;  python_version >= "3.9"
+typing-extensions==4.15.0;  python_version >= "3.9"
 zope.interface==6.4.post2;  python_version < "3.8" # pyup: ignore
-zope.interface==7.2;  python_version >= "3.8"
+zope.interface==7.2;  python_version >= "3.8" and python_version < "3.10"  # pyup: ignore (8.0+ requires Python >= 3.10)
+zope.interface==8.2;  python_version >= "3.10"
 importlib_metadata<=8.7.1
 -e worker
