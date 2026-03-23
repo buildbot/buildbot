@@ -13,11 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import io
 import re
 import sys
+from typing import TYPE_CHECKING
 
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -33,14 +39,16 @@ except ImportError:
 
 
 class FakeTest:
-    def __init__(self, id):
+    def __init__(self, id: str) -> None:
         self._id = id
 
-    def id(self):
+    def id(self) -> str:
         return self._id
 
 
-def create_error(name):
+def create_error(
+    name: str,
+) -> tuple[type[BaseException] | None, BaseException | None, None] | None:
     try:
         int('_' + name)
         return None
@@ -51,26 +59,26 @@ def create_error(name):
 
 
 class TestSubUnit(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         if TestProtocolClient is None:
             raise unittest.SkipTest("Need to install python-subunit to test subunit step")
 
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_empty(self):
+    def test_empty(self) -> defer.Deferred[None]:
         self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expect_commands(ExpectShell(workdir='wkdir', command="test").exit(0))
         self.expect_outcome(result=SUCCESS, state_string="shell no tests run")
         return self.run_step()
 
-    def test_empty_error(self):
+    def test_empty_error(self) -> defer.Deferred[None]:
         self.setup_step(subunit.SubunitShellCommand(command='test', failureOnNoTests=True))
         self.expect_commands(ExpectShell(workdir='wkdir', command="test").exit(0))
         self.expect_outcome(result=FAILURE, state_string="shell no tests run (failure)")
         return self.run_step()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         stream = io.BytesIO()
         client = TestProtocolClient(stream)
         test = FakeTest(id='test1')
@@ -79,13 +87,13 @@ class TestSubUnit(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)
+            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)  # type: ignore[arg-type]
         )
 
         self.expect_outcome(result=SUCCESS, state_string="shell 1 test passed")
         return self.run_step()
 
-    def test_error(self):
+    def test_error(self) -> defer.Deferred[None]:
         stream = io.BytesIO()
         client = TestProtocolClient(stream)
         test = FakeTest(id='test1')
@@ -95,7 +103,7 @@ class TestSubUnit(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)
+            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)  # type: ignore[arg-type]
         )
 
         self.expect_outcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
@@ -110,7 +118,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         )
         return self.run_step()
 
-    def test_multiple_errors(self):
+    def test_multiple_errors(self) -> defer.Deferred[None]:
         stream = io.BytesIO()
         client = TestProtocolClient(stream)
         test1 = FakeTest(id='test1')
@@ -124,7 +132,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)
+            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)  # type: ignore[arg-type]
         )
 
         self.expect_outcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
@@ -142,7 +150,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
         )
         return self.run_step()
 
-    def test_warnings(self):
+    def test_warnings(self) -> defer.Deferred[None]:
         stream = io.BytesIO()
         client = TestProtocolClient(stream)
         test1 = FakeTest(id='test1')
@@ -154,7 +162,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)
+            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)  # type: ignore[arg-type]
         )
 
         self.expect_outcome(

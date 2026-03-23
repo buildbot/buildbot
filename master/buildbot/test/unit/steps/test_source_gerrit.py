@@ -13,7 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import gerrit
@@ -28,11 +35,11 @@ from buildbot.test.util import sourcesteps
 class TestGerrit(
     sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_mode_full_clean(self):
+    def test_mode_full_clean(self) -> defer.Deferred[None]:
         self.setup_step(
             gerrit.Gerrit(
                 repourl='http://github.com/buildbot/buildbot.git', mode='full', method='clean'
@@ -41,7 +48,6 @@ class TestGerrit(
         self.build.setProperty("event.change.project", "buildbot")
         self.sourcestamp.project = 'buildbot'
         self.build.setProperty("event.patchSet.ref", "gerrit_branch")
-
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -72,7 +78,7 @@ class TestGerrit(
         self.expect_property('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Gerrit')
         return self.run_step()
 
-    def test_mode_full_clean_force_build(self):
+    def test_mode_full_clean_force_build(self) -> defer.Deferred[None]:
         self.setup_step(
             gerrit.Gerrit(
                 repourl='http://github.com/buildbot/buildbot.git', mode='full', method='clean'
@@ -81,7 +87,6 @@ class TestGerrit(
         self.build.setProperty("event.change.project", "buildbot")
         self.sourcestamp.project = 'buildbot'
         self.build.setProperty("gerrit_change", "1234/567")
-
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -112,7 +117,7 @@ class TestGerrit(
         self.expect_property('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Gerrit')
         return self.run_step()
 
-    def test_mode_full_clean_force_same_project(self):
+    def test_mode_full_clean_force_same_project(self) -> defer.Deferred[None]:
         self.setup_step(
             gerrit.Gerrit(
                 repourl='http://github.com/buildbot/buildbot.git',
@@ -124,7 +129,6 @@ class TestGerrit(
         self.build.setProperty("event.change.project", "buildbot")
         self.sourcestamp.project = 'buildbot'
         self.build.setProperty("gerrit_change", "1234/567")
-
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -157,7 +161,7 @@ class TestGerrit(
         )
         return self.run_step()
 
-    def test_mode_full_clean_different_project(self):
+    def test_mode_full_clean_different_project(self) -> defer.Deferred[None]:
         self.setup_step(
             gerrit.Gerrit(
                 repourl='http://github.com/buildbot/buildbot.git',
@@ -169,7 +173,6 @@ class TestGerrit(
         self.build.setProperty("event.change.project", "buildbot")
         self.sourcestamp.project = 'not_buildbot'
         self.build.setProperty("gerrit_change", "1234/567")
-
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
             .stdout('git version 1.7.5')

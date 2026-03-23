@@ -13,10 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import os
 import shutil
 import tempfile
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 from twisted.internet import defer
@@ -40,24 +43,27 @@ from buildbot.test.steps import ExpectUploadDirectory
 from buildbot.test.steps import ExpectUploadFile
 from buildbot.test.steps import TestBuildStepMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
         return self.setup_test_build_step()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
 
-    def testConstructorModeType(self):
+    def testConstructorModeType(self) -> None:
         with self.assertRaises(config.ConfigErrors):
-            transfer.FileUpload(workersrc=__file__, masterdest='xyz', mode='g+rwx')
+            transfer.FileUpload(workersrc=__file__, masterdest='xyz', mode='g+rwx')  # type: ignore[arg-type]
 
-    def testBasic(self):
+    def testBasic(self) -> defer.Deferred[None]:
         self.setup_step(transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
         self.expect_commands(
@@ -77,7 +83,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         d = self.run_step()
         return d
 
-    def testWorker2_16(self):
+    def testWorker2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
@@ -99,7 +105,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return d
 
     @defer.inlineCallbacks
-    def testTimestamp(self):
+    def testTimestamp(self) -> InlineCallbacksType[None]:
         self.setup_step(
             transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, keepstamp=True)
         )
@@ -126,12 +132,12 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         desttimestamp = (os.path.getatime(self.destfile), os.path.getmtime(self.destfile))
 
         srctimestamp = [int(t) for t in timestamp]
-        desttimestamp = [int(d) for d in desttimestamp]
+        desttimestamp = [int(d) for d in desttimestamp]  # type: ignore[assignment]
 
         self.assertEqual(srctimestamp[0], desttimestamp[0])
         self.assertEqual(srctimestamp[1], desttimestamp[1])
 
-    def testDescriptionDone(self):
+    def testDescriptionDone(self) -> defer.Deferred[None]:
         self.setup_step(
             transfer.FileUpload(
                 workersrc=__file__,
@@ -141,7 +147,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             )
         )
 
-        self.get_nth_step(0).addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()  # type: ignore[method-assign]
 
         self.expect_commands(
             ExpectUploadFile(
@@ -162,14 +168,14 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return d
 
     @defer.inlineCallbacks
-    def testURL(self):
+    def testURL(self) -> InlineCallbacksType[None]:
         self.setup_step(
             transfer.FileUpload(
                 workersrc=__file__, masterdest=self.destfile, url="http://server/file"
             )
         )
 
-        self.get_nth_step(0).addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()  # type: ignore[method-assign]
 
         self.expect_commands(
             ExpectUploadFile(
@@ -188,12 +194,12 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         yield self.run_step()
 
-        self.get_nth_step(0).addURL.assert_called_once_with(
+        self.get_nth_step(0).addURL.assert_called_once_with(  # type: ignore[attr-defined]
             os.path.basename(self.destfile), "http://server/file"
         )
 
     @defer.inlineCallbacks
-    def testURLText(self):
+    def testURLText(self) -> InlineCallbacksType[None]:
         self.setup_step(
             transfer.FileUpload(
                 workersrc=__file__,
@@ -203,7 +209,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             )
         )
 
-        self.get_nth_step(0).addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()  # type: ignore[method-assign]
 
         self.expect_commands(
             ExpectUploadFile(
@@ -222,9 +228,9 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         yield self.run_step()
 
-        self.get_nth_step(0).addURL.assert_called_once_with("testfile", "http://server/file")
+        self.get_nth_step(0).addURL.assert_called_once_with("testfile", "http://server/file")  # type: ignore[attr-defined]
 
-    def testFailure(self):
+    def testFailure(self) -> defer.Deferred[None]:
         self.setup_step(transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
         self.expect_commands(
@@ -243,10 +249,10 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return d
 
     @defer.inlineCallbacks
-    def testException(self):
+    def testException(self) -> InlineCallbacksType[None]:
         self.setup_step(transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
-        writers = []
+        writers = []  # type: ignore[var-annotated]
 
         self.expect_commands(
             ExpectUploadFile(
@@ -268,7 +274,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
-    def test_interrupt(self):
+    def test_interrupt(self) -> InlineCallbacksType[None]:
         self.setup_step(transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
         self.expect_commands(
@@ -289,17 +295,17 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_log_file('interrupt', 'interrupt reason')
         yield self.run_step()
 
-    def test_init_workersrc_keyword(self):
+    def test_init_workersrc_keyword(self) -> None:
         step = transfer.FileUpload(workersrc='srcfile', masterdest='dstfile')
 
         self.assertEqual(step.workersrc, 'srcfile')
 
-    def test_init_workersrc_positional(self):
+    def test_init_workersrc_positional(self) -> None:
         step = transfer.FileUpload('srcfile', 'dstfile')
 
         self.assertEqual(step.workersrc, 'srcfile')
 
-    def test_init_positional_args(self):
+    def test_init_positional_args(self) -> None:
         with self.assertRaises(TypeError):
             transfer.FileUpload()
         with self.assertRaises(TypeError):
@@ -307,7 +313,7 @@ class TestFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
@@ -315,11 +321,11 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
         return self.setup_test_build_step()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
-    def testBasic(self):
+    def testBasic(self) -> defer.Deferred[None]:
         self.setup_step(transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir))
 
         self.expect_commands(
@@ -339,7 +345,7 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
         d = self.run_step()
         return d
 
-    def testWorker2_16(self):
+    def testWorker2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir),
@@ -363,14 +369,14 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
         return d
 
     @defer.inlineCallbacks
-    def test_url(self):
+    def test_url(self) -> InlineCallbacksType[None]:
         self.setup_step(
             transfer.DirectoryUpload(
                 workersrc="srcdir", masterdest=self.destdir, url="http://server/dir"
             )
         )
 
-        self.get_nth_step(0).addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()  # type: ignore[method-assign]
 
         self.expect_commands(
             ExpectUploadDirectory(
@@ -389,10 +395,10 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
         yield self.run_step()
 
-        self.get_nth_step(0).addURL.assert_called_once_with("destdir", "http://server/dir")
+        self.get_nth_step(0).addURL.assert_called_once_with("destdir", "http://server/dir")  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_url_text(self):
+    def test_url_text(self) -> InlineCallbacksType[None]:
         self.setup_step(
             transfer.DirectoryUpload(
                 workersrc="srcdir",
@@ -402,7 +408,7 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
             )
         )
 
-        self.get_nth_step(0).addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()  # type: ignore[method-assign]
 
         self.expect_commands(
             ExpectUploadDirectory(
@@ -421,10 +427,10 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
         yield self.run_step()
 
-        self.get_nth_step(0).addURL.assert_called_once_with("url text", "http://server/dir")
+        self.get_nth_step(0).addURL.assert_called_once_with("url text", "http://server/dir")  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def testFailure(self):
+    def testFailure(self) -> InlineCallbacksType[None]:
         self.setup_step(transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir))
 
         self.expect_commands(
@@ -442,10 +448,10 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
         yield self.run_step()
 
     @defer.inlineCallbacks
-    def testException(self):
+    def testException(self) -> InlineCallbacksType[None]:
         self.setup_step(transfer.DirectoryUpload(workersrc='srcdir', masterdest=self.destdir))
 
-        writers = []
+        writers = []  # type: ignore[var-annotated]
 
         self.expect_commands(
             ExpectUploadDirectory(
@@ -471,17 +477,17 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    def test_init_workersrc_keyword(self):
+    def test_init_workersrc_keyword(self) -> None:
         step = transfer.DirectoryUpload(workersrc='srcfile', masterdest='dstfile')
 
         self.assertEqual(step.workersrc, 'srcfile')
 
-    def test_init_workersrc_positional(self):
+    def test_init_workersrc_positional(self) -> None:
         step = transfer.DirectoryUpload('srcfile', 'dstfile')
 
         self.assertEqual(step.workersrc, 'srcfile')
 
-    def test_init_positional_args(self):
+    def test_init_positional_args(self) -> None:
         with self.assertRaises(TypeError):
             transfer.DirectoryUpload()
         with self.assertRaises(TypeError):
@@ -489,7 +495,7 @@ class TestDirectoryUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCas
 
 
 class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
@@ -497,11 +503,11 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         return self.setup_test_build_step()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if os.path.exists(self.destdir):
             shutil.rmtree(self.destdir)
 
-    def testEmpty(self):
+    def testEmpty(self) -> defer.Deferred[None]:
         self.setup_step(transfer.MultipleFileUpload(workersrcs=[], masterdest=self.destdir))
 
         self.expect_commands()
@@ -510,7 +516,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         d = self.run_step()
         return d
 
-    def testFile(self):
+    def testFile(self) -> defer.Deferred[None]:
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcfile"], masterdest=self.destdir)
         )
@@ -533,7 +539,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         d = self.run_step()
         return d
 
-    def testDirectory(self):
+    def testDirectory(self) -> defer.Deferred[None]:
         self.setup_step(transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir))
 
         self.expect_commands(
@@ -555,7 +561,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return d
 
     @defer.inlineCallbacks
-    def test_not_existing_path(self):
+    def test_not_existing_path(self) -> InlineCallbacksType[None]:
         self.setup_step(transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir))
 
         self.expect_commands(ExpectStat(file='srcdir', workdir='wkdir').exit(1))
@@ -566,7 +572,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         yield self.run_step()
 
     @defer.inlineCallbacks
-    def test_special_path(self):
+    def test_special_path(self) -> InlineCallbacksType[None]:
         self.setup_step(transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir))
 
         self.expect_commands(ExpectStat(file='srcdir', workdir='wkdir').stat(mode=0).exit(0))
@@ -576,7 +582,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         yield self.run_step()
 
-    def testMultiple(self):
+    def testMultiple(self) -> defer.Deferred[None]:
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir)
         )
@@ -610,7 +616,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         d = self.run_step()
         return d
 
-    def testMultipleString(self):
+    def testMultipleString(self) -> defer.Deferred[None]:
         self.setup_step(transfer.MultipleFileUpload(workersrcs="srcfile", masterdest=self.destdir))
         self.expect_commands(
             ExpectStat(file="srcfile", workdir='wkdir').stat_file().exit(0),
@@ -629,7 +635,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         d = self.run_step()
         return d
 
-    def testGlob(self):
+    def testGlob(self) -> defer.Deferred[None]:
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["src*"], masterdest=self.destdir, glob=True)
         )
@@ -653,7 +659,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         d = self.run_step()
         return d
 
-    def testFailedGlob(self):
+    def testFailedGlob(self) -> defer.Deferred[None]:
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["src*"], masterdest=self.destdir, glob=True)
         )
@@ -664,7 +670,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         d = self.run_step()
         return d
 
-    def testFileWorker2_16(self):
+    def testFileWorker2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcfile"], masterdest=self.destdir),
@@ -688,7 +694,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         d = self.run_step()
         return d
 
-    def testDirectoryWorker2_16(self):
+    def testDirectoryWorker2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir),
@@ -712,7 +718,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         d = self.run_step()
         return d
 
-    def testMultipleWorker2_16(self):
+    def testMultipleWorker2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir),
@@ -748,14 +754,14 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return d
 
     @defer.inlineCallbacks
-    def test_url(self):
+    def test_url(self) -> InlineCallbacksType[None]:
         self.setup_step(
             transfer.MultipleFileUpload(
                 workersrcs=["srcfile"], masterdest=self.destdir, url="http://server/dir"
             )
         )
 
-        self.get_nth_step(0).addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()  # type: ignore[method-assign]
 
         self.expect_commands(
             ExpectStat(file='srcfile', workdir='wkdir').stat_file().exit(0),
@@ -775,10 +781,10 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         yield self.run_step()
 
-        self.get_nth_step(0).addURL.assert_called_once_with("destdir", "http://server/dir")
+        self.get_nth_step(0).addURL.assert_called_once_with("destdir", "http://server/dir")  # type: ignore[attr-defined]
 
     @defer.inlineCallbacks
-    def test_url_text(self):
+    def test_url_text(self) -> InlineCallbacksType[None]:
         self.setup_step(
             transfer.MultipleFileUpload(
                 workersrcs=["srcfile"],
@@ -788,7 +794,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
             )
         )
 
-        self.get_nth_step(0).addURL = Mock()
+        self.get_nth_step(0).addURL = Mock()  # type: ignore[method-assign]
 
         self.expect_commands(
             ExpectStat(file='srcfile', workdir='wkdir').stat_file().exit(0),
@@ -808,9 +814,9 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         yield self.run_step()
 
-        self.get_nth_step(0).addURL.assert_called_once_with("url text", "http://server/dir")
+        self.get_nth_step(0).addURL.assert_called_once_with("url text", "http://server/dir")  # type: ignore[attr-defined]
 
-    def testFailure(self):
+    def testFailure(self) -> defer.Deferred[None]:
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir)
         )
@@ -832,12 +838,12 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return d
 
     @defer.inlineCallbacks
-    def testException(self):
+    def testException(self) -> InlineCallbacksType[None]:
         self.setup_step(
             transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir)
         )
 
-        writers = []
+        writers = []  # type: ignore[var-annotated]
 
         self.expect_commands(
             ExpectStat(file="srcfile", workdir='wkdir').stat_file().exit(0),
@@ -860,7 +866,7 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
-    def testSubclass(self):
+    def testSubclass(self) -> InlineCallbacksType[None]:
         class CustomStep(transfer.MultipleFileUpload):
             uploadDone = Mock(return_value=None)
             allUploadsDone = Mock(return_value=None)
@@ -912,17 +918,17 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
             ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}),
         )
 
-    def test_init_workersrcs_keyword(self):
+    def test_init_workersrcs_keyword(self) -> None:
         step = transfer.MultipleFileUpload(workersrcs=['srcfile'], masterdest='dstfile')
 
         self.assertEqual(step.workersrcs, ['srcfile'])
 
-    def test_init_workersrcs_positional(self):
+    def test_init_workersrcs_positional(self) -> None:
         step = transfer.MultipleFileUpload(['srcfile'], 'dstfile')
 
         self.assertEqual(step.workersrcs, ['srcfile'])
 
-    def test_init_positional_args(self):
+    def test_init_positional_args(self) -> None:
         with self.assertRaises(TypeError):
             transfer.MultipleFileUpload()
         with self.assertRaises(TypeError):
@@ -930,40 +936,40 @@ class TestMultipleFileUpload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
 
 class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
         return self.setup_test_build_step()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
 
-    def test_init_workerdest_keyword(self):
+    def test_init_workerdest_keyword(self) -> None:
         step = transfer.FileDownload(mastersrc='srcfile', workerdest='dstfile')
 
         self.assertEqual(step.workerdest, 'dstfile')
 
-    def test_init_workerdest_positional(self):
+    def test_init_workerdest_positional(self) -> None:
         step = transfer.FileDownload('srcfile', 'dstfile')
 
         self.assertEqual(step.workerdest, 'dstfile')
 
-    def test_init_positional_args(self):
+    def test_init_positional_args(self) -> None:
         with self.assertRaises(TypeError):
-            transfer.FileDownload()
+            transfer.FileDownload()  # type: ignore[call-arg]
         with self.assertRaises(TypeError):
             transfer.FileDownload('srcfile')
 
     @defer.inlineCallbacks
-    def testBasic(self):
+    def testBasic(self) -> InlineCallbacksType[None]:
         master_file = __file__
         self.setup_step(transfer.FileDownload(mastersrc=master_file, workerdest=self.destfile))
 
         # A place to store what gets read
-        read = []
+        read = []  # type: ignore[var-annotated]
 
         self.expect_commands(
             ExpectDownloadFile(
@@ -989,7 +995,7 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(b''.join(read), contents)
 
     @defer.inlineCallbacks
-    def testBasicWorker2_16(self):
+    def testBasicWorker2_16(self) -> InlineCallbacksType[None]:
         master_file = __file__
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
@@ -997,7 +1003,7 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         )
 
         # A place to store what gets read
-        read = []
+        read = []  # type: ignore[var-annotated]
 
         self.expect_commands(
             ExpectDownloadFile(
@@ -1023,7 +1029,7 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(b''.join(read), contents)
 
     @defer.inlineCallbacks
-    def test_no_file(self):
+    def test_no_file(self) -> InlineCallbacksType[None]:
         self.setup_step(
             transfer.FileDownload(mastersrc='not existing file', workerdest=self.destfile)
         )
@@ -1039,29 +1045,29 @@ class TestFileDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
     # check that ConfigErrors is raised on invalid 'mode' argument
 
-    def testModeConfError(self):
+    def testModeConfError(self) -> None:
         with self.assertRaisesRegex(
             config.ConfigErrors,
             "StringDownload step's mode must be an integer or None, got 'not-a-number'",
         ):
-            transfer.StringDownload("string", "file", mode="not-a-number")
+            transfer.StringDownload("string", "file", mode="not-a-number")  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def testBasic(self):
+    def testBasic(self) -> InlineCallbacksType[None]:
         self.setup_step(transfer.StringDownload("Hello World", "hello.txt"))
 
-        self.get_nth_step(0).worker = Mock()
-        self.get_nth_step(0).worker.workername = "mock-worker"
+        self.get_nth_step(0).worker = Mock()  # type: ignore[assignment]
+        self.get_nth_step(0).worker.workername = "mock-worker"  # type: ignore[attr-defined]
         self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
-        read = []
+        read = []  # type: ignore[var-annotated]
 
         self.expect_commands(
             ExpectDownloadFile(
@@ -1082,16 +1088,16 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         self.assertEqual(b''.join(read), b"Hello World")
 
     @defer.inlineCallbacks
-    def testBasicWorker2_16(self):
+    def testBasicWorker2_16(self) -> InlineCallbacksType[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(transfer.StringDownload("Hello World", "hello.txt"))
 
-        self.get_nth_step(0).worker = Mock()
-        self.get_nth_step(0).worker.workername = "mock-worker"
+        self.get_nth_step(0).worker = Mock()  # type: ignore[assignment]
+        self.get_nth_step(0).worker.workername = "mock-worker"  # type: ignore[attr-defined]
         self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
-        read = []
+        read = []  # type: ignore[var-annotated]
 
         self.expect_commands(
             ExpectDownloadFile(
@@ -1111,7 +1117,7 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 
         self.assertEqual(b''.join(read), b"Hello World")
 
-    def testFailure(self):
+    def testFailure(self) -> defer.Deferred[None]:
         self.setup_step(transfer.StringDownload("Hello World", "hello.txt"))
 
         self.expect_commands(
@@ -1128,39 +1134,39 @@ class TestStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_outcome(result=FAILURE, state_string="downloading to hello.txt (failure)")
         return self.run_step()
 
-    def test_init_workerdest_keyword(self):
+    def test_init_workerdest_keyword(self) -> None:
         step = transfer.StringDownload('srcfile', workerdest='dstfile')
 
         self.assertEqual(step.workerdest, 'dstfile')
 
-    def test_init_workerdest_positional(self):
+    def test_init_workerdest_positional(self) -> None:
         step = transfer.StringDownload('srcfile', 'dstfile')
 
         self.assertEqual(step.workerdest, 'dstfile')
 
-    def test_init_positional_args(self):
+    def test_init_positional_args(self) -> None:
         with self.assertRaises(TypeError):
-            transfer.StringDownload()
+            transfer.StringDownload()  # type: ignore[call-arg]
         with self.assertRaises(TypeError):
             transfer.StringDownload('srcfile')
 
 
 class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
     @defer.inlineCallbacks
-    def testBasic(self):
+    def testBasic(self) -> InlineCallbacksType[None]:
         msg = {"message": 'Hello World'}
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
-        self.get_nth_step(0).worker = Mock()
-        self.get_nth_step(0).worker.workername = "mock-worker"
+        self.get_nth_step(0).worker = Mock()  # type: ignore[assignment]
+        self.get_nth_step(0).worker.workername = "mock-worker"  # type: ignore[attr-defined]
         self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
-        read = []
+        read = []  # type: ignore[var-annotated]
 
         self.expect_commands(
             ExpectDownloadFile(
@@ -1181,16 +1187,16 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.assertEqual(b''.join(read), b'{"message": "Hello World"}')
 
     @defer.inlineCallbacks
-    def test_basic_with_renderable(self):
+    def test_basic_with_renderable(self) -> InlineCallbacksType[None]:
         msg = {"message": Interpolate('Hello World')}
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
-        self.get_nth_step(0).worker = Mock()
-        self.get_nth_step(0).worker.workername = "mock-worker"
+        self.get_nth_step(0).worker = Mock()  # type: ignore[assignment]
+        self.get_nth_step(0).worker.workername = "mock-worker"  # type: ignore[attr-defined]
         self.get_nth_step(0).remote = Mock()
 
         # A place to store what gets read
-        read = []
+        read = []  # type: ignore[var-annotated]
 
         self.expect_commands(
             ExpectDownloadFile(
@@ -1210,7 +1216,7 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         self.assertEqual(b''.join(read), b'{"message": "Hello World"}')
 
-    def testFailure(self):
+    def testFailure(self) -> defer.Deferred[None]:
         msg = {"message": 'Hello World'}
         self.setup_step(transfer.JSONStringDownload(msg, "hello.json"))
 
@@ -1228,33 +1234,33 @@ class TestJSONStringDownload(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=FAILURE, state_string="downloading to hello.json (failure)")
         return self.run_step()
 
-    def test_init_workerdest_keyword(self):
+    def test_init_workerdest_keyword(self) -> None:
         step = transfer.JSONStringDownload('srcfile', workerdest='dstfile')
 
         self.assertEqual(step.workerdest, 'dstfile')
 
-    def test_init_workerdest_positional(self):
+    def test_init_workerdest_positional(self) -> None:
         step = transfer.JSONStringDownload('srcfile', 'dstfile')
 
         self.assertEqual(step.workerdest, 'dstfile')
 
-    def test_init_positional_args(self):
+    def test_init_positional_args(self) -> None:
         with self.assertRaises(TypeError):
-            transfer.JSONStringDownload()
+            transfer.JSONStringDownload()  # type: ignore[call-arg]
         with self.assertRaises(TypeError):
             transfer.JSONStringDownload('srcfile')
 
 
 class TestJSONPropertiesDownload(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
     @defer.inlineCallbacks
-    def testBasic(self):
+    def testBasic(self) -> InlineCallbacksType[None]:
         self.setup_step(transfer.JSONPropertiesDownload("props.json"))
-        self.get_nth_step(0).build.setProperty('key1', 'value1', 'test')
-        read = []
+        self.get_nth_step(0).build.setProperty('key1', 'value1', 'test')  # type: ignore[union-attr]
+        read = []  # type: ignore[var-annotated]
         self.expect_commands(
             ExpectDownloadFile(
                 workerdest="props.json",
@@ -1276,16 +1282,16 @@ class TestJSONPropertiesDownload(TestBuildStepMixin, TestReactorMixin, unittest.
             {"properties": {"key1": "value1"}, "sourcestamps": []},
         )
 
-    def test_init_workerdest_keyword(self):
+    def test_init_workerdest_keyword(self) -> None:
         step = transfer.JSONPropertiesDownload(workerdest='dstfile')
 
         self.assertEqual(step.workerdest, 'dstfile')
 
-    def test_init_workerdest_positional(self):
+    def test_init_workerdest_positional(self) -> None:
         step = transfer.JSONPropertiesDownload('dstfile')
 
         self.assertEqual(step.workerdest, 'dstfile')
 
-    def test_init_positional_args(self):
+    def test_init_positional_args(self) -> None:
         with self.assertRaises(TypeError):
             transfer.JSONPropertiesDownload()

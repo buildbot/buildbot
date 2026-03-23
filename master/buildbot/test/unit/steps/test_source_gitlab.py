@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
@@ -24,18 +29,23 @@ from buildbot.test.steps import ExpectStat
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
 
+if TYPE_CHECKING:
+    from twisted.internet import defer
+
+    from buildbot.process import buildstep
+
 
 class TestGitLab(
     sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
     stepClass = gitlab.GitLab
 
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.sourceName = self.stepClass.__name__
         return self.setup_test_build_step()
 
-    def setup_step(self, step, args, **kwargs):
+    def setup_step(self, step: Any, args: Any, **kwargs: Any) -> buildstep.BuildStep:  # type: ignore[override]
         step = super().setup_step(step, args, **kwargs)
         step.build.properties.setProperty("source_branch", "ms-viewport", "gitlab source branch")
         step.build.properties.setProperty(
@@ -53,7 +63,7 @@ class TestGitLab(
         step.build.properties.setProperty("target_project_id", 239, "gitlab target project ID")
         return step
 
-    def test_with_merge_branch(self):
+    def test_with_merge_branch(self) -> defer.Deferred[None]:
         self.setup_step(
             self.stepClass(
                 repourl='git@gitlab.example.com:mmusterman/awesome_project.git',

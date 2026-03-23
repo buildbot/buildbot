@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import github
 from buildbot.test.steps import ExpectListdir
@@ -20,12 +24,15 @@ from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import ExpectStat
 from buildbot.test.unit.steps import test_source_git
 
+if TYPE_CHECKING:
+    from twisted.internet import defer
+
 
 # GitHub step shall behave exactly like Git, and thus is inheriting its tests
 class TestGitHub(test_source_git.TestGit):
     stepClass = github.GitHub
 
-    def test_with_merge_branch(self):
+    def test_with_merge_branch(self) -> defer.Deferred[None]:
         self.setup_step(
             self.stepClass(
                 repourl='http://github.com/buildbot/buildbot.git', mode='full', method='clean'
@@ -64,7 +71,7 @@ class TestGitHub(test_source_git.TestGit):
         self.expect_property('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'GitHub')
         return self.run_step()
 
-    def test_with_head_branch(self):
+    def test_with_head_branch(self) -> defer.Deferred[None]:
         self.setup_step(
             self.stepClass(
                 repourl='http://github.com/buildbot/buildbot.git', mode='full', method='clean'

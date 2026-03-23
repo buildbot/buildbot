@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -28,20 +33,23 @@ from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class DynamicRun(shellsequence.ShellSequence):
-    def run(self):
-        return self.runShellSequence(self.dynamicCommands)
+    def run(self) -> defer.Deferred[int]:
+        return self.runShellSequence(self.dynamicCommands)  # type: ignore[attr-defined]
 
 
 class TestOneShellCommand(
     TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def testShellArgInput(self):
+    def testShellArgInput(self) -> None:
         with self.assertRaisesConfigError("the 'command' parameter of ShellArg must not be None"):
             shellsequence.ShellArg(command=None)
         arg1 = shellsequence.ShellArg(command=1)
@@ -55,7 +63,7 @@ class TestOneShellCommand(
             arg = shellsequence.ShellArg(command=goodcmd)
             arg.validateAttributes()
 
-    def testShellArgsAreRendered(self):
+    def testShellArgsAreRendered(self) -> defer.Deferred[None]:
         arg1 = shellsequence.ShellArg(command=WithProperties('make %s', 'project'))
         self.setup_step(shellsequence.ShellSequence(commands=[arg1], workdir='build'))
         self.build.setProperty("project", "BUILDBOT-TEST", "TEST")
@@ -65,26 +73,28 @@ class TestOneShellCommand(
         self.expect_outcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
         return self.run_step()
 
-    def createDynamicRun(self, commands):
-        DynamicRun.dynamicCommands = commands
+    def createDynamicRun(self, commands: list[Any] | None) -> DynamicRun:
+        DynamicRun.dynamicCommands = commands  # type: ignore[attr-defined]
         return DynamicRun()
 
-    def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsNone(self):
+    def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsNone(self) -> defer.Deferred[None]:
         self.setup_step(self.createDynamicRun(None))
         self.expect_outcome(result=EXCEPTION, state_string="finished (exception)")
         return self.run_step()
 
-    def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsString(self):
+    def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsString(self) -> defer.Deferred[None]:
         self.setup_step(self.createDynamicRun(["one command"]))
         self.expect_outcome(result=EXCEPTION, state_string='finished (exception)')
         return self.run_step()
 
-    def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
+    def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(
+        self,
+    ) -> defer.Deferred[None]:
         self.setup_step(self.createDynamicRun([shellsequence.ShellArg(command=1)]))
         self.expect_outcome(result=EXCEPTION, state_string='finished (exception)')
         return self.run_step()
 
-    def testMultipleCommandsAreRun(self):
+    def testMultipleCommandsAreRun(self) -> defer.Deferred[None]:
         arg1 = shellsequence.ShellArg(command='make p1')
         arg2 = shellsequence.ShellArg(command='deploy p1')
         self.setup_step(shellsequence.ShellSequence(commands=[arg1, arg2], workdir='build'))
@@ -95,7 +105,7 @@ class TestOneShellCommand(
         self.expect_outcome(result=SUCCESS, state_string="'deploy p1'")
         return self.run_step()
 
-    def testSkipWorks(self):
+    def testSkipWorks(self) -> defer.Deferred[None]:
         arg1 = shellsequence.ShellArg(command='make p1')
         arg2 = shellsequence.ShellArg(command='')
         arg3 = shellsequence.ShellArg(command='deploy p1')
@@ -107,7 +117,7 @@ class TestOneShellCommand(
         self.expect_outcome(result=SUCCESS, state_string="'deploy p1'")
         return self.run_step()
 
-    def testWarningWins(self):
+    def testWarningWins(self) -> defer.Deferred[None]:
         arg1 = shellsequence.ShellArg(command='make p1', warnOnFailure=True, flunkOnFailure=False)
         arg2 = shellsequence.ShellArg(command='deploy p1')
         self.setup_step(shellsequence.ShellSequence(commands=[arg1, arg2], workdir='build'))
@@ -118,7 +128,7 @@ class TestOneShellCommand(
         self.expect_outcome(result=WARNINGS, state_string="'deploy p1' (warnings)")
         return self.run_step()
 
-    def testSequenceStopsOnHaltOnFailure(self):
+    def testSequenceStopsOnHaltOnFailure(self) -> defer.Deferred[None]:
         arg1 = shellsequence.ShellArg(command='make p1', haltOnFailure=True)
         arg2 = shellsequence.ShellArg(command='deploy p1')
 
@@ -128,7 +138,7 @@ class TestOneShellCommand(
         return self.run_step()
 
     @defer.inlineCallbacks
-    def testShellArgsAreRenderedAnewAtEachInvocation(self):
+    def testShellArgsAreRenderedAnewAtEachInvocation(self) -> InlineCallbacksType[None]:
         """Unit test to ensure that ShellArg instances are properly re-rendered.
         This unit test makes sure that ShellArg instances are rendered anew at each invocation
         """

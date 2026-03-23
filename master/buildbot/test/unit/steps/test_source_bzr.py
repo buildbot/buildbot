@@ -14,12 +14,18 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
 from pathlib import PureWindowsPath
+from typing import TYPE_CHECKING
 
 from twisted.internet import error
 from twisted.python.reflect import namedModule
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
@@ -37,11 +43,11 @@ from buildbot.test.util import sourcesteps
 
 
 class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_mode_full(self):
+    def test_mode_full(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='fresh'
@@ -63,14 +69,14 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_win32path(self):
+    def test_mode_full_win32path(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='fresh'
             )
         )
         self.build.path_module = namedModule('ntpath')
-        self.build.path_cls = PureWindowsPath
+        self.build.path_cls = PureWindowsPath  # type: ignore[assignment]
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['bzr', '--version']).exit(0),
             ExpectStat(file=r'wkdir\.buildbot-patched', log_environ=True).exit(1),
@@ -86,7 +92,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_full_timeout(self):
+    def test_mode_full_timeout(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
@@ -115,7 +121,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_revision(self):
+    def test_mode_full_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='fresh'
@@ -138,7 +144,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clean(self):
+    def test_mode_full_clean(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='clean'
@@ -162,7 +168,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clean_patched(self):
+    def test_mode_full_clean_patched(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='clean'
@@ -191,7 +197,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clean_patch(self):
+    def test_mode_full_clean_patch(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='clean'
@@ -245,7 +251,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clean_patch_worker_2_16(self):
+    def test_mode_full_clean_patch_worker_2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             bzr.Bzr(
@@ -300,7 +306,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clean_revision(self):
+    def test_mode_full_clean_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='clean'
@@ -325,7 +331,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_fresh(self):
+    def test_mode_full_fresh(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='fresh'
@@ -347,7 +353,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clobber(self):
+    def test_mode_full_clobber(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='clobber'
@@ -371,7 +377,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clobber_retry(self):
+    def test_mode_full_clobber_retry(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
@@ -408,7 +414,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clobber_revision(self):
+    def test_mode_full_clobber_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='clobber'
@@ -440,7 +446,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clobber_baseurl(self):
+    def test_mode_full_clobber_baseurl(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 baseURL='http://bzr.squid-cache.org/bzr/squid3',
@@ -472,7 +478,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_clobber_baseurl_nodefault(self):
+    def test_mode_full_clobber_baseurl_nodefault(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 baseURL='http://bzr.squid-cache.org/bzr/squid3',
@@ -505,7 +511,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_full_copy(self):
+    def test_mode_full_copy(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='copy'
@@ -528,7 +534,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_incremental(self):
+    def test_mode_incremental(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='incremental')
         )
@@ -547,7 +553,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_incremental_revision(self):
+    def test_mode_incremental_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='incremental'),
             args={"revision": '9384'},
@@ -567,7 +573,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'Bzr')
         return self.run_step()
 
-    def test_mode_incremental_no_existing_repo(self):
+    def test_mode_incremental_no_existing_repo(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='incremental')
         )
@@ -589,7 +595,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100\n', 'Bzr')
         return self.run_step()
 
-    def test_mode_incremental_retry(self):
+    def test_mode_incremental_retry(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
@@ -620,7 +626,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100\n', 'Bzr')
         return self.run_step()
 
-    def test_bad_revparse(self):
+    def test_bad_revparse(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='incremental')
         )
@@ -641,7 +647,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_bad_checkout(self):
+    def test_bad_checkout(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='incremental')
         )
@@ -659,7 +665,7 @@ class TestBzr(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_worker_connection_lost(self):
+    def test_worker_connection_lost(self) -> defer.Deferred[None]:
         self.setup_step(
             bzr.Bzr(
                 repourl='http://bzr.squid-cache.org/bzr/squid3/trunk', mode='full', method='fresh'

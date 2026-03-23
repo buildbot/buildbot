@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from collections import OrderedDict
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -27,17 +30,20 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_no_specfile(self):
+    def test_no_specfile(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             rpmbuild.RpmBuild()
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", dist=".el5"))
         self.expect_commands(
             ExpectShell(
@@ -55,7 +61,7 @@ class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     @mock.patch('builtins.open', mock.mock_open())
-    def test_autoRelease(self):
+    def test_autoRelease(self) -> defer.Deferred[None]:
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", autoRelease=True))
         self.expect_commands(
             ExpectShell(
@@ -72,7 +78,7 @@ class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
         return self.run_step()
 
-    def test_define(self):
+    def test_define(self) -> defer.Deferred[None]:
         defines = [("a", "1"), ("b", "2")]
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", define=OrderedDict(defines)))
         self.expect_commands(
@@ -91,7 +97,7 @@ class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string='RPMBUILD')
         return self.run_step()
 
-    def test_define_none(self):
+    def test_define_none(self) -> defer.Deferred[None]:
         self.setup_step(rpmbuild.RpmBuild(specfile="foo.spec", define=None))
         self.expect_commands(
             ExpectShell(
@@ -109,9 +115,9 @@ class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_renderable_dist(self):
+    def test_renderable_dist(self) -> InlineCallbacksType[None]:
         self.setup_step(
-            rpmbuild.RpmBuild(specfile="foo.spec", dist=Interpolate('%(prop:renderable_dist)s'))
+            rpmbuild.RpmBuild(specfile="foo.spec", dist=Interpolate('%(prop:renderable_dist)s'))  # type: ignore[arg-type]
         )
         self.build.setProperty('renderable_dist', '.el7', 'test')
         self.expect_commands(

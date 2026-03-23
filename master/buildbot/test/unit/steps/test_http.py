@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import NoReturn
 from unittest import mock
 
 from twisted.internet import defer
@@ -28,6 +33,11 @@ from buildbot.steps import http
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util.site import SiteWithClose
+
+if TYPE_CHECKING:
+    from twisted.web.server import Request
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 try:
     import txrequests
@@ -47,25 +57,25 @@ except ImportError:
 class TestPage(Resource):
     isLeaf = True
 
-    def render_GET(self, request):
+    def render_GET(self, request: Request) -> bytes:
         if request.uri == b"/404":
             request.setResponseCode(404)
             return b"404"
         elif request.uri == b'/redirect':
             return redirectTo(b'/redirected-path', request)
         elif request.uri == b"/header":
-            return b"".join(request.requestHeaders.getRawHeaders(b"X-Test"))
+            return b"".join(request.requestHeaders.getRawHeaders(b"X-Test"))  # type: ignore[arg-type]
         return b"OK"
 
-    def render_POST(self, request):
+    def render_POST(self, request: Request) -> bytes:
         if request.uri == b"/404":
             request.setResponseCode(404)
             return b"404"
-        return b"OK:" + request.content.read()
+        return b"OK:" + request.content.read()  # type: ignore[attr-defined]
 
 
 class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         if txrequests is None:
             raise unittest.SkipTest("Need to install txrequests to test http steps")
@@ -80,19 +90,19 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.addCleanup(self.site.stopFactory)
         self.addCleanup(self.site.close_connections)
 
-        self.listener = reactor.listenTCP(0, self.site)
+        self.listener = reactor.listenTCP(0, self.site)  # type: ignore[attr-defined]
         self.addCleanup(self.listener.stopListening)
 
         self.port = self.listener.getHost().port
         return self.setup_test_build_step()
 
-    def get_connection_string(self):
+    def get_connection_string(self) -> str:
         return f"http://127.0.0.1:{self.port}"
 
-    def getURL(self, path=""):
+    def getURL(self, path: str = "") -> str:
         return f'{self.get_connection_string()}/{path}'
 
-    def test_get(self):
+    def test_get(self) -> defer.Deferred[None]:
         url = self.getURL()
         self.setup_step(http.GET(url))
         self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nOK")
@@ -100,8 +110,8 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
 
-    def test_connection_error(self):
-        def throwing_request(*args, **kwargs):
+    def test_connection_error(self) -> defer.Deferred[None]:
+        def throwing_request(*args: Any, **kwargs: Any) -> NoReturn:
             raise requests.exceptions.ConnectionError("failed to connect")
 
         with mock.patch.object(http.getSession(), 'request', throwing_request):
@@ -110,7 +120,7 @@ class TestHTTPStep(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             self.expect_outcome(result=FAILURE, state_string="Requested (failure)")
             return self.run_step()
 
-    def test_redirect(self):
+    def test_redirect(self) -> defer.Deferred[None]:
         url = self.getURL("redirect")
         self.setup_step(http.GET(url))
 
@@ -139,7 +149,7 @@ OK"""
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         return self.run_step()
 
-    def test_404(self):
+    def test_404(self) -> defer.Deferred[None]:
         url = self.getURL("404")
         self.setup_step(http.GET(url))
         self.expect_log_file('log', f"URL: {url}\n ------ Content ------\n404")
@@ -147,13 +157,13 @@ OK"""
         self.expect_outcome(result=FAILURE, state_string="Status code: 404 (failure)")
         return self.run_step()
 
-    def test_method_not_allowed(self):
+    def test_method_not_allowed(self) -> defer.Deferred[None]:
         url = self.getURL("path")
         self.setup_step(http.PUT(url))
         self.expect_outcome(result=FAILURE, state_string="Status code: 501 (failure)")
         return self.run_step()
 
-    def test_post(self):
+    def test_post(self) -> defer.Deferred[None]:
         url = self.getURL("path")
         self.setup_step(http.POST(url))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
@@ -161,7 +171,7 @@ OK"""
         self.expect_log_file('content', "OK:")
         return self.run_step()
 
-    def test_post_data(self):
+    def test_post_data(self) -> defer.Deferred[None]:
         url = self.getURL("path")
         self.setup_step(http.POST(url, data='mydata'))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
@@ -169,23 +179,19 @@ OK"""
         self.expect_log_file('content', "OK:mydata")
         return self.run_step()
 
-    def test_post_data_dict(self):
+    def test_post_data_dict(self) -> defer.Deferred[None]:
         url = self.getURL("path")
 
         self.setup_step(http.POST(url, data={'key1': 'value1'}))
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         self.expect_log_file(
             'log',
-            f"""\
-URL: {url}
-Status: 200
- ------ Content ------
-OK:key1=value1""",
+            f"URL: {url}\nStatus: 200\n ------ Content ------\nOK:key1=value1",
         )
         self.expect_log_file('content', "OK:key1=value1")
         return self.run_step()
 
-    def test_header(self):
+    def test_header(self) -> defer.Deferred[None]:
         url = self.getURL("header")
         self.setup_step(http.GET(url, headers={"X-Test": "True"}))
         self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
@@ -193,7 +199,7 @@ OK:key1=value1""",
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_hidden_header(self):
+    def test_hidden_header(self) -> InlineCallbacksType[None]:
         url = self.getURL("header")
         self.setup_step(
             http.GET(
@@ -206,15 +212,16 @@ OK:key1=value1""",
         self.expect_log_file('log', f"URL: {url}\nStatus: 200\n ------ Content ------\nTrue")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")
         yield self.run_step()
-        self.assertIn("X-Test: <HIDDEN>", self.get_nth_step(0).logs['log'].header)
-        self.assertIn("Content-Length: <HIDDEN>", self.get_nth_step(0).logs['log'].header)
+        self.assertIn("X-Test: <HIDDEN>", self.get_nth_step(0).logs['log'].header)  # type: ignore[attr-defined]
+        self.assertIn("Content-Length: <HIDDEN>", self.get_nth_step(0).logs['log'].header)  # type: ignore[attr-defined]
 
-    def test_params_renderable(self):
+    def test_params_renderable(self) -> defer.Deferred[None]:
         url = self.getURL()
         self.setup_step(http.GET(url, params=properties.Property("x")))
         self.build.setProperty("x", {"param_1": "param_1", "param_2": 2}, "here")
         self.expect_log_file(
-            'log', f"URL: {url}?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK"
+            'log',
+            f"URL: {url}?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK",
         )
         self.expect_log_file('content', "OK")
         self.expect_outcome(result=SUCCESS, state_string="Status code: 200")

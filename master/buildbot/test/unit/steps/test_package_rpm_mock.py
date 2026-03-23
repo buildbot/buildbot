@@ -13,7 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot import config
 from buildbot.process.properties import Interpolate
@@ -26,23 +33,24 @@ from buildbot.test.steps import TestBuildStepMixin
 
 
 class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_no_root(self):
+    def test_no_root(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             mock.Mock()
 
-    def test_class_attrs(self):
+    def test_class_attrs(self) -> None:
         step = self.setup_step(mock.Mock(root='TESTROOT'))
-        self.assertEqual(step.command, ['mock', '--root', 'TESTROOT'])
+        self.assertEqual(step.command, ['mock', '--root', 'TESTROOT'])  # type: ignore[attr-defined]
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(mock.Mock(root='TESTROOT'))
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/build.log', 'build/root.log', 'build/state.log'], log_environ=False
+                dir=['build/build.log', 'build/root.log', 'build/state.log'],  # type: ignore[arg-type]
+                log_environ=False,
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -57,11 +65,11 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS, state_string="'mock --root ...'")
         return self.run_step()
 
-    def test_resultdir_success(self):
+    def test_resultdir_success(self) -> defer.Deferred[None]:
         self.setup_step(mock.Mock(root='TESTROOT', resultdir='RESULT'))
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/RESULT/build.log', 'build/RESULT/root.log', 'build/RESULT/state.log'],
+                dir=['build/RESULT/build.log', 'build/RESULT/root.log', 'build/RESULT/state.log'],  # type: ignore[arg-type]
                 log_environ=False,
             ).exit(0),
             ExpectShell(
@@ -77,16 +85,17 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_resultdir_renderable(self):
+    def test_resultdir_renderable(self) -> defer.Deferred[None]:
         resultdir_text = "RESULT"
         self.setup_step(
             mock.Mock(
-                root='TESTROOT', resultdir=Interpolate('%(kw:resultdir)s', resultdir=resultdir_text)
+                root='TESTROOT',
+                resultdir=Interpolate('%(kw:resultdir)s', resultdir=resultdir_text),  # type: ignore[arg-type]
             )
         )
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/RESULT/build.log', 'build/RESULT/root.log', 'build/RESULT/state.log'],
+                dir=['build/RESULT/build.log', 'build/RESULT/root.log', 'build/RESULT/state.log'],  # type: ignore[arg-type]
                 log_environ=False,
             ).exit(0),
             ExpectShell(
@@ -104,19 +113,20 @@ class TestMock(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestMockBuildSRPM(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_no_spec(self):
+    def test_no_spec(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             mock.MockBuildSRPM(root='TESTROOT')
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/build.log', 'build/root.log', 'build/state.log'], log_environ=False
+                dir=['build/build.log', 'build/root.log', 'build/state.log'],  # type: ignore[arg-type]
+                log_environ=False,
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -142,19 +152,20 @@ class TestMockBuildSRPM(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
 
 class TestMockRebuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_no_srpm(self):
+    def test_no_srpm(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             mock.MockRebuild(root='TESTROOT')
 
-    def test_success(self):
+    def test_success(self) -> defer.Deferred[None]:
         self.setup_step(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))
         self.expect_commands(
             ExpectRmdir(
-                dir=['build/build.log', 'build/root.log', 'build/state.log'], log_environ=False
+                dir=['build/build.log', 'build/root.log', 'build/state.log'],  # type: ignore[arg-type]
+                log_environ=False,
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',

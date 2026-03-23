@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from parameterized import parameterized
 from twisted.trial import unittest
 
@@ -53,7 +55,7 @@ class TestParseEnvString(unittest.TestCase):
             {'ABC': '1 2', 'EFG': '2'},
         ),
     ])
-    def test_one(self, name, value, expected):
+    def test_one(self, name: str, value: str, expected: dict[str, str]) -> None:
         self.assertEqual(parse_env_string(value), expected)
 
     @parameterized.expand([
@@ -78,10 +80,10 @@ class TestParseEnvString(unittest.TestCase):
         ('left_angled_brace', 'ABC=1<0', {'ABC': '1<0'}),
         ('right_angled_brace', 'ABC=1>0', {'ABC': '1>0'}),
     ])
-    def test_special_characters(self, name, value, expected):
+    def test_special_characters(self, name: str, value: str, expected: dict[str, str]) -> None:
         self.assertEqual(parse_env_string(value), expected)
 
-    def test_global_overridden(self):
+    def test_global_overridden(self) -> None:
         self.assertEqual(
             parse_env_string('K1=VE1 K2=VE2', {'K2': 'VG1', 'K3': 'VG3'}),
             {'K1': 'VE1', 'K2': 'VE2', 'K3': 'VG3'},
@@ -89,31 +91,31 @@ class TestParseEnvString(unittest.TestCase):
 
 
 class TestEvaluateCondition(unittest.TestCase):
-    def test_bool(self):
+    def test_bool(self) -> None:
         self.assertTrue(evaluate_condition('True', {}))
         self.assertFalse(evaluate_condition('False', {}))
 
-    def test_string_empty(self):
+    def test_string_empty(self) -> None:
         self.assertFalse(evaluate_condition('VALUE', {'VALUE': ''}))
         self.assertTrue(evaluate_condition('VALUE', {'VALUE': 'abc'}))
 
-    def test_string_equal(self):
+    def test_string_equal(self) -> None:
         self.assertTrue(evaluate_condition('VALUE == "a"', {'VALUE': 'a'}))
         self.assertFalse(evaluate_condition('VALUE == "a"', {'VALUE': 'b'}))
 
-    def test_string_in_tuple(self):
+    def test_string_in_tuple(self) -> None:
         cond = 'VALUE in ("a", "b", "c", "d")'
         self.assertTrue(evaluate_condition(cond, {'VALUE': 'a'}))
         self.assertFalse(evaluate_condition(cond, {'VALUE': 'not'}))
 
-    def test_string_not_in_tuple(self):
+    def test_string_not_in_tuple(self) -> None:
         cond = 'VALUE not in ("a", "b", "c", "d")'
         self.assertFalse(evaluate_condition(cond, {'VALUE': 'a'}))
         self.assertTrue(evaluate_condition(cond, {'VALUE': 'not'}))
 
 
 class TestLoading(unittest.TestCase):
-    def test_single_script(self):
+    def test_single_script(self) -> None:
         c = BuildbotCiYml.load_from_str("""
         script:
             - echo success
@@ -130,7 +132,7 @@ class TestLoading(unittest.TestCase):
             },
         )
 
-    def test_single_script_interpolated_no_replacement(self):
+    def test_single_script_interpolated_no_replacement(self) -> None:
         c = BuildbotCiYml.load_from_str("""
         script:
             - !i echo success
@@ -147,7 +149,7 @@ class TestLoading(unittest.TestCase):
             },
         )
 
-    def test_single_script_interpolated_with_replacement(self):
+    def test_single_script_interpolated_with_replacement(self) -> None:
         c = BuildbotCiYml.load_from_str("""
         script:
             - !i echo "%(prop:name)s"
@@ -164,7 +166,7 @@ class TestLoading(unittest.TestCase):
             },
         )
 
-    def test_single_script_dict_interpolate_with_replacement(self):
+    def test_single_script_dict_interpolate_with_replacement(self) -> None:
         c = BuildbotCiYml.load_from_str("""
         script:
             - title: mytitle
@@ -182,7 +184,7 @@ class TestLoading(unittest.TestCase):
             },
         )
 
-    def test_multiple_scripts(self):
+    def test_multiple_scripts(self) -> None:
         c = BuildbotCiYml.load_from_str("""
         script:
             - echo success
@@ -201,7 +203,7 @@ class TestLoading(unittest.TestCase):
             },
         )
 
-    def test_script_with_step(self):
+    def test_script_with_step(self) -> None:
         c = BuildbotCiYml.load_from_str("""
         script:
             - !ShellCommand
@@ -219,7 +221,7 @@ class TestLoading(unittest.TestCase):
             },
         )
 
-    def test_matrix_include_simple(self):
+    def test_matrix_include_simple(self) -> None:
         m = BuildbotCiYml.load_matrix(
             {'matrix': {'include': [{'env': 'ABC=10'}, {'env': 'ABC=11'}, {'env': 'ABC=12'}]}}, {}
         )
@@ -227,7 +229,7 @@ class TestLoading(unittest.TestCase):
             m, [{'env': {'ABC': '10'}}, {'env': {'ABC': '11'}}, {'env': {'ABC': '12'}}]
         )
 
-    def test_matrix_include_global(self):
+    def test_matrix_include_global(self) -> None:
         m = BuildbotCiYml.load_matrix(
             {'matrix': {'include': [{'env': 'ABC=10'}, {'env': 'ABC=11'}, {'env': 'ABC=12'}]}},
             {'GLOBAL': 'GV'},
@@ -241,7 +243,7 @@ class TestLoading(unittest.TestCase):
             ],
         )
 
-    def test_matrix_include_global_with_override(self):
+    def test_matrix_include_global_with_override(self) -> None:
         m = BuildbotCiYml.load_matrix(
             {'matrix': {'include': [{'env': 'ABC=10'}, {'env': 'ABC=11'}, {'env': 'ABC=12'}]}},
             {'ABC': 'GV'},

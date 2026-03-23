@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import pprint
 import sys
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.python import runtime
@@ -31,25 +35,29 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectMasterShell
 from buildbot.test.steps import TestBuildStepMixin
 
+if TYPE_CHECKING:
+    from buildbot.interfaces import IProperties
+    from buildbot.util.twisted import InlineCallbacksType
+
 _COMSPEC_ENV = 'COMSPEC'
 
 
 class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         if runtime.platformType == 'win32':
             self.comspec = os.environ.get(_COMSPEC_ENV)
             os.environ[_COMSPEC_ENV] = r'C:\WINDOWS\system32\cmd.exe'
         return self.setup_test_build_step()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if runtime.platformType == 'win32':
             if self.comspec:
                 os.environ[_COMSPEC_ENV] = self.comspec
             else:
                 del os.environ[_COMSPEC_ENV]
 
-    def test_constr_args(self):
+    def test_constr_args(self) -> defer.Deferred[None]:
         self.setup_step(
             master.MasterShellCommand(
                 description='x',
@@ -67,7 +75,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
             exp_argv = ['/bin/sh', '-c', 'true']
 
         self.expect_commands(
-            ExpectMasterShell(exp_argv)
+            ExpectMasterShell(exp_argv)  # type: ignore[arg-type]
             .workdir('build')
             .env({'a': 'b'})
             .stdout(b'hello!\n')
@@ -80,7 +88,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_env_subst(self):
+    def test_env_subst(self) -> InlineCallbacksType[None]:
         os.environ['WORLD'] = 'hello'
         self.setup_step(master.MasterShellCommand(command='true', env={'HELLO': '${WORLD}'}))
 
@@ -89,7 +97,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         else:
             exp_argv = ['/bin/sh', '-c', 'true']
 
-        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': 'hello'}).exit(0))
+        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': 'hello'}).exit(0))  # type: ignore[arg-type]
 
         self.expect_outcome(result=SUCCESS)
 
@@ -99,7 +107,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
             del os.environ['WORLD']
 
     @defer.inlineCallbacks
-    def test_env_list_subst(self):
+    def test_env_list_subst(self) -> InlineCallbacksType[None]:
         os.environ['WORLD'] = 'hello'
         os.environ['LIST'] = 'world'
         self.setup_step(
@@ -113,7 +121,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
             exp_argv = ['/bin/sh', '-c', 'true']
             exp_env = 'hello:world'
 
-        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': exp_env}).exit(0))
+        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': exp_env}).exit(0))  # type: ignore[arg-type]
 
         self.expect_outcome(result=SUCCESS)
 
@@ -124,7 +132,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
             del os.environ['LIST']
 
     @defer.inlineCallbacks
-    def test_runtime_timeout_success(self):
+    def test_runtime_timeout_success(self) -> InlineCallbacksType[None]:
         """Test the runtime_timeout argument."""
         runtime_timeout = 10
         n_ping = 1
@@ -137,13 +145,13 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         self.setup_step(master.MasterShellCommand(command=cmd, runtime_timeout=runtime_timeout))
 
-        self.expect_commands(ExpectMasterShell(exp_argv).exit(0))
+        self.expect_commands(ExpectMasterShell(exp_argv).exit(0))  # type: ignore[arg-type]
         self.expect_outcome(result=SUCCESS)
 
         yield self.run_step()
 
     @defer.inlineCallbacks
-    def test_runtime_timeout_failed(self):
+    def test_runtime_timeout_failed(self) -> InlineCallbacksType[None]:
         """Test the runtime_timeout argument aborts the step."""
         runtime_timeout = 1
         n_ping = 10
@@ -156,15 +164,16 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         self.setup_step(master.MasterShellCommand(command=cmd, runtime_timeout=runtime_timeout))
 
-        self.expect_commands(ExpectMasterShell(exp_argv).exit(2))
+        self.expect_commands(ExpectMasterShell(exp_argv).exit(2))  # type: ignore[arg-type]
         self.expect_outcome(result=FAILURE)
 
         yield self.run_step()
 
-    def test_prop_rendering(self):
+    def test_prop_rendering(self) -> defer.Deferred[None]:
         self.setup_step(
             master.MasterShellCommand(
-                command=Interpolate('%(prop:project)s-BUILD'), workdir='build'
+                command=Interpolate('%(prop:project)s-BUILD'),  # type: ignore[arg-type]
+                workdir='build',
             )
         )
         self.build.setProperty("project", "BUILDBOT-TEST", "TEST")
@@ -174,12 +183,12 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         else:
             exp_argv = ['/bin/sh', '-c', 'BUILDBOT-TEST-BUILD']
 
-        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').exit(0))
+        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').exit(0))  # type: ignore[arg-type]
 
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_constr_args_descriptionSuffix(self):
+    def test_constr_args_descriptionSuffix(self) -> defer.Deferred[None]:
         self.setup_step(
             master.MasterShellCommand(
                 description='x',
@@ -197,18 +206,18 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         else:
             exp_argv = ['/bin/sh', '-c', 'true']
 
-        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').env({'a': 'b'}).exit(0))
+        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').env({'a': 'b'}).exit(0))  # type: ignore[arg-type]
 
         self.expect_outcome(result=SUCCESS, state_string='y z')
         return self.run_step()
 
 
 class TestSetProperty(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_simple(self):
+    def test_simple(self) -> defer.Deferred[None]:
         self.setup_step(
             master.SetProperty(
                 property="testProperty",
@@ -223,11 +232,11 @@ class TestSetProperty(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestLogRenderable(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_simple(self):
+    def test_simple(self) -> defer.Deferred[None]:
         self.setup_step(
             master.LogRenderable(
                 content=Interpolate('sch=%(prop:scheduler)s, worker=%(prop:workername)s')
@@ -241,11 +250,11 @@ class TestLogRenderable(TestBuildStepMixin, TestReactorMixin, unittest.TestCase)
 
 
 class TestsSetProperties(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def doOneTest(self, **kwargs):
+    def doOneTest(self, **kwargs: Any) -> defer.Deferred[None]:
         # all three tests should create a 'a' property with 'b' value, all with different
         # more or less dynamic methods
         self.setup_step(master.SetProperties(name="my-step", **kwargs))
@@ -253,15 +262,15 @@ class TestsSetProperties(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_outcome(result=SUCCESS, state_string='Properties Set')
         return self.run_step()
 
-    def test_basic(self):
+    def test_basic(self) -> defer.Deferred[None]:
         return self.doOneTest(properties={'a': 'b'})
 
-    def test_renderable(self):
+    def test_renderable(self) -> defer.Deferred[None]:
         return self.doOneTest(properties={'a': Interpolate("b")})
 
-    def test_renderer(self):
+    def test_renderer(self) -> defer.Deferred[None]:
         @renderer
-        def manipulate(props):
+        def manipulate(props: IProperties) -> dict[str, Any]:
             # the renderer returns renderable!
             return {'a': Interpolate('b')}
 
@@ -269,25 +278,25 @@ class TestsSetProperties(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 
 
 class TestAssert(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_eq_pass(self):
+    def test_eq_pass(self) -> defer.Deferred[None]:
         self.setup_step(master.Assert(Property("test_prop") == "foo"))
         self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_eq_fail(self):
+    def test_eq_fail(self) -> defer.Deferred[None]:
         self.setup_step(master.Assert(Property("test_prop") == "bar"))
         self.build.setProperty("test_prop", "foo", "bar")
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_renderable_pass(self):
+    def test_renderable_pass(self) -> defer.Deferred[None]:
         @renderer
-        def test_renderer(props):
+        def test_renderer(props: IProperties) -> bool:
             return props.getProperty("test_prop") == "foo"
 
         self.setup_step(master.Assert(test_renderer))
@@ -295,9 +304,9 @@ class TestAssert(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_renderable_fail(self):
+    def test_renderable_fail(self) -> defer.Deferred[None]:
         @renderer
-        def test_renderer(props):
+        def test_renderer(props: IProperties) -> bool:
             return props.getProperty("test_prop") == "bar"
 
         self.setup_step(master.Assert(test_renderer))

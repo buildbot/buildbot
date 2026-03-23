@@ -14,6 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -28,25 +33,28 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import TestBuildStepMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     """
     Test L{Robocopy} command building.
     """
 
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
     def _run_simple_test(
         self,
-        source,
-        destination,
-        expected_args=None,
-        expected_code=0,
-        expected_res=SUCCESS,
-        **kwargs,
-    ):
+        source: str,
+        destination: str,
+        expected_args: list[str] | None = None,
+        expected_code: int = 0,
+        expected_res: int = SUCCESS,
+        **kwargs: Any,
+    ) -> defer.Deferred[None]:
         self.setup_step(mswin.Robocopy(source, destination, **kwargs))
         self.get_nth_step(0).rendered = True
 
@@ -66,10 +74,10 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         self.expect_outcome(result=expected_res, state_string=state_string)
         return self.run_step()
 
-    def test_copy(self):
+    def test_copy(self) -> defer.Deferred[None]:
         return self._run_simple_test(r'D:\source', r'E:\dest')
 
-    def test_copy_files(self):
+    def test_copy_files(self) -> defer.Deferred[None]:
         return self._run_simple_test(
             r'D:\source',
             r'E:\dest',
@@ -77,20 +85,20 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
             expected_args=['a.txt', 'b.txt', '*.log'],
         )
 
-    def test_copy_recursive(self):
+    def test_copy_recursive(self) -> defer.Deferred[None]:
         return self._run_simple_test(r'D:\source', r'E:\dest', recursive=True, expected_args=['/E'])
 
-    def test_mirror_files(self):
+    def test_mirror_files(self) -> defer.Deferred[None]:
         return self._run_simple_test(
             r'D:\source', r'E:\dest', files=['*.foo'], mirror=True, expected_args=['*.foo', '/MIR']
         )
 
-    def test_move_files(self):
+    def test_move_files(self) -> defer.Deferred[None]:
         return self._run_simple_test(
             r'D:\source', r'E:\dest', files=['*.foo'], move=True, expected_args=['*.foo', '/MOVE']
         )
 
-    def test_exclude(self):
+    def test_exclude(self) -> defer.Deferred[None]:
         return self._run_simple_test(
             r'D:\source',
             r'E:\dest',
@@ -99,7 +107,7 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
             expected_args=['blah*', '/XF', '*.foo', '*.bar'],
         )
 
-    def test_exclude_files(self):
+    def test_exclude_files(self) -> defer.Deferred[None]:
         return self._run_simple_test(
             r'D:\source',
             r'E:\dest',
@@ -108,7 +116,7 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
             expected_args=['blah*', '/XF', '*.foo', '*.bar'],
         )
 
-    def test_exclude_dirs(self):
+    def test_exclude_dirs(self) -> defer.Deferred[None]:
         return self._run_simple_test(
             r'D:\source',
             r'E:\dest',
@@ -117,7 +125,7 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
             expected_args=['blah*', '/XD', 'foo', 'bar'],
         )
 
-    def test_custom_opts(self):
+    def test_custom_opts(self) -> defer.Deferred[None]:
         return self._run_simple_test(
             r'D:\source',
             r'E:\dest',
@@ -126,7 +134,7 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
             expected_args=['*.foo', '/R:10', '/W:60'],
         )
 
-    def test_verbose_output(self):
+    def test_verbose_output(self) -> defer.Deferred[None]:
         return self._run_simple_test(
             r'D:\source',
             r'E:\dest',
@@ -146,7 +154,7 @@ class TestRobocopySimple(TestBuildStepMixin, TestReactorMixin, unittest.TestCase
         + [(32, EXCEPTION)]
     )
     @defer.inlineCallbacks
-    def test_codes(self, code, expected_result):
+    def test_codes(self, code: int, expected_result: int) -> InlineCallbacksType[None]:
         yield self._run_simple_test(
             r'D:\source', r'E:\dest', expected_code=code, expected_res=expected_result
         )
