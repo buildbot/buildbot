@@ -80,7 +80,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -123,7 +123,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -196,7 +196,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -268,7 +268,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -333,7 +333,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
             ExpectShell(
                 workdir='wkdir',
                 command=['mtn', 'update', '--revision', 'h:master', '--branch', 'master'],
@@ -721,7 +721,7 @@ class TestMonotone(
             .stdout('file3\nfile4')
             .exit(0),
             ExpectRmdir(
-                dir=['wkdir/file1', 'wkdir/file2', 'wkdir/file3', 'wkdir/file4'],  # type: ignore[arg-type]
+                dir=['wkdir/file1', 'wkdir/file2', 'wkdir/file3', 'wkdir/file4'],
                 log_environ=True,
             ).exit(0),
             ExpectShell(
@@ -904,7 +904,7 @@ class TestMonotone(
             ExpectShell(workdir='wkdir', command=['mtn', 'ls', 'unknown'])
             .stdout('file1\nfile2')
             .exit(0),
-            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),  # type: ignore[arg-type]
+            ExpectRmdir(dir=['wkdir/file1', 'wkdir/file2'], log_environ=True).exit(0),
             ExpectStat(file='wkdir/_MTN', log_environ=True).exit(0),
             ExpectShell(
                 workdir='wkdir',

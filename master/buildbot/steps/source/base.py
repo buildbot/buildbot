@@ -66,9 +66,9 @@ class Source(buildstep.BuildStep, CompositeStepMixin):
         retry: tuple[int, int] | None = None,
         env: dict[str, Any] | None = None,
         logEnviron: bool = True,
-        description: list[str] | None = None,
-        descriptionDone: list[str] | None = None,
-        descriptionSuffix: list[str] | None = None,
+        description: str | list[str] | None = None,
+        descriptionDone: str | list[str] | None = None,
+        descriptionSuffix: str | list[str] | None = None,
         codebase: str = '',
         **kwargs: Any,
     ) -> None:

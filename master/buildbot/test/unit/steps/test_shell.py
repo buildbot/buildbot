@@ -751,7 +751,7 @@ class WarningCountingShellCommand(
         )
         step = shell.WarningCountingShellCommand(
             command=['make'],
-            suppressionList=supps,  # type: ignore[arg-type]
+            suppressionList=supps,
             warningExtractor=warningExtractor,
         )
         stdout = textwrap.dedent("""\
@@ -779,7 +779,7 @@ class WarningCountingShellCommand(
 
         step = shell.WarningCountingShellCommand(
             command=['make'],
-            suppressionList=properties.Property("suppressionsList"),  # type: ignore[arg-type]
+            suppressionList=properties.Property("suppressionsList"),
             warningExtractor=warningExtractor,
         )
 
@@ -807,7 +807,7 @@ class WarningCountingShellCommand(
             123,
             'text',
         )
-        self.assertEqual(we(step, line, re.match(pat, line)), (exp_file, exp_lineNo, exp_text))  # type: ignore[arg-type]
+        self.assertEqual(we(step, line, re.match(pat, line)), (exp_file, exp_lineNo, exp_text))
 
     def test_missing_command_error(self) -> None:
         # this checks that an exception is raised for invalid arguments

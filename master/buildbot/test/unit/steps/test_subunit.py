@@ -87,7 +87,7 @@ class TestSubUnit(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)  # type: ignore[arg-type]
+            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)
         )
 
         self.expect_outcome(result=SUCCESS, state_string="shell 1 test passed")
@@ -103,7 +103,7 @@ class TestSubUnit(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)  # type: ignore[arg-type]
+            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)
         )
 
         self.expect_outcome(result=FAILURE, state_string="shell Total 1 test(s) 1 error (failure)")
@@ -132,7 +132,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)  # type: ignore[arg-type]
+            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)
         )
 
         self.expect_outcome(result=FAILURE, state_string="shell Total 2 test(s) 2 errors (failure)")
@@ -162,7 +162,7 @@ testtools.testresult.real._StringException:.*ValueError: invalid literal for int
 
         self.setup_step(subunit.SubunitShellCommand(command='test'))
         self.expect_commands(
-            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)  # type: ignore[arg-type]
+            ExpectShell(workdir='wkdir', command="test").stdout(stream.getvalue()).exit(0)
         )
 
         self.expect_outcome(

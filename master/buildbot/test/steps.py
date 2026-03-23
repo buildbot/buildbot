@@ -191,11 +191,11 @@ class Expect:
         self.behaviors.append(('update', name, value))
         return self
 
-    def stdout(self, output: str) -> Expect:
+    def stdout(self, output: str | bytes) -> Expect:
         self.behaviors.append(('log', 'stdio', {'stdout': output}))
         return self
 
-    def stderr(self, output: str) -> Expect:
+    def stderr(self, output: str | bytes) -> Expect:
         self.behaviors.append(('log', 'stdio', {'stderr': output}))
         return self
 
@@ -572,7 +572,7 @@ class ExpectMkdir(Expect):
 class ExpectRmdir(Expect):
     def __init__(
         self,
-        dir: str | None = None,
+        dir: str | list[str] | None = None,
         log_environ: bool | None = None,
         timeout: int | None = None,
         path: str | None = None,
@@ -759,7 +759,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
 
         self._interrupt_remote_command_numbers: list[int] = []
 
-        self._expected_commands: list[Expect] = []
+        self._expected_commands: list[Expect | ExpectMasterShell] = []
         self._expected_commands_popped = 0
 
         self.master = yield fakemaster.make_master(
@@ -1001,7 +1001,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
     def get_nth_step(self, index: int) -> buildstep.BuildStep:
         return self._steps[index]
 
-    def expect_commands(self, *exp: Expect) -> None:
+    def expect_commands(self, *exp: Expect | ExpectMasterShell) -> None:
         self._expected_commands.extend(exp)
 
     def expect_outcome(self, result: int, state_string: str | None = None) -> None:
@@ -1260,6 +1260,7 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         elif callable(collect_stderr):
             collect_stderr(stderr)
 
+        start_retval: int | tuple[int, bytes] | tuple[int, bytes, bytes]
         if return_stdout is not None and return_stderr is not None:
             start_retval = (rc, return_stdout, return_stderr)
         elif return_stdout is not None:

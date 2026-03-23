@@ -341,7 +341,7 @@ class VisualStudio(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_rendering(self) -> InlineCallbacksType[None]:
-        self.setup_step(VCx(projectfile=Property('a'), config=Property('b'), project=Property('c')))  # type: ignore[arg-type]
+        self.setup_step(VCx(projectfile=Property('a'), config=Property('b'), project=Property('c')))
         self.build.setProperty('a', 'aa', 'Test')
         self.build.setProperty('b', 'bb', 'Test')
         self.build.setProperty('c', 'cc', 'Test')
@@ -634,7 +634,7 @@ class TestVC8(VC8ExpectedEnvMixin, TestBuildStepMixin, TestReactorMixin, unittes
 
     @defer.inlineCallbacks
     def test_rendering(self) -> InlineCallbacksType[None]:
-        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', arch=Property('a')))  # type: ignore[arg-type]
+        self.setup_step(vstudio.VC8(projectfile='pf', config='cfg', arch=Property('a')))
         self.build.setProperty('a', 'x64', 'Test')
         self.expect_commands(
             ExpectShell(
@@ -765,7 +765,7 @@ class TestMsBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_no_platform(self) -> InlineCallbacksType[None]:
         self.setup_step(
-            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')  # type: ignore[arg-type]
+            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')
         )
 
         self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")
@@ -864,7 +864,7 @@ class TestMsBuild141(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_no_platform(self) -> InlineCallbacksType[None]:
         self.setup_step(
-            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')  # type: ignore[arg-type]
+            vstudio.MsBuild(projectfile='pf', config='cfg', platform=None, project='pj')
         )
 
         self.expect_outcome(result=results.EXCEPTION, state_string="built pj for cfg|None")

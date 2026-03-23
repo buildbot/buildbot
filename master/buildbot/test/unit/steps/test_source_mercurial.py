@@ -728,7 +728,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.Test
             ExpectShell(workdir='wkdir', command=['hg', '--verbose', 'locate', 'set:added()'])
             .stdout('foo\nbar/baz\n')
             .exit(1),
-            ExpectRmdir(dir=['wkdir/foo', 'wkdir/bar/baz'], log_environ=True).exit(0),  # type: ignore[arg-type]
+            ExpectRmdir(dir=['wkdir/foo', 'wkdir/bar/baz'], log_environ=True).exit(0),
             ExpectShell(
                 workdir='wkdir',
                 command=['hg', '--verbose', 'update', '--clean', '--rev', 'default'],

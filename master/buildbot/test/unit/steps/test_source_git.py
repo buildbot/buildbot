@@ -144,7 +144,7 @@ class TestGit(
     def test_mode_full_clean(
         self, name: str, url: str | Interpolate, pull_url: str
     ) -> defer.Deferred[None]:
-        self.setup_step(self.stepClass(repourl=url, mode='full', method='clean'))  # type: ignore[arg-type]
+        self.setup_step(self.stepClass(repourl=url, mode='full', method='clean'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
             .stdout('git version 1.7.5')
@@ -4286,7 +4286,7 @@ class TestGitPush(
     def test_push_simple(
         self, name: str, url: str | Interpolate, push_url: str
     ) -> defer.Deferred[None]:
-        self.setup_step(self.stepClass(workdir='wkdir', repourl=url, branch='testbranch'))  # type: ignore[arg-type]
+        self.setup_step(self.stepClass(workdir='wkdir', repourl=url, branch='testbranch'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', '--version'])
             .stdout('git version 1.7.5')

@@ -31,6 +31,7 @@ from buildbot.process import logobserver
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -55,7 +56,7 @@ class RpmBuild(buildstep.ShellMixin, buildstep.BuildStep):
         sourcedir: str = '`pwd`',
         specdir: str = '`pwd`',
         srcrpmdir: str = '`pwd`',
-        dist: str = '.el6',
+        dist: IMaybeRenderableType[str] = '.el6',
         define: dict[str, str] | None = None,
         autoRelease: bool = False,
         vcsRevision: bool = False,

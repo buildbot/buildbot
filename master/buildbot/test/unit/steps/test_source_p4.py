@@ -84,17 +84,17 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
             'Either provide p4viewspec or p4base and p4branch (and optionally p4extra_views)'
         ):
             P4(
-                p4viewspec=('//depot/trunk', ''),  # type: ignore[arg-type]
+                p4viewspec=('//depot/trunk', ''),
                 p4base='//depot',
                 p4branch='trunk',
-                p4extra_views=['src', 'doc'],  # type: ignore[arg-type]
+                p4extra_views=['src', 'doc'],  # type: ignore[list-item]
             )
 
     def test_no_p4viewspec_is_string_step_config(self) -> None:
         with self.assertRaisesConfigError(
             'p4viewspec must not be a string, and should be a sequence of 2 element sequences'
         ):
-            P4(p4viewspec='a_bad_idea')  # type: ignore[arg-type]
+            P4(p4viewspec='a_bad_idea')
 
     def test_no_p4base_has_trailing_slash_step_config(self) -> None:
         with self.assertRaisesConfigError(
@@ -130,7 +130,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             ),
             {"revision": '101'},
@@ -304,7 +304,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -338,7 +338,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 mode='incremental',
                 p4base='//depot/trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -372,13 +372,13 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 mode='incremental',
                 p4base='//depot',
                 p4branch='trunk',
-                p4extra_views=[  # type: ignore[arg-type]
+                p4extra_views=[
                     ('-//depot/trunk/test', 'test'),
                     ('-//depot/trunk/doc', 'doc'),
                     ('-//depot/trunk/white space', 'white space'),
                 ],
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -419,7 +419,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                     ('-//depot/white space/excluded/', 'white space/excluded/'),
                 ],
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -453,14 +453,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
             P4(
                 p4port='localhost:12000',
                 mode='incremental',
-                p4viewspec_suffix=None,  # type: ignore[arg-type]
+                p4viewspec_suffix=None,
                 p4viewspec=[
                     ('//depot/trunk/foo.xml', 'bar.xml'),
                     ('//depot/white space/...', 'white space/...'),
                     ('-//depot/white space/excluded/...', 'white space/excluded/...'),
                 ],
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -498,7 +498,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4branch='trunk',
                 p4client_spec_options='rmdir compress',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -533,7 +533,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 workdir='../another_wkdir',
             )
@@ -569,7 +569,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 p4extra_args=['-Zproxyload'],
             )
@@ -605,7 +605,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 timeout=60 * 60,
             )
@@ -641,7 +641,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 stream=True,
             )
@@ -773,7 +773,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -808,7 +808,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -841,7 +841,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 mode='full',
                 p4base='//depot/trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -879,7 +879,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                     ('-//depot/main/white space/excluded/', 'white space/excluded/'),
                 ],
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -914,10 +914,10 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
             P4(
                 p4port='localhost:12000',
                 mode='full',
-                p4base=ConstantRenderable('//depot'),  # type: ignore[arg-type]
+                p4base=ConstantRenderable('//depot'),
                 p4branch='release/1.0',
                 p4user='user',
-                p4client='p4_client2',  # type: ignore[arg-type]
+                p4client='p4_client2',
                 p4passwd='pass',
             )
         )
@@ -952,7 +952,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client=ConstantRenderable('p4_client_render'),  # type: ignore[arg-type]
+                p4client=ConstantRenderable('p4_client_render'),
                 p4passwd='pass',
             )
         )
@@ -986,9 +986,9 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4port='localhost:12000',
                 mode='full',
                 p4base='//depot',
-                p4branch=ConstantRenderable('render_branch'),  # type: ignore[arg-type]
+                p4branch=ConstantRenderable('render_branch'),
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -1020,9 +1020,9 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
             P4(
                 p4port='localhost:12000',
                 mode='full',
-                p4viewspec=[(ConstantRenderable('//depot/render_trunk/'), '')],  # type: ignore[list-item]
+                p4viewspec=[(ConstantRenderable('//depot/render_trunk/'), '')],
                 p4user='different_user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -1054,14 +1054,14 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
             P4(
                 p4port='localhost:12000',
                 mode='full',
-                p4viewspec_suffix=None,  # type: ignore[arg-type]
+                p4viewspec_suffix=None,
                 p4viewspec=[
                     ('//depot/trunk/foo.xml', 'bar.xml'),
                     ('//depot/trunk/white space/...', 'white space/...'),
                     ('-//depot/trunk/white space/excluded/...', 'white space/excluded/...'),
                 ],
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -1099,7 +1099,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4branch='trunk',
                 p4client_spec_options='rmdir compress',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             )
         )
@@ -1134,7 +1134,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 workdir='../another_wkdir',
             )
@@ -1170,7 +1170,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 p4extra_args=['-Zproxyload'],
             )
@@ -1206,7 +1206,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 stream=True,
             )
@@ -1238,10 +1238,10 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
             P4(
                 p4port='localhost:12000',
                 mode='full',
-                p4base=ConstantRenderable('//depot'),  # type: ignore[arg-type]
+                p4base=ConstantRenderable('//depot'),
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 stream=True,
             )
@@ -1274,9 +1274,9 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4port='localhost:12000',
                 mode='full',
                 p4base='//depot',
-                p4branch=ConstantRenderable('render_branch'),  # type: ignore[arg-type]
+                p4branch=ConstantRenderable('render_branch'),
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 stream=True,
             )
@@ -1311,7 +1311,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
             ),
             {"revision": '100'},
@@ -1330,7 +1330,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 use_tickets=True,
             )
@@ -1424,7 +1424,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 p4client_type='readonly',
             )
@@ -1519,7 +1519,7 @@ class TestP4(sourcesteps.SourceStepMixin, TestReactorMixin, ConfigErrorsMixin, u
                 p4base='//depot',
                 p4branch='trunk',
                 p4user='user',
-                p4client='p4_client1',  # type: ignore[arg-type]
+                p4client='p4_client1',
                 p4passwd='pass',
                 p4client_type='partitioned',
             )

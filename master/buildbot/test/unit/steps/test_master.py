@@ -75,7 +75,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
             exp_argv = ['/bin/sh', '-c', 'true']
 
         self.expect_commands(
-            ExpectMasterShell(exp_argv)  # type: ignore[arg-type]
+            ExpectMasterShell(exp_argv)
             .workdir('build')
             .env({'a': 'b'})
             .stdout(b'hello!\n')
@@ -97,7 +97,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         else:
             exp_argv = ['/bin/sh', '-c', 'true']
 
-        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': 'hello'}).exit(0))  # type: ignore[arg-type]
+        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': 'hello'}).exit(0))
 
         self.expect_outcome(result=SUCCESS)
 
@@ -121,7 +121,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
             exp_argv = ['/bin/sh', '-c', 'true']
             exp_env = 'hello:world'
 
-        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': exp_env}).exit(0))  # type: ignore[arg-type]
+        self.expect_commands(ExpectMasterShell(exp_argv).env({'HELLO': exp_env}).exit(0))
 
         self.expect_outcome(result=SUCCESS)
 
@@ -145,7 +145,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         self.setup_step(master.MasterShellCommand(command=cmd, runtime_timeout=runtime_timeout))
 
-        self.expect_commands(ExpectMasterShell(exp_argv).exit(0))  # type: ignore[arg-type]
+        self.expect_commands(ExpectMasterShell(exp_argv).exit(0))
         self.expect_outcome(result=SUCCESS)
 
         yield self.run_step()
@@ -164,7 +164,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         self.setup_step(master.MasterShellCommand(command=cmd, runtime_timeout=runtime_timeout))
 
-        self.expect_commands(ExpectMasterShell(exp_argv).exit(2))  # type: ignore[arg-type]
+        self.expect_commands(ExpectMasterShell(exp_argv).exit(2))
         self.expect_outcome(result=FAILURE)
 
         yield self.run_step()
@@ -172,7 +172,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
     def test_prop_rendering(self) -> defer.Deferred[None]:
         self.setup_step(
             master.MasterShellCommand(
-                command=Interpolate('%(prop:project)s-BUILD'),  # type: ignore[arg-type]
+                command=Interpolate('%(prop:project)s-BUILD'),
                 workdir='build',
             )
         )
@@ -183,7 +183,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         else:
             exp_argv = ['/bin/sh', '-c', 'BUILDBOT-TEST-BUILD']
 
-        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').exit(0))  # type: ignore[arg-type]
+        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').exit(0))
 
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
@@ -206,7 +206,7 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         else:
             exp_argv = ['/bin/sh', '-c', 'true']
 
-        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').env({'a': 'b'}).exit(0))  # type: ignore[arg-type]
+        self.expect_commands(ExpectMasterShell(exp_argv).workdir('build').env({'a': 'b'}).exit(0))
 
         self.expect_outcome(result=SUCCESS, state_string='y z')
         return self.run_step()

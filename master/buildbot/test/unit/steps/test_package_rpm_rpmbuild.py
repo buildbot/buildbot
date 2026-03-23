@@ -117,7 +117,7 @@ class RpmBuild(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_renderable_dist(self) -> InlineCallbacksType[None]:
         self.setup_step(
-            rpmbuild.RpmBuild(specfile="foo.spec", dist=Interpolate('%(prop:renderable_dist)s'))  # type: ignore[arg-type]
+            rpmbuild.RpmBuild(specfile="foo.spec", dist=Interpolate('%(prop:renderable_dist)s'))
         )
         self.build.setProperty('renderable_dist', '.el7', 'test')
         self.expect_commands(
