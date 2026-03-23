@@ -24,7 +24,6 @@ from buildbot.test.util import migration
 from buildbot.util import sautils
 
 if TYPE_CHECKING:
-    from sqlalchemy.engine.base import Connection
     from twisted.internet.defer import Deferred
 
 
@@ -32,7 +31,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
     def setUp(self) -> Deferred[None]:  # type: ignore[override]
         return self.setUpMigrateTest()
 
-    def create_tables_thd(self, conn: Connection) -> None:
+    def create_tables_thd(self, conn: sa.Connection) -> None:
         metadata = sa.MetaData()
 
         # buildid foreign key is removed for the purposes of the test
@@ -72,10 +71,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         conn.commit()
 
     def test_update(self) -> Deferred:
-        def setup_thd(conn: Connection) -> None:
+        def setup_thd(conn: sa.Connection) -> None:
             self.create_tables_thd(conn)
 
-        def verify_thd(conn: Connection) -> None:
+        def verify_thd(conn: sa.Connection) -> None:
             metadata = sa.MetaData()
 
             steps = sautils.Table('steps', metadata, autoload_with=conn)
