@@ -14,6 +14,13 @@
 # Copyright Buildbot Team Members
 # Copyright Manba Team
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -138,7 +145,7 @@ class TestChangeHookConfiguredWithBitbucketChange(TestReactorMixin, unittest.Tes
     """Unit tests for BitBucket Change Hook"""
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         master = yield fakeMasterForHooks(self)
         self.change_hook = change_hook.ChangeHookResource(
@@ -146,11 +153,11 @@ class TestChangeHookConfiguredWithBitbucketChange(TestReactorMixin, unittest.Tes
         )
 
     @defer.inlineCallbacks
-    def testGitWithChange(self):
+    def testGitWithChange(self) -> InlineCallbacksType[None]:
         change_dict = {b'payload': [gitJsonPayload]}
 
         request = FakeRequest(change_dict)
-        request.received_headers[_HEADER_EVENT] = b"repo:push"
+        request.received_headers[_HEADER_EVENT] = b"repo:push"  # type: ignore[index, assignment]
         request.uri = b'/change_hook/bitbucket'
         request.method = b'POST'
 
@@ -174,7 +181,7 @@ class TestChangeHookConfiguredWithBitbucketChange(TestReactorMixin, unittest.Tes
         self.assertEqual(commit['properties']['event'], 'repo:push')
 
     @defer.inlineCallbacks
-    def testGitWithNoCommitsPayload(self):
+    def testGitWithNoCommitsPayload(self) -> InlineCallbacksType[None]:
         change_dict = {b'payload': [gitJsonNoCommitsPayload]}
 
         request = FakeRequest(change_dict)
@@ -187,11 +194,11 @@ class TestChangeHookConfiguredWithBitbucketChange(TestReactorMixin, unittest.Tes
         self.assertEqual(request.written, b'no change found')
 
     @defer.inlineCallbacks
-    def testMercurialWithChange(self):
+    def testMercurialWithChange(self) -> InlineCallbacksType[None]:
         change_dict = {b'payload': [mercurialJsonPayload]}
 
         request = FakeRequest(change_dict)
-        request.received_headers[_HEADER_EVENT] = b"repo:push"
+        request.received_headers[_HEADER_EVENT] = b"repo:push"  # type: ignore[index, assignment]
         request.uri = b'/change_hook/bitbucket'
         request.method = b'POST'
 
@@ -215,7 +222,7 @@ class TestChangeHookConfiguredWithBitbucketChange(TestReactorMixin, unittest.Tes
         self.assertEqual(commit['properties']['event'], 'repo:push')
 
     @defer.inlineCallbacks
-    def testMercurialWithNoCommitsPayload(self):
+    def testMercurialWithNoCommitsPayload(self) -> InlineCallbacksType[None]:
         change_dict = {b'payload': [mercurialJsonNoCommitsPayload]}
 
         request = FakeRequest(change_dict)
@@ -228,7 +235,7 @@ class TestChangeHookConfiguredWithBitbucketChange(TestReactorMixin, unittest.Tes
         self.assertEqual(request.written, b'no change found')
 
     @defer.inlineCallbacks
-    def testWithNoJson(self):
+    def testWithNoJson(self) -> InlineCallbacksType[None]:
         request = FakeRequest()
         request.uri = b'/change_hook/bitbucket'
         request.method = b'POST'
@@ -240,7 +247,7 @@ class TestChangeHookConfiguredWithBitbucketChange(TestReactorMixin, unittest.Tes
         self.assertEqual(len(self.flushLoggedErrors()), 1)
 
     @defer.inlineCallbacks
-    def testGitWithChangeAndProject(self):
+    def testGitWithChangeAndProject(self) -> InlineCallbacksType[None]:
         change_dict = {b'payload': [gitJsonPayload], b'project': [b'project-name']}
 
         request = FakeRequest(change_dict)

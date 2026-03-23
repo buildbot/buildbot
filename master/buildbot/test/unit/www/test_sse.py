@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import datetime
 import json
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -28,27 +31,30 @@ from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
 from buildbot.www import sse
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
-        self.master = master = yield self.make_master(url=b'h:/a/b/')
+        self.master = master = yield self.make_master(url=b'h:/a/b/')  # type: ignore[arg-type]
         self.sse = sse.EventResource(master)
 
-    def test_simpleapi(self):
+    def test_simpleapi(self) -> None:
         self.render_resource(self.sse, b'/changes/*/*')
         self.readUUID(self.request)
         self.assertReceivesChangeNewMessage(self.request)
         self.assertEqual(self.request.finished, False)
 
-    def test_listen(self):
+    def test_listen(self) -> None:
         self.render_resource(self.sse, b'/listen/changes/*/*')
         self.readUUID(self.request)
         self.assertReceivesChangeNewMessage(self.request)
         self.assertEqual(self.request.finished, False)
 
-    def test_listen_add_then_close(self):
+    def test_listen_add_then_close(self) -> None:
         self.render_resource(self.sse, b'/listen')
         request = self.request
         self.request = None
@@ -61,7 +67,7 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.assertReceivesChangeNewMessage(request)
 
-    def test_listen_add_then_remove(self):
+    def test_listen_add_then_remove(self) -> None:
         self.render_resource(self.sse, b'/listen')
         request = self.request
         uuid = self.readUUID(request)
@@ -72,7 +78,7 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.assertReceivesChangeNewMessage(request)
 
-    def test_listen_add_nouuid(self):
+    def test_listen_add_nouuid(self) -> None:
         self.render_resource(self.sse, b'/listen')
         request = self.request
         self.readUUID(request)
@@ -81,7 +87,7 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.request.responseCode, 400)
         self.assertIn(b"need uuid", self.request.written)
 
-    def test_listen_add_baduuid(self):
+    def test_listen_add_baduuid(self) -> None:
         self.render_resource(self.sse, b'/listen')
         request = self.request
         self.readUUID(request)
@@ -90,8 +96,8 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.request.responseCode, 400)
         self.assertIn(b"unknown uuid", self.request.written)
 
-    def readEvent(self, request):
-        kw = {}
+    def readEvent(self, request: Any) -> dict[bytes, bytes]:
+        kw: dict[bytes, bytes] = {}
         hasEmptyLine = False
         for line in request.written.splitlines():
             if line.find(b":") > 0:
@@ -105,12 +111,12 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertTrue(hasEmptyLine)
         return kw
 
-    def readUUID(self, request):
+    def readUUID(self, request: Any) -> bytes:
         kw = self.readEvent(request)
         self.assertEqual(kw[b"event"], b"handshake")
         return kw[b"data"]
 
-    def assertReceivesChangeNewMessage(self, request):
+    def assertReceivesChangeNewMessage(self, request: Any) -> None:
         self.master.mq.callConsumer(("changes", "500", "new"), test_changes.Change.changeEvent)
         kw = self.readEvent(request)
         self.assertEqual(kw[b"event"], b"event")
@@ -121,7 +127,7 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             json.loads(json.dumps(test_changes.Change.changeEvent, default=self._toJson)),
         )
 
-    def _toJson(self, obj):
+    def _toJson(self, obj: object) -> int | None:
         if isinstance(obj, datetime.datetime):
             return datetime2epoch(obj)
         return None

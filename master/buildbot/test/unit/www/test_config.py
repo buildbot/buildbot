@@ -13,6 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 import json
 import os
 from unittest import mock
@@ -31,7 +39,7 @@ from buildbot.www.authz.authz import Forbidden
 
 
 class Utils(unittest.TestCase):
-    def test_serialize_www_frontend_theme_to_css(self):
+    def test_serialize_www_frontend_theme_to_css(self) -> None:
         self.maxDiff = None
         self.assertEqual(
             config.serialize_www_frontend_theme_to_css({}, indent=4),
@@ -52,13 +60,13 @@ class Utils(unittest.TestCase):
 
 
 class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
     @defer.inlineCallbacks
-    def test_render(self):
+    def test_render(self) -> InlineCallbacksType[None]:
         _auth = auth.NoAuth()
-        _auth.maybeAutoLogin = mock.Mock()
+        _auth.maybeAutoLogin = mock.Mock()  # type: ignore[method-assign]
 
         custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
 
@@ -69,7 +77,7 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
 
         res = yield self.render_resource(rsrc, b'/config')
-        res = json.loads(bytes2unicode(res))
+        res_json = json.loads(bytes2unicode(res))  # type: ignore[arg-type]
         exp = {
             "authz": {},
             "titleURL": "http://buildbot.net/",
@@ -82,12 +90,12 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             "port": None,
             "user_any_access_allowed": False,
         }
-        self.assertEqual(res, exp)
+        self.assertEqual(res_json, exp)
 
     @defer.inlineCallbacks
-    def test_render_with_default_page(self):
+    def test_render_with_default_page(self) -> InlineCallbacksType[None]:
         _auth = auth.NoAuth()
-        _auth.maybeAutoLogin = mock.Mock()
+        _auth.maybeAutoLogin = mock.Mock()  # type: ignore[method-assign]
 
         custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
 
@@ -100,7 +108,7 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
 
         res = yield self.render_resource(rsrc, b'/config')
-        res = json.loads(bytes2unicode(res))
+        res_json = json.loads(bytes2unicode(res))  # type: ignore[arg-type]
         exp = {
             "authz": {},
             "titleURL": "http://buildbot.net/",
@@ -114,26 +122,26 @@ class TestConfigResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             "default_page": "console",
             "user_any_access_allowed": False,
         }
-        self.assertEqual(res, exp)
+        self.assertEqual(res_json, exp)
 
 
 class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
-    def get_react_base_path(self):
+    def get_react_base_path(self) -> str:
         path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
         for _ in range(0, 4):
             path = os.path.dirname(path)
         return os.path.join(path, 'www/base')
 
-    def find_matching_line(self, lines, match, start_i):
+    def find_matching_line(self, lines: list[str], match: str, start_i: int) -> int | None:
         for i in range(start_i, len(lines)):
             if match in lines[i]:
                 return i
         return None
 
-    def extract_config_json(self, res):
+    def extract_config_json(self, res: str) -> Any:
         lines = res.split('\n')
 
         first_line = self.find_matching_line(lines, '<script id="bb-config">', 0)
@@ -161,9 +169,15 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         ),
     ])
     @defer.inlineCallbacks
-    def test_render(self, name, allowed_read_something, user_info, expected_user):
+    def test_render(
+        self,
+        name: str,
+        allowed_read_something: bool,
+        user_info: dict[str, str] | None,
+        expected_user: dict[str, Any],
+    ) -> InlineCallbacksType[None]:
         _auth = auth.NoAuth()
-        _auth.maybeAutoLogin = mock.Mock()
+        _auth.maybeAutoLogin = mock.Mock()  # type: ignore[method-assign]
 
         custom_versions = [['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
 
@@ -187,7 +201,7 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         vjson = [list(v) for v in config.get_environment_versions()] + custom_versions
 
         res = yield self.render_resource(rsrc, b'/')
-        config_json = self.extract_config_json(bytes2unicode(res))
+        config_json = self.extract_config_json(bytes2unicode(res))  # type: ignore[arg-type]
 
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
         exp = {

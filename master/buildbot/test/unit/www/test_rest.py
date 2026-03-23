@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import json
 import re
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -31,15 +35,18 @@ from buildbot.www import authz
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     maxVersion = 2
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
 
     @defer.inlineCallbacks
-    def test_render(self):
+    def test_render(self) -> InlineCallbacksType[None]:
         master = yield self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
 
@@ -48,7 +55,7 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertIn(b'api_versions', rv)
 
     @defer.inlineCallbacks
-    def test_versions(self):
+    def test_versions(self) -> InlineCallbacksType[None]:
         master = yield self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
         versions = [unicode2bytes(f'v{v}') for v in range(2, self.maxVersion + 1)]
@@ -57,7 +64,7 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(sorted(rsrc.listNames()), sorted(versions))
 
     @defer.inlineCallbacks
-    def test_versions_limited(self):
+    def test_versions_limited(self) -> InlineCallbacksType[None]:
         master = yield self.make_master(url='h:/a/b/')
         master.config.www['rest_minimum_version'] = 2
         rsrc = rest.RestRootResource(master)
@@ -68,30 +75,30 @@ class RestRootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield self.make_master(url='http://server/path/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 
-    def assertSimpleError(self, message, responseCode):
+    def assertSimpleError(self, message: str, responseCode: int) -> None:
         content = json.dumps({'error': message})
         self.assertRequest(content=unicode2bytes(content), responseCode=responseCode)
 
     @defer.inlineCallbacks
-    def test_failure(self):
-        self.rsrc.renderRest = mock.Mock(return_value=defer.fail(RuntimeError('oh noes')))
+    def test_failure(self) -> InlineCallbacksType[None]:
+        self.rsrc.renderRest = mock.Mock(return_value=defer.fail(RuntimeError('oh noes')))  # type: ignore[method-assign]
         yield self.render_resource(self.rsrc, b'/')
         self.assertSimpleError('internal error - see logs', 500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
-    def test_invalid_http_method(self):
+    def test_invalid_http_method(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/', method=b'PATCH')
         self.assertSimpleError('invalid HTTP method', 400)
 
-    def do_check_origin_regexp(self, goods, bads):
+    def do_check_origin_regexp(self, goods: list[str], bads: list[str]) -> None:
         self.assertEqual(len(self.rsrc.origins), 1)
         regexp = self.rsrc.origins[0]
         for good in goods:
@@ -105,7 +112,7 @@ class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 f"{bad} should not match default origin({regexp.pattern}), but it is",
             )
 
-    def test_default_origin(self):
+    def test_default_origin(self) -> None:
         self.master.config.buildbotURL = 'http://server/path/'
         self.rsrc.reconfigResource(self.master.config)
         self.do_check_origin_regexp(
@@ -137,7 +144,7 @@ class V2RootResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 
 class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/')
         self.master.data._scanModule(endpoint)
@@ -145,13 +152,15 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         self.master.config.www['allowed_origins'] = [b'h://good']
         self.rsrc.reconfigResource(self.master.config)
 
-        def renderRest(request):
+        def renderRest(request: Any) -> defer.Deferred[None]:
             request.write(b'ok')
             return defer.succeed(None)
 
-        self.rsrc.renderRest = renderRest
+        self.rsrc.renderRest = renderRest  # type: ignore[method-assign]
 
-    def assertOk(self, expectHeaders=True, content=b'ok', origin=b'h://good'):
+    def assertOk(
+        self, expectHeaders: bool = True, content: bytes = b'ok', origin: bytes = b'h://good'
+    ) -> None:
         hdrs = (
             {
                 b'access-control-allow-origin': [origin],
@@ -163,32 +172,32 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
         self.assertRequest(content=content, responseCode=200, headers=hdrs)
 
-    def assertNotOk(self, message):
-        content = json.dumps({'error': message})
-        content = unicode2bytes(content)
-        self.assertRequest(content=content, responseCode=400)
+    def assertNotOk(self, message: str) -> None:
+        content_str = json.dumps({'error': message})
+        content_bytes = unicode2bytes(content_str)
+        self.assertRequest(content=content_bytes, responseCode=400)
 
     @defer.inlineCallbacks
-    def test_cors_no_origin(self):
+    def test_cors_no_origin(self) -> InlineCallbacksType[None]:
         # if the browser doesn't send Origin, there's nothing we can do to
         # protect the user
         yield self.render_resource(self.rsrc, b'/')
         self.assertOk(expectHeaders=False)
 
     @defer.inlineCallbacks
-    def test_cors_origin_match(self):
+    def test_cors_origin_match(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/', origin=b'h://good')
         self.assertOk()
 
     @defer.inlineCallbacks
-    def test_cors_origin_match_star(self):
+    def test_cors_origin_match_star(self) -> InlineCallbacksType[None]:
         self.master.config.www['allowed_origins'] = ['*']
         self.rsrc.reconfigResource(self.master.config)
         yield self.render_resource(self.rsrc, b'/', origin=b'h://good')
         self.assertOk()
 
     @defer.inlineCallbacks
-    def test_cors_origin_patterns(self):
+    def test_cors_origin_patterns(self) -> InlineCallbacksType[None]:
         self.master.config.www['allowed_origins'] = ['h://*.good', 'hs://*.secure']
         self.rsrc.reconfigResource(self.master.config)
         yield self.render_resource(self.rsrc, b'/', origin=b'h://foo.good')
@@ -199,19 +208,19 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         self.assertNotOk('invalid origin')
 
     @defer.inlineCallbacks
-    def test_cors_origin_mismatch(self):
+    def test_cors_origin_mismatch(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/', origin=b'h://bad')
         self.assertNotOk('invalid origin')
 
     @defer.inlineCallbacks
-    def test_cors_origin_mismatch_post(self):
+    def test_cors_origin_mismatch_post(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/', method=b'POST', origin=b'h://bad')
-        content = json.dumps({'error': {'message': 'invalid origin'}})
-        content = unicode2bytes(content)
-        self.assertRequest(content=content, responseCode=400)
+        content_str = json.dumps({'error': {'message': 'invalid origin'}})
+        content_bytes = unicode2bytes(content_str)
+        self.assertRequest(content=content_bytes, responseCode=400)
 
     @defer.inlineCallbacks
-    def test_cors_origin_preflight_match_GET(self):
+    def test_cors_origin_preflight_match_GET(self) -> InlineCallbacksType[None]:
         yield self.render_resource(
             self.rsrc,
             b'/',
@@ -222,7 +231,7 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         self.assertOk(content=b'')
 
     @defer.inlineCallbacks
-    def test_cors_origin_preflight_match_POST(self):
+    def test_cors_origin_preflight_match_POST(self) -> InlineCallbacksType[None]:
         yield self.render_resource(
             self.rsrc,
             b'/',
@@ -233,7 +242,7 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         self.assertOk(content=b'')
 
     @defer.inlineCallbacks
-    def test_cors_origin_preflight_bad_method(self):
+    def test_cors_origin_preflight_bad_method(self) -> InlineCallbacksType[None]:
         yield self.render_resource(
             self.rsrc,
             b'/',
@@ -244,7 +253,7 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         self.assertNotOk(message='invalid method')
 
     @defer.inlineCallbacks
-    def test_cors_origin_preflight_bad_origin(self):
+    def test_cors_origin_preflight_bad_origin(self) -> InlineCallbacksType[None]:
         yield self.render_resource(
             self.rsrc,
             b'/',
@@ -257,7 +266,7 @@ class V2RootResource_CORS(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
 class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/')
         self.master.config.www['debug'] = True
@@ -265,30 +274,35 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 
-        def allow(*args, **kw):
+        def allow(*args: Any, **kw: Any) -> None:
             return
 
         self.master.www.assertUserAllowed = allow
 
         endpoint.TestEndpoint.rtype = mock.MagicMock()
         endpoint.TestsEndpoint.rtype = mock.MagicMock()
-        endpoint.Test.kind = EndpointKind.COLLECTION
-        endpoint.Test.rtype = endpoint.Test
+        endpoint.Test.kind = EndpointKind.COLLECTION  # type: ignore[attr-defined]
+        endpoint.Test.rtype = endpoint.Test  # type: ignore[attr-defined]
 
     def assertRestCollection(
-        self, typeName, items, total=None, contentType=None, orderSignificant=False
-    ):
+        self,
+        typeName: str,
+        items: Any,
+        total: int | None = None,
+        contentType: bytes | None = None,
+        orderSignificant: bool = False,
+    ) -> None:
         self.assertFalse(isinstance(self.request.written, str))
-        got = {}
+        got: dict[str, Any] = {}
         got['content'] = json.loads(bytes2unicode(self.request.written))
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
 
-        meta = {}
+        meta: dict[str, Any] = {}
         if total is not None:
             meta['total'] = total
 
-        exp = {}
+        exp: dict[str, Any] = {}
         exp['content'] = {typeName: items, 'meta': meta}
         exp['contentType'] = [contentType or b'text/plain; charset=utf-8']
         exp['responseCode'] = 200
@@ -303,13 +317,13 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
         self.assertEqual(got, exp)
 
-    def assertRestDetails(self, typeName, item, contentType=None):
-        got = {}
+    def assertRestDetails(self, typeName: str, item: Any, contentType: bytes | None = None) -> None:
+        got: dict[str, Any] = {}
         got['content'] = json.loads(bytes2unicode(self.request.written))
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
 
-        exp = {}
+        exp: dict[str, Any] = {}
         exp['content'] = {
             typeName: [item],
             'meta': {},
@@ -319,7 +333,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
         self.assertEqual(got, exp)
 
-    def assertRestError(self, responseCode, message):
+    def assertRestError(self, responseCode: int, message: str) -> None:
         content = json.loads(bytes2unicode(self.request.written))
         gotResponseCode = self.request.responseCode
         self.assertEqual(list(content.keys()), ['error'])
@@ -327,7 +341,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         self.assertEqual(responseCode, gotResponseCode)
 
     @defer.inlineCallbacks
-    def test_not_found(self):
+    def test_not_found(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/not/found')
         self.assertRequest(
             contentJson={"error": 'Invalid path: not/found'},
@@ -336,7 +350,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_invalid_query(self):
+    def test_invalid_query(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?huh=1')
         self.assertRequest(
             contentJson={"error": "unrecognized query parameter 'huh'"},
@@ -345,7 +359,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_raw(self):
+    def test_raw(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/rawtest')
         self.assertRequest(
             content=b"value",
@@ -355,25 +369,27 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_head(self):
+    def test_api_head(self) -> InlineCallbacksType[None]:
         get = yield self.render_resource(self.rsrc, b'/test', method=b'GET')
         head = yield self.render_resource(self.rsrc, b'/test', method=b'HEAD')
         self.assertEqual(head, b'')
         self.assertEqual(int(self.request.headers[b'content-length'][0]), len(get))
 
     @defer.inlineCallbacks
-    def test_api_collection(self):
+    def test_api_collection(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test')
         self.assertRestCollection(typeName='tests', items=list(endpoint.testData.values()), total=8)
 
     @defer.inlineCallbacks
-    def do_test_api_collection_pagination(self, query, ids, links):
+    def do_test_api_collection_pagination(
+        self, query: bytes, ids: list[int], links: dict[str, str]
+    ) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test' + query)
         self.assertRestCollection(
             typeName='tests', items=[v for k, v in endpoint.testData.items() if k in ids], total=8
         )
 
-    def test_api_collection_limit(self):
+    def test_api_collection_limit(self) -> defer.Deferred[None]:
         return self.do_test_api_collection_pagination(
             b'?limit=2',
             [13, 14],
@@ -383,7 +399,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             },
         )
 
-    def test_api_collection_offset(self):
+    def test_api_collection_offset(self) -> defer.Deferred[None]:
         return self.do_test_api_collection_pagination(
             b'?offset=2',
             [15, 16, 17, 18, 19, 20],
@@ -393,7 +409,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             },
         )
 
-    def test_api_collection_offset_limit(self):
+    def test_api_collection_offset_limit(self) -> defer.Deferred[None]:
         return self.do_test_api_collection_pagination(
             b'?offset=5&limit=2',
             [18, 19],
@@ -405,7 +421,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             },
         )
 
-    def test_api_collection_limit_at_end(self):
+    def test_api_collection_limit_at_end(self) -> defer.Deferred[None]:
         return self.do_test_api_collection_pagination(
             b'?offset=5&limit=3',
             [18, 19, 20],
@@ -416,7 +432,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             },
         )
 
-    def test_api_collection_limit_past_end(self):
+    def test_api_collection_limit_past_end(self) -> defer.Deferred[None]:
         return self.do_test_api_collection_pagination(
             b'?offset=5&limit=20',
             [18, 19, 20],
@@ -427,7 +443,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             },
         )
 
-    def test_api_collection_offset_past_end(self):
+    def test_api_collection_offset_past_end(self) -> defer.Deferred[None]:
         return self.do_test_api_collection_pagination(
             b'?offset=50&limit=10',
             [],
@@ -439,7 +455,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_invalid_limit(self):
+    def test_api_collection_invalid_limit(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?limit=foo!')
         self.assertRequest(
             contentJson={"error": 'invalid limit'},
@@ -448,7 +464,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_invalid_offset(self):
+    def test_api_collection_invalid_offset(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?offset=foo!')
         self.assertRequest(
             contentJson={"error": 'invalid offset'},
@@ -457,7 +473,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_invalid_simple_filter_value(self):
+    def test_api_collection_invalid_simple_filter_value(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?success=sorta')
         self.assertRequest(
             contentJson={"error": 'invalid filter value for success'},
@@ -466,7 +482,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_invalid_filter_value(self):
+    def test_api_collection_invalid_filter_value(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?testid__lt=fifteen')
         self.assertRequest(
             contentJson={"error": 'invalid filter value for testid__lt'},
@@ -475,7 +491,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_fields(self):
+    def test_api_collection_fields(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?field=success&field=info')
         self.assertRestCollection(
             typeName='tests',
@@ -486,7 +502,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_invalid_field(self):
+    def test_api_collection_invalid_field(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?field=success&field=WTF')
         self.assertRequest(
             contentJson={"error": "no such field 'WTF'"},
@@ -495,32 +511,32 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_simple_filter(self):
+    def test_api_collection_simple_filter(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?success=yes')
         self.assertRestCollection(
             typeName='tests', items=[v for v in endpoint.testData.values() if v['success']], total=5
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_list_filter(self):
+    def test_api_collection_list_filter(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?tags__contains=a')
         self.assertRestCollection(
             typeName='tests',
-            items=[v for v in endpoint.testData.values() if 'a' in v['tags']],
+            items=[v for v in endpoint.testData.values() if 'a' in v['tags']],  # type: ignore[operator]
             total=2,
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_operator_filter(self):
+    def test_api_collection_operator_filter(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?info__lt=skipped')
         self.assertRestCollection(
             typeName='tests',
-            items=[v for v in endpoint.testData.values() if v['info'] < 'skipped'],
+            items=[v for v in endpoint.testData.values() if v['info'] < 'skipped'],  # type: ignore[operator]
             total=4,
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_order(self):
+    def test_api_collection_order(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?order=info')
         self.assertRestCollection(
             typeName='tests',
@@ -530,7 +546,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_filter_and_order(self):
+    def test_api_collection_filter_and_order(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?field=info&order=info')
         self.assertRestCollection(
             typeName='tests',
@@ -542,7 +558,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_order_desc(self):
+    def test_api_collection_order_desc(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?order=-info')
         self.assertRestCollection(
             typeName='tests',
@@ -552,7 +568,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_filter_and_order_desc(self):
+    def test_api_collection_filter_and_order_desc(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?field=info&order=-info')
         self.assertRestCollection(
             typeName='tests',
@@ -566,35 +582,35 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_collection_order_on_unselected(self):
+    def test_api_collection_order_on_unselected(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?field=testid&order=info')
         self.assertRestError(message="cannot order on un-selected fields", responseCode=400)
 
     @defer.inlineCallbacks
-    def test_api_collection_filter_on_unselected(self):
+    def test_api_collection_filter_on_unselected(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?field=testid&info__gt=xx')
         self.assertRestError(message="cannot filter on un-selected fields", responseCode=400)
 
     @defer.inlineCallbacks
-    def test_api_collection_filter_pagination(self):
+    def test_api_collection_filter_pagination(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test?success=false&limit=2')
         # note that the limit/offset and total are *after* the filter
         self.assertRestCollection(
             typeName='tests',
             items=sorted(
                 [v for v in endpoint.testData.values() if not v['success']],
-                key=lambda v: v['testid'],
+                key=lambda v: v['testid'],  # type: ignore[arg-type,return-value]
             )[:2],
             total=3,
         )
 
     @defer.inlineCallbacks
-    def test_api_details(self):
+    def test_api_details(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test/13')
         self.assertRestDetails(typeName='tests', item=endpoint.testData[13])
 
     @defer.inlineCallbacks
-    def test_api_details_none(self):
+    def test_api_details_none(self) -> InlineCallbacksType[None]:
         self.maxDiff = None
         yield self.render_resource(self.rsrc, b'/test/0')
         self.assertRequest(
@@ -611,7 +627,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_details_filter_fails(self):
+    def test_api_details_filter_fails(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test/13?success=false')
         self.assertRequest(
             contentJson={"error": 'this is not a collection'},
@@ -620,12 +636,12 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_details_fields(self):
+    def test_api_details_fields(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test/13?field=info')
         self.assertRestDetails(typeName='tests', item={'info': endpoint.testData[13]['info']})
 
     @defer.inlineCallbacks
-    def test_api_with_accept(self):
+    def test_api_with_accept(self) -> InlineCallbacksType[None]:
         # when 'application/json' is accepted, the result has that type
         yield self.render_resource(self.rsrc, b'/test/13', accept=b'application/json')
         self.assertRestDetails(
@@ -635,88 +651,88 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         )
 
     @defer.inlineCallbacks
-    def test_api_fails(self):
+    def test_api_fails(self) -> InlineCallbacksType[None]:
         yield self.render_resource(self.rsrc, b'/test/fail')
         self.assertRestError(message=r"RuntimeError\('oh noes',?\)", responseCode=500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    def test_decode_result_spec_raise_bad_request_on_bad_property_value(self):
+    def test_decode_result_spec_raise_bad_request_on_bad_property_value(self) -> None:
         expected_props = [None, 'test2']
         self.make_request(b'/test')
         self.request.args = {b'property': expected_props}
         with self.assertRaises(InvalidQueryParameter):
-            self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)
+            self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)  # type: ignore[arg-type]
 
-    def test_decode_result_spec_limit(self):
+    def test_decode_result_spec_limit(self) -> None:
         expected_limit = 5
         self.make_request(b'/test')
         self.request.args = {b'limit': str(expected_limit)}
-        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)  # type: ignore[arg-type]
         self.assertEqual(spec.limit, expected_limit)
 
-    def test_decode_result_spec_order(self):
+    def test_decode_result_spec_order(self) -> None:
         expected_order = ('info',)
         self.make_request(b'/test')
         self.request.args = {b'order': expected_order}
-        spec = self.rsrc.decodeResultSpec(self.request, endpoint.Test)
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.Test)  # type: ignore[arg-type]
         self.assertEqual(spec.order, expected_order)
 
-    def test_decode_result_spec_offset(self):
+    def test_decode_result_spec_offset(self) -> None:
         expected_offset = 5
         self.make_request(b'/test')
         self.request.args = {b'offset': str(expected_offset)}
-        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)  # type: ignore[arg-type]
         self.assertEqual(spec.offset, expected_offset)
 
-    def test_decode_result_spec_properties(self):
+    def test_decode_result_spec_properties(self) -> None:
         expected_props = ['test1', 'test2']
         self.make_request(b'/test')
         self.request.args = {b'property': expected_props}
-        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)  # type: ignore[arg-type]
         self.assertEqual(spec.properties[0].values, expected_props)
 
-    def test_decode_result_spec_not_a_collection_limit(self):
-        def expectRaiseInvalidQueryParameter():
+    def test_decode_result_spec_not_a_collection_limit(self) -> None:
+        def expectRaiseInvalidQueryParameter() -> None:
             limit = 5
             self.make_request(b'/test')
             self.request.args = {b'limit': limit}
-            self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
+            self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)  # type: ignore[arg-type]
 
         with self.assertRaises(InvalidQueryParameter):
             expectRaiseInvalidQueryParameter()
 
-    def test_decode_result_spec_not_a_collection_order(self):
-        def expectRaiseInvalidQueryParameter():
+    def test_decode_result_spec_not_a_collection_order(self) -> None:
+        def expectRaiseInvalidQueryParameter() -> None:
             order = ('info',)
             self.make_request(b'/test')
             self.request.args = {b'order': order}
-            self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
+            self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)  # type: ignore[arg-type]
 
         with self.assertRaises(InvalidQueryParameter):
             expectRaiseInvalidQueryParameter()
 
-    def test_decode_result_spec_not_a_collection_offset(self):
-        def expectRaiseInvalidQueryParameter():
+    def test_decode_result_spec_not_a_collection_offset(self) -> None:
+        def expectRaiseInvalidQueryParameter() -> None:
             offset = 0
             self.make_request(b'/test')
             self.request.args = {b'offset': offset}
-            self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
+            self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)  # type: ignore[arg-type]
 
         with self.assertRaises(InvalidQueryParameter):
             expectRaiseInvalidQueryParameter()
 
-    def test_decode_result_spec_not_a_collection_properties(self):
+    def test_decode_result_spec_not_a_collection_properties(self) -> None:
         expected_props = ['test1', 'test2']
         self.make_request(b'/test')
         self.request.args = {b'property': expected_props}
-        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)  # type: ignore[arg-type]
         self.assertEqual(spec.properties[0].values, expected_props)
 
     @defer.inlineCallbacks
-    def test_authz_forbidden(self):
-        def deny(request, ep, action, options):
+    def test_authz_forbidden(self) -> InlineCallbacksType[None]:
+        def deny(request: Any, ep: str, action: str, options: Any) -> None:
             if "test" in ep:
-                raise authz.Forbidden("no no")
+                raise authz.Forbidden("no no")  # type: ignore[arg-type]
             return None
 
         self.master.www.assertUserAllowed = deny
@@ -724,8 +740,8 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         yield self.render_resource(self.rsrc, b'/test')
         self.assertRestAuthError(message=re.compile('no no'), responseCode=403)
 
-    def assertRestAuthError(self, message, responseCode=400):
-        got = {}
+    def assertRestAuthError(self, message: str | re.Pattern[str], responseCode: int = 400) -> None:
+        got: dict[str, Any] = {}
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
         content = json.loads(bytes2unicode(self.request.written))
@@ -734,7 +750,7 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             self.fail(f"response does not have proper error form: {content!r}")
         got['error'] = content['error']
 
-        exp = {}
+        exp: dict[str, Any] = {}
         exp['contentType'] = [b'text/plain; charset=utf-8']
         exp['responseCode'] = responseCode
         exp['error'] = message
@@ -750,11 +766,11 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
 
 class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/')
 
-        def allow(*args, **kw):
+        def allow(*args: Any, **kw: Any) -> None:
             return
 
         self.master.www.assertUserAllowed = allow
@@ -763,8 +779,13 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 
-    def assertJsonRpcError(self, message, responseCode=400, jsonrpccode=None):
-        got = {}
+    def assertJsonRpcError(
+        self,
+        message: str | re.Pattern[str],
+        responseCode: int = 400,
+        jsonrpccode: int | None = None,
+    ) -> None:
+        got: dict[str, Any] = {}
         got['contentType'] = self.request.headers[b'content-type']
         got['responseCode'] = self.request.responseCode
         content = json.loads(bytes2unicode(self.request.written))
@@ -772,7 +793,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
             self.fail(f"response does not have proper error form: {content!r}")
         got['error'] = content['error']
 
-        exp = {}
+        exp: dict[str, Any] = {}
         exp['contentType'] = [b'application/json']
         exp['responseCode'] = responseCode
         exp['error'] = {'code': jsonrpccode, 'message': message}
@@ -787,7 +808,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         self.assertEqual(got, exp)
 
     @defer.inlineCallbacks
-    def test_invalid_path(self):
+    def test_invalid_path(self) -> InlineCallbacksType[None]:
         yield self.render_control_resource(self.rsrc, b'/not/found')
         self.assertJsonRpcError(
             message='Invalid path: not/found',
@@ -796,7 +817,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_invalid_action(self):
+    def test_invalid_action(self) -> InlineCallbacksType[None]:
         yield self.render_control_resource(self.rsrc, b'/test', action='nosuch')
         self.assertJsonRpcError(
             message='action: nosuch is not supported',
@@ -805,14 +826,14 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_invalid_json(self):
+    def test_invalid_json(self) -> InlineCallbacksType[None]:
         yield self.render_control_resource(self.rsrc, b'/test', requestJson="{abc")
         self.assertJsonRpcError(
             message=re.compile('^JSON parse error'), jsonrpccode=JSONRPC_CODES['parse_error']
         )
 
     @defer.inlineCallbacks
-    def test_invalid_content_type(self):
+    def test_invalid_content_type(self) -> InlineCallbacksType[None]:
         yield self.render_control_resource(
             self.rsrc,
             b'/test',
@@ -824,7 +845,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_list_request(self):
+    def test_list_request(self) -> InlineCallbacksType[None]:
         yield self.render_control_resource(self.rsrc, b'/test', requestJson="[1,2]")
         self.assertJsonRpcError(
             message="JSONRPC batch requests are not supported",
@@ -832,7 +853,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_bad_req_type(self):
+    def test_bad_req_type(self) -> InlineCallbacksType[None]:
         yield self.render_control_resource(self.rsrc, b'/test', requestJson='"a string?!"')
         self.assertJsonRpcError(
             message="JSONRPC root object must be an object",
@@ -840,62 +861,62 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def do_test_invalid_req(self, requestJson, message):
+    def do_test_invalid_req(self, requestJson: str, message: str) -> InlineCallbacksType[None]:
         yield self.render_control_resource(self.rsrc, b'/test', requestJson=requestJson)
         self.assertJsonRpcError(message=message, jsonrpccode=JSONRPC_CODES['invalid_request'])
 
-    def test_bad_req_jsonrpc_missing(self):
+    def test_bad_req_jsonrpc_missing(self) -> defer.Deferred[None]:
         return self.do_test_invalid_req(
             '{"method": "foo", "id":"abcdef", "params": {}}', "missing key 'jsonrpc'"
         )
 
-    def test_bad_req_jsonrpc_type(self):
+    def test_bad_req_jsonrpc_type(self) -> defer.Deferred[None]:
         return self.do_test_invalid_req(
             '{"jsonrpc": 13, "method": "foo", "id":"abcdef", "params": {}}',
             "'jsonrpc' must be a string",
         )
 
-    def test_bad_req_jsonrpc_value(self):
+    def test_bad_req_jsonrpc_value(self) -> defer.Deferred[None]:
         return self.do_test_invalid_req(
             '{"jsonrpc": "3.0", "method": "foo", "id":"abcdef", "params": {}}',
             "only JSONRPC 2.0 is supported",
         )
 
-    def test_bad_req_method_missing(self):
+    def test_bad_req_method_missing(self) -> defer.Deferred[None]:
         return self.do_test_invalid_req(
             '{"jsonrpc": "2.0", "id":"abcdef", "params": {}}', "missing key 'method'"
         )
 
-    def test_bad_req_method_type(self):
+    def test_bad_req_method_type(self) -> defer.Deferred[None]:
         return self.do_test_invalid_req(
             '{"jsonrpc": "2.0", "method": 999, "id":"abcdef", "params": {}}',
             "'method' must be a string",
         )
 
-    def test_bad_req_id_missing(self):
+    def test_bad_req_id_missing(self) -> defer.Deferred[None]:
         return self.do_test_invalid_req(
             '{"jsonrpc": "2.0", "method": "foo", "params": {}}', "missing key 'id'"
         )
 
-    def test_bad_req_id_type(self):
+    def test_bad_req_id_type(self) -> defer.Deferred[None]:
         return self.do_test_invalid_req(
             '{"jsonrpc": "2.0", "method": "foo", "id": {}, "params": {}}',
             "'id' must be a string, number, or null",
         )
 
-    def test_bad_req_params_missing(self):
+    def test_bad_req_params_missing(self) -> defer.Deferred[None]:
         return self.do_test_invalid_req(
             '{"jsonrpc": "2.0", "method": "foo", "id": "abc"}', "missing key 'params'"
         )
 
-    def test_bad_req_params_type(self):
+    def test_bad_req_params_type(self) -> defer.Deferred[None]:
         return self.do_test_invalid_req(
             '{"jsonrpc": "2.0", "method": "foo", "id": "abc", "params": 999}',
             "'params' must be an object",
         )
 
     @defer.inlineCallbacks
-    def test_valid(self):
+    def test_valid(self) -> InlineCallbacksType[None]:
         yield self.render_control_resource(
             self.rsrc, b'/test/13', action="testy", params={'foo': 3, 'bar': 5}
         )
@@ -914,7 +935,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_valid_int_id(self):
+    def test_valid_int_id(self) -> InlineCallbacksType[None]:
         yield self.render_control_resource(
             self.rsrc, b'/test/13', action="testy", params={'foo': 3, 'bar': 5}, id=1823
         )
@@ -937,7 +958,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_valid_fails(self):
+    def test_valid_fails(self) -> InlineCallbacksType[None]:
         yield self.render_control_resource(self.rsrc, b'/test/13', action="fail")
         self.assertJsonRpcError(
             message=re.compile('^RuntimeError'),
@@ -948,10 +969,10 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
-    def test_authz_forbidden(self):
-        def deny(request, ep, action, options):
+    def test_authz_forbidden(self) -> InlineCallbacksType[None]:
+        def deny(request: Any, ep: str, action: str, options: Any) -> None:
             if "13" in ep:
-                raise authz.Forbidden("no no")
+                raise authz.Forbidden("no no")  # type: ignore[arg-type]
             return None
 
         self.master.www.assertUserAllowed = deny
@@ -963,7 +984,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_owner_without_email(self):
+    def test_owner_without_email(self) -> InlineCallbacksType[None]:
         self.master.session.user_info = {
             "username": "defunkt",
             "full_name": "Defunkt user",
@@ -985,7 +1006,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_owner_with_only_full_name(self):
+    def test_owner_with_only_full_name(self) -> InlineCallbacksType[None]:
         self.master.session.user_info = {
             "full_name": "Defunkt user",
         }
@@ -1006,7 +1027,7 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
         )
 
     @defer.inlineCallbacks
-    def test_owner_with_email(self):
+    def test_owner_with_email(self) -> InlineCallbacksType[None]:
         self.master.session.user_info = {
             "email": "defunkt@example.org",
             "username": "defunkt",
@@ -1030,15 +1051,15 @@ class V2RootResource_JSONRPC2(TestReactorMixin, www.WwwTestMixin, unittest.TestC
 
 
 class ContentTypeParser(unittest.TestCase):
-    def test_simple(self):
+    def test_simple(self) -> None:
         self.assertEqual(rest.ContentTypeParser(b"application/json").gettype(), "application/json")
 
-    def test_complex(self):
+    def test_complex(self) -> None:
         self.assertEqual(
             rest.ContentTypeParser(b"application/json; Charset=UTF-8").gettype(), "application/json"
         )
 
-    def test_text(self):
+    def test_text(self) -> None:
         self.assertEqual(
             rest.ContentTypeParser(b"text/plain; Charset=UTF-8").gettype(), "text/plain"
         )
