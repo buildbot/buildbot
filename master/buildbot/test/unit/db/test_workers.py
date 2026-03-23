@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -23,12 +27,15 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import querylog
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
-def workerKey(worker: workers.WorkerModel):
+
+def workerKey(worker: workers.WorkerModel) -> int:
     return worker.id
 
 
-def configuredOnKey(worker: workers.BuilderMasterModel):
+def configuredOnKey(worker: workers.BuilderMasterModel) -> tuple[int, int]:
     return (worker.builderid, worker.masterid)
 
 
@@ -79,38 +86,38 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
     ]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_findWorkerId_insert(self):
+    def test_findWorkerId_insert(self) -> InlineCallbacksType[None]:
         id = yield self.db.workers.findWorkerId(name="xyz")
         worker = yield self.db.workers.getWorker(workerid=id)
         self.assertEqual(worker.name, 'xyz')
         self.assertEqual(worker.workerinfo, {})
 
     @defer.inlineCallbacks
-    def test_findWorkerId_existing(self):
+    def test_findWorkerId_existing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows)
         id = yield self.db.workers.findWorkerId(name="one")
         self.assertEqual(id, 31)
 
     @defer.inlineCallbacks
-    def test_getWorker_no_such(self):
+    def test_getWorker_no_such(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows)
         workerdict = yield self.db.workers.getWorker(workerid=99)
         self.assertEqual(workerdict, None)
 
     @defer.inlineCallbacks
-    def test_getWorker_by_name_no_such(self):
+    def test_getWorker_by_name_no_such(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows)
         workerdict = yield self.db.workers.getWorker(name='NOSUCH')
         self.assertEqual(workerdict, None)
 
     @defer.inlineCallbacks
-    def test_getWorker_not_configured(self):
+    def test_getWorker_not_configured(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows)
         workerdict = yield self.db.workers.getWorker(workerid=30)
         self.assertIsInstance(workerdict, workers.WorkerModel)
@@ -129,7 +136,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_connected_not_configured(self):
+    def test_getWorker_connected_not_configured(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.baseRows,
             # the worker is connected to this master, but not configured.
@@ -154,7 +161,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_multiple_connections(self):
+    def test_getWorker_multiple_connections(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.baseRows,
             # the worker is connected to two masters at once.
@@ -187,7 +194,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_by_name_not_configured(self):
+    def test_getWorker_by_name_not_configured(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows)
         workerdict = yield self.db.workers.getWorker(name='zero')
         self.assertIsInstance(workerdict, workers.WorkerModel)
@@ -206,7 +213,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_not_connected(self):
+    def test_getWorker_not_connected(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.baseRows,
             fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
@@ -229,7 +236,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_connected(self):
+    def test_getWorker_connected(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.baseRows,
             fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
@@ -253,7 +260,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_with_multiple_masters(self):
+    def test_getWorker_with_multiple_masters(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdict = yield self.db.workers.getWorker(workerid=30)
         self.assertIsInstance(workerdict, workers.WorkerModel)
@@ -280,7 +287,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_with_multiple_masters_builderid(self):
+    def test_getWorker_with_multiple_masters_builderid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdict = yield self.db.workers.getWorker(workerid=30, builderid=20)
         self.assertIsInstance(workerdict, workers.WorkerModel)
@@ -306,7 +313,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_with_multiple_masters_masterid(self):
+    def test_getWorker_with_multiple_masters_masterid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdict = yield self.db.workers.getWorker(workerid=30, masterid=11)
         self.assertIsInstance(workerdict, workers.WorkerModel)
@@ -327,7 +334,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_with_multiple_masters_builderid_masterid(self):
+    def test_getWorker_with_multiple_masters_builderid_masterid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdict = yield self.db.workers.getWorker(workerid=30, builderid=20, masterid=11)
         self.assertIsInstance(workerdict, workers.WorkerModel)
@@ -348,7 +355,9 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorker_by_name_with_multiple_masters_builderid_masterid(self):
+    def test_getWorker_by_name_with_multiple_masters_builderid_masterid(
+        self,
+    ) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdict = yield self.db.workers.getWorker(name='zero', builderid=20, masterid=11)
         self.assertIsInstance(workerdict, workers.WorkerModel)
@@ -369,7 +378,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorkers_no_config(self):
+    def test_getWorkers_no_config(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows)
         workerdicts = yield self.db.workers.getWorkers()
 
@@ -406,7 +415,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorkers_with_config(self):
+    def test_getWorkers_with_config(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdicts = yield self.db.workers.getWorkers()
         for workerdict in workerdicts:
@@ -455,7 +464,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorkers_empty(self):
+    def test_getWorkers_empty(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdicts = yield self.db.workers.getWorkers(masterid=11, builderid=21)
         for workerdict in workerdicts:
@@ -464,7 +473,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         self.assertEqual(sorted(workerdicts, key=workerKey), [])
 
     @defer.inlineCallbacks
-    def test_getWorkers_with_config_builderid(self):
+    def test_getWorkers_with_config_builderid(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdicts = yield self.db.workers.getWorkers(builderid=20)
         for workerdict in workerdicts:
@@ -511,7 +520,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorkers_with_config_masterid_10(self):
+    def test_getWorkers_with_config_masterid_10(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdicts = yield self.db.workers.getWorkers(masterid=10)
         for workerdict in workerdicts:
@@ -543,7 +552,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorkers_with_config_masterid_11(self):
+    def test_getWorkers_with_config_masterid_11(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdicts = yield self.db.workers.getWorkers(masterid=11)
         for workerdict in workerdicts:
@@ -590,7 +599,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorkers_with_config_masterid_11_builderid_22(self):
+    def test_getWorkers_with_config_masterid_11_builderid_22(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         workerdicts = yield self.db.workers.getWorkers(masterid=11, builderid=22)
         for workerdict in workerdicts:
@@ -621,7 +630,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorkers_with_paused(self):
+    def test_getWorkers_with_paused(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         yield self.db.workers.set_worker_paused(31, paused=True, pause_reason="reason")
         yield self.db.workers.set_worker_graceful(31, graceful=False)
@@ -646,7 +655,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_getWorkers_with_graceful(self):
+    def test_getWorkers_with_graceful(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
         yield self.db.workers.set_worker_paused(31, paused=False)
         yield self.db.workers.set_worker_graceful(31, graceful=True)
@@ -671,7 +680,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_workerConnected_existing(self):
+    def test_workerConnected_existing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.worker1_rows)
 
         NEW_INFO = {'other': [1, 2, 3]}
@@ -694,7 +703,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_workerConnected_already_connected(self):
+    def test_workerConnected_already_connected(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(
             self.baseRows
             + self.worker1_rows
@@ -708,7 +717,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         self.assertEqual(w.connected_to, [11])
 
     @defer.inlineCallbacks
-    def test_workerDisconnected(self):
+    def test_workerDisconnected(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(
             self.baseRows
             + self.worker1_rows
@@ -723,7 +732,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         self.assertEqual(w.connected_to, [10])
 
     @defer.inlineCallbacks
-    def test_workerDisconnected_already_disconnected(self):
+    def test_workerDisconnected_already_disconnected(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.worker1_rows)
         yield self.db.workers.workerDisconnected(workerid=self.W1_ID, masterid=11)
 
@@ -731,7 +740,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         self.assertEqual(w.connected_to, [])
 
     @defer.inlineCallbacks
-    def test_set_worker_paused_existing(self):
+    def test_set_worker_paused_existing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.worker1_rows)
 
         yield self.db.workers.set_worker_paused(self.W1_ID, False, None)
@@ -769,7 +778,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_set_worker_graceful_existing(self):
+    def test_set_worker_graceful_existing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.worker1_rows)
 
         yield self.db.workers.set_worker_graceful(self.W1_ID, False)
@@ -807,7 +816,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_workerConfigured(self):
+    def test_workerConfigured(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
 
         # should remove builder 21, and add 22
@@ -829,7 +838,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_workerConfiguredTwice(self):
+    def test_workerConfiguredTwice(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
 
         # should remove builder 21, and add 22
@@ -854,7 +863,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         self.assertEqual(x1, x2)
 
     @defer.inlineCallbacks
-    def test_workerReConfigured(self):
+    def test_workerReConfigured(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
 
         # should remove builder 21, and add 22
@@ -875,7 +884,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_workerReConfigured_should_not_affect_other_worker(self):
+    def test_workerReConfigured_should_not_affect_other_worker(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
 
         # should remove all the builders in master 11
@@ -905,7 +914,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         self.assertEqual(x1, x2)
 
     @defer.inlineCallbacks
-    def test_workerUnconfigured(self):
+    def test_workerUnconfigured(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
 
         # should remove all builders from master 10
@@ -919,7 +928,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         self.assertEqual(w.configured_on, expected)
 
     @defer.inlineCallbacks
-    def test_nothingConfigured(self):
+    def test_nothingConfigured(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
 
         # should remove builder 21, and add 22
@@ -933,7 +942,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         )
 
     @defer.inlineCallbacks
-    def test_deconfiguredAllWorkers(self):
+    def test_deconfiguredAllWorkers(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.baseRows + self.multipleMasters)
 
         res = yield self.db.workers.getWorkers(masterid=11)
@@ -946,7 +955,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         self.assertEqual(len(res), 0)
 
     @defer.inlineCallbacks
-    def test_workerConfiguredMany(self):
+    def test_workerConfiguredMany(self) -> InlineCallbacksType[None]:
         manyWorkers = (
             [
                 fakedb.BuilderMaster(id=1000, builderid=20, masterid=10),
@@ -967,7 +976,7 @@ class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin
         self.assertEqual(sorted(w.configured_on), [])
 
     @defer.inlineCallbacks
-    def test_workerConfiguredManyBuilders(self):
+    def test_workerConfiguredManyBuilders(self) -> InlineCallbacksType[None]:
         manyWorkers = (
             [fakedb.Builder(id=100 + n, name='a' + str(n)) for n in range(1000)]
             + [fakedb.Worker(id=50 + n, name='zero' + str(n)) for n in range(2000)]

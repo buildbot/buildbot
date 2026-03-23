@@ -13,7 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -25,6 +30,14 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import db
 from buildbot.util import UTC
 from buildbot.util import epoch2datetime
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from twisted.internet.defer import Deferred
+
+    from buildbot.test.fakedb.row import Row
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class Tests(TestReactorMixin, unittest.TestCase):
@@ -41,11 +54,11 @@ class Tests(TestReactorMixin, unittest.TestCase):
     BLDRID1 = 890
     BLDRID2 = 891
     BLDRID3 = 893
-    MASTER_ID = "set in setUp"
-    OTHER_MASTER_ID = "set in setUp"
+    MASTER_ID: int  # "set in setUp"
+    OTHER_MASTER_ID: int  # "set in setUp"
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
 
@@ -67,7 +80,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def test_getBuildRequest(self):
+    def test_getBuildRequest(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             fakedb.BuildRequest(
                 id=44,
@@ -104,13 +117,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getBuildRequest_missing(self):
+    def test_getBuildRequest_missing(self) -> InlineCallbacksType[None]:
         brdict = yield self.db.buildrequests.getBuildRequest(44)
 
         self.assertEqual(brdict, None)
 
     @defer.inlineCallbacks
-    def do_test_getBuildRequests_claim_args(self, **kwargs):
+    def do_test_getBuildRequests_claim_args(self, **kwargs: Any) -> InlineCallbacksType[None]:
         expected = kwargs.pop('expected')
         yield self.master.db.insert_test_data([
             # 50: claimed by this master
@@ -132,20 +145,20 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted(expected))
 
-    def test_getBuildRequests_no_claimed_arg(self):
+    def test_getBuildRequests_no_claimed_arg(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_claim_args(expected=[50, 51, 52, 53])
 
-    def test_getBuildRequests_claimed_mine(self):
+    def test_getBuildRequests_claimed_mine(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_claim_args(claimed=self.MASTER_ID, expected=[50])
 
-    def test_getBuildRequests_claimed_true(self):
+    def test_getBuildRequests_claimed_true(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_claim_args(claimed=True, expected=[50, 51])
 
-    def test_getBuildRequests_unclaimed(self):
+    def test_getBuildRequests_unclaimed(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_claim_args(claimed=False, expected=[52])
 
     @defer.inlineCallbacks
-    def do_test_getBuildRequests_buildername_arg(self, **kwargs):
+    def do_test_getBuildRequests_buildername_arg(self, **kwargs: Any) -> InlineCallbacksType[None]:
         expected = kwargs.pop('expected')
         yield self.master.db.insert_test_data([
             # 8: 'bb'
@@ -160,7 +173,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted(expected))
 
     @defer.inlineCallbacks
-    def do_test_getBuildRequests_complete_arg(self, **kwargs):
+    def do_test_getBuildRequests_complete_arg(self, **kwargs: Any) -> InlineCallbacksType[None]:
         expected = kwargs.pop('expected')
         yield self.master.db.insert_test_data([
             # 70: incomplete
@@ -192,17 +205,17 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted(expected))
 
-    def test_getBuildRequests_complete_none(self):
+    def test_getBuildRequests_complete_none(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_complete_arg(expected=[70, 80, 81, 82])
 
-    def test_getBuildRequests_complete_true(self):
+    def test_getBuildRequests_complete_true(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_complete_arg(complete=True, expected=[80, 81])
 
-    def test_getBuildRequests_complete_false(self):
+    def test_getBuildRequests_complete_false(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_complete_arg(complete=False, expected=[70, 82])
 
     @defer.inlineCallbacks
-    def test_getBuildRequests_bsid_arg(self):
+    def test_getBuildRequests_bsid_arg(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             # the buildset that we are *not* looking for
             fakedb.Buildset(id=self.BSID + 1),
@@ -225,7 +238,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted([70, 72]))
 
     @defer.inlineCallbacks
-    def test_getBuildRequests_combo(self):
+    def test_getBuildRequests_combo(self) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             # 44: everything we want
             fakedb.BuildRequest(
@@ -304,7 +317,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual([br.buildrequestid for br in brlist], [44])
 
     @defer.inlineCallbacks
-    def do_test_getBuildRequests_branch_arg(self, **kwargs):
+    def do_test_getBuildRequests_branch_arg(self, **kwargs: Any) -> InlineCallbacksType[None]:
         expected = kwargs.pop('expected')
         yield self.master.db.insert_test_data([
             fakedb.Buildset(id=self.BSID + 1),
@@ -327,29 +340,29 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(sorted([br.buildrequestid for br in brlist]), sorted(expected))
 
-    def test_getBuildRequests_branch(self):
+    def test_getBuildRequests_branch(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_branch_arg(branch='branch_A', expected=[70, 90])
 
-    def test_getBuildRequests_branch_empty(self):
+    def test_getBuildRequests_branch_empty(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_branch_arg(branch='absent_branch', expected=[])
 
-    def test_getBuildRequests_repository(self):
+    def test_getBuildRequests_repository(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_branch_arg(
             repository='repository_A', expected=[80, 90]
         )
 
-    def test_getBuildRequests_repository_empty(self):
+    def test_getBuildRequests_repository_empty(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_branch_arg(repository='absent_repository', expected=[])
 
-    def test_getBuildRequests_repository_and_branch(self):
+    def test_getBuildRequests_repository_and_branch(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_branch_arg(
             repository='repository_A', branch='branch_A', expected=[90]
         )
 
-    def test_getBuildRequests_no_repository_nor_branch(self):
+    def test_getBuildRequests_no_repository_nor_branch(self) -> Deferred[None]:
         return self.do_test_getBuildRequests_branch_arg(expected=[70, 80, 90])
 
-    def failWithExpFailure(self, exc, expfailure=None):
+    def failWithExpFailure(self, exc: Exception, expfailure: type[Exception] | None = None) -> None:
         if not expfailure:
             raise exc
         self.flushLoggedErrors(expfailure)
@@ -359,8 +372,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_test_claimBuildRequests(
-        self, rows, now, brids, expected=None, expfailure=None, claimed_at=None
-    ):
+        self,
+        rows: list[Row],
+        now: float,
+        brids: list[int],
+        expected: Iterable[tuple[int, datetime.datetime | None, int | None]] | None = None,
+        expfailure: type[Exception] | None = None,
+        claimed_at: datetime.datetime | None = None,
+    ) -> InlineCallbacksType[None]:
         self.reactor.advance(now)
 
         try:
@@ -371,12 +390,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
             self.assertNotEqual(expected, None, "unexpected success from claimBuildRequests")
             self.assertEqual(
                 sorted([(r.buildrequestid, r.claimed_at, r.claimed_by_masterid) for r in results]),
-                sorted(expected),
+                sorted(expected),  # type: ignore[arg-type]
             )
         except Exception as e:
             self.failWithExpFailure(e, expfailure)
 
-    def test_claimBuildRequests_single(self):
+    def test_claimBuildRequests_single(self) -> Deferred[None]:
         return self.do_test_claimBuildRequests(
             [
                 fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -386,7 +405,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             [(44, epoch2datetime(1300305712), self.MASTER_ID)],
         )
 
-    def test_claimBuildRequests_single_explicit_claimed_at(self):
+    def test_claimBuildRequests_single_explicit_claimed_at(self) -> Deferred[None]:
         return self.do_test_claimBuildRequests(
             [
                 fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -397,7 +416,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             claimed_at=epoch2datetime(14000000),
         )
 
-    def test_claimBuildRequests_multiple(self):
+    def test_claimBuildRequests_multiple(self) -> Deferred[None]:
         return self.do_test_claimBuildRequests(
             [
                 fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -413,7 +432,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             ],
         )
 
-    def test_claimBuildRequests_stress(self):
+    def test_claimBuildRequests_stress(self) -> Deferred[None]:
         return self.do_test_claimBuildRequests(
             [
                 fakedb.BuildRequest(id=id, buildsetid=self.BSID, builderid=self.BLDRID1)
@@ -424,7 +443,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             [(id, epoch2datetime(1300305713), self.MASTER_ID) for id in range(1, 1000)],
         )
 
-    def test_claimBuildRequests_other_master_claim(self):
+    def test_claimBuildRequests_other_master_claim(self) -> Deferred[None]:
         return self.do_test_claimBuildRequests(
             [
                 fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -439,7 +458,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
     @db.skip_for_dialect('mysql')
     @defer.inlineCallbacks
-    def test_claimBuildRequests_other_master_claim_stress(self):
+    def test_claimBuildRequests_other_master_claim_stress(self) -> InlineCallbacksType[None]:
         yield self.do_test_claimBuildRequests(
             [
                 fakedb.BuildRequest(id=id, buildsetid=self.BSID, builderid=self.BLDRID1)
@@ -465,7 +484,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_claimBuildRequests_sequential(self):
+    def test_claimBuildRequests_sequential(self) -> InlineCallbacksType[None]:
         now = 120350934
         self.reactor.advance(now)
 
@@ -481,8 +500,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_test_completeBuildRequests(
-        self, rows, now, expected=None, expfailure=None, brids=None, complete_at=None
-    ):
+        self,
+        rows: list[Row],
+        now: float,
+        expected: Iterable[tuple[int, bool, int, datetime.datetime | None]] | None = None,
+        expfailure: type[Exception] | None = None,
+        brids: list[int] | None = None,
+        complete_at: datetime.datetime | None = None,
+    ) -> InlineCallbacksType[None]:
         if brids is None:
             brids = [44]
         self.reactor.advance(now)
@@ -497,13 +522,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
             self.assertNotEqual(expected, None, "unexpected success from completeBuildRequests")
             self.assertEqual(
                 sorted((r.buildrequestid, r.complete, r.results, r.complete_at) for r in results),
-                sorted(expected),
+                sorted(expected),  # type: ignore[arg-type]
             )
 
         except Exception as e:
             self.failWithExpFailure(e, expfailure)
 
-    def test_completeBuildRequests(self):
+    def test_completeBuildRequests(self) -> Deferred[None]:
         return self.do_test_completeBuildRequests(
             [
                 fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -513,7 +538,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             [(44, True, 7, epoch2datetime(1300305712))],
         )
 
-    def test_completeBuildRequests_explicit_time(self):
+    def test_completeBuildRequests_explicit_time(self) -> Deferred[None]:
         return self.do_test_completeBuildRequests(
             [
                 fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -524,7 +549,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             complete_at=epoch2datetime(999999),
         )
 
-    def test_completeBuildRequests_multiple(self):
+    def test_completeBuildRequests_multiple(self) -> Deferred[None]:
         return self.do_test_completeBuildRequests(
             [
                 fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -545,7 +570,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             brids=[44, 46],
         )
 
-    def test_completeBuildRequests_stress(self):
+    def test_completeBuildRequests_stress(self) -> Deferred[None]:
         return self.do_test_completeBuildRequests(
             [
                 fakedb.BuildRequest(id=id, buildsetid=self.BSID, builderid=self.BLDRID1)
@@ -560,7 +585,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             brids=list(range(1, 280)),
         )
 
-    def test_completeBuildRequests_multiple_notmine(self):
+    def test_completeBuildRequests_multiple_notmine(self) -> Deferred[None]:
         # note that the requests are completed even though they are not mine!
         return self.do_test_completeBuildRequests(
             [
@@ -582,7 +607,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             brids=[44, 45, 46],
         )
 
-    def test_completeBuildRequests_already_completed(self):
+    def test_completeBuildRequests_already_completed(self) -> Deferred[None]:
         return self.do_test_completeBuildRequests(
             [
                 fakedb.BuildRequest(
@@ -597,7 +622,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             expfailure=buildrequests.NotClaimedError,
         )
 
-    def test_completeBuildRequests_no_such(self):
+    def test_completeBuildRequests_no_such(self) -> Deferred[None]:
         return self.do_test_completeBuildRequests(
             [
                 fakedb.BuildRequest(id=45, buildsetid=self.BSID, builderid=self.BLDRID1),
@@ -607,7 +632,9 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def do_test_unclaimMethod(self, method, expected):
+    def do_test_unclaimMethod(
+        self, method: Callable[[], Deferred[None]], expected: Iterable[int]
+    ) -> InlineCallbacksType[None]:
         yield self.master.db.insert_test_data([
             # 44: a complete build (should not be unclaimed)
             fakedb.BuildRequest(
@@ -660,7 +687,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         self.assertEqual(sorted([r.buildrequestid for r in results]), sorted(expected))
 
-    def test_unclaimBuildRequests(self):
+    def test_unclaimBuildRequests(self) -> Deferred[None]:
         to_unclaim = [
             44,  # completed -> should not be unclaimed
             45,  # incomplete -> unclaimed

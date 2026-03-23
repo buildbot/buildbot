@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -21,20 +25,24 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
+if TYPE_CHECKING:
+    from buildbot.db.projects import ProjectModel
+    from buildbot.util.twisted import InlineCallbacksType
 
-def project_key(builder):
+
+def project_key(builder: ProjectModel) -> int:
     return builder.id
 
 
 class Tests(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_update_project_info(self):
+    def test_update_project_info(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project7'),
         ])
@@ -57,7 +65,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_find_project_id_new(self):
+    def test_find_project_id_new(self) -> InlineCallbacksType[None]:
         id = yield self.db.projects.find_project_id('fake_project')
         dbdict = yield self.db.projects.get_project(id)
         self.assertEqual(
@@ -73,12 +81,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_find_project_id_new_no_auto_create(self):
+    def test_find_project_id_new_no_auto_create(self) -> InlineCallbacksType[None]:
         id = yield self.db.projects.find_project_id('fake_project', auto_create=False)
         self.assertIsNone(id)
 
     @defer.inlineCallbacks
-    def test_find_project_id_exists(self):
+    def test_find_project_id_exists(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project'),
         ])
@@ -86,7 +94,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(id, 7)
 
     @defer.inlineCallbacks
-    def test_get_project(self):
+    def test_get_project(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Project(id=7, name='fake_project'),
         ])
@@ -105,12 +113,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_project_missing(self):
+    def test_get_project_missing(self) -> InlineCallbacksType[None]:
         dbdict = yield self.db.projects.get_project(7)
         self.assertIsNone(dbdict)
 
     @defer.inlineCallbacks
-    def test_get_projects(self):
+    def test_get_projects(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Project(id=7, name="fake_project7"),
             fakedb.Project(id=8, name="fake_project8"),
@@ -153,12 +161,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_get_projects_empty(self):
+    def test_get_projects_empty(self) -> InlineCallbacksType[None]:
         dblist = yield self.db.projects.get_projects()
         self.assertEqual(dblist, [])
 
     @defer.inlineCallbacks
-    def test_get_active_projects(self):
+    def test_get_active_projects(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Project(id=1, name='fake_project1'),
             fakedb.Project(id=2, name='fake_project2'),

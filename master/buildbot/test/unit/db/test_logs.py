@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import textwrap
 from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 import sqlalchemy as sa
@@ -35,6 +36,10 @@ from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
     from typing import Callable
+
+    from twisted.internet.defer import Deferred
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class FakeUnavailableCompressor(compression.CompressorInterface):
@@ -125,13 +130,13 @@ class Tests(TestReactorMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def checkTestLogLines(self):
+    def checkTestLogLines(self) -> InlineCallbacksType[None]:
         expLines = [
             'line zero',
             'line 1' + "x" * 200,
@@ -142,7 +147,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             'yet another line',
         ]
 
-        def _join_lines(lines: list[str]):
+        def _join_lines(lines: list[str]) -> str:
             return ''.join(e + '\n' for e in lines)
 
         for first_line in range(0, 7):
@@ -153,7 +158,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual((yield self.db.logs.getLogLines(201, 5, 20)), _join_lines(expLines[5:7]))
 
     @defer.inlineCallbacks
-    def test_getLog(self):
+    def test_getLog(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
@@ -176,12 +181,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getLog_missing(self):
+    def test_getLog_missing(self) -> InlineCallbacksType[None]:
         logdict = yield self.db.logs.getLog(201)
         self.assertEqual(logdict, None)
 
     @defer.inlineCallbacks
-    def test_getLogBySlug(self):
+    def test_getLogBySlug(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
@@ -202,7 +207,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(logdict.id, 202)
 
     @defer.inlineCallbacks
-    def test_getLogBySlug_missing(self):
+    def test_getLogBySlug_missing(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
@@ -213,7 +218,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(logdict, None)
 
     @defer.inlineCallbacks
-    def test_getLogs(self):
+    def test_getLogs(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
@@ -238,7 +243,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(sorted([ld.id for ld in logdicts]), [201, 202])
 
     @defer.inlineCallbacks
-    def test_getLogLines(self):
+    def test_getLogLines(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.testLogLines)
         yield self.checkTestLogLines()
 
@@ -246,7 +251,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual((yield self.db.logs.getLogLines(201, 6, 3)), '')
 
     @defer.inlineCallbacks
-    def test_getLogLines_empty(self):
+    def test_getLogLines_empty(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
@@ -257,7 +262,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual((yield self.db.logs.getLogLines(999, 9, 99)), '')
 
     @defer.inlineCallbacks
-    def test_getLogLines_bug3101(self):
+    def test_getLogLines_bug3101(self) -> InlineCallbacksType[None]:
         # regression test for #3101
         content = self.bug3101Content
         yield self.db.insert_test_data(self.backgroundData + self.bug3101Rows)
@@ -269,7 +274,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 0)), expected)
 
     @defer.inlineCallbacks
-    def test_addLog_getLog(self):
+    def test_addLog_getLog(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData)
         logid = yield self.db.logs.addLog(
             stepid=101, name='config.log', slug='config_log', type='t'
@@ -290,7 +295,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_appendLog_getLogLines(self):
+    def test_appendLog_getLogLines(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.testLogLines)
         logid = yield self.db.logs.addLog(stepid=102, name='another', slug='another', type='s')
         self.assertEqual((yield self.db.logs.appendLog(logid, 'xyz\n')), (0, 0))
@@ -314,14 +319,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_compressLog(self):
+    def test_compressLog(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.testLogLines)
         yield self.db.logs.compressLog(201)
         # test log lines should still be readable just the same
         yield self.checkTestLogLines()
 
     @defer.inlineCallbacks
-    def test_addLogLines_big_chunk(self):
+    def test_addLogLines_big_chunk(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.testLogLines)
         self.assertEqual(
             (yield self.db.logs.appendLog(201, 'abc\n' * 20000)),  # 80k
@@ -332,7 +337,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(lines, ('abc\n' * 20000))
 
     @defer.inlineCallbacks
-    def test_addLogLines_big_chunk_big_lines(self):
+    def test_addLogLines_big_chunk_big_lines(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'x' * 33000 + '\n'
         self.assertEqual(
@@ -343,17 +348,17 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(lines, (line * 3))
 
     @defer.inlineCallbacks
-    def test_addLogLines_db(self):
+    def test_addLogLines_db(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.testLogLines)
         self.assertEqual((yield self.db.logs.appendLog(201, 'abc\ndef\nghi\njkl\n')), (7, 10))
 
-        def thd(conn):
+        def thd(conn: sa.Connection) -> dict[str, Any]:
             res = conn.execute(
                 self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
             ).mappings()
             row = res.fetchone()
             res.close()
-            return dict(row)
+            return dict(row)  # type: ignore[arg-type]
 
         newRow = yield self.db.pool.do(thd)
         self.assertEqual(
@@ -367,7 +372,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             },
         )
 
-    async def _base_appendLog_truncate(self, content: str):
+    async def _base_appendLog_truncate(self, content: str) -> list[dict[str, Any]]:
         LOG_ID = 201
         await self.db.insert_test_data([
             *self.backgroundData,
@@ -383,7 +388,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         ])
         await self.db.logs.appendLog(LOG_ID, content)
 
-        def _thd(conn: sa.engine.Connection) -> list[dict]:
+        def _thd(conn: sa.Connection) -> list[dict[str, Any]]:
             tbl = self.db.model.logchunks
             res = conn.execute(
                 tbl.select().where(tbl.c.logid == LOG_ID).order_by(tbl.c.first_line)
@@ -395,7 +400,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         return await self.db.pool.do(_thd)
 
     @async_to_deferred
-    async def test_appendLog_no_truncate_compressable_chunks(self):
+    async def test_appendLog_no_truncate_compressable_chunks(self) -> None:
         content = 'a ' + '\N{SNOWMAN}' * 100000 + '\n'
         assert len(content) > self.db.logs.MAX_CHUNK_SIZE
         self.db.master.config.logCompressionMethod = "gz"
@@ -414,7 +419,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @async_to_deferred
-    async def test_appendLog_truncate_chunk(self):
+    async def test_appendLog_truncate_chunk(self) -> None:
         self.maxDiff = None
         content = 'a ' + '\N{SNOWMAN}' * 100000 + '\n'
         assert len(content) > self.db.logs.MAX_CHUNK_SIZE
@@ -434,18 +439,18 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_no_compress_small_chunk(self):
+    def test_no_compress_small_chunk(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.testLogLines)
         self.db.master.config.logCompressionMethod = "gz"
         self.assertEqual((yield self.db.logs.appendLog(201, 'abc\n')), (7, 7))
 
-        def thd(conn):
+        def thd(conn: sa.Connection) -> dict[str, Any]:
             res = conn.execute(
                 self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
             ).mappings()
             row = res.fetchone()
             res.close()
-            return dict(row)
+            return dict(row)  # type: ignore[arg-type]
 
         newRow = yield self.db.pool.do(thd)
         self.assertEqual(
@@ -455,20 +460,20 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
     async def _test_compress_big_chunk(
         self,
-        compressor: compression.CompressorInterface,
+        compressor: type[compression.CompressorInterface],
         compressed_id: int,
     ) -> None:
         await self.db.insert_test_data(self.backgroundData + self.testLogLines)
         line = 'xy' * 10000
         self.assertEqual((await self.db.logs.appendLog(201, line + '\n')), (7, 7))
 
-        def thd(conn):
+        def thd(conn: sa.Connection) -> dict[str, Any]:
             res = conn.execute(
                 self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
             ).mappings()
             row = res.fetchone()
             res.close()
-            return dict(row)
+            return dict(row)  # type: ignore[arg-type]
 
         newRow = await self.db.pool.do(thd)
         self.assertEqual(compressor.read(newRow.pop('content')), unicode2bytes(line))
@@ -483,24 +488,24 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @async_to_deferred
-    async def test_raw_compress_big_chunk(self):
+    async def test_raw_compress_big_chunk(self) -> None:
         fake_raw_compressor = mock.Mock(spec=compression.CompressorInterface)
         fake_raw_compressor.read = lambda d: d
         self.db.master.config.logCompressionMethod = "raw"
         await self._test_compress_big_chunk(fake_raw_compressor, 0)
 
     @async_to_deferred
-    async def test_gz_compress_big_chunk(self):
+    async def test_gz_compress_big_chunk(self) -> None:
         self.db.master.config.logCompressionMethod = "gz"
         await self._test_compress_big_chunk(compression.GZipCompressor, 1)
 
     @async_to_deferred
-    async def test_bz2_compress_big_chunk(self):
+    async def test_bz2_compress_big_chunk(self) -> None:
         self.db.master.config.logCompressionMethod = "bz2"
         await self._test_compress_big_chunk(compression.BZipCompressor, 2)
 
     @async_to_deferred
-    async def test_lz4_compress_big_chunk(self):
+    async def test_lz4_compress_big_chunk(self) -> None:
         try:
             import lz4  # noqa: F401, PLC0415
         except ImportError as e:
@@ -510,7 +515,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         await self._test_compress_big_chunk(compression.LZ4Compressor, 3)
 
     @async_to_deferred
-    async def test_zstd_compress_big_chunk(self):
+    async def test_zstd_compress_big_chunk(self) -> None:
         try:
             import zstandard  # noqa: F401, PLC0415
         except ImportError as e:
@@ -520,7 +525,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         await self._test_compress_big_chunk(compression.ZStdCompressor, 4)
 
     @async_to_deferred
-    async def test_br_compress_big_chunk(self):
+    async def test_br_compress_big_chunk(self) -> None:
         try:
             import brotli  # noqa: F401, PLC0415
         except ImportError as e:
@@ -530,7 +535,9 @@ class Tests(TestReactorMixin, unittest.TestCase):
         await self._test_compress_big_chunk(compression.BrotliCompressor, 5)
 
     @defer.inlineCallbacks
-    def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=('xy' * 70 + '\n') * 3):
+    def do_addLogLines_huge_log(
+        self, NUM_CHUNKS: int = 3000, chunk: str = ('xy' * 70 + '\n') * 3
+    ) -> InlineCallbacksType[None]:
         if chunk.endswith("\n"):
             chunk = chunk[:-1]
         linesperchunk = chunk.count("\n") + 1
@@ -564,11 +571,11 @@ class Tests(TestReactorMixin, unittest.TestCase):
             self.assertEqual(wholeLog, wholeLog2)
         self.assertEqual(wholeLog, wholeLog2)
 
-        def countChunk(conn):
+        def countChunk(conn: sa.Connection) -> int:
             tbl = self.db.model.logchunks
             q = sa.select(sa.func.count(tbl.c.content))
             q = q.where(tbl.c.logid == 201)
-            return conn.execute(q).fetchone()[0]
+            return conn.execute(q).fetchone()[0]  # type: ignore[index]
 
         chunks = yield self.db.pool.do(countChunk)
         # make sure MAX_CHUNK_LINES is taken in account
@@ -576,23 +583,23 @@ class Tests(TestReactorMixin, unittest.TestCase):
             chunks, NUM_CHUNKS * linesperchunk / logs.LogsConnectorComponent.MAX_CHUNK_LINES
         )
 
-    def test_addLogLines_huge_log(self):
+    def test_addLogLines_huge_log(self) -> Deferred:
         return self.do_addLogLines_huge_log()
 
-    def test_addLogLines_huge_log_lots_line(self):
+    def test_addLogLines_huge_log_lots_line(self) -> Deferred:
         return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk='x\n' * 50)
 
-    def test_addLogLines_huge_log_lots_snowmans(self):
+    def test_addLogLines_huge_log_lots_snowmans(self) -> Deferred:
         return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk='\N{SNOWMAN}\n' * 50)
 
     @defer.inlineCallbacks
-    def test_compressLog_non_existing_log(self):
+    def test_compressLog_non_existing_log(self) -> InlineCallbacksType[None]:
         yield self.db.logs.compressLog(201)
         logdict = yield self.db.logs.getLog(201)
         self.assertEqual(logdict, None)
 
     @defer.inlineCallbacks
-    def test_compressLog_empty_log(self):
+    def test_compressLog_empty_log(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             *self.backgroundData,
             fakedb.Log(
@@ -615,7 +622,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_deleteOldLogChunks_basic(self):
+    def test_deleteOldLogChunks_basic(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData)
         logids = []
         for stepid in (101, 102):
@@ -649,7 +656,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             self.assertEqual(lines, '')
 
     @async_to_deferred
-    async def test_insert_logs_non_existing_compression_method(self):
+    async def test_insert_logs_non_existing_compression_method(self) -> None:
         LOG_ID = 201
         await self.db.insert_test_data([
             *self.backgroundData,
@@ -661,7 +668,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
             ),
         ])
 
-        def _thd_get_log_chunks(conn):
+        def _thd_get_log_chunks(conn: sa.Connection) -> list[dict[str, Any]]:
             res = conn.execute(
                 self.db.model.logchunks.select().where(self.db.model.logchunks.c.logid == LOG_ID)
             ).mappings()
@@ -706,7 +713,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @async_to_deferred
-    async def test_get_logs_non_existing_compression_method(self):
+    async def test_get_logs_non_existing_compression_method(self) -> None:
         LOG_ID = 201
 
         # register fake compressor

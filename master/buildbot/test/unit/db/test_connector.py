@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -25,6 +28,11 @@ from buildbot.db import exceptions
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestDBConnector(TestReactorMixin, unittest.TestCase):
     """
@@ -32,7 +40,7 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
     """
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
 
         self.master = yield fakemaster.make_master(
@@ -45,14 +53,14 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
         yield self.db.set_master(self.master)
 
         @defer.inlineCallbacks
-        def cleanup():
+        def cleanup() -> InlineCallbacksType[None]:
             if self.db.pool is not None:
                 yield self.db.pool.stop()
 
         self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
-    def startService(self, check_version=False):
+    def startService(self, check_version: bool = False) -> InlineCallbacksType[None]:
         self.master.config.db.db_url = self.db_url
         yield self.db.setup(check_version=check_version)
         yield self.db.startService()
@@ -60,31 +68,31 @@ class TestDBConnector(TestReactorMixin, unittest.TestCase):
 
     # tests
     @defer.inlineCallbacks
-    def test_doCleanup_service(self):
+    def test_doCleanup_service(self) -> InlineCallbacksType[None]:
         yield self.startService()
 
         self.assertTrue(self.db.cleanup_timer.running)
 
-    def test_doCleanup_unconfigured(self):
-        self.db.changes.pruneChanges = mock.Mock(return_value=defer.succeed(None))
+    def test_doCleanup_unconfigured(self) -> None:
+        self.db.changes.pruneChanges = mock.Mock(return_value=defer.succeed(None))  # type: ignore[method-assign]
         self.db._doCleanup()
         self.assertFalse(self.db.changes.pruneChanges.called)
 
     @defer.inlineCallbacks
-    def test_doCleanup_configured(self):
-        self.db.changes.pruneChanges = mock.Mock(return_value=defer.succeed(None))
+    def test_doCleanup_configured(self) -> InlineCallbacksType[None]:
+        self.db.changes.pruneChanges = mock.Mock(return_value=defer.succeed(None))  # type: ignore[method-assign]
         yield self.startService()
 
         self.db._doCleanup()
         self.assertTrue(self.db.changes.pruneChanges.called)
 
     @defer.inlineCallbacks
-    def test_setup_check_version_bad(self):
+    def test_setup_check_version_bad(self) -> InlineCallbacksType[None]:
         if self.db_url == 'sqlite://':
             raise unittest.SkipTest('sqlite in-memory model is always upgraded at connection')
         with self.assertRaises(exceptions.DatabaseNotReadyError):
             yield self.startService(check_version=True)
 
-    def test_setup_check_version_good(self):
-        self.db.model.is_current = lambda: defer.succeed(True)
+    def test_setup_check_version_good(self) -> Deferred[None]:
+        self.db.model.is_current = lambda: defer.succeed(True)  # type: ignore[method-assign]
         return self.startService(check_version=True)

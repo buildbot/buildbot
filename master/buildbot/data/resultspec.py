@@ -235,15 +235,15 @@ class ResultSpec:
 
     def __init__(
         self,
-        filters: list[Filter] | None = None,
-        fields: list[str] | None = None,
-        properties: list[Property] | None = None,
-        order: tuple[str, ...] | None = None,
+        filters: Iterable[Filter] | None = None,
+        fields: Iterable[str] | None = None,
+        properties: Iterable[Property] | None = None,
+        order: Iterable[str] | None = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> None:
-        self.filters = filters or []
-        self.properties = properties or []
+        self.filters = list(filters) if filters is not None else []
+        self.properties = list(properties) if properties is not None else []
         self.fields = fields
         self.order = order
         self.limit = limit

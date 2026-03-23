@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -21,6 +25,11 @@ from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import epoch2datetime
+
+if TYPE_CHECKING:
+    from sqlalchemy import Connection
+
+    from buildbot.util.twisted import InlineCallbacksType
 
 SOMETIME = 1348971992
 SOMETIME_DT = epoch2datetime(SOMETIME)
@@ -36,14 +45,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
     ]
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.reactor.advance(SOMETIME)
         self.master = yield fakemaster.make_master(self, wantDb=True)
         self.db = self.master.db
 
     @defer.inlineCallbacks
-    def test_findMasterId_new(self):
+    def test_findMasterId_new(self) -> InlineCallbacksType[None]:
         id = yield self.db.masters.findMasterId('master-7')
         masterdict = yield self.db.masters.getMaster(id)
         self.assertEqual(
@@ -52,7 +61,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_findMasterId_new_name_differs_only_by_case(self):
+    def test_findMasterId_new_name_differs_only_by_case(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=7, name='some:master'),
         ])
@@ -64,7 +73,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_findMasterId_exists(self):
+    def test_findMasterId_exists(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=7, name='some:master'),
         ])
@@ -72,12 +81,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(id, 7)
 
     @defer.inlineCallbacks
-    def test_setMasterState_when_missing(self):
+    def test_setMasterState_when_missing(self) -> InlineCallbacksType[None]:
         activated = yield self.db.masters.setMasterState(masterid=7, active=True)
         self.assertFalse(activated)
 
     @defer.inlineCallbacks
-    def test_setMasterState_true_when_active(self):
+    def test_setMasterState_true_when_active(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=7, active=1, last_active=OTHERTIME),
         ])
@@ -90,7 +99,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )  # timestamp updated
 
     @defer.inlineCallbacks
-    def test_setMasterState_true_when_inactive(self):
+    def test_setMasterState_true_when_inactive(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=OTHERTIME),
         ])
@@ -103,7 +112,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_setMasterState_false_when_active(self):
+    def test_setMasterState_false_when_active(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=7, active=1, last_active=OTHERTIME),
         ])
@@ -116,7 +125,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_setMasterState_false_when_inactive(self):
+    def test_setMasterState_false_when_inactive(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=OTHERTIME),
         ])
@@ -129,7 +138,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getMaster(self):
+    def test_getMaster(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=SOMETIME),
         ])
@@ -141,12 +150,12 @@ class Tests(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_getMaster_missing(self):
+    def test_getMaster_missing(self) -> InlineCallbacksType[None]:
         masterdict = yield self.db.masters.getMaster(7)
         self.assertEqual(masterdict, None)
 
     @defer.inlineCallbacks
-    def test_getMasters(self):
+    def test_getMasters(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=7, active=0, last_active=SOMETIME),
             fakedb.Master(id=8, active=1, last_active=OTHERTIME),
@@ -155,20 +164,20 @@ class Tests(TestReactorMixin, unittest.TestCase):
         for masterdict in masterlist:
             self.assertIsInstance(masterdict, masters.MasterModel)
 
-        def masterKey(master):
+        def masterKey(master: masters.MasterModel) -> int:
             return master.id
 
         expected = sorted(
             [
-                masters.MasterModel(id=7, name='master-7', active=0, last_active=SOMETIME_DT),
-                masters.MasterModel(id=8, name='master-8', active=1, last_active=OTHERTIME_DT),
+                masters.MasterModel(id=7, name='master-7', active=False, last_active=SOMETIME_DT),
+                masters.MasterModel(id=8, name='master-8', active=True, last_active=OTHERTIME_DT),
             ],
             key=masterKey,
         )
         self.assertEqual(sorted(masterlist, key=masterKey), expected)
 
     @defer.inlineCallbacks
-    def test_setMasterState_false_deletes_links(self):
+    def test_setMasterState_false_deletes_links(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Master(id=7, name='some:master', active=1, last_active=OTHERTIME),
             fakedb.Scheduler(id=21),
@@ -178,7 +187,7 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertTrue(deactivated)
 
         # check that the scheduler_masters row was deleted
-        def thd(conn):
+        def thd(conn: Connection) -> None:
             tbl = self.db.model.scheduler_masters
             self.assertEqual(conn.execute(tbl.select()).fetchall(), [])
 
