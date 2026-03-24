@@ -13,11 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import os
 import re
 import sys
+from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet import utils
@@ -89,34 +96,37 @@ golden_1_12_regex = [
 
 
 class _SubprocessProtocol(protocol.ProcessProtocol):
-    def __init__(self, input, deferred):
+    def __init__(self, input: str | bytes, deferred: defer.Deferred[Any]) -> None:
         if isinstance(input, str):
             input = input.encode('utf-8')
         self.input = input
         self.deferred = deferred
         self.output = b''
 
-    def outReceived(self, data):
+    def outReceived(self, data: bytes) -> None:
         self.output += data
 
     errReceived = outReceived
 
-    def connectionMade(self):
+    def connectionMade(self) -> None:
         # push the input and send EOF
+        assert self.transport is not None
         self.transport.write(self.input)
         self.transport.closeStdin()
 
-    def processEnded(self, reason):
+    def processEnded(self, reason: Any) -> None:
         self.deferred.callback((self.output, reason.value.exitCode))
 
 
-def getProcessOutputAndValueWithInput(executable, args, input):
+def getProcessOutputAndValueWithInput(
+    executable: str | bytes, args: Sequence[str | bytes], input: str | bytes
+) -> defer.Deferred[Any]:
     "similar to getProcessOutputAndValue, but also allows injection of input on stdin"
-    d = defer.Deferred()
+    d: defer.Deferred[Any] = defer.Deferred()
     p = _SubprocessProtocol(input, d)
 
-    (executable, args) = encodeExecutableAndArgs(executable, args)
-    reactor.spawnProcess(p, executable, (executable, *tuple(args)))
+    (executable_bytes, args_bytes) = encodeExecutableAndArgs(executable, args)
+    reactor.spawnProcess(p, executable_bytes, (executable_bytes, *tuple(args_bytes)))  # type: ignore[attr-defined]
     return d
 
 
@@ -127,7 +137,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
     if not os.path.exists(buildbot_cvs_mail_path):
         skip = f"'{buildbot_cvs_mail_path}' does not exist (normal unless run from git)"
 
-    def assertOutputOk(self, result, regexList):
+    def assertOutputOk(self, result: tuple[bytes | str, int], regexList: list[str]) -> None:
         "assert that the output from getProcessOutputAndValueWithInput matches expectations"
         (output, code) = result
         if isinstance(output, bytes):
@@ -147,10 +157,10 @@ class TestBuildbotCvsMail(unittest.TestCase):
             log.msg("got output:\n" + output)
             raise
 
-    def test_buildbot_cvs_mail_from_cvs1_11(self):
+    def test_buildbot_cvs_mail_from_cvs1_11(self) -> defer.Deferred[Any]:
         # Simulate CVS 1.11
         executable = sys.executable
-        args = [
+        args: list[str | bytes] = [
             self.buildbot_cvs_mail_path,
             '--cvsroot="ext:example:/cvsroot"',
             '--email=buildbot@example.com',
@@ -165,15 +175,15 @@ class TestBuildbotCvsMail(unittest.TestCase):
             'hello.c',
             '2.2,2.3',
         ]
-        (executable, args) = encodeExecutableAndArgs(executable, args)
-        d = getProcessOutputAndValueWithInput(executable, args, input=test)
+        (executable_bytes, args_bytes) = encodeExecutableAndArgs(executable, args)
+        d = getProcessOutputAndValueWithInput(executable_bytes, args_bytes, input=test)
         d.addCallback(self.assertOutputOk, golden_1_11_regex)
         return d
 
-    def test_buildbot_cvs_mail_from_cvs1_12(self):
+    def test_buildbot_cvs_mail_from_cvs1_12(self) -> defer.Deferred[Any]:
         # Simulate CVS 1.12, with --path option
         executable = sys.executable
-        args = [
+        args: list[str | bytes] = [
             self.buildbot_cvs_mail_path,
             '--cvsroot="ext:example.com:/cvsroot"',
             '--email=buildbot@example.com',
@@ -191,27 +201,27 @@ class TestBuildbotCvsMail(unittest.TestCase):
             '2.2',
             '2.3',
         ]
-        (executable, args) = encodeExecutableAndArgs(executable, args)
-        d = getProcessOutputAndValueWithInput(executable, args, input=test)
+        (executable_bytes, args_bytes) = encodeExecutableAndArgs(executable, args)
+        d = getProcessOutputAndValueWithInput(executable_bytes, args_bytes, input=test)
         d.addCallback(self.assertOutputOk, golden_1_12_regex)
         return d
 
-    def test_buildbot_cvs_mail_no_args_exits_with_error(self):
+    def test_buildbot_cvs_mail_no_args_exits_with_error(self) -> defer.Deferred[Any]:
         executable = sys.executable
-        args = [self.buildbot_cvs_mail_path]
-        (executable, args) = encodeExecutableAndArgs(executable, args)
-        d = utils.getProcessOutputAndValue(executable, args)
+        args: list[str | bytes] = [self.buildbot_cvs_mail_path]
+        (executable_bytes, args_bytes) = encodeExecutableAndArgs(executable, args)
+        d = utils.getProcessOutputAndValue(executable_bytes, args_bytes)
 
-        def check(result):
+        def check(result: tuple[bytes, bytes, int]) -> None:
             _, __, code = result
             self.assertEqual(code, 2)
 
         d.addCallback(check)
         return d
 
-    def test_buildbot_cvs_mail_without_email_opt_exits_with_error(self):
+    def test_buildbot_cvs_mail_without_email_opt_exits_with_error(self) -> defer.Deferred[Any]:
         executable = sys.executable
-        args = [
+        args: list[str | bytes] = [
             self.buildbot_cvs_mail_path,
             '--cvsroot="ext:example.com:/cvsroot"',
             '-P',
@@ -228,19 +238,19 @@ class TestBuildbotCvsMail(unittest.TestCase):
             '2.2',
             '2.3',
         ]
-        (executable, args) = encodeExecutableAndArgs(executable, args)
-        d = utils.getProcessOutputAndValue(executable, args)
+        (executable_bytes, args_bytes) = encodeExecutableAndArgs(executable, args)
+        d = utils.getProcessOutputAndValue(executable_bytes, args_bytes)
 
-        def check(result):
+        def check(result: tuple[bytes, bytes, int]) -> None:
             _, __, code = result
             self.assertEqual(code, 2)
 
         d.addCallback(check)
         return d
 
-    def test_buildbot_cvs_mail_without_cvsroot_opt_exits_with_error(self):
+    def test_buildbot_cvs_mail_without_cvsroot_opt_exits_with_error(self) -> defer.Deferred[Any]:
         executable = sys.executable
-        args = [
+        args: list[str | bytes] = [
             self.buildbot_cvs_mail_path,
             '--complete-garbage-opt=gomi',
             '--cvsroot="ext:example.com:/cvsroot"',
@@ -259,19 +269,19 @@ class TestBuildbotCvsMail(unittest.TestCase):
             '2.2',
             '2.3',
         ]
-        (executable, args) = encodeExecutableAndArgs(executable, args)
-        d = utils.getProcessOutputAndValue(executable, args)
+        (executable_bytes, args_bytes) = encodeExecutableAndArgs(executable, args)
+        d = utils.getProcessOutputAndValue(executable_bytes, args_bytes)
 
-        def check(result):
+        def check(result: tuple[bytes, bytes, int]) -> None:
             _, __, code = result
             self.assertEqual(code, 2)
 
         d.addCallback(check)
         return d
 
-    def test_buildbot_cvs_mail_with_unknown_opt_exits_with_error(self):
+    def test_buildbot_cvs_mail_with_unknown_opt_exits_with_error(self) -> defer.Deferred[Any]:
         executable = sys.executable
-        args = [
+        args: list[str | bytes] = [
             self.buildbot_cvs_mail_path,
             '--email=buildbot@example.com',
             '-P',
@@ -288,10 +298,10 @@ class TestBuildbotCvsMail(unittest.TestCase):
             '2.2',
             '2.3',
         ]
-        (executable, args) = encodeExecutableAndArgs(executable, args)
-        d = utils.getProcessOutputAndValue(executable, args)
+        (executable_bytes, args_bytes) = encodeExecutableAndArgs(executable, args)
+        d = utils.getProcessOutputAndValue(executable_bytes, args_bytes)
 
-        def check(result):
+        def check(result: tuple[bytes, bytes, int]) -> None:
             _, __, code = result
             self.assertEqual(code, 2)
 
