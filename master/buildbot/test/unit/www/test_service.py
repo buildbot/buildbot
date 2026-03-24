@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import calendar
 import datetime
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 import jwt
@@ -34,6 +38,9 @@ from buildbot.www import resource
 from buildbot.www import rest
 from buildbot.www import service
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class FakeChannel:
     transport = None
@@ -41,13 +48,13 @@ class FakeChannel:
     def __init__(self, site: service.BuildbotSite) -> None:
         self.site = site
 
-    def isSecure(self):
+    def isSecure(self) -> bool:
         return False
 
-    def getPeer(self):
+    def getPeer(self) -> None:
         return None
 
-    def getHost(self):
+    def getHost(self) -> None:
         return None
 
 
@@ -55,19 +62,19 @@ class NeedsReconfigResource(resource.Resource):
     needsReconfig = True
     reconfigs = 0
 
-    def reconfigResource(self, new_config):
+    def reconfigResource(self, new_config: object) -> None:
         NeedsReconfigResource.reconfigs += 1
 
 
 class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield self.make_master(url='h:/a/b/')
         self.svc = self.master.www = service.WWWService()
         yield self.svc.setServiceParent(self.master)
 
-    def makeConfig(self, **kwargs):
+    def makeConfig(self, **kwargs: Any) -> mock.Mock:
         w = {"port": None, "auth": auth.NoAuth(), "logfileName": 'l'}
         w.update(kwargs)
         new_config = mock.Mock()
@@ -77,14 +84,14 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         return new_config
 
     @defer.inlineCallbacks
-    def test_reconfigService_no_port(self):
+    def test_reconfigService_no_port(self) -> InlineCallbacksType[None]:
         new_config = self.makeConfig()
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         self.assertEqual(self.svc.site, None)
 
     @defer.inlineCallbacks
-    def test_reconfigService_reconfigResources(self):
+    def test_reconfigService_reconfigResources(self) -> InlineCallbacksType[None]:
         new_config = self.makeConfig(port=8080)
         self.patch(rest, 'RestRootResource', NeedsReconfigResource)
         NeedsReconfigResource.reconfigs = 0
@@ -98,7 +105,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(NeedsReconfigResource.reconfigs, 2)
 
     @defer.inlineCallbacks
-    def test_reconfigService_port(self):
+    def test_reconfigService_port(self) -> InlineCallbacksType[None]:
         new_config = self.makeConfig(port=20)
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
@@ -107,7 +114,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.svc.port, 20)
 
     @defer.inlineCallbacks
-    def test_reconfigService_expiration_time(self):
+    def test_reconfigService_expiration_time(self) -> InlineCallbacksType[None]:
         new_config = self.makeConfig(port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
@@ -116,7 +123,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
 
     @defer.inlineCallbacks
-    def test_reconfigService_port_changes(self):
+    def test_reconfigService_port_changes(self) -> InlineCallbacksType[None]:
         new_config = self.makeConfig(port=20)
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
@@ -128,7 +135,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.svc.port, 999)
 
     @defer.inlineCallbacks
-    def test_reconfigService_port_changes_to_none(self):
+    def test_reconfigService_port_changes_to_none(self) -> InlineCallbacksType[None]:
         new_config = self.makeConfig(port=20)
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
@@ -139,9 +146,10 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.svc.port_service, None)
         self.assertEqual(self.svc.port, None)
 
-    def test_setupSite(self):
+    def test_setupSite(self) -> None:
         self.svc.setupSite(self.makeConfig())
         site = self.svc.site
+        assert site is not None
 
         # check that it has the right kind of resources attached to its
         # root
@@ -149,14 +157,15 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         req = mock.Mock()
         self.assertIsInstance(root.getChildWithDefault(b'api', req), rest.RestRootResource)
 
-    def test_setupSiteWithProtectedHook(self):
+    def test_setupSiteWithProtectedHook(self) -> None:
         checker = InMemoryUsernamePasswordDatabaseDontUse()
-        checker.addUser("guest", "password")
+        checker.addUser("guest", "password")  # type: ignore[arg-type]
 
         self.svc.setupSite(
             self.makeConfig(change_hook_dialects={'base': True}, change_hook_auth=[checker])
         )
         site = self.svc.site
+        assert site is not None
 
         # check that it has the right kind of resources attached to its
         # root
@@ -165,10 +174,11 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.assertIsInstance(root.getChildWithDefault(b'change_hook', req), HTTPAuthSessionWrapper)
 
     @defer.inlineCallbacks
-    def test_setupSiteWithHook(self):
+    def test_setupSiteWithHook(self) -> InlineCallbacksType[None]:
         new_config = self.makeConfig(change_hook_dialects={'base': True})
         self.svc.setupSite(new_config)
         site = self.svc.site
+        assert site is not None
 
         # check that it has the right kind of resources attached to its
         # root
@@ -185,6 +195,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         # now configured
         self.assertEqual(ep.dialects, {'base': True})
 
+        assert self.svc.site is not None
         rsrc = self.svc.site.resource.getChildWithDefault(b'change_hook', mock.Mock())
         path = b'/change_hook/base'
         request = test_hooks_base._prepare_request({})
@@ -193,7 +204,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.master.data.updates.addChange.assert_called()
 
     @defer.inlineCallbacks
-    def test_setupSiteWithHookAndAuth(self):
+    def test_setupSiteWithHookAndAuth(self) -> InlineCallbacksType[None]:
         fn = self.mktemp()
         with open(fn, 'w', encoding='utf-8') as f:
             f.write("user:pass")
@@ -206,6 +217,7 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.svc.setupSite(new_config)
 
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        assert self.svc.site is not None
         rsrc = self.svc.site.resource.getChildWithDefault(b'', mock.Mock())
 
         res = yield self.render_resource(rsrc, b'')
@@ -221,11 +233,11 @@ class Test(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
 class TestBuildbotSite(unittest.SynchronousTestCase):
     SECRET = 'secret_with_enough_length_for_jwt'
 
-    def setUp(self):
-        self.site = service.BuildbotSite(None, "logs", 0, 0)
+    def setUp(self) -> None:
+        self.site = service.BuildbotSite(None, "logs", 0, 0)  # type: ignore[arg-type]
         self.site.setSessionSecret(self.SECRET)
 
-    def test_getSession_from_bad_jwt(self):
+    def test_getSession_from_bad_jwt(self) -> None:
         """if the cookie is bad (maybe from previous version of buildbot),
         then we should raise KeyError for consumption by caller,
         and log the JWT error
@@ -234,35 +246,35 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
             self.site.getSession("xxx")
         self.flushLoggedErrors(jwt.exceptions.DecodeError)
 
-    def test_getSession_from_correct_jwt(self):
+    def test_getSession_from_correct_jwt(self) -> None:
         payload = {'user_info': {'some': 'payload'}}
         uid = jwt.encode(payload, self.SECRET, algorithm=auth.SESSION_SECRET_ALGORITHM)
         session = self.site.getSession(uid)
         self.assertEqual(session.user_info, {'some': 'payload'})
 
-    def test_getSession_from_expired_jwt(self):
+    def test_getSession_from_expired_jwt(self) -> None:
         # expired one week ago
-        exp = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(weeks=1)
-        exp = calendar.timegm(datetime.datetime.timetuple(exp))
+        exp_dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(weeks=1)
+        exp = calendar.timegm(datetime.datetime.timetuple(exp_dt))
         payload = {'user_info': {'some': 'payload'}, 'exp': exp}
         uid = jwt.encode(payload, self.SECRET, algorithm=auth.SESSION_SECRET_ALGORITHM)
         with self.assertRaises(KeyError):
             self.site.getSession(uid)
 
-    def test_getSession_with_no_user_info(self):
+    def test_getSession_with_no_user_info(self) -> None:
         payload = {'foo': 'bar'}
         uid = jwt.encode(payload, self.SECRET, algorithm=auth.SESSION_SECRET_ALGORITHM)
         with self.assertRaises(KeyError):
             self.site.getSession(uid)
 
-    def test_makeSession(self):
+    def test_makeSession(self) -> None:
         session = self.site.makeSession()
         self.assertEqual(session.user_info, {'anonymous': True})
 
-    def test_updateSession(self):
+    def test_updateSession(self) -> None:
         session = self.site.makeSession()
         request = Request(FakeChannel(self.site), False)
-        request.sitepath = [b"bb"]
+        request.sitepath = [b"bb"]  # type: ignore[attr-defined]
         session.updateSession(request)
         self.assertEqual(len(request.cookies), 1)
         _, value = request.cookies[0].split(b";")[0].split(b"=")
@@ -270,6 +282,6 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         self.assertEqual(decoded['user_info'], {'anonymous': True})
         self.assertIn('exp', decoded)
 
-    def test_absentServerHeader(self):
+    def test_absentServerHeader(self) -> None:
         request = Request(FakeChannel(self.site), False)
         self.assertEqual(request.responseHeaders.hasHeader('Server'), False)
