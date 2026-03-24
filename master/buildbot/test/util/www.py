@@ -39,96 +39,106 @@ from buildbot.www import authz
 from buildbot.www.authz.authz import Authz
 
 if TYPE_CHECKING:
+    from twisted.trial import unittest
+
     from buildbot.util.twisted import InlineCallbacksType
+
+    _WwwTestMixinBase = unittest.TestCase
+else:
+    _WwwTestMixinBase = object
 
 
 class FakeSession:
-    def __init__(self):
-        self.user_info = {"anonymous": True}
+    def __init__(self) -> None:
+        self.user_info: dict[str, Any] = {"anonymous": True}
 
-    def updateSession(self, request):
+    def updateSession(self, request: Any) -> None:
         pass
 
 
 class FakeRequest:
     written = b''
     finished = False
-    redirected_to = None
-    rendered_resource = None
-    failure = None
+    redirected_to: bytes | None = None
+    rendered_resource: Any = None
+    failure: Any = None
     method = b'GET'
     path = b'/req.path'
     responseCode = 200
 
-    def __init__(self, path=None):
-        # from twisted.web.http.Request. Used to detect connection dropped
-        self.channel = True
+    session: Any = None
+    content: Any = None
 
-        self.headers = {}
-        self.input_headers = {}
-        self.prepath = []
+    def __init__(self, path: bytes | None = None) -> None:
+        # from twisted.web.http.Request. Used to detect connection dropped
+        self.channel: Any = True
+
+        self.headers: dict[bytes, list[bytes]] = {}
+        self.input_headers: dict[bytes, bytes] = {}
+        self.prepath: list[bytes] = []
+        assert path is not None
         x = path.split(b'?', 1)
         if len(x) == 1:
             self.path = path
-            self.args = {}
+            self.args: dict[bytes, Any] = {}
         else:
             path, argstring = x
             self.path = path
-            self.args = parse_qs(argstring, 1)
+            self.args = parse_qs(argstring, 1)  # type: ignore[arg-type]
         self.uri = self.path
-        self.postpath = []
+        self.postpath: list[bytes] = []
         for p in path[1:].split(b'/'):
-            path = urlunquote(bytes2unicode(p))
-            self.postpath.append(unicode2bytes(path))
+            decoded_path = urlunquote(bytes2unicode(p))
+            self.postpath.append(unicode2bytes(decoded_path))
 
-        self.deferred = defer.Deferred()
+        self.deferred: defer.Deferred[Any] = defer.Deferred()
 
-    def write(self, data):
+    def write(self, data: bytes) -> None:
         self.written = self.written + data
 
-    def redirect(self, url):
+    def redirect(self, url: bytes) -> None:
         self.redirected_to = url
 
-    def render(self, rsrc):
+    def render(self, rsrc: Any) -> None:
         rendered_resource = rsrc
         self.deferred.callback(rendered_resource)
 
-    def finish(self):
+    def finish(self) -> None:
         self.finished = True
         if self.redirected_to is not None:
             self.deferred.callback({"redirected": self.redirected_to})
         else:
             self.deferred.callback(self.written)
 
-    def setResponseCode(self, code, text=None):
+    def setResponseCode(self, code: int, text: bytes | None = None) -> None:
         # twisted > 16 started to assert this
         assert isinstance(code, int)
         self.responseCode = code
         self.responseText = text
 
-    def setHeader(self, hdr, value):
+    def setHeader(self, hdr: bytes, value: bytes) -> None:
         assert isinstance(hdr, bytes)
         assert isinstance(value, bytes)
         self.headers.setdefault(hdr, []).append(value)
 
-    def getHeader(self, key):
+    def getHeader(self, key: bytes) -> bytes | None:
         assert isinstance(key, bytes)
         return self.input_headers.get(key)
 
-    def processingFailed(self, f):
+    def processingFailed(self, f: Any) -> None:
         self.deferred.errback(f)
 
-    def notifyFinish(self):
-        d = defer.Deferred()
+    def notifyFinish(self) -> defer.Deferred[Any]:
+        d: defer.Deferred[Any] = defer.Deferred()
 
         @self.deferred.addBoth
-        def finished(res):
+        def finished(res: Any) -> Any:
             d.callback(res)
             return res
 
         return d
 
-    def getSession(self):
+    def getSession(self) -> Any:
         return self.session
 
 
@@ -143,8 +153,9 @@ class RequiresWwwMixin:
         skip = 'buildbot-www not installed'
 
 
-class WwwTestMixin(RequiresWwwMixin):
+class WwwTestMixin(RequiresWwwMixin, _WwwTestMixinBase):
     UUID = str(uuid1())
+    request: FakeRequest
 
     @defer.inlineCallbacks
     def make_master(
@@ -156,7 +167,7 @@ class WwwTestMixin(RequiresWwwMixin):
         master.www.getUserInfos = lambda _: getattr(
             self.master.session, "user_info", {"anonymous": True}
         )
-        cfg = {"port": None, "auth": auth.NoAuth(), "authz": authz.Authz()}
+        cfg: dict[str, Any] = {"port": None, "auth": auth.NoAuth(), "authz": authz.Authz()}
         cfg.update(kwargs)
         master.config.www = cfg
         if url is not None:
@@ -167,7 +178,7 @@ class WwwTestMixin(RequiresWwwMixin):
         self.master.authz.setMaster(self.master)
         return master
 
-    def make_request(self, path=None, method=b'GET'):
+    def make_request(self, path: bytes | None = None, method: bytes = b'GET') -> FakeRequest:
         self.request = FakeRequest(path)
         self.request.session = self.master.session
         self.request.method = method
@@ -175,17 +186,17 @@ class WwwTestMixin(RequiresWwwMixin):
 
     def render_resource(
         self,
-        rsrc,
-        path=b'/',
-        accept=None,
-        method=b'GET',
-        origin=None,
-        access_control_request_method=None,
-        extraHeaders=None,
-        request=None,
-        content=None,
-        content_type=None,
-    ):
+        rsrc: Any,
+        path: bytes = b'/',
+        accept: bytes | None = None,
+        method: bytes = b'GET',
+        origin: bytes | None = None,
+        access_control_request_method: bytes | None = None,
+        extraHeaders: dict[bytes, bytes] | None = None,
+        request: FakeRequest | None = None,
+        content: bytes | None = None,
+        content_type: bytes | None = None,
+    ) -> defer.Deferred[Any]:
         if not request:
             request = self.make_request(path, method=method)
             if accept:
@@ -200,7 +211,7 @@ class WwwTestMixin(RequiresWwwMixin):
                 request.input_headers.update(extraHeaders)
             if content_type is not None:
                 request.input_headers.update({b'content-type': content_type})
-                request.content = BytesIO(content)
+                request.content = BytesIO(content)  # type: ignore[arg-type]
 
         rv = rsrc.render(request)
         if rv != server.NOT_DONE_YET:
@@ -212,14 +223,14 @@ class WwwTestMixin(RequiresWwwMixin):
     @defer.inlineCallbacks
     def render_control_resource(
         self,
-        rsrc,
-        path=b'/',
-        params=None,
-        requestJson=None,
-        action="notfound",
-        id=None,
-        content_type=b'application/json',
-    ):
+        rsrc: Any,
+        path: bytes = b'/',
+        params: dict[str, Any] | None = None,
+        requestJson: str | None = None,
+        action: str = "notfound",
+        id: int | str | None = None,
+        content_type: bytes | str = b'application/json',
+    ) -> InlineCallbacksType[None]:
         # pass *either* a request or postpath
         if params is None:
             params = {}
@@ -230,7 +241,7 @@ class WwwTestMixin(RequiresWwwMixin):
             requestJson
             or json.dumps({"jsonrpc": "2.0", "method": action, "params": params, "id": id})
         )
-        request.input_headers = {b'content-type': content_type}
+        request.input_headers = {b'content-type': content_type}  # type: ignore[dict-item]
         rv = rsrc.render(request)
         if rv == server.NOT_DONE_YET:
             rv = yield request.deferred
@@ -245,17 +256,17 @@ class WwwTestMixin(RequiresWwwMixin):
 
     def assertRequest(
         self,
-        content=None,
-        contentJson=None,
-        contentType=None,
-        responseCode=None,
-        contentDisposition=None,
-        headers=None,
-    ):
+        content: bytes | None = None,
+        contentJson: Any = None,
+        contentType: bytes | None = None,
+        responseCode: int | None = None,
+        contentDisposition: Any = None,
+        headers: dict[bytes, list[bytes]] | None = None,
+    ) -> None:
         if headers is None:
             headers = {}
-        got = {}
-        exp = {}
+        got: dict[Any, Any] = {}
+        exp: dict[Any, Any] = {}
         if content is not None:
             got['content'] = self.request.written
             exp['content'] = content
