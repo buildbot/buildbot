@@ -122,6 +122,7 @@ div.bb-topbar-navbar-elements {
 
 // Align navbar with sidebar
 .navbar {
+  --bs-navbar-padding-x: 1rem !important;
   padding-bottom: 0;
   padding-top: 0;
   margin-bottom: 20px;
