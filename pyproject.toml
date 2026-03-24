@@ -201,7 +201,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.util.config",
       "buildbot.test.util.configurators",
       "buildbot.test.util.connector_component",
-      "buildbot.test.util.db",
       "buildbot.test.util.decorators",
       "buildbot.test.util.dirs",
       "buildbot.test.util.endpoint",
