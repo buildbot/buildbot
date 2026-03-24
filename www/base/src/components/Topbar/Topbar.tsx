@@ -54,8 +54,8 @@ export const Topbar = observer(({store, appTitle, children}: TopbarProps) => {
       <Navbar.Toggle aria-controls="bb-topbar-navbar-nav" />
       <Navbar.Collapse id="bb-topbar-navbar-nav">
         <Nav className="mr-auto bb-topbar-navbar-elements">{elements}</Nav>
-        {children}
       </Navbar.Collapse>
+      {children}
     </Navbar>
   );
 });

@@ -269,7 +269,7 @@ export const BuilderView = observer(() => {
           <span>None</span>
         ) : (
           workers.array.map((worker) => (
-            <li>
+            <li key={worker.name}>
               <WorkerBadge key={worker.name} worker={worker} showWorkerName={true} />
             </li>
           ))
