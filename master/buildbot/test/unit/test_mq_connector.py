@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
 from unittest import mock
 
 from twisted.internet import defer
@@ -24,31 +29,39 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import service
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
-    new_config = "not_called"
+    new_config: Any = "not_called"
 
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config: Any) -> defer.Deferred[None]:
         self.new_config = new_config
         return defer.succeed(None)
 
-    def produce(self, routingKey, data):
+    def produce(self, routingKey: tuple[str, ...], data: dict[str, Any]) -> None:
         pass
 
-    def startConsuming(self, callback, filter, persistent_name=None):
-        return defer.succeed(None)
+    def startConsuming(
+        self,
+        callback: Callable[..., Any],
+        filter: tuple[str | None, ...],
+        persistent_name: str | None = None,
+    ) -> defer.Deferred[base.QueueRef]:
+        return defer.succeed(None)  # type: ignore[arg-type]
 
 
 class MQConnector(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self.mqconfig = self.master.config.mq = {}
         self.conn = connector.MQConnector()
         yield self.conn.setServiceParent(self.master)
 
-    def patchFakeMQ(self, name='fake'):
+    def patchFakeMQ(self, name: str = 'fake') -> None:
         self.patch(
             connector.MQConnector,
             'classes',
@@ -58,22 +71,22 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_setup_unknown_type(self):
+    def test_setup_unknown_type(self) -> InlineCallbacksType[None]:
         self.mqconfig['type'] = 'unknown'
         with self.assertRaises(AssertionError):
             yield self.conn.setup()
 
     @defer.inlineCallbacks
-    def test_setup_simple_type(self):
+    def test_setup_simple_type(self) -> InlineCallbacksType[None]:
         self.patchFakeMQ(name='simple')
         self.mqconfig['type'] = 'simple'
         yield self.conn.setup()
-        self.assertIsInstance(self.conn.impl, FakeMQ)
+        assert isinstance(self.conn.impl, FakeMQ)
         self.assertEqual(self.conn.impl.produce, self.conn.produce)
         self.assertEqual(self.conn.impl.startConsuming, self.conn.startConsuming)
 
     @defer.inlineCallbacks
-    def test_reconfigServiceWithBuildbotConfig(self):
+    def test_reconfigServiceWithBuildbotConfig(self) -> InlineCallbacksType[None]:
         self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
         self.conn.setup()
@@ -81,10 +94,11 @@ class MQConnector(TestReactorMixin, unittest.TestCase):
         new_config.mq = {"type": 'fake'}
         yield self.conn.reconfigServiceWithBuildbotConfig(new_config)
 
+        assert isinstance(self.conn.impl, FakeMQ)
         self.assertIdentical(self.conn.impl.new_config, new_config)
 
     @defer.inlineCallbacks
-    def test_reconfigService_change_type(self):
+    def test_reconfigService_change_type(self) -> InlineCallbacksType[None]:
         self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
         yield self.conn.setup()
