@@ -155,10 +155,3 @@ plugins = "mypy_zope:plugin"
     ]
     warn_unused_ignores = false
 
-    [[tool.mypy.overrides]]
-    module = [
-      "buildbot",
-    ]
-    disallow_untyped_calls = false
-    disallow_untyped_defs = false
-    no_implicit_optional = false
