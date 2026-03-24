@@ -5,6 +5,8 @@ html,
 body,
 #root {
   height: 100%;
+  background-color: var(--bb-background-color);
+  color: var(--bb-text-color);
 }
 .row {
   margin-left: 0;
@@ -13,6 +15,9 @@ body,
 .row > div {
   margin-bottom: 15px;
 }
+
+// Portal overrides (tooltips, popovers) are injected at runtime by ThemeManager.ts
+// to guarantee they load after all other stylesheets.
 
 .noselect {
   -webkit-touch-callout: none;

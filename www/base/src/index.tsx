@@ -24,6 +24,7 @@ import {
 } from 'buildbot-ui';
 import {HashRouter} from 'react-router-dom';
 import {SidebarStore} from './stores/SidebarStore';
+import './plugins/ThemeManager';
 import {StoresContext} from './contexts/Stores';
 import moment from 'moment';
 import axios from 'axios';

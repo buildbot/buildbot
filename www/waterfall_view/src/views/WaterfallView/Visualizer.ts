@@ -343,7 +343,7 @@ export class Visualizer {
       .attr('y', -this.layoutSettings.margin.top)
       .attr('width', this.layoutSettings.margin.left)
       .attr('height', this.containerHeight)
-      .style('fill', '#fff');
+      .style('fill', 'var(--bb-background-color)');
 
     const ticks = this.getTickValues(y);
 

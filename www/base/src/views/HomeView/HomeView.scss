@@ -1,10 +1,10 @@
 .bb-home-view {
   .card-header {
     a {
-      color: white;
+      color: white !important;
     }
-    background-color: #337ab7;
-    border-color: #337ab7;
+    background-color: var(--bb-home-card-header-bg-color) !important;
+    border-color: var(--bb-home-card-header-bg-color) !important;
     padding: 10px 15px;
   }
 
@@ -13,6 +13,6 @@
   }
 
   .bb-home-builder-card {
-    border-color: #337ab7;
+    border-color: var(--bb-home-card-header-bg-color);
   }
 }

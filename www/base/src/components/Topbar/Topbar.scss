@@ -107,7 +107,7 @@ $gl-sidebar-small-threshold: 600px;
     padding: 0.5rem;
     display: inline-block;
     content: '/';
-    color: #cccccc;
+    color: var(--bb-navbar-separator-color);
   }
 
   .nav-link {
@@ -141,7 +141,7 @@ div.bb-topbar-navbar-elements {
 }
 
 img.avatar {
-  background-color: #ccc;
+  background-color: var(--bb-avatar-bg-color);
   border-radius: 50%;
   height: 40px;
   margin: -10px;

@@ -17,7 +17,7 @@
       content: '';
       position: absolute;
       inset: 5px;
-      background-color: #007bff;
+      background-color: var(--bb-link-color);
       z-index: -1;
       border-radius: inherit;
     }
