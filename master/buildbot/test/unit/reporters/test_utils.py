@@ -43,7 +43,7 @@ def sort_builds(builds: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(builds, key=lambda key: key['buildid'])
 
 
-class TestDataUtils(TestReactorMixin, unittest.TestCase, logging.LoggingMixin):
+class TestDataUtils(TestReactorMixin, logging.LoggingMixin, unittest.TestCase):
     LOGCONTENT = textwrap.dedent("""\
         line zero
         line 1""")

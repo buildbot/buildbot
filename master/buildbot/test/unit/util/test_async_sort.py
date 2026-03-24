@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-class AsyncSort(unittest.TestCase, LoggingMixin):
+class AsyncSort(LoggingMixin, unittest.TestCase):
     def setUp(self) -> None:
         self.setUpLogging()
         return super().setUp()

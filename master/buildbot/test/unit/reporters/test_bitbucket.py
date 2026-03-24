@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 
 class TestBitbucketStatusPush(
-    TestReactorMixin, unittest.TestCase, ConfigErrorsMixin, ReporterTestMixin, LoggingMixin
+    TestReactorMixin, ConfigErrorsMixin, ReporterTestMixin, LoggingMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
@@ -279,7 +279,7 @@ class TestBitbucketStatusPush(
 
 
 class TestBitbucketStatusPushProperties(
-    TestReactorMixin, unittest.TestCase, ConfigErrorsMixin, ReporterTestMixin, LoggingMixin
+    TestReactorMixin, ConfigErrorsMixin, ReporterTestMixin, LoggingMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]

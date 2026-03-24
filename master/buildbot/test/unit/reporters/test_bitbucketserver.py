@@ -59,7 +59,7 @@ class TestException(Exception):
 
 
 class TestBitbucketServerStatusPush(
-    TestReactorMixin, ConfigErrorsMixin, unittest.TestCase, ReporterTestMixin, LoggingMixin
+    TestReactorMixin, ConfigErrorsMixin, ReporterTestMixin, LoggingMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
@@ -221,7 +221,7 @@ class TestBitbucketServerStatusPush(
 
 
 class TestBitbucketServerCoreAPIStatusPush(
-    ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, ReporterTestMixin, LoggingMixin
+    ConfigErrorsMixin, TestReactorMixin, ReporterTestMixin, LoggingMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setupReporter(self, token: str | None = None, **kwargs: Any) -> InlineCallbacksType[None]:
@@ -634,7 +634,7 @@ PR_URL = "http://example.com/projects/PRO/repos/myrepo/pull-requests/20"
 
 
 class TestBitbucketServerPRCommentPush(
-    TestReactorMixin, unittest.TestCase, ReporterTestMixin, LoggingMixin
+    TestReactorMixin, ReporterTestMixin, LoggingMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
