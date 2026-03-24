@@ -17,6 +17,9 @@ from __future__ import annotations
 import os
 import sys
 from io import StringIO
+from typing import IO
+from typing import TYPE_CHECKING
+from typing import cast
 from unittest import mock
 from unittest.case import SkipTest
 
@@ -31,18 +34,23 @@ from buildbot.test.util import config
 from buildbot.util import kubeclientservice
 from buildbot.util import service
 
+if TYPE_CHECKING:
+    from twisted.internet.defer import Deferred
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class MockFileBase:
     file_mock_config: dict[str, str] = {}
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.patcher = mock.patch('buildbot.util.kubeclientservice.open', self.mock_open)
         self.patcher.start()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.patcher.stop()
 
-    def mock_open(self, filename, mode=None, encoding='UTF-8'):
+    def mock_open(self, filename: str, mode: str | None = None, encoding: str = 'UTF-8') -> IO[str]:
         filename_type = os.path.basename(filename)
         file_value = self.file_mock_config[filename_type]
         mock_open = mock.Mock(
@@ -54,20 +62,20 @@ class MockFileBase:
 class KubeClientServiceTestClusterConfig(MockFileBase, config.ConfigErrorsMixin, unittest.TestCase):
     file_mock_config = {'token': 'BASE64_TOKEN', 'namespace': 'buildbot_namespace'}
 
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         self.patch(kubeclientservice.os, 'environ', {'KUBERNETES_PORT': 'tcp://foo'})
 
-    def patchExist(self, val):
+    def patchExist(self, val: bool) -> None:
         self.patch(kubeclientservice.os.path, 'exists', lambda x: val)
 
-    def test_not_exists(self):
+    def test_not_exists(self) -> None:
         self.patchExist(False)
         with self.assertRaisesConfigError('kube_dir not found:'):
             kubeclientservice.KubeInClusterConfigLoader()
 
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         self.patchExist(True)
         config = kubeclientservice.KubeInClusterConfigLoader()
         yield config.startService()
@@ -105,7 +113,7 @@ class KubeClientServiceTestKubeHardcodedConfig(
     TestReactorMixin, config.ConfigErrorsMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
@@ -114,7 +122,7 @@ class KubeClientServiceTestKubeHardcodedConfig(
         yield self.master.startService()
         self.addCleanup(self.master.stopService)
 
-    def test_basic(self):
+    def test_basic(self) -> None:
         self.config = kubeclientservice.KubeHardcodedConfig(
             master_url="http://localhost:8001", namespace="default"
         )
@@ -123,7 +131,7 @@ class KubeClientServiceTestKubeHardcodedConfig(
             {'master_url': 'http://localhost:8001', 'namespace': 'default', 'headers': {}},
         )
 
-    def test_cannot_pass_both_bearer_and_basic_auth(self):
+    def test_cannot_pass_both_bearer_and_basic_auth(self) -> None:
         with self.assertRaises(RuntimeError):
             kubeclientservice.KubeHardcodedConfig(
                 master_url="http://localhost:8001",
@@ -135,7 +143,9 @@ class KubeClientServiceTestKubeHardcodedConfig(
 
 
 class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin, unittest.TestCase):
-    def patchProxyCmd(self, cmd):
+    config: kubeclientservice.KubeCtlProxyConfigLoader | None
+
+    def patchProxyCmd(self, cmd: str) -> None:
         if runtime.platformType != 'posix':
             self.config = None
             raise SkipTest('only posix platform is supported by this test')
@@ -145,13 +155,13 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin, unittest
             [sys.executable, "-c", cmd],
         )
 
-    def tearDown(self):
+    def tearDown(self) -> Deferred[None] | None:  # type: ignore[override]
         if self.config is not None and self.config.running:
             return self.config.stopService()
         return None
 
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
         self.config = kubeclientservice.KubeCtlProxyConfigLoader()
         yield self.config.startService()
@@ -160,7 +170,7 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin, unittest
         )
 
     @defer.inlineCallbacks
-    def test_config_args(self):
+    def test_config_args(self) -> InlineCallbacksType[None]:
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
         self.config = kubeclientservice.KubeCtlProxyConfigLoader(
             proxy_port=8002, namespace="system"
@@ -173,7 +183,7 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin, unittest
         yield self.config.stopService()
 
     @defer.inlineCallbacks
-    def test_reconfig(self):
+    def test_reconfig(self) -> InlineCallbacksType[None]:
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE)
         self.config = kubeclientservice.KubeCtlProxyConfigLoader(
             proxy_port=8002, namespace="system"
@@ -191,7 +201,7 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin, unittest
         yield self.config.stopService()
 
     @defer.inlineCallbacks
-    def test_config_with_error(self):
+    def test_config_with_error(self) -> InlineCallbacksType[None]:
         self.patchProxyCmd(KUBE_CTL_PROXY_FAKE_ERROR)
         self.config = kubeclientservice.KubeCtlProxyConfigLoader()
         with self.assertRaises(RuntimeError):
@@ -200,11 +210,11 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin, unittest
 
 class KubeClientServiceTest(unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.parent = service.BuildbotService(name="parent")
 
         @defer.inlineCallbacks
-        def cleanup():
+        def cleanup() -> InlineCallbacksType[None]:
             if self.parent.running:
                 yield self.parent.stopService()
 
@@ -214,9 +224,11 @@ class KubeClientServiceTest(unittest.TestCase):
         yield self.client.setServiceParent(self.parent)
 
     @defer.inlineCallbacks
-    def test_stopped(self):
+    def test_stopped(self) -> InlineCallbacksType[None]:
         worker = mock.Mock(name="worker1")
-        config = service.BuildbotService(name="config")
+        config = cast(
+            kubeclientservice.KubeConfigLoaderBase, service.BuildbotService(name="config")
+        )
 
         yield self.client.register(worker, config)
         self.assertEqual(config.running, 0)
@@ -224,11 +236,13 @@ class KubeClientServiceTest(unittest.TestCase):
         self.assertEqual(config.running, 0)
 
     @defer.inlineCallbacks
-    def test_started(self):
+    def test_started(self) -> InlineCallbacksType[None]:
         yield self.parent.startService()
 
         worker = mock.Mock(name="worker1")
-        config = service.BuildbotService(name="config")
+        config = cast(
+            kubeclientservice.KubeConfigLoaderBase, service.BuildbotService(name="config")
+        )
 
         yield self.client.register(worker, config)
         self.assertEqual(config.running, 1)
@@ -236,11 +250,13 @@ class KubeClientServiceTest(unittest.TestCase):
         self.assertEqual(config.running, 0)
 
     @defer.inlineCallbacks
-    def test_started_but_stop(self):
+    def test_started_but_stop(self) -> InlineCallbacksType[None]:
         yield self.parent.startService()
 
         worker = mock.Mock(name="worker1")
-        config = service.BuildbotService(name="config")
+        config = cast(
+            kubeclientservice.KubeConfigLoaderBase, service.BuildbotService(name="config")
+        )
 
         yield self.client.register(worker, config)
         self.assertEqual(config.running, 1)
@@ -249,9 +265,11 @@ class KubeClientServiceTest(unittest.TestCase):
         self.assertEqual(config.running, 0)
 
     @defer.inlineCallbacks
-    def test_stopped_but_start(self):
+    def test_stopped_but_start(self) -> InlineCallbacksType[None]:
         worker = mock.Mock(name="worker1")
-        config = service.BuildbotService(name="config")
+        config = cast(
+            kubeclientservice.KubeConfigLoaderBase, service.BuildbotService(name="config")
+        )
 
         yield self.client.register(worker, config)
         self.assertEqual(config.running, 0)
@@ -263,12 +281,14 @@ class KubeClientServiceTest(unittest.TestCase):
         self.assertEqual(config.running, 0)
 
     @defer.inlineCallbacks
-    def test_two_workers(self):
+    def test_two_workers(self) -> InlineCallbacksType[None]:
         yield self.parent.startService()
 
         worker1 = mock.Mock(name="worker1")
         worker2 = mock.Mock(name="worker2")
-        config = service.BuildbotService(name="config")
+        config = cast(
+            kubeclientservice.KubeConfigLoaderBase, service.BuildbotService(name="config")
+        )
 
         yield self.client.register(worker1, config)
         self.assertEqual(config.running, 1)
