@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import warnings
 
 
@@ -33,7 +35,7 @@ class DeprecatedApiWarning(Warning):
     """
 
 
-def warn_deprecated(version, msg, stacklevel=2):
+def warn_deprecated(version: str, msg: str, stacklevel: int = 2) -> None:
     warnings.warn(
         f"[{version} and later] {msg}", category=DeprecatedApiWarning, stacklevel=stacklevel
     )
