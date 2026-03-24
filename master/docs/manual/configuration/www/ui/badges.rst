@@ -61,7 +61,7 @@ The badgeio template
 ^^^^^^^^^^^^^^^^^^^^
 
 A badges template was developed to standardize upon a consistent "look and feel" across the usage of
-multiple CI/CD solutions, e.g.: use of Buildbot, Codecov.io, and Travis-CI. An example is shown below.
+multiple CI/CD solutions, e.g.: use of Buildbot, Codecov.io, and GitHub Actions. An example is shown below.
 
 .. image:: ../../../../_images/badges-badgeio.png
 
