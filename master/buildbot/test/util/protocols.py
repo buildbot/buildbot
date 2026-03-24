@@ -12,57 +12,68 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
+from typing import Any
 
 from buildbot.test.util import interfaces
 
 
 class ConnectionInterfaceTest(interfaces.InterfaceTests):
-    def setUp(self):
+    conn: Any
+
+    def setUp(self) -> None:
         # subclasses must set self.conn in this method
         raise NotImplementedError
 
-    def test_sig_notifyOnDisconnect(self):
+    def test_sig_notifyOnDisconnect(self) -> None:
         @self.assertArgSpecMatches(self.conn.notifyOnDisconnect)
-        def notifyOnDisconnect(self, cb):
+        def notifyOnDisconnect(self: Any, cb: Any) -> None:
             pass
 
-    def test_sig_loseConnection(self):
+    def test_sig_loseConnection(self) -> None:
         @self.assertArgSpecMatches(self.conn.loseConnection)
-        def loseConnection(self):
+        def loseConnection(self: Any) -> None:
             pass
 
-    def test_sig_remotePrint(self):
+    def test_sig_remotePrint(self) -> None:
         @self.assertArgSpecMatches(self.conn.remotePrint)
-        def remotePrint(self, message):
+        def remotePrint(self: Any, message: Any) -> None:
             pass
 
-    def test_sig_remoteGetWorkerInfo(self):
+    def test_sig_remoteGetWorkerInfo(self) -> None:
         @self.assertArgSpecMatches(self.conn.remoteGetWorkerInfo)
-        def remoteGetWorkerInfo(self):
+        def remoteGetWorkerInfo(self: Any) -> None:
             pass
 
-    def test_sig_remoteSetBuilderList(self):
+    def test_sig_remoteSetBuilderList(self) -> None:
         @self.assertArgSpecMatches(self.conn.remoteSetBuilderList)
-        def remoteSetBuilderList(self, builders):
+        def remoteSetBuilderList(self: Any, builders: Any) -> None:
             pass
 
-    def test_sig_remoteStartCommand(self):
+    def test_sig_remoteStartCommand(self) -> None:
         @self.assertArgSpecMatches(self.conn.remoteStartCommand)
-        def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
+        def remoteStartCommand(
+            self: Any,
+            remoteCommand: Any,
+            builderName: Any,
+            commandId: Any,
+            commandName: Any,
+            args: Any,
+        ) -> None:
             pass
 
-    def test_sig_remoteShutdown(self):
+    def test_sig_remoteShutdown(self) -> None:
         @self.assertArgSpecMatches(self.conn.remoteShutdown)
-        def remoteShutdown(self):
+        def remoteShutdown(self: Any) -> None:
             pass
 
-    def test_sig_remoteStartBuild(self):
+    def test_sig_remoteStartBuild(self) -> None:
         @self.assertArgSpecMatches(self.conn.remoteStartBuild)
-        def remoteStartBuild(self, builderName):
+        def remoteStartBuild(self: Any, builderName: Any) -> None:
             pass
 
-    def test_sig_remoteInterruptCommand(self):
+    def test_sig_remoteInterruptCommand(self) -> None:
         @self.assertArgSpecMatches(self.conn.remoteInterruptCommand)
-        def remoteInterruptCommand(builderName, commandId, why):
+        def remoteInterruptCommand(builderName: Any, commandId: Any, why: Any) -> None:
             pass

@@ -106,7 +106,7 @@ class TestSecretInVaultAuthenticator(interfaces.InterfaceTests):
         raise NotImplementedError
 
 
-class TestSecretInVaultAuthenticatorToken(unittest.TestCase, TestSecretInVaultAuthenticator):
+class TestSecretInVaultAuthenticatorToken(TestSecretInVaultAuthenticator, unittest.TestCase):
     def setUp(self):
         if hvac is None:
             raise unittest.SkipTest("Need to install hvac to test VaultAuthenticatorToken")
@@ -119,7 +119,7 @@ class TestSecretInVaultAuthenticatorToken(unittest.TestCase, TestSecretInVaultAu
         self.assertEqual(client.token, token)
 
 
-class TestSecretInVaultAuthenticatorApprole(unittest.TestCase, TestSecretInVaultAuthenticator):
+class TestSecretInVaultAuthenticatorApprole(TestSecretInVaultAuthenticator, unittest.TestCase):
     def test_authenticate(self):
         authenticator = VaultAuthenticatorApprole("testRole", "testSecret")
         client = FakeHvacClient()

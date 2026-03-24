@@ -91,11 +91,11 @@ class TestPBChangeSource(
         yield self.setChangeSourceToMaster(None)
 
         # not quite enough time to cause it to activate
-        self.reactor.advance(self.changesource.POLL_INTERVAL_SEC * 4 / 5)  # type: ignore[attr-defined]
+        self.reactor.advance(self.changesource.POLL_INTERVAL_SEC * 4 / 5)
         self.assertNotRegistered()
 
         # there we go!
-        self.reactor.advance(self.changesource.POLL_INTERVAL_SEC * 2 / 5)  # type: ignore[attr-defined]
+        self.reactor.advance(self.changesource.POLL_INTERVAL_SEC * 2 / 5)
         self.assertRegistered(*self.EXP_DEFAULT_REGISTRATION)
 
     @defer.inlineCallbacks
@@ -114,13 +114,13 @@ class TestPBChangeSource(
         if exp_ConfigErrors:
             # if it's not registered, it should raise a ConfigError.
             try:
-                yield self.changesource.reconfigServiceWithBuildbotConfig(cfg)  # type: ignore[attr-defined]
+                yield self.changesource.reconfigServiceWithBuildbotConfig(cfg)
             except config.ConfigErrors:
                 pass
             else:
                 self.fail("Expected ConfigErrors")
         else:
-            yield self.changesource.reconfigServiceWithBuildbotConfig(cfg)  # type: ignore[attr-defined]
+            yield self.changesource.reconfigServiceWithBuildbotConfig(cfg)
 
         if exp_registration:
             self.assertRegistered(*exp_registration)
@@ -129,14 +129,14 @@ class TestPBChangeSource(
 
         if exp_registration:
             self.assertUnregistered(*exp_registration)
-        self.assertEqual(self.changesource.registration, None)  # type: ignore[attr-defined]
+        self.assertEqual(self.changesource.registration, None)
 
     @defer.inlineCallbacks
     def test_perspective(self) -> InlineCallbacksType[None]:
         yield self.attachChangeSource(
             pb.PBChangeSource('alice', 'sekrit', name=self.DEFAULT_NAME, port='8888')
         )
-        persp = self.changesource.getPerspective(mock.Mock(), 'alice')  # type: ignore[attr-defined]
+        persp = self.changesource.getPerspective(mock.Mock(), 'alice')
         self.assertIsInstance(persp, pb.ChangePerspective)
 
     def test_describe(self) -> None:
@@ -169,7 +169,7 @@ class TestPBChangeSource(
         yield self.attachChangeSource(pb.PBChangeSource(name=self.DEFAULT_NAME, port='9876'))
 
         self.startChangeSource()
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)  # type: ignore[attr-defined]
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertRegistered('9876', 'change', 'changepw')
 
@@ -184,13 +184,13 @@ class TestPBChangeSource(
         yield self.attachChangeSource(pb.PBChangeSource(name=self.DEFAULT_NAME))
 
         self.startChangeSource()
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)  # type: ignore[attr-defined]
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertRegistered('9876', 'change', 'changepw')
 
         config.protocols = {'pb': {'port': '1234'}}
 
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)  # type: ignore[attr-defined]
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertUnregistered('9876', 'change', 'changepw')
         self.assertRegistered('1234', 'change', 'changepw')
@@ -208,13 +208,13 @@ class TestPBChangeSource(
         yield self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         self.startChangeSource()
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)  # type: ignore[attr-defined]
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertNotRegistered()
 
         config.protocols = {'pb': {'port': '1234'}}
 
-        yield self.changesource.reconfigServiceWithBuildbotConfig(config)  # type: ignore[attr-defined]
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertNotRegistered()
 

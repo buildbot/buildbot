@@ -14,39 +14,46 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import Any
+
+
 class TupleMatchingMixin:
     # a bunch of tuple-matching tests that all call do_test_match
     # this is used to test this behavior in a few places
 
-    def do_test_match(self, routingKey, shouldMatch, *tuples):
+    def do_test_match(
+        self, routingKey: tuple[str | None, ...], shouldMatch: bool, *tuples: Any
+    ) -> None:
         raise NotImplementedError
 
-    def test_simple_tuple_match(self):
+    def test_simple_tuple_match(self) -> None:
         return self.do_test_match(('abc',), True, ('abc',))
 
-    def test_simple_tuple_no_match(self):
+    def test_simple_tuple_no_match(self) -> None:
         return self.do_test_match(('abc',), False, ('def',))
 
-    def test_multiple_tuple_match(self):
+    def test_multiple_tuple_match(self) -> None:
         return self.do_test_match(('a', 'b', 'c'), True, ('a', 'b', 'c'))
 
-    def test_multiple_tuple_match_tuple_prefix(self):
+    def test_multiple_tuple_match_tuple_prefix(self) -> None:
         return self.do_test_match(('a', 'b', 'c'), False, ('a', 'b'))
 
-    def test_multiple_tuple_match_tuple_suffix(self):
+    def test_multiple_tuple_match_tuple_suffix(self) -> None:
         return self.do_test_match(('a', 'b', 'c'), False, ('b', 'c'))
 
-    def test_multiple_tuple_match_rk_prefix(self):
+    def test_multiple_tuple_match_rk_prefix(self) -> None:
         return self.do_test_match(('a', 'b'), False, ('a', 'b', 'c'))
 
-    def test_multiple_tuple_match_rk_suffix(self):
+    def test_multiple_tuple_match_rk_suffix(self) -> None:
         return self.do_test_match(('b', 'c'), False, ('a', 'b', 'c'))
 
-    def test_None_match(self):
+    def test_None_match(self) -> None:
         return self.do_test_match(('a', 'b', 'c'), True, ('a', None, 'c'))
 
-    def test_None_match_empty(self):
+    def test_None_match_empty(self) -> None:
         return self.do_test_match(('a', '', 'c'), True, ('a', None, 'c'))
 
-    def test_None_no_match(self):
+    def test_None_no_match(self) -> None:
         return self.do_test_match(('a', 'b', 'c'), False, ('a', None, 'x'))

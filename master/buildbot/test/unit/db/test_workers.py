@@ -39,7 +39,7 @@ def configuredOnKey(worker: workers.BuilderMasterModel) -> tuple[int, int]:
     return (worker.builderid, worker.masterid)
 
 
-class Tests(TestReactorMixin, unittest.TestCase, querylog.SqliteMaxVariableMixin):
+class Tests(TestReactorMixin, querylog.SqliteMaxVariableMixin, unittest.TestCase):
     # common sample data
 
     baseRows = [

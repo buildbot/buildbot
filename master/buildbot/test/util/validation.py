@@ -19,24 +19,32 @@ from __future__ import annotations
 import datetime
 import json
 import re
+import typing
+from typing import TYPE_CHECKING
 
 from buildbot.util import UTC
 from buildbot.util import bytes2unicode
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from collections.abc import Generator
+
 # Base class
 
-validatorsByName = {}
+validatorsByName: dict[str, type[Validator]] = {}
 
 
 class Validator:
     name: str | None = None
     hasArgs = False
 
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         raise NotImplementedError
 
     class __metaclass__(type):
-        def __new__(mcs, name, bases, attrs):
+        def __new__(
+            mcs: type[type], name: str, bases: tuple[type, ...], attrs: dict[str, typing.Any]
+        ) -> type:
             cls = type.__new__(mcs, name, bases, attrs)
             if attrs.get('name'):
                 assert attrs['name'] not in validatorsByName
@@ -48,9 +56,9 @@ class Validator:
 
 
 class InstanceValidator(Validator):
-    types: tuple[type] | tuple[()] = ()
+    types: tuple[type, ...] = ()
 
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         if not isinstance(object, self.types):
             yield f"{name} ({object!r}) is not a {self.name or repr(self.types)}"
 
@@ -85,7 +93,7 @@ class DateTimeValidator(Validator):
     types = (datetime.datetime,)
     name = 'datetime'
 
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         if not isinstance(object, datetime.datetime):
             yield f"{name} - {object!r} - is not a datetime"
         elif object.tzinfo != UTC:
@@ -101,10 +109,10 @@ class IdentifierValidator(Validator):
         '^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$', flags=re.UNICODE
     )
 
-    def __init__(self, len):
+    def __init__(self, len: int) -> None:
         self.len = len
 
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         if not isinstance(object, str):
             yield f"{name} - {object!r} - is not a unicode string"
         elif not self.ident_re.match(object):
@@ -119,19 +127,19 @@ class IdentifierValidator(Validator):
 
 
 class NoneOk:
-    def __init__(self, original):
+    def __init__(self, original: Validator) -> None:
         self.original = original
 
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         if object is None:
             return
-        else:
-            yield from self.original.validate(name, object)
+        yield from self.original.validate(name, object)
 
 
 class Any:
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         return
+        yield
 
 
 # Compound Types
@@ -140,14 +148,14 @@ class Any:
 class DictValidator(Validator):
     name = 'dict'
 
-    def __init__(self, optionalNames=None, **keys):
+    def __init__(self, optionalNames: list[str] | None = None, **keys: typing.Any) -> None:
         if optionalNames is None:
             optionalNames = []
         self.optionalNames = set(optionalNames)
         self.keys = keys
         self.expectedNames = set(keys.keys())
 
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         # this uses isinstance, allowing dict subclasses as used by the DB API
         if not isinstance(object, dict):
             yield f"{name} ({object!r}) is not a dictionary (got type {type(object)})"
@@ -169,11 +177,11 @@ class DictValidator(Validator):
 class SequenceValidator(Validator):
     type: type | None = None
 
-    def __init__(self, elementValidator):
+    def __init__(self, elementValidator: typing.Any) -> None:
         self.elementValidator = elementValidator
 
-    def validate(self, name, object):
-        if not isinstance(object, self.type):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
+        if not isinstance(object, self.type):  # type: ignore[arg-type]
             yield f"{name} ({object!r}) is not a {self.name}"
             return
 
@@ -194,14 +202,14 @@ class TupleValidator(SequenceValidator):
 class StringListValidator(ListValidator):
     name = 'string-list'
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(StringValidator())
 
 
 class SourcedPropertiesValidator(Validator):
     name = 'sourced-properties'
 
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         if not isinstance(object, dict):
             yield f"{name} is not sourced properties (not a dict)"
             return
@@ -223,7 +231,7 @@ class SourcedPropertiesValidator(Validator):
 class JsonValidator(Validator):
     name = 'json'
 
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         try:
             json.dumps(object)
         except (TypeError, ValueError):
@@ -241,18 +249,18 @@ class PatchValidator(Validator):
         comment=NoneOk(StringValidator()),
     )
 
-    def validate(self, name, object):
+    def validate(self, name: str, object: typing.Any) -> Generator[str, None, None]:
         yield from self.validator.validate(name, object)
 
 
 class MessageValidator(Validator):
     routingKeyValidator = TupleValidator(StrValidator())
 
-    def __init__(self, events, messageValidator):
+    def __init__(self, events: list[typing.Any], messageValidator: Validator) -> None:
         self.events = [bytes2unicode(e) for e in set(events)]
         self.messageValidator = messageValidator
 
-    def validate(self, name, routingKey_message):
+    def validate(self, name: str, routingKey_message: typing.Any) -> Generator[str, None, None]:
         try:
             routingKey, message = routingKey_message
         except (TypeError, ValueError) as e:
@@ -271,13 +279,13 @@ class MessageValidator(Validator):
 
 
 class Selector(Validator):
-    def __init__(self):
-        self.selectors = []
+    def __init__(self) -> None:
+        self.selectors: list[tuple[Callable[..., bool] | None, Validator]] = []
 
-    def add(self, selector, validator):
+    def add(self, selector: Callable[..., bool] | None, validator: Validator) -> None:
         self.selectors.append((selector, validator))
 
-    def validate(self, name, arg_object):
+    def validate(self, name: str, arg_object: typing.Any) -> Generator[str, None, None]:
         try:
             arg, object = arg_object
         except (TypeError, ValueError) as e:
@@ -291,7 +299,7 @@ class Selector(Validator):
 
 # Type definitions
 
-message = {}
+message: dict[str, Selector] = {}
 
 # parse and use a ResourceType class's dataFields into a validator
 
@@ -313,7 +321,7 @@ message['masters'].add(
 
 # sourcestamp
 
-_sourcestamp = {
+_sourcestamp: dict[str, typing.Any] = {
     "ssid": IntValidator(),
     "branch": NoneOk(StringValidator()),
     "revision": NoneOk(StringValidator()),
@@ -352,7 +360,7 @@ message['builders'].add(
 
 # buildset
 
-_buildset = {
+_buildset: dict[str, typing.Any] = {
     "bsid": IntValidator(),
     "external_idstring": NoneOk(StringValidator()),
     "reason": StringValidator(),
@@ -434,7 +442,7 @@ message['changes'].add(
 
 # builds
 
-_build = {
+_build: dict[str, typing.Any] = {
     "buildid": IntValidator(),
     "number": IntValidator(),
     "builderid": IntValidator(),
@@ -471,7 +479,7 @@ message['build_data'].add(None, MessageValidator(events=[], messageValidator=_bu
 
 # steps
 
-_step = {
+_step: dict[str, typing.Any] = {
     "stepid": IntValidator(),
     "number": IntValidator(),
     "name": IdentifierValidator(50),
@@ -493,7 +501,7 @@ message['steps'].add(
 
 # logs
 
-_log = {
+_log: dict[str, Validator] = {
     "logid": IntValidator(),
     "name": IdentifierValidator(50),
     "stepid": IntValidator(),
@@ -543,7 +551,7 @@ message['test_results'].add(
 # external functions
 
 
-def _verify(testcase, validator, name, object):
+def _verify(testcase: typing.Any, validator: typing.Any, name: str, object: typing.Any) -> None:
     msgs = list(validator.validate(name, object))
     if msgs:
         msg = "; ".join(msgs)
@@ -553,7 +561,7 @@ def _verify(testcase, validator, name, object):
             raise AssertionError(msg)
 
 
-def verifyMessage(testcase, routingKey, message_):
+def verifyMessage(testcase: typing.Any, routingKey: tuple[str, ...], message_: typing.Any) -> None:
     # the validator is a Selector wrapping a MessageValidator, so we need to
     # pass (arg, (routingKey, message)), where the routing key is the arg
     # the "type" of the message is identified by last path name
@@ -563,9 +571,11 @@ def verifyMessage(testcase, routingKey, message_):
     _verify(testcase, validator, '', (routingKey, (routingKey, message_)))
 
 
-def verifyData(testcase, entityType, options, value):
+def verifyData(
+    testcase: typing.Any, entityType: typing.Any, options: typing.Any, value: typing.Any
+) -> None:
     _verify(testcase, entityType, entityType.name, value)
 
 
-def verifyType(testcase, name, value, validator):
+def verifyType(testcase: typing.Any, name: str, value: typing.Any, validator: typing.Any) -> None:
     _verify(testcase, validator, name, value)

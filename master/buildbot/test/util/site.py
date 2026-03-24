@@ -13,21 +13,30 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.python.failure import Failure
 from twisted.web.server import Site
 
+if TYPE_CHECKING:
+    from twisted.internet.interfaces import IAddress
+    from twisted.internet.protocol import Protocol
+
 
 class SiteWithClose(Site):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._protocols = []
+        self._protocols: list[Any] = []
 
-    def buildProtocol(self, addr):
+    def buildProtocol(self, addr: IAddress) -> Protocol | None:
         p = super().buildProtocol(addr)
         self._protocols.append(p)
         return p
 
-    def close_connections(self):
+    def close_connections(self) -> None:
         for p in self._protocols:
             p.connectionLost(Failure(RuntimeError("Closing down at the end of test")))
             # There is currently no other way to force all pending server-side connections to

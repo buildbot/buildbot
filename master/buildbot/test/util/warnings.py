@@ -23,13 +23,20 @@
 # Also this implementation allows nested checks.
 
 
+from __future__ import annotations
+
 import contextlib
 import re
 import warnings
+from typing import TYPE_CHECKING
+from typing import Any
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 @contextlib.contextmanager
-def _recordWarnings(category, output):
+def _recordWarnings(category: type[Warning], output: list[Any]) -> Generator[None, None, None]:
     assert isinstance(output, list)
 
     unrelated_warns = []
@@ -54,8 +61,11 @@ def _recordWarnings(category, output):
 
 @contextlib.contextmanager
 def assertProducesWarnings(
-    filter_category, num_warnings=None, messages_patterns=None, message_pattern=None
-):
+    filter_category: type[Warning],
+    num_warnings: int | None = None,
+    messages_patterns: list[str] | None = None,
+    message_pattern: str | None = None,
+) -> Generator[None, None, None]:
     if messages_patterns is not None:
         assert message_pattern is None
         assert num_warnings is None
@@ -63,7 +73,7 @@ def assertProducesWarnings(
     else:
         assert num_warnings is not None or message_pattern is not None
 
-    warns = []
+    warns: list[Any] = []
     with _recordWarnings(filter_category, warns):
         yield
 
@@ -95,18 +105,20 @@ def assertProducesWarnings(
 
 
 @contextlib.contextmanager
-def assertProducesWarning(filter_category, message_pattern=None):
+def assertProducesWarning(
+    filter_category: type[Warning], message_pattern: str | None = None
+) -> Generator[None, None, None]:
     with assertProducesWarnings(filter_category, num_warnings=1, message_pattern=message_pattern):
         yield
 
 
 @contextlib.contextmanager
-def assertNotProducesWarnings(filter_category):
+def assertNotProducesWarnings(filter_category: type[Warning]) -> Generator[None, None, None]:
     with assertProducesWarnings(filter_category, 0):
         yield
 
 
 @contextlib.contextmanager
-def ignoreWarning(category):
+def ignoreWarning(category: type[Warning]) -> Generator[None, None, None]:
     with _recordWarnings(category, []):
         yield

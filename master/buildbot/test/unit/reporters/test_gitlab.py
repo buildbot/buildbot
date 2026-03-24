@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 
 class TestGitLabStatusPush(
-    TestReactorMixin, ConfigErrorsMixin, unittest.TestCase, ReporterTestMixin, logging.LoggingMixin
+    TestReactorMixin, ConfigErrorsMixin, ReporterTestMixin, logging.LoggingMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]

@@ -324,12 +324,12 @@ class InterfaceTests(interfaces.InterfaceTests):
         self.assertFalse(hasattr(self.log, 'getChunks'))  # type: ignore[attr-defined]
 
 
-class TestProcessItfc(unittest.TestCase, InterfaceTests):
+class TestProcessItfc(InterfaceTests, unittest.TestCase):
     def setUp(self) -> None:
         self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's', 101, str)
 
 
-class TestFakeLogFile(unittest.TestCase, InterfaceTests):
+class TestFakeLogFile(InterfaceTests, unittest.TestCase):
     def setUp(self) -> None:
         self.log = fakelogfile.FakeLogFile('stdio')
 

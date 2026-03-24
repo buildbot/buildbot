@@ -24,7 +24,7 @@ from buildbot.process.properties import Interpolate
 from buildbot.test.util import config
 
 
-class TestCheckParamLength(unittest.TestCase, config.ConfigErrorsMixin):
+class TestCheckParamLength(config.ConfigErrorsMixin, unittest.TestCase):
     def test_short_string(self) -> None:
         check_param_length('1234567890', 'Step name', 10)
 
@@ -46,7 +46,7 @@ class TestCheckParamLength(unittest.TestCase, config.ConfigErrorsMixin):
             check_param_length(Interpolate('123456%(prop:xy)s78901'), 'Step name', 10)
 
 
-class TestCheckParamType(unittest.TestCase, config.ConfigErrorsMixin):
+class TestCheckParamType(config.ConfigErrorsMixin, unittest.TestCase):
     def test_str(self) -> None:
         check_param_str('abc', self.__class__, 'param')
 

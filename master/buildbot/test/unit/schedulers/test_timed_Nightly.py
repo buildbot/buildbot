@@ -339,7 +339,7 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         last_only_if_changed: bool | None,
         is_new_scheduler: bool = False,
         **kwargs: Any,
-    ) -> InlineCallbacksType[None]:
+    ) -> InlineCallbacksType[Any]:
         fII = mock.Mock(name='fII')
         yield self.makeScheduler(
             name='test',

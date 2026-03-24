@@ -16,7 +16,7 @@ class FakeBuildWithMaster(FakeBuild):
         self.master = master
 
 
-class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin):
+class TestInterpolateSecrets(TestReactorMixin, ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -41,7 +41,7 @@ class TestInterpolateSecrets(TestReactorMixin, unittest.TestCase, ConfigErrorsMi
             yield self.build.render(command)
 
 
-class TestInterpolateSecretsNoService(TestReactorMixin, unittest.TestCase, ConfigErrorsMixin):
+class TestInterpolateSecretsNoService(TestReactorMixin, ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()

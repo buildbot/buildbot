@@ -130,7 +130,7 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
         self.assertEqual(res, (('abc',), {"x": 1}))
 
 
-class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
+class TestFakeMQ(TestReactorMixin, Tests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()
@@ -139,7 +139,7 @@ class TestFakeMQ(TestReactorMixin, unittest.TestCase, Tests):
         self.mq.verifyMessages = False
 
 
-class TestSimpleMQ(TestReactorMixin, unittest.TestCase, RealTests):
+class TestSimpleMQ(TestReactorMixin, RealTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         self.setup_test_reactor()

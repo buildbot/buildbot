@@ -57,7 +57,7 @@ class EventResource(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def test_listen_add_then_close(self) -> None:
         self.render_resource(self.sse, b'/listen')
         request = self.request
-        self.request = None
+        self.request = None  # type: ignore[assignment]
         uuid = self.readUUID(request)
         self.render_resource(self.sse, b'/add/' + unicode2bytes(uuid) + b"/changes/*/*")
         self.assertReceivesChangeNewMessage(request)

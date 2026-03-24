@@ -789,7 +789,7 @@ class OAuth2AuthGitHubE2E(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             res = yield d
         yield listener.stopListening()
         yield site.stopFactory()  # type: ignore[func-returns-value]
-        yield site.close_connections()
+        yield site.close_connections()  # type: ignore[func-returns-value]
 
         self.assertIn("full_name", res)
         self.assertIn("email", res)

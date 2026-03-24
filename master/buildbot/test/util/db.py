@@ -15,6 +15,10 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import TypeVar
 
 import sqlalchemy as sa
 from sqlalchemy.schema import MetaData
@@ -24,22 +28,27 @@ from twisted.trial import unittest
 from buildbot.db import model
 from buildbot.util.sautils import withoutSqliteForeignKeys
 
+if TYPE_CHECKING:
+    from sqlalchemy.future.engine import Connection
 
-def skip_for_dialect(dialect):
+_F = TypeVar('_F', bound=Callable[..., Any])
+
+
+def skip_for_dialect(dialect: str) -> Callable[[_F], _F]:
     """Decorator to skip a test for a particular SQLAlchemy dialect."""
 
-    def dec(fn):
-        def wrap(self, *args, **kwargs):
+    def dec(fn: _F) -> _F:
+        def wrap(self: Any, *args: Any, **kwargs: Any) -> Any:
             if self.master.db._engine.dialect.name == dialect:
                 raise unittest.SkipTest(f"Not supported on dialect '{dialect}'")
             return fn(self, *args, **kwargs)
 
-        return wrap
+        return wrap  # type: ignore[return-value]
 
     return dec
 
 
-def get_trial_parallel_from_cwd(cwd):
+def get_trial_parallel_from_cwd(cwd: str) -> int | bool | None:
     cwd = cwd.rstrip("/")
     last = os.path.basename(cwd)
     prev = os.path.basename(os.path.dirname(cwd))
@@ -87,7 +96,7 @@ def resolve_test_db_url(db_url: str | None, sqlite_memory: bool) -> str:
     return resolve_test_index_in_db_url(db_url)
 
 
-def thd_clean_database(conn) -> None:
+def thd_clean_database(conn: Connection) -> None:
     # In general it's nearly impossible to do "bullet proof" database cleanup with SQLAlchemy
     # that will work on a range of databases and they configurations.
     #
@@ -162,7 +171,7 @@ def thd_clean_database(conn) -> None:
         raise
 
 
-def thd_create_tables(conn, table_names):
+def thd_create_tables(conn: Connection, table_names: list[str]) -> None:
     table_names_set = set(table_names)
     tables = [t for t in model.Model.metadata.tables.values() if t.name in table_names_set]
     # Create tables using create_all() method. This way not only tables

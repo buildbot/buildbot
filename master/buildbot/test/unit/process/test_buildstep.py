@@ -1146,7 +1146,7 @@ class TestFakeItfc(TestBuildStepMixin, TestReactorMixin, InterfaceTests, unittes
         self.setup_step(buildstep.BuildStep())
 
 
-class TestRealItfc(unittest.TestCase, InterfaceTests):
+class TestRealItfc(InterfaceTests, unittest.TestCase):
     def setUp(self) -> None:
         self.step = buildstep.BuildStep()
 

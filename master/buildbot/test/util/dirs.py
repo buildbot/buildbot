@@ -14,15 +14,17 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
 import shutil
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
-from twisted.trial import unittest
+from twisted.trial import unittest  # noqa: TC002
 
 if TYPE_CHECKING:
-    from twisted.trial import unittest
+    from collections.abc import Iterable
 
     _DirsMixinBase = unittest.TestCase
 else:
@@ -30,9 +32,9 @@ else:
 
 
 class DirsMixin(_DirsMixinBase):
-    _dirs = None
+    _dirs: Iterable[str] | None = None
 
-    def setUpDirs(self, *dirs) -> defer.Deferred[None]:
+    def setUpDirs(self, *dirs: str) -> defer.Deferred[None]:
         """Make sure C{dirs} exist and are empty, and set them up to be deleted
         in tearDown."""
         self._dirs = map(os.path.abspath, dirs)
@@ -41,8 +43,8 @@ class DirsMixin(_DirsMixinBase):
                 shutil.rmtree(dir)
             os.makedirs(dir)
 
-        def cleanup():
-            for dir in self._dirs:
+        def cleanup() -> None:
+            for dir in self._dirs:  # type: ignore[union-attr]
                 if os.path.exists(dir):
                     shutil.rmtree(dir)
 

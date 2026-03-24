@@ -78,7 +78,7 @@ class RolesFromOwner(unittest.TestCase):
         self.assertEqual(ret, ["ownerofbuild"])
 
 
-class RolesFromUsername(unittest.TestCase, ConfigErrorsMixin):
+class RolesFromUsername(ConfigErrorsMixin, unittest.TestCase):
     def setUp(self):
         self.roles = roles.RolesFromUsername(roles=["admins"], usernames=["Admin"])
         self.roles2 = roles.RolesFromUsername(

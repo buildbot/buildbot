@@ -13,14 +13,33 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from twisted.internet import defer
 
 from buildbot.process.results import SUCCESS
 from buildbot.test import fakedb
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class ReporterTestMixin:
-    def setup_reporter_test(self):
+    master: Any
+    reporter_test_project: str
+    reporter_test_repo: str
+    reporter_test_revision: str | None
+    reporter_test_branch: str | None
+    reporter_test_codebase: str
+    reporter_test_change_id: str
+    reporter_test_builder_name: str
+    reporter_test_props: dict[str, Any]
+    reporter_test_thing_url: str
+
+    def setup_reporter_test(self) -> None:
         self.reporter_test_project = 'testProject'
         self.reporter_test_repo = 'https://example.org/repo'
         self.reporter_test_revision = 'd34db33fd43db33f'
@@ -40,7 +59,13 @@ class ReporterTestMixin:
         self.reporter_test_thing_url = 'http://thing.example.com'
 
     @defer.inlineCallbacks
-    def insert_build(self, results, insert_ss=True, parent_plan=False, insert_patch=False):
+    def insert_build(
+        self,
+        results: int | None,
+        insert_ss: bool = True,
+        parent_plan: bool = False,
+        insert_patch: bool = False,
+    ) -> InlineCallbacksType[Any]:
         yield self.insert_test_data(
             [results],
             results,
@@ -53,8 +78,12 @@ class ReporterTestMixin:
 
     @defer.inlineCallbacks
     def insert_buildset_no_builds(
-        self, results, insert_ss=True, parent_plan=False, insert_patch=False
-    ):
+        self,
+        results: int | None,
+        insert_ss: bool = True,
+        parent_plan: bool = False,
+        insert_patch: bool = False,
+    ) -> InlineCallbacksType[Any]:
         yield self.insert_test_data(
             [], results, insertSS=insert_ss, parentPlan=parent_plan, insert_patch=insert_patch
         )
@@ -62,15 +91,19 @@ class ReporterTestMixin:
         return buildset
 
     @defer.inlineCallbacks
-    def insert_build_finished(self, results=SUCCESS, **kwargs):
+    def insert_build_finished(
+        self, results: int | None = SUCCESS, **kwargs: Any
+    ) -> InlineCallbacksType[Any]:
         return (yield self.insert_build(results=results, **kwargs))
 
     @defer.inlineCallbacks
-    def insert_build_new(self, **kwargs):
+    def insert_build_new(self, **kwargs: Any) -> InlineCallbacksType[Any]:
         return (yield self.insert_build(results=None, **kwargs))
 
     @defer.inlineCallbacks
-    def insert_buildrequest_new(self, insert_patch=False, **kwargs):
+    def insert_buildrequest_new(
+        self, insert_patch: bool = False, **kwargs: Any
+    ) -> InlineCallbacksType[Any]:
         yield self.master.db.insert_test_data([
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
@@ -107,9 +140,14 @@ class ReporterTestMixin:
 
     @defer.inlineCallbacks
     def insert_test_data(
-        self, buildResults, finalResult, insertSS=True, parentPlan=False, insert_patch=False
-    ):
-        rows = [
+        self,
+        buildResults: list[int | None],
+        finalResult: int | None,
+        insertSS: bool = True,
+        parentPlan: bool = False,
+        insert_patch: bool = False,
+    ) -> InlineCallbacksType[None]:
+        rows: list[Any] = [
             fakedb.Master(id=92),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
@@ -215,12 +253,12 @@ class ReporterTestMixin:
 
         self.setup_fake_get_changes_for_build()
 
-    def get_inserted_buildset(self):
+    def get_inserted_buildset(self) -> defer.Deferred[Any]:
         return self.master.data.get(("buildsets", 98))
 
-    def setup_fake_get_changes_for_build(self, has_change=True):
+    def setup_fake_get_changes_for_build(self, has_change: bool = True) -> None:
         @defer.inlineCallbacks
-        def getChangesForBuild(buildid):
+        def getChangesForBuild(buildid: int) -> InlineCallbacksType[list[Any]]:
             if not has_change:
                 return []
 

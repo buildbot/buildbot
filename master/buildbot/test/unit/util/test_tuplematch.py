@@ -24,7 +24,7 @@ from buildbot.util import tuplematch
 class MatchTuple(tuplematching.TupleMatchingMixin, unittest.TestCase):
     # called by the TupleMatchingMixin methods
 
-    def do_test_match(
+    def do_test_match(  # type: ignore[override]
         self, routingKey: tuple[str, ...], shouldMatch: bool, filter: tuple[str | None, ...]
     ) -> None:
         result = tuplematch.matchTuple(routingKey, filter)
