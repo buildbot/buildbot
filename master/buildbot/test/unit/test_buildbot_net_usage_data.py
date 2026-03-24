@@ -53,7 +53,7 @@ class Tests(unittest.TestCase):
         await master.db.setup(check_version=False, verbose=False)
         return master
 
-    def getBaseConfig(self):
+    def getBaseConfig(self) -> dict[str, Any]:
         return {
             'builders': [
                 BuilderConfig(
@@ -68,7 +68,7 @@ class Tests(unittest.TestCase):
             'multiMaster': True,
         }
 
-    async def test_basic(self):
+    async def test_basic(self) -> None:
         self.patch(config.master, "get_is_in_unit_tests", lambda: False)
         with assertProducesWarning(
             ConfigWarning,
@@ -76,6 +76,7 @@ class Tests(unittest.TestCase):
         ):
             master = await self.getMaster(self.getBaseConfig())
         data = computeUsageData(master)
+        assert data is not None
         self.assertEqual(
             sorted(data.keys()),
             sorted(['versions', 'db', 'platform', 'installid', 'mq', 'plugins', 'www_plugins']),
@@ -91,11 +92,12 @@ class Tests(unittest.TestCase):
             ]),
         )
 
-    async def test_full(self):
+    async def test_full(self) -> None:
         c = self.getBaseConfig()
         c['buildbotNetUsageData'] = 'full'
         master = await self.getMaster(c)
         data = computeUsageData(master)
+        assert data is not None
         self.assertEqual(
             sorted(data.keys()),
             sorted([
@@ -110,12 +112,13 @@ class Tests(unittest.TestCase):
             ]),
         )
 
-    async def test_full_renderable_db_url(self):
+    async def test_full_renderable_db_url(self) -> None:
         c = self.getBaseConfig()
         c['buildbotNetUsageData'] = 'full'
         c['db'] = {'db_url': properties.Interpolate('sqlite:///state.sqlite')}
         master = await self.getMaster(c)
         data = computeUsageData(master)
+        assert data is not None
         self.assertEqual(
             sorted(data.keys()),
             sorted([
@@ -130,36 +133,37 @@ class Tests(unittest.TestCase):
             ]),
         )
 
-    async def test_custom(self):
+    async def test_custom(self) -> None:
         c = self.getBaseConfig()
 
-        def myCompute(data):
+        def myCompute(data: dict[str, Any]) -> dict[str, Any]:
             return {"db": data['db']}
 
         c['buildbotNetUsageData'] = myCompute
         master = await self.getMaster(c)
         data = computeUsageData(master)
+        assert data is not None
         self.assertEqual(sorted(data.keys()), sorted(['db']))
 
-    def test_urllib(self):
+    def test_urllib(self) -> None:
         self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
 
         class FakeRequest:
-            def __init__(self, *args, **kwargs):
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
                 self.args = args
                 self.kwargs = kwargs
 
-        open_url = []
+        open_url: list[urlopen] = []
 
         class urlopen:
-            def __init__(self, r):
+            def __init__(self, r: FakeRequest) -> None:
                 self.request = r
                 open_url.append(self)
 
-            def read(self):
+            def read(self) -> str:
                 return "ok"
 
-            def close(self):
+            def close(self) -> None:
                 pass
 
         self.patch(urllib_request, "Request", FakeRequest)
@@ -175,7 +179,7 @@ class Tests(unittest.TestCase):
             ),
         )
 
-    def test_real(self):
+    def test_real(self) -> None:
         if "TEST_BUILDBOTNET_USAGEDATA" not in os.environ:
             raise SkipTest(
                 "_sendBuildbotNetUsageData real test only run when environment variable"
@@ -184,7 +188,7 @@ class Tests(unittest.TestCase):
 
         _sendBuildbotNetUsageData({'foo': 'bar'})
 
-    def test_linux_distro(self):
+    def test_linux_distro(self) -> None:
         system = platform.system()
         if system != "Linux":
             raise SkipTest("test is only for linux")
