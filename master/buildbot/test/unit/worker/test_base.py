@@ -59,8 +59,6 @@ class FakeBuilder:
 
 class WorkerInterfaceTests(interfaces.InterfaceTests):
     wrk: Any
-    assertTrue: Callable[..., None]
-    assertIsInstance: Callable[..., None]
     callAttached: Callable[..., Any]
 
     def test_attr_workername(self) -> None:

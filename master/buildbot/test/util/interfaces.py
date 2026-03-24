@@ -16,17 +16,24 @@ from __future__ import annotations
 
 import inspect
 from collections import OrderedDict
-from typing import Callable
+from typing import TYPE_CHECKING
+from typing import Any
 
 import zope.interface.interface
 from zope.interface.interface import Attribute
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-class InterfaceTests:
-    # assertions
-    assertEqual: Callable[..., None]
+    from twisted.trial import unittest
 
-    def assertArgSpecMatches(self, actualMethod, *fakeMethods):
+    _InterfaceTestsBase = unittest.TestCase
+else:
+    _InterfaceTestsBase = object
+
+
+class InterfaceTests(_InterfaceTestsBase):
+    def assertArgSpecMatches(self, actualMethod: Any, *fakeMethods: Any) -> Callable[..., Any]:
         """Usage::
 
             @self.assertArgSpecMatches(obj.methodUnderTest)
@@ -38,7 +45,7 @@ class InterfaceTests:
             self.assertArgSpecMatches(obj.methodUnderTest, self.fakeMethod)
         """
 
-        def filter(signature: inspect.Signature):
+        def filter(signature: inspect.Signature) -> inspect.Signature:
             parameters = OrderedDict(signature.parameters)
             for name in parameters:
                 if name == 'self':
@@ -63,16 +70,16 @@ class InterfaceTests:
             signature = signature.replace(parameters=list(parameters.values()))
             return signature
 
-        def remove_decorators(func):
+        def remove_decorators(func: Any) -> Any:
             try:
                 return func.__wrapped__
             except AttributeError:
                 return func
 
-        def filter_argspec(func):
+        def filter_argspec(func: Any) -> inspect.Signature:
             return filter(inspect.signature(remove_decorators(func)))
 
-        def assert_same_argspec(expected, actual):
+        def assert_same_argspec(expected: inspect.Signature, actual: inspect.Signature) -> None:
             if expected != actual:
                 msg = f"Expected: {expected}; got: {actual}"
                 self.fail(msg)
@@ -83,7 +90,7 @@ class InterfaceTests:
             fake_argspec = filter_argspec(fakeMethod)
             assert_same_argspec(actual_argspec, fake_argspec)
 
-        def assert_same_argspec_decorator(decorated):
+        def assert_same_argspec_decorator(decorated: Any) -> Any:
             expected_argspec = filter_argspec(decorated)
             assert_same_argspec(expected_argspec, actual_argspec)
             # The decorated function works as usual.
@@ -91,7 +98,7 @@ class InterfaceTests:
 
         return assert_same_argspec_decorator
 
-    def assertInterfacesImplemented(self, cls):
+    def assertInterfacesImplemented(self, cls: type) -> None:
         "Given a class, assert that the zope.interface.Interfaces are implemented to specification."
 
         for interface in zope.interface.implementedBy(cls):
