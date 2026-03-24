@@ -293,7 +293,7 @@ class TestPropertyMap(unittest.TestCase):
         )
 
 
-class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
+class TestInterpolateConfigure(ConfigErrorsMixin, unittest.TestCase):
     """
     Test that Interpolate reports errors in the interpolation string
     at configure time.
@@ -1717,7 +1717,7 @@ class Compare(unittest.TestCase):
         self.assertEqual(_SourceStampDict('binary'), _SourceStampDict('binary'))
 
 
-class TestTransform(unittest.TestCase, ConfigErrorsMixin):
+class TestTransform(ConfigErrorsMixin, unittest.TestCase):
     def setUp(self) -> None:
         self.props = Properties(propname='propvalue')
 

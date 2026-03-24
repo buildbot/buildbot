@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 
 class TestGitHubStatusPush(
-    TestReactorMixin, unittest.TestCase, ConfigErrorsMixin, ReporterTestMixin
+    TestReactorMixin, ConfigErrorsMixin, ReporterTestMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]

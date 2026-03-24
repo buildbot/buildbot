@@ -57,7 +57,7 @@ class TestEscapeShellArgIfNeeded(unittest.TestCase):
         self.assert_does_not_escape('--opt')
 
 
-class TestSetUpGit(unittest.TestCase, config.ConfigErrorsMixin):
+class TestSetUpGit(config.ConfigErrorsMixin, unittest.TestCase):
     @parameterized.expand([
         ('no_keys', None, None, None, None),
         ('only_private_key', 'key', None, None, None),
