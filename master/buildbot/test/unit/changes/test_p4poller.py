@@ -142,7 +142,7 @@ class TestP4Poller(
                 split_file=lambda x: x.split('/', 1),
             )
         )
-        self.assertSubstring("p4source", self.changesource.describe())  # type: ignore[attr-defined]
+        self.assertSubstring("p4source", self.changesource.describe())
 
     def test_name(self) -> None:
         # no name:
@@ -190,14 +190,14 @@ class TestP4Poller(
         self.add_p4_describe_result(3, encoded_p4change[3])  # type: ignore[arg-type]
 
         # The first time, it just learns the change to start at.
-        self.assertTrue(self.changesource.last_change is None)  # type: ignore[attr-defined]
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        self.assertTrue(self.changesource.last_change is None)
+        yield self.changesource.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [])
-        self.assertEqual(self.changesource.last_change, 1)  # type: ignore[attr-defined]
+        self.assertEqual(self.changesource.last_change, 1)
 
         # Subsequent times, it returns Change objects for new changes.
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
 
         # when_timestamp is converted from a local time spec, so just
         # replicate that here
@@ -290,7 +290,7 @@ class TestP4Poller(
 
         # call _poll, so we can catch the failure
         with self.assertRaises(P4PollerError):
-            yield self.changesource._poll()  # type: ignore[attr-defined]
+            yield self.changesource._poll()
 
         self.assert_all_commands_ran()
 
@@ -313,14 +313,14 @@ class TestP4Poller(
         self.add_p4_describe_result(3, b'Perforce client error:\n...')
 
         # tell poll() that it's already been called once
-        self.changesource.last_change = 2  # type: ignore[attr-defined]
+        self.changesource.last_change = 2
 
         # call _poll, so we can catch the failure
         with self.assertRaises(P4PollerError):
-            yield self.changesource._poll()  # type: ignore[attr-defined]
+            yield self.changesource._poll()
 
         # check that 2 was processed OK
-        self.assertEqual(self.changesource.last_change, 2)  # type: ignore[attr-defined]
+        self.assertEqual(self.changesource.last_change, 2)
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
@@ -343,11 +343,11 @@ class TestP4Poller(
         self.add_p4_describe_result(2, undecodableText)
 
         # tell poll() that it's already been called once
-        self.changesource.last_change = 2  # type: ignore[attr-defined]
+        self.changesource.last_change = 2
 
         # call _poll, so we can catch the failure
         with self.assertRaises(UnicodeError):
-            yield self.changesource._poll()  # type: ignore[attr-defined]
+            yield self.changesource._poll()
 
         self.assert_all_commands_ran()
 
@@ -369,7 +369,7 @@ class TestP4Poller(
             ),
         )
 
-        yield self.changesource._poll()  # type: ignore[attr-defined]
+        yield self.changesource._poll()
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
@@ -405,7 +405,7 @@ class TestP4Poller(
 
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
@@ -442,7 +442,7 @@ class TestP4Poller(
 
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
 
     @defer.inlineCallbacks
     def test_poll_split_file(self) -> InlineCallbacksType[None]:
@@ -459,8 +459,8 @@ class TestP4Poller(
         )
         self.add_p4_describe_result(5, p4change[5])  # type: ignore[arg-type]
 
-        self.changesource.last_change = 50  # type: ignore[attr-defined]
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        self.changesource.last_change = 50
+        yield self.changesource.poll()
 
         # when_timestamp is converted from a local time spec, so just
         # replicate that here
@@ -515,7 +515,7 @@ class TestP4Poller(
                 key=changeKey,  # type: ignore[arg-type]
             ),
         )
-        self.assertEqual(self.changesource.last_change, 5)  # type: ignore[attr-defined]
+        self.assertEqual(self.changesource.last_change, 5)
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
@@ -537,8 +537,8 @@ class TestP4Poller(
         )
         self.add_p4_describe_result(5, p4change[5])  # type: ignore[arg-type]
 
-        self.changesource.last_change = 50  # type: ignore[attr-defined]
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        self.changesource.last_change = 50
+        yield self.changesource.poll()
 
         # when_timestamp is converted from 21:55:39 Berlin time to UTC
         when_berlin = self.makeTime("2006/04/13 21:55:39")

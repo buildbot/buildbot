@@ -98,7 +98,7 @@ class TestReconfigurablePollingChangeSource(
     @defer.inlineCallbacks
     def test_config_negative_interval(self) -> InlineCallbacksType[None]:
         try:
-            yield self.changesource.reconfigServiceWithSibling(  # type: ignore[attr-defined]
+            yield self.changesource.reconfigServiceWithSibling(
                 self.Subclass(name="NegativePollInterval", pollInterval=-1, pollAtLaunch=False)
             )
         except ConfigErrors as e:
@@ -107,7 +107,7 @@ class TestReconfigurablePollingChangeSource(
     @defer.inlineCallbacks
     def test_config_negative_random_delay_min(self) -> InlineCallbacksType[None]:
         try:
-            yield self.changesource.reconfigServiceWithSibling(  # type: ignore[attr-defined]
+            yield self.changesource.reconfigServiceWithSibling(
                 self.Subclass(
                     name="NegativePollRandomDelayMin",
                     pollInterval=1,
@@ -122,7 +122,7 @@ class TestReconfigurablePollingChangeSource(
     @defer.inlineCallbacks
     def test_config_negative_random_delay_max(self) -> InlineCallbacksType[None]:
         try:
-            yield self.changesource.reconfigServiceWithSibling(  # type: ignore[attr-defined]
+            yield self.changesource.reconfigServiceWithSibling(
                 self.Subclass(
                     name="NegativePollRandomDelayMax",
                     pollInterval=1,
@@ -137,7 +137,7 @@ class TestReconfigurablePollingChangeSource(
     @defer.inlineCallbacks
     def test_config_random_delay_min_gt_random_delay_max(self) -> InlineCallbacksType[None]:
         try:
-            yield self.changesource.reconfigServiceWithSibling(  # type: ignore[attr-defined]
+            yield self.changesource.reconfigServiceWithSibling(
                 self.Subclass(
                     name="PollRandomDelayMinGtPollRandomDelayMax",
                     pollInterval=1,
@@ -152,7 +152,7 @@ class TestReconfigurablePollingChangeSource(
     @defer.inlineCallbacks
     def test_config_random_delay_max_gte_interval(self) -> InlineCallbacksType[None]:
         try:
-            yield self.changesource.reconfigServiceWithSibling(  # type: ignore[attr-defined]
+            yield self.changesource.reconfigServiceWithSibling(
                 self.Subclass(
                     name="PollRandomDelayMaxGtePollInterval",
                     pollInterval=1,
@@ -167,10 +167,10 @@ class TestReconfigurablePollingChangeSource(
     def test_loop_loops(self) -> InlineCallbacksType[None]:
         # track when poll() gets called
         loops = []
-        self.changesource.poll = lambda: loops.append(self.reactor.seconds())  # type: ignore[attr-defined]
+        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
 
         yield self.startChangeSource()
-        yield self.changesource.reconfigServiceWithSibling(  # type: ignore[attr-defined]
+        yield self.changesource.reconfigServiceWithSibling(
             self.Subclass(name=self.DEFAULT_NAME, pollInterval=5, pollAtLaunch=False)
         )
 
@@ -187,10 +187,10 @@ class TestReconfigurablePollingChangeSource(
             loops.append(self.reactor.seconds())
             raise RuntimeError("oh noes")
 
-        self.changesource.poll = poll  # type: ignore[attr-defined]
+        self.changesource.poll = poll
 
         yield self.startChangeSource()
-        yield self.changesource.reconfigServiceWithSibling(  # type: ignore[attr-defined]
+        yield self.changesource.reconfigServiceWithSibling(
             self.Subclass(name=self.DEFAULT_NAME, pollInterval=5, pollAtLaunch=False)
         )
 
@@ -206,10 +206,10 @@ class TestReconfigurablePollingChangeSource(
         yield self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         loops = []
-        self.changesource.poll = lambda: loops.append(self.reactor.seconds())  # type: ignore[attr-defined]
+        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
 
         yield self.startChangeSource()
-        yield self.changesource.reconfigServiceWithSibling(  # type: ignore[attr-defined]
+        yield self.changesource.reconfigServiceWithSibling(
             self.Subclass(name=self.DEFAULT_NAME, pollInterval=5, pollAtLaunch=False)
         )
 
@@ -222,9 +222,9 @@ class TestReconfigurablePollingChangeSource(
     def test_pollAtLaunch(self) -> InlineCallbacksType[None]:
         # track when poll() gets called
         loops = []
-        self.changesource.poll = lambda: loops.append(self.reactor.seconds())  # type: ignore[attr-defined]
+        self.changesource.poll = lambda: loops.append(self.reactor.seconds())
         yield self.startChangeSource()
-        yield self.changesource.reconfigServiceWithSibling(  # type: ignore[attr-defined]
+        yield self.changesource.reconfigServiceWithSibling(
             self.Subclass(name=self.DEFAULT_NAME, pollInterval=5, pollAtLaunch=True)
         )
 

@@ -13,16 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
+from typing import Any
 
 from twisted.internet import defer
-from twisted.trial import unittest
 
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 
 if TYPE_CHECKING:
     from twisted.trial import unittest
+
+    from buildbot.util.twisted import InlineCallbacksType
 
     _ChangeSourceMixinBase = unittest.TestCase
 else:
@@ -37,7 +41,7 @@ class ChangeSourceMixin(_ChangeSourceMixinBase):
      - a fake master with a data API implementation
     """
 
-    changesource = None
+    changesource: Any = None
     started = False
 
     DUMMY_CHANGESOURCE_ID = 20
@@ -45,7 +49,7 @@ class ChangeSourceMixin(_ChangeSourceMixinBase):
     DEFAULT_NAME = "ChangeSource"
 
     @defer.inlineCallbacks
-    def setUpChangeSource(self, want_real_reactor: bool = False):
+    def setUpChangeSource(self, want_real_reactor: bool = False) -> InlineCallbacksType[None]:
         "Set up the mixin - returns a deferred."
         self.master = yield fakemaster.make_master(
             self, wantDb=True, wantData=True, wantRealReactor=want_real_reactor
@@ -58,7 +62,7 @@ class ChangeSourceMixin(_ChangeSourceMixinBase):
         ])
 
         @defer.inlineCallbacks
-        def cleanup():
+        def cleanup() -> InlineCallbacksType[None]:
             if not self.started:
                 return
             if self.changesource.running:
@@ -68,26 +72,26 @@ class ChangeSourceMixin(_ChangeSourceMixinBase):
         self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
-    def attachChangeSource(self, cs):
+    def attachChangeSource(self, cs: Any) -> InlineCallbacksType[Any]:
         self.changesource = cs
         yield self.changesource.setServiceParent(self.master)
         yield self.changesource.configureService()
         return cs
 
-    def startChangeSource(self):
+    def startChangeSource(self) -> defer.Deferred[None]:
         "start the change source as a service"
         self.started = True
         return self.changesource.startService()
 
     @defer.inlineCallbacks
-    def stopChangeSource(self):
+    def stopChangeSource(self) -> InlineCallbacksType[None]:
         "stop the change source again; returns a deferred"
         yield self.changesource.stopService()
 
         self.started = False
 
     @defer.inlineCallbacks
-    def setChangeSourceToMaster(self, otherMaster):
+    def setChangeSourceToMaster(self, otherMaster: int | None) -> InlineCallbacksType[Any]:
         ret = yield self.master.data.updates.trySetChangeSourceMaster(
             self.DUMMY_CHANGESOURCE_ID, otherMaster
         )

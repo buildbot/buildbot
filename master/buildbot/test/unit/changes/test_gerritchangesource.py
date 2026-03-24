@@ -129,7 +129,7 @@ class TestGerritChangeSource(
     @defer.inlineCallbacks
     def create_gerrit_synchronized(
         self, host: str, user: str, *args: Any, **kwargs: Any
-    ) -> InlineCallbacksType[None]:
+    ) -> InlineCallbacksType[Any]:
         s = yield self.create_gerrit(host, user, *args, **kwargs)
         s._is_synchronized = True
         return s
@@ -1080,7 +1080,7 @@ class TestGerritEventLogPoller(
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master, self, 'gerrit', auth=auth
         )
-        self.changesource = gerritchangesource.GerritEventLogPoller(  # type: ignore[assignment]
+        self.changesource = gerritchangesource.GerritEventLogPoller(
             'gerrit',
             auth=auth,
             gitBaseURL="ssh://someuser@somehost:29418",
@@ -1090,7 +1090,7 @@ class TestGerritEventLogPoller(
 
     @defer.inlineCallbacks
     def startChangeSource(self) -> InlineCallbacksType[None]:
-        yield self.changesource.setServiceParent(self.master)  # type: ignore[attr-defined]
+        yield self.changesource.setServiceParent(self.master)
         yield self.attachChangeSource(self.changesource)
 
     @defer.inlineCallbacks
@@ -1098,12 +1098,12 @@ class TestGerritEventLogPoller(
         # describe is not used yet in buildbot nine, but it can still be useful in the future, so
         # lets implement and test it
         yield self.newChangeSource()
-        self.assertSubstring('GerritEventLogPoller', self.changesource.describe())  # type: ignore[attr-defined]
+        self.assertSubstring('GerritEventLogPoller', self.changesource.describe())
 
     @defer.inlineCallbacks
     def test_name(self) -> InlineCallbacksType[None]:
         yield self.newChangeSource()
-        self.assertEqual('GerritEventLogPoller:gerrit', self.changesource.name)  # type: ignore[attr-defined]
+        self.assertEqual('GerritEventLogPoller:gerrit', self.changesource.name)
 
     @defer.inlineCallbacks
     def test_poller_uses_correct_signature(self) -> InlineCallbacksType[None]:
@@ -1125,11 +1125,11 @@ class TestGerritEventLogPoller(
 
         yield self.startChangeSource()
 
-        d = self.changesource._poller()  # type: ignore[attr-defined]
+        d = self.changesource._poller()
         self.reactor.advance(0)
         yield d
 
-        d = self.changesource.disownServiceParent()  # type: ignore[attr-defined]
+        d = self.changesource.disownServiceParent()
         yield d
 
     @defer.inlineCallbacks
@@ -1175,7 +1175,7 @@ class TestGerritEventLogPoller(
         )
 
         yield self.startChangeSource()
-        yield self.changesource._connector.poll()  # type: ignore[attr-defined]
+        yield self.changesource._connector.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
@@ -1219,7 +1219,7 @@ class TestGerritEventLogPoller(
             content=self.change_revision_resp,
         )
 
-        yield self.changesource._connector.poll()  # type: ignore[attr-defined]
+        yield self.changesource._connector.poll()
         yield self.assert_state(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
 
     change_revision_dict = {
@@ -1239,7 +1239,7 @@ class TestGerritEventLogPoller(
             content=self.change_revision_resp,
         )
 
-        files = yield self.changesource.getFiles(100, 1)  # type: ignore[attr-defined]
+        files = yield self.changesource.getFiles(100, 1)
         self.assertEqual(set(files), {'/COMMIT_MSG', 'file1'})
 
     @defer.inlineCallbacks
@@ -1253,7 +1253,7 @@ class TestGerritEventLogPoller(
             content=b')]}\n',  # more than one line expected
         )
 
-        files = yield self.changesource.getFiles(100, 1)  # type: ignore[attr-defined]
+        files = yield self.changesource.getFiles(100, 1)
         self.assertEqual(files, [])
         self.assertEqual(len(self.flushLoggedErrors()), 1)
 

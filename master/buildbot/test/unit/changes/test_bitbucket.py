@@ -291,7 +291,7 @@ class PullRequestListRest:
 class TestBitbucketPullrequestPoller(
     changesource.ChangeSourceMixin, TestReactorMixin, LoggingMixin, unittest.TestCase
 ):
-    def setUp(self) -> defer.Deferred[object]:  # type: ignore[override]
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setUpLogging()
 
@@ -366,7 +366,7 @@ class TestBitbucketPullrequestPoller(
     @defer.inlineCallbacks
     def test_describe(self) -> InlineCallbacksType[None]:
         yield self._new_change_source(owner='owner', slug='slug')
-        assert re.search(r'owner/slug', self.changesource.describe())  # type: ignore[attr-defined]
+        assert re.search(r'owner/slug', self.changesource.describe())
 
     @defer.inlineCallbacks
     def test_poll_unknown_repo(self) -> InlineCallbacksType[None]:
@@ -375,7 +375,7 @@ class TestBitbucketPullrequestPoller(
 
         self._http.expect('get', '/repositories/owner/slug/pullrequests', content_json={}, code=404)
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
 
         self.assertLogged('error 404 while loading')
 
@@ -393,7 +393,7 @@ class TestBitbucketPullrequestPoller(
             'get', '/repositories/owner/slug/pullrequests', content=rest_pr_list.response()
         )
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
@@ -429,7 +429,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_src.repo_response(),
         )
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -491,7 +491,7 @@ class TestBitbucketPullrequestPoller(
             'get', '/repositories/owner/slug/pullrequests', content=self.rest_pr_list.response()
         )
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -518,7 +518,7 @@ class TestBitbucketPullrequestPoller(
         )
 
         # repoll
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
     @defer.inlineCallbacks
@@ -602,7 +602,7 @@ class TestBitbucketPullrequestPoller(
             content=rest_src2.repo_response(),
         )
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
         self.maxDiff = None
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -628,7 +628,7 @@ class TestBitbucketPullrequestPoller(
             ],
         )
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -688,7 +688,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_pr.response(),
         )
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
@@ -724,7 +724,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_src.repo_response(),
         )
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
 
         self.assertEqual(
             self.master.data.updates.changesAdded,
@@ -784,7 +784,7 @@ class TestBitbucketPullrequestPoller(
 
         self.reactor.advance(1396825656)
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
@@ -843,7 +843,7 @@ class TestBitbucketPullrequestPoller(
             content=self.rest_src.repo_response(),
         )
 
-        yield self.changesource.poll()  # type: ignore[attr-defined]
+        yield self.changesource.poll()
         self.assertEqual(
             self.master.data.updates.changesAdded,
             [
