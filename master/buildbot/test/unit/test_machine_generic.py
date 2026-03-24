@@ -14,12 +14,19 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 from buildbot.machine.generic import HttpAction
 from buildbot.machine.generic import LocalWakeAction
@@ -37,14 +44,14 @@ from buildbot.test.util import config
 
 
 class FakeManager:
-    def __init__(self, master):
+    def __init__(self, master: Any) -> None:
         self.master = master
 
-    def renderSecrets(self, args):
+    def renderSecrets(self, args: Any) -> defer.Deferred[Any]:
         return defer.succeed(args)
 
 
-def create_simple_mock_master(reactor, basedir=None):
+def create_simple_mock_master(reactor: Any, basedir: str | None = None) -> mock.Mock:
     master = mock.Mock()
     master.basedir = basedir
     master.reactor = reactor
@@ -54,12 +61,12 @@ def create_simple_mock_master(reactor, basedir=None):
 class TestActions(
     MasterRunProcessMixin, config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         self.setup_master_run_process()
 
     @defer.inlineCallbacks
-    def test_local_wake_action(self):
+    def test_local_wake_action(self) -> InlineCallbacksType[None]:
         self.expect_commands(
             ExpectMasterShell(['cmd', 'arg1', 'arg2']).exit(1),
             ExpectMasterShell(['cmd', 'arg1', 'arg2']).exit(0),
@@ -71,12 +78,12 @@ class TestActions(
         self.assertTrue((yield action.perform(manager)))
         self.assert_all_commands_ran()
 
-    def test_local_wake_action_command_not_list(self):
+    def test_local_wake_action_command_not_list(self) -> None:
         with self.assertRaisesConfigError('command parameter must be a list'):
-            LocalWakeAction('not-list')
+            LocalWakeAction('not-list')  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
-    def test_local_wol_action(self):
+    def test_local_wol_action(self) -> InlineCallbacksType[None]:
         self.expect_commands(
             ExpectMasterShell(['wol', '00:11:22:33:44:55']).exit(1),
             ExpectMasterShell(['wakeonlan', '00:11:22:33:44:55']).exit(0),
@@ -96,7 +103,9 @@ class TestActions(
     )
     @mock.patch('buildbot.util.misc.writeLocalFile')
     @defer.inlineCallbacks
-    def test_remote_ssh_wake_action_no_keys(self, write_local_file_mock, temp_dir_mock):
+    def test_remote_ssh_wake_action_no_keys(
+        self, write_local_file_mock: mock.Mock, temp_dir_mock: mock.Mock
+    ) -> InlineCallbacksType[None]:
         self.expect_commands(
             ExpectMasterShell([
                 'ssh',
@@ -131,7 +140,9 @@ class TestActions(
     )
     @mock.patch('buildbot.util.misc.writeLocalFile')
     @defer.inlineCallbacks
-    def test_remote_ssh_wake_action_with_keys(self, write_local_file_mock, temp_dir_mock):
+    def test_remote_ssh_wake_action_with_keys(
+        self, write_local_file_mock: mock.Mock, temp_dir_mock: mock.Mock
+    ) -> InlineCallbacksType[None]:
         temp_dir_path = os.path.join('path-to-master', 'ssh-@@@')
         ssh_key_path = os.path.join(temp_dir_path, 'ssh-key')
         ssh_known_hosts_path = os.path.join(temp_dir_path, 'ssh-known-hosts')
@@ -169,17 +180,17 @@ class TestActions(
             ],
         )
 
-    def test_remote_ssh_wake_action_sshBin_not_str(self):
+    def test_remote_ssh_wake_action_sshBin_not_str(self) -> None:
         with self.assertRaisesConfigError('sshBin parameter must be a string'):
-            RemoteSshWakeAction('host', ['cmd'], sshBin=123)
+            RemoteSshWakeAction('host', ['cmd'], sshBin=123)  # type: ignore[arg-type]
 
-    def test_remote_ssh_wake_action_host_not_str(self):
+    def test_remote_ssh_wake_action_host_not_str(self) -> None:
         with self.assertRaisesConfigError('host parameter must be a string'):
-            RemoteSshWakeAction(123, ['cmd'])
+            RemoteSshWakeAction(123, ['cmd'])  # type: ignore[arg-type]
 
-    def test_remote_ssh_wake_action_command_not_list(self):
+    def test_remote_ssh_wake_action_command_not_list(self) -> None:
         with self.assertRaisesConfigError('remoteCommand parameter must be a list'):
-            RemoteSshWakeAction('host', 'cmd')
+            RemoteSshWakeAction('host', 'cmd')  # type: ignore[arg-type]
 
     @mock.patch(
         'buildbot.util.private_tempdir.PrivateTemporaryDirectory',
@@ -187,7 +198,9 @@ class TestActions(
     )
     @mock.patch('buildbot.util.misc.writeLocalFile')
     @defer.inlineCallbacks
-    def test_remote_ssh_wol_action_no_keys(self, write_local_file_mock, temp_dir_mock):
+    def test_remote_ssh_wol_action_no_keys(
+        self, write_local_file_mock: mock.Mock, temp_dir_mock: mock.Mock
+    ) -> InlineCallbacksType[None]:
         self.expect_commands(
             ExpectMasterShell([
                 'ssh',
@@ -224,7 +237,9 @@ class TestActions(
     )
     @mock.patch('buildbot.util.misc.writeLocalFile')
     @defer.inlineCallbacks
-    def test_remote_ssh_suspend_action_no_keys(self, write_local_file_mock, temp_dir_mock):
+    def test_remote_ssh_suspend_action_no_keys(
+        self, write_local_file_mock: mock.Mock, temp_dir_mock: mock.Mock
+    ) -> InlineCallbacksType[None]:
         self.expect_commands(
             ExpectMasterShell([
                 'ssh',
@@ -258,7 +273,7 @@ class TestActions(
 
 class TestHttpAction(config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self.http = yield fakehttpclientservice.HTTPClientService.getService(
@@ -266,7 +281,7 @@ class TestHttpAction(config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCa
         )
 
     @defer.inlineCallbacks
-    def test_http_wrong_method(self):
+    def test_http_wrong_method(self) -> InlineCallbacksType[None]:
         manager = FakeManager(self.master)
         action = HttpAction('http://localhost/request', method='non-existing-method')
 
@@ -280,7 +295,7 @@ class TestHttpAction(config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCa
         'put',
     ])
     @defer.inlineCallbacks
-    def test_http(self, method):
+    def test_http(self, method: str) -> InlineCallbacksType[None]:
         self.http.expect(method, '')
 
         manager = FakeManager(self.master)
