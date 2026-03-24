@@ -209,7 +209,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.util.scheduler",
       "buildbot.test.util.sourcesteps",
       "buildbot.test.util.validation",
-      "buildbot.test.util.warnings",
       "buildbot.test.util.www",
       "buildbot.test",
       "buildbot.wamp.connector",
