@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
+class TriggerableInterfaceTest(interfaces.InterfaceTests, unittest.TestCase):
     def test_interface(self) -> None:
         self.assertInterfacesImplemented(triggerable.Triggerable)
 

@@ -132,7 +132,7 @@ class Tests(interfaces.InterfaceTests):
             pass
 
 
-class TestFakeData(TestReactorMixin, unittest.TestCase, Tests):
+class TestFakeData(TestReactorMixin, Tests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
@@ -140,7 +140,7 @@ class TestFakeData(TestReactorMixin, unittest.TestCase, Tests):
         self.data = self.master.data
 
 
-class TestDataConnector(TestReactorMixin, unittest.TestCase, Tests):
+class TestDataConnector(TestReactorMixin, Tests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()

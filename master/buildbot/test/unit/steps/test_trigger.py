@@ -74,7 +74,7 @@ class FakeTriggerable:
         return (idsDeferred, resultsDeferred)
 
 
-class TriggerableInterfaceTest(unittest.TestCase, InterfaceTests):
+class TriggerableInterfaceTest(InterfaceTests, unittest.TestCase):
     def test_interface(self) -> None:
         self.assertInterfacesImplemented(FakeTriggerable)
 

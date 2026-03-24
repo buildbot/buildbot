@@ -134,7 +134,7 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
             pass
 
 
-class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
+class RealWorkerItfc(TestReactorMixin, WorkerInterfaceTests, unittest.TestCase):
     def setUp(self) -> None:
         self.setup_test_reactor()
         self.wrk = ConcreteWorker('wrk', 'pa')
@@ -152,7 +152,7 @@ class RealWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
         yield self.wrk.attached(self.conn)
 
 
-class FakeWorkerItfc(TestReactorMixin, unittest.TestCase, WorkerInterfaceTests):
+class FakeWorkerItfc(TestReactorMixin, WorkerInterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
