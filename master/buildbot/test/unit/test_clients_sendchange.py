@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
@@ -22,9 +26,14 @@ from twisted.trial import unittest
 
 from buildbot.clients import sendchange
 
+if TYPE_CHECKING:
+    from twisted.cred import credentials
+
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class Sender(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         # patch out some PB components and make up some mocks
         self.patch(pb, 'PBClientFactory', self._fake_PBClientFactory)
         self.patch(reactor, 'connectTCP', self._fake_connectTCP)
@@ -38,47 +47,55 @@ class Sender(unittest.TestCase):
         self.remote.broker.transport.loseConnection = self._fake_loseConnection
 
         # results
-        self.creds = None
-        self.conn_host = self.conn_port = None
+        self.creds: credentials.UsernamePassword | None = None
+        self.conn_host: str | None = None
+        self.conn_port: int | None = None
         self.lostConnection = False
-        self.added_changes = []
-        self.vc_used = None
+        self.added_changes: list[dict[str, Any]] = []
+        self.vc_used: str | None = None
 
-    def _fake_PBClientFactory(self):
+    def _fake_PBClientFactory(self) -> mock.Mock:
         return self.factory
 
-    def _fake_login(self, creds):
+    def _fake_login(self, creds: credentials.UsernamePassword) -> defer.Deferred[mock.Mock]:
         self.creds = creds
         return self.factory.login_d
 
-    def _fake_connectTCP(self, host, port, factory):
+    def _fake_connectTCP(self, host: str, port: int, factory: pb.PBClientFactory) -> None:
         self.conn_host = host
         self.conn_port = port
         self.assertIdentical(factory, self.factory)
         self.factory.login_d.callback(self.remote)
 
-    def _fake_callRemote(self, method, change):
+    def _fake_callRemote(self, method: str, change: dict[str, Any]) -> defer.Deferred[None]:
         self.assertEqual(method, 'addChange')
         self.added_changes.append(change)
         return defer.succeed(None)
 
-    def _fake_loseConnection(self):
+    def _fake_loseConnection(self) -> None:
         self.lostConnection = True
 
-    def assertProcess(self, host, port, username, password, changes):
+    def assertProcess(
+        self,
+        host: str,
+        port: int,
+        username: bytes,
+        password: bytes,
+        changes: list[dict[str, Any]],
+    ) -> None:
         self.assertEqual(
             [host, port, username, password, changes],
             [
                 self.conn_host,
                 self.conn_port,
-                self.creds.username,
-                self.creds.password,
+                self.creds.username,  # type: ignore[union-attr]
+                self.creds.password,  # type: ignore[union-attr]
                 self.added_changes,
             ],
         )
 
     @defer.inlineCallbacks
-    def test_send_minimal(self):
+    def test_send_minimal(self) -> InlineCallbacksType[None]:
         s = sendchange.Sender('localhost:1234')
         yield s.send('branch', 'rev', 'comm', ['a'])
 
@@ -106,7 +123,7 @@ class Sender(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_send_auth(self):
+    def test_send_auth(self) -> InlineCallbacksType[None]:
         s = sendchange.Sender('localhost:1234', auth=('me', 'sekrit'))
         yield s.send('branch', 'rev', 'comm', ['a'])
 
@@ -134,7 +151,7 @@ class Sender(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_send_full(self):
+    def test_send_full(self) -> InlineCallbacksType[None]:
         s = sendchange.Sender('localhost:1234')
         yield s.send(
             'branch',
@@ -175,7 +192,7 @@ class Sender(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_send_files_tuple(self):
+    def test_send_files_tuple(self) -> InlineCallbacksType[None]:
         # 'buildbot sendchange' sends files as a tuple, rather than a list..
         s = sendchange.Sender('localhost:1234')
         yield s.send('branch', 'rev', 'comm', ('a', 'b'))
@@ -204,7 +221,7 @@ class Sender(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_send_codebase(self):
+    def test_send_codebase(self) -> InlineCallbacksType[None]:
         s = sendchange.Sender('localhost:1234')
         yield s.send('branch', 'rev', 'comm', ['a'], codebase='mycb')
 
@@ -233,7 +250,7 @@ class Sender(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_send_unicode(self):
+    def test_send_unicode(self) -> InlineCallbacksType[None]:
         s = sendchange.Sender('localhost:1234')
         yield s.send(
             '\N{DEGREE SIGN}',
@@ -273,7 +290,7 @@ class Sender(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_send_unicode_utf8(self):
+    def test_send_unicode_utf8(self) -> InlineCallbacksType[None]:
         s = sendchange.Sender('localhost:1234')
 
         yield s.send(
@@ -315,7 +332,7 @@ class Sender(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_send_unicode_latin1(self):
+    def test_send_unicode_latin1(self) -> InlineCallbacksType[None]:
         # hand send() a bunch of latin1 strings, and expect them recoded
         # to unicode
         s = sendchange.Sender('localhost:1234', encoding='latin1')
