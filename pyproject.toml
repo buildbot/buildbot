@@ -205,7 +205,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.util.fuzz",
       "buildbot.test.util.git_repository",
       "buildbot.test.util.integration",
-      "buildbot.test.util.patch_delay",
       "buildbot.test.util.pbmanager",
       "buildbot.test.util.properties",
       "buildbot.test.util.protocols",

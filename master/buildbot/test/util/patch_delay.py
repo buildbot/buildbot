@@ -18,15 +18,23 @@
 #
 # It is licensed under PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2.
 # Copyright (c) 2001-2019 Python Software Foundation. All rights reserved.
+from __future__ import annotations
 
 import contextlib
 import functools
+from typing import TYPE_CHECKING
+from typing import Any
 from unittest import mock
 
 from twisted.internet import defer
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
-def _dot_lookup(thing, comp, import_path):
+    from buildbot.util.twisted import InlineCallbacksType
+
+
+def _dot_lookup(thing: Any, comp: str, import_path: str) -> Any:
     try:
         return getattr(thing, comp)
     except AttributeError:
@@ -34,7 +42,7 @@ def _dot_lookup(thing, comp, import_path):
         return getattr(thing, comp)
 
 
-def _importer(target):
+def _importer(target: str) -> Any:
     components = target.split('.')
     import_path = components.pop(0)
     thing = __import__(import_path)
@@ -45,7 +53,7 @@ def _importer(target):
     return thing
 
 
-def _get_target(target):
+def _get_target(target: str) -> tuple[Any, str]:
     try:
         target, attribute = target.rsplit('.', 1)
     except (TypeError, ValueError) as e:
@@ -54,18 +62,18 @@ def _get_target(target):
 
 
 class DelayWrapper:
-    def __init__(self):
-        self._deferreds = []
+    def __init__(self) -> None:
+        self._deferreds: list[defer.Deferred[None]] = []
 
-    def add_new(self):
-        d = defer.Deferred()
+    def add_new(self) -> defer.Deferred[None]:
+        d: defer.Deferred[None] = defer.Deferred()
         self._deferreds.append(d)
         return d
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._deferreds)
 
-    def fire(self):
+    def fire(self) -> None:
         deferreds = self._deferreds
         self._deferreds = []
         for d in deferreds:
@@ -73,7 +81,7 @@ class DelayWrapper:
 
 
 @contextlib.contextmanager
-def patchForDelay(target_name):
+def patchForDelay(target_name: str) -> Iterator[DelayWrapper]:
     class Default:
         pass
 
@@ -91,7 +99,7 @@ def patchForDelay(target_name):
 
     @functools.wraps(original)
     @defer.inlineCallbacks
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> InlineCallbacksType[Any]:
         yield delay.add_new()
         return (yield original(*args, **kwargs))
 
