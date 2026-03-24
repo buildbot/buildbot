@@ -198,7 +198,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.www.test_roles",
       "buildbot.test.unit.www.test_service",
       "buildbot.test.util.changesource",
-      "buildbot.test.util.config",
       "buildbot.test.util.configurators",
       "buildbot.test.util.connector_component",
       "buildbot.test.util.endpoint",
