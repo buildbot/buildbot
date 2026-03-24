@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
+from typing import Any
 from unittest import mock
 
 from buildbot.test.steps import TestBuildStepMixin
@@ -32,7 +34,9 @@ class SourceStepMixin(TestBuildStepMixin):
     @ivar sourcestamp: fake SourceStamp for the build
     """
 
-    def setup_step(self, step, args=None, patch=None, **kwargs):
+    def setup_step(  # type: ignore[override]
+        self, step: Any, args: dict[str, Any] | None = None, patch: Any = None, **kwargs: Any
+    ) -> Any:
         """
         Set up C{step} for testing.  This calls L{TestBuildStepMixin}'s C{setup_step}
         and then does setup specific to a Source step.
@@ -51,5 +55,5 @@ class SourceStepMixin(TestBuildStepMixin):
         ss.patch = patch
         ss.patch_info = None
         ss.changes = []
-        self.build.getSourceStamp = lambda x=None: ss
+        self.build.getSourceStamp = lambda x=None: ss  # type: ignore[method-assign,misc]
         return step
