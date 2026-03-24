@@ -14,11 +14,17 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class FuzzTestCase(unittest.TestCase):
@@ -26,11 +32,11 @@ class FuzzTestCase(unittest.TestCase):
     FUZZ_TIME = 10
 
     @defer.inlineCallbacks
-    def test_fuzz(self):
+    def test_fuzz(self) -> InlineCallbacksType[None]:
         # note that this will loop if do_fuzz doesn't take long enough
-        endTime = reactor.seconds() + self.FUZZ_TIME
-        while reactor.seconds() < endTime:
-            yield self.do_fuzz(endTime)
+        endTime = reactor.seconds() + self.FUZZ_TIME  # type: ignore[attr-defined]
+        while reactor.seconds() < endTime:  # type: ignore[attr-defined]
+            yield self.do_fuzz(endTime)  # type: ignore[attr-defined]
 
     # delete this test case entirely if fuzzing is not enabled
     if 'BUILDBOT_FUZZ' not in os.environ:
