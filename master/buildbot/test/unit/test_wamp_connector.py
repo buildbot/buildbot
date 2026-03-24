@@ -107,30 +107,30 @@ class WampConnector(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_startup(self) -> InlineCallbacksType[None]:
         d = self.connector.getService()
-        self.connector.app.gotConnection()
+        self.connector.app.gotConnection()  # type: ignore[union-attr]
         yield d
         # 824 is the hardcoded masterid of fakemaster
-        self.connector.service.publish.assert_called_with("org.buildbot.824.connected")
+        self.connector.service.publish.assert_called_with("org.buildbot.824.connected")  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
     def test_subscribe(self) -> InlineCallbacksType[None]:
         d = self.connector.subscribe('callback', 'topic', 'options')
-        self.connector.app.gotConnection()
+        self.connector.app.gotConnection()  # type: ignore[union-attr]
         yield d
-        self.connector.service.subscribe.assert_called_with('callback', 'topic', 'options')
+        self.connector.service.subscribe.assert_called_with('callback', 'topic', 'options')  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
     def test_publish(self) -> InlineCallbacksType[None]:
         d = self.connector.publish('topic', 'data', 'options')
-        self.connector.app.gotConnection()
+        self.connector.app.gotConnection()  # type: ignore[union-attr]
         yield d
-        self.connector.service.publish.assert_called_with('topic', 'data', options='options')
+        self.connector.service.publish.assert_called_with('topic', 'data', options='options')  # type: ignore[union-attr]
 
     @defer.inlineCallbacks
     def test_OnLeave(self) -> InlineCallbacksType[None]:
         d = self.connector.getService()
-        self.connector.app.gotConnection()
+        self.connector.app.gotConnection()  # type: ignore[union-attr]
         yield d
         self.assertTrue(self.connector.master.running)
-        self.connector.service.onLeave(None)
+        self.connector.service.onLeave(None)  # type: ignore[union-attr, arg-type]
         self.assertFalse(self.connector.master.running)
