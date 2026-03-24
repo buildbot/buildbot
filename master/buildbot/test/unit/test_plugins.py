@@ -16,7 +16,10 @@
 Unit tests for the plugin framework
 """
 
+from __future__ import annotations
+
 import warnings
+from typing import Any
 from unittest import mock
 
 from twisted.trial import unittest
@@ -37,29 +40,36 @@ class FakeEntry:
     An entry suitable for unit tests
     """
 
-    def __init__(self, name, group, fail_require, value, warnings=None):
+    def __init__(
+        self,
+        name: str,
+        group: str,
+        fail_require: bool,
+        value: Any,
+        warnings: list[str] | None = None,
+    ) -> None:
         self._name = name
         self._group = group
         self._fail_require = fail_require
         self._value = value
-        self._warnings = [] if warnings is None else warnings
+        self._warnings: list[str] = [] if warnings is None else warnings
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def group(self):
+    def group(self) -> str:
         return self._group
 
-    def require(self):
+    def require(self) -> None:
         """
         handle external dependencies
         """
         if self._fail_require:
             raise RuntimeError('Fail require as requested')
 
-    def load(self):
+    def load(self) -> Any:
         """
         handle loading
         """
@@ -69,18 +79,18 @@ class FakeEntry:
 
 
 class FakeDistribution:
-    def __init__(self, name, version, fake_entries_distribution):
+    def __init__(self, name: str, version: str, fake_entries_distribution: list[FakeEntry]) -> None:
         self.entry_points = fake_entries_distribution
         self.version = version
-        self.metadata = {}
+        self.metadata: dict[str, str] = {}
         self.metadata['Name'] = name
         self.metadata['Version'] = version
 
 
 class FakeDistributionNoMetadata:
-    def __init__(self, name, version, fake_entries_distribution):
+    def __init__(self, name: str, version: str, fake_entries_distribution: list[FakeEntry]) -> None:
         self.entry_points = fake_entries_distribution
-        self.metadata = {}
+        self.metadata: dict[str, str] = {}
 
 
 class ITestInterface(IPlugin):
@@ -88,7 +98,7 @@ class ITestInterface(IPlugin):
     test interface
     """
 
-    def hello():
+    def hello(name: str | None = None) -> str | None:
         pass
 
 
@@ -98,10 +108,10 @@ class ClassWithInterface:
     a class to implement a simple interface
     """
 
-    def __init__(self, name=None):
+    def __init__(self, name: str | None = None) -> None:
         self._name = name
 
-    def hello(self, name=None):
+    def hello(self, name: str | None = None) -> str | None:
         "implement the required method"
         return name or self._name
 
@@ -154,12 +164,12 @@ _FAKE_ENTRIES = {
 }
 
 
-def fake_find_distribution_info(entry_name, entry_group):
+def fake_find_distribution_info(entry_name: str, entry_group: str) -> tuple[str, str]:
     return ('non-existent', 'irrelevant')
 
 
 class TestFindDistributionInfo(unittest.TestCase):
-    def test_exists_in_1st_ep(self):
+    def test_exists_in_1st_ep(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -173,7 +183,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             result = buildbot.plugins.db.find_distribution_info('ep1', 'group_ep1')
             self.assertEqual(('name_1', 'version_1'), result)
 
-    def test_exists_in_last_ep(self):
+    def test_exists_in_last_ep(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -188,7 +198,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             result = buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
             self.assertEqual(('name_1', 'version_1'), result)
 
-    def test_no_group(self):
+    def test_no_group(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -202,7 +212,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             with self.assertRaises(PluginDBError):
                 buildbot.plugins.db.find_distribution_info('ep1', 'no_group')
 
-    def test_no_name(self):
+    def test_no_name(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -216,7 +226,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             with self.assertRaises(PluginDBError):
                 buildbot.plugins.db.find_distribution_info('no_name', 'group_ep1')
 
-    def test_no_name_no_group(self):
+    def test_no_name_no_group(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -230,7 +240,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             with self.assertRaises(PluginDBError):
                 buildbot.plugins.db.find_distribution_info('no_name', 'no_group')
 
-    def test_no_metadata_error_in_1st_dist(self):
+    def test_no_metadata_error_in_1st_dist(self) -> None:
         distributions = [
             FakeDistributionNoMetadata(
                 'name_1',
@@ -244,7 +254,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             with self.assertRaises(PluginDBError):
                 buildbot.plugins.db.find_distribution_info('ep1', 'group_ep1')
 
-    def test_no_metadata_error_in_last_dist(self):
+    def test_no_metadata_error_in_last_dist(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -265,7 +275,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             with self.assertRaises(PluginDBError):
                 buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
 
-    def test_exists_in_last_dist_1st_ep(self):
+    def test_exists_in_last_dist_1st_ep(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -287,7 +297,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             result = buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
             self.assertEqual(('name_2', 'version_2'), result)
 
-    def test_exists_in_last_dist_last_ep(self):
+    def test_exists_in_last_dist_last_ep(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -309,7 +319,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             result = buildbot.plugins.db.find_distribution_info('ep3', 'group_ep3')
             self.assertEqual(('name_2', 'version_2'), result)
 
-    def test_1st_dist_no_ep(self):
+    def test_1st_dist_no_ep(self) -> None:
         distributions = [
             FakeDistribution('name_1', 'version_1', []),
             FakeDistribution(
@@ -324,7 +334,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             result = buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
             self.assertEqual(('name_2', 'version_2'), result)
 
-    def test_exists_in_2nd_dist_ep_no_metadada(self):
+    def test_exists_in_2nd_dist_ep_no_metadada(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -345,7 +355,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             with self.assertRaises(PluginDBError):
                 buildbot.plugins.db.find_distribution_info('ep2', 'group_ep2')
 
-    def test_same_groups_different_ep(self):
+    def test_same_groups_different_ep(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -366,7 +376,7 @@ class TestFindDistributionInfo(unittest.TestCase):
             result = buildbot.plugins.db.find_distribution_info('ep2', 'group_ep1')
             self.assertEqual(('name_2', 'version_2'), result)
 
-    def test_same_ep_different_groups(self):
+    def test_same_ep_different_groups(self) -> None:
         distributions = [
             FakeDistribution(
                 'name_1',
@@ -388,14 +398,14 @@ class TestFindDistributionInfo(unittest.TestCase):
             self.assertEqual(('name_2', 'version_2'), result)
 
 
-def provide_fake_entry_points():
+def provide_fake_entry_points() -> dict[str, list[FakeEntry]]:
     return _FAKE_ENTRIES
 
 
 _fake_find_distribution_info_dups_counter = 0
 
 
-def fake_find_distribution_info_dups(entry_name, entry_group):
+def fake_find_distribution_info_dups(entry_name: str, entry_group: str) -> tuple[str, str]:
     # entry_name is always 'good'
     global _fake_find_distribution_info_dups_counter
     if _fake_find_distribution_info_dups_counter == 0:
@@ -408,10 +418,10 @@ def fake_find_distribution_info_dups(entry_name, entry_group):
 
 @mock.patch('buildbot.plugins.db.entry_points', provide_fake_entry_points)
 class TestBuildbotPlugins(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         buildbot.plugins.db._DB = buildbot.plugins.db._PluginDB()
 
-    def test_check_group_registration(self):
+    def test_check_group_registration(self) -> None:
         with mock.patch.object(buildbot.plugins.db, '_DB', db._PluginDB()):
             # The groups will be prepended with namespace, so info() will
             # return a dictionary with right keys, but no data
@@ -424,7 +434,7 @@ class TestBuildbotPlugins(unittest.TestCase):
             self.assertEqual(registered, set(db.namespaces()))
 
     @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info)
-    def test_interface_provided_simple(self):
+    def test_interface_provided_simple(self) -> None:
         # Basic check before the actual test
         self.assertTrue(ITestInterface.implementedBy(ClassWithInterface))
 
@@ -442,7 +452,7 @@ class TestBuildbotPlugins(unittest.TestCase):
         self.assertEqual('yes', greeter.hello())
         self.assertEqual('no', greeter.hello('no'))
 
-    def test_missing_plugin(self):
+    def test_missing_plugin(self) -> None:
         plugins = db.get_plugins('interface', interface=ITestInterface)
 
         with self.assertRaises(AttributeError):
@@ -453,7 +463,7 @@ class TestBuildbotPlugins(unittest.TestCase):
             plugins.get('good.extra')
 
     @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info)
-    def test_interface_provided_deep(self):
+    def test_interface_provided_deep(self) -> None:
         # Basic check before the actual test
         self.assertTrue(ITestInterface.implementedBy(ClassWithInterface))
 
@@ -475,7 +485,7 @@ class TestBuildbotPlugins(unittest.TestCase):
         self.assertEqual('no', greeter.hello('no'))
 
     @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info)
-    def test_interface_warnings(self):
+    def test_interface_warnings(self) -> None:
         # we should not get no warnings when not trying to access the plugin
         plugins = db.get_plugins('interface_warnings', interface=ITestInterface)
         self.assertTrue('good' in plugins.names)
@@ -491,39 +501,39 @@ class TestBuildbotPlugins(unittest.TestCase):
         with assertProducesWarning(DeprecationWarning, "test warning"):
             _ = plugins.deep.path
 
-    def test_required_interface_not_provided(self):
+    def test_required_interface_not_provided(self) -> None:
         plugins = db.get_plugins('no_interface_again', interface=ITestInterface)
         self.assertTrue(plugins._interface is ITestInterface)
         with self.assertRaises(PluginDBError):
             plugins.get('good')
 
-    def test_no_interface_provided(self):
+    def test_no_interface_provided(self) -> None:
         plugins = db.get_plugins('no_interface')
         self.assertFalse(plugins.get('good') is None)
 
     @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info_dups)
-    def test_failure_on_dups(self):
+    def test_failure_on_dups(self) -> None:
         with self.assertRaises(PluginDBError):
             db.get_plugins('duplicates', load_now=True)
 
     @mock.patch('buildbot.plugins.db.find_distribution_info', fake_find_distribution_info)
-    def test_get_info_on_a_known_plugin(self):
+    def test_get_info_on_a_known_plugin(self) -> None:
         plugins = db.get_plugins('interface')
         self.assertEqual(('non-existent', 'irrelevant'), plugins.info('good'))
 
-    def test_failure_on_unknown_plugin_info(self):
+    def test_failure_on_unknown_plugin_info(self) -> None:
         plugins = db.get_plugins('interface')
         with self.assertRaises(PluginDBError):
             plugins.info('bad')
 
-    def test_failure_on_unknown_plugin_get(self):
+    def test_failure_on_unknown_plugin_get(self) -> None:
         plugins = db.get_plugins('interface')
         with self.assertRaises(PluginDBError):
             plugins.get('bad')
 
 
 class SimpleFakeEntry(FakeEntry):
-    def __init__(self, name, value):
+    def __init__(self, name: str, value: Any) -> None:
         super().__init__(name, 'group', False, value)
 
 
@@ -544,7 +554,7 @@ _WORKER_FAKE_ENTRIES = {
 }
 
 
-def provide_worker_fake_entries(group):
+def provide_worker_fake_entries(group: str) -> list[SimpleFakeEntry]:
     """
     give a set of fake entries for known groups
     """
