@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import annotations
 
+from typing import Any
 
 from zope.interface import implementer
 
@@ -21,8 +23,8 @@ from buildbot.interfaces import IRenderable
 
 @implementer(IRenderable)
 class ConstantRenderable:
-    def __init__(self, value):
+    def __init__(self, value: Any) -> None:
         self.value = value
 
-    def getRenderingFor(self, props):
+    def getRenderingFor(self, props: Any) -> Any:
         return self.value
