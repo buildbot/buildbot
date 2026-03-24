@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -22,15 +26,18 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.util import httpclientservice
 from buildbot.util import service
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class myTestedService(service.BuildbotService):
     name = 'myTestedService'
 
-    def reconfigService(self, baseurl):
+    def reconfigService(self, baseurl: str) -> None:  # type: ignore[override]
         self._http = httpclientservice.HTTPSession(self.master.httpservice, baseurl)
 
     @defer.inlineCallbacks
-    def doGetRoot(self):
+    def doGetRoot(self) -> InlineCallbacksType[dict[str, str]]:
         res = yield self._http.get("/")
         # note that at this point, only the http response headers are received
         if res.code != 200:
@@ -42,8 +49,8 @@ class myTestedService(service.BuildbotService):
 
 class Test(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
-        yield self.setup_test_reactor()
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
+        yield self.setup_test_reactor()  # type: ignore[func-returns-value]
 
         baseurl = 'http://127.0.0.1:8080'
         master = yield fakemaster.make_master(self)
@@ -55,14 +62,14 @@ class Test(TestReactorMixin, unittest.TestCase):
         yield master.startService()
 
     @defer.inlineCallbacks
-    def test_root(self):
+    def test_root(self) -> InlineCallbacksType[None]:
         self._http.expect("get", "/", content_json={'foo': 'bar'})
 
         response = yield self.tested.doGetRoot()
         self.assertEqual(response, {'foo': 'bar'})
 
     @defer.inlineCallbacks
-    def test_root_error(self):
+    def test_root_error(self) -> InlineCallbacksType[None]:
         self._http.expect("get", "/", content_json={'foo': 'bar'}, code=404)
 
         try:
