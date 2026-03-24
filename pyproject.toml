@@ -208,7 +208,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.util.reporter",
       "buildbot.test.util.scheduler",
       "buildbot.test.util.sourcesteps",
-      "buildbot.test.util.tuplematching",
       "buildbot.test.util.validation",
       "buildbot.test.util.warnings",
       "buildbot.test.util.www",
