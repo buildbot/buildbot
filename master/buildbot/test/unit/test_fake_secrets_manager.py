@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -7,10 +11,13 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.reactor import TestReactorMixin
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestSecretsManager(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self)
         self.master.config.secretsProviders = [
@@ -18,7 +25,7 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
         ]
 
     @defer.inlineCallbacks
-    def testGetManagerService(self):
+    def testGetManagerService(self) -> InlineCallbacksType[None]:
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
@@ -34,7 +41,7 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
         self.assertEqual(strExpectedSecretDetail, "FakeSecretStorage foo: 'bar'")
 
     @defer.inlineCallbacks
-    def testGetNoDataManagerService(self):
+    def testGetNoDataManagerService(self) -> InlineCallbacksType[None]:
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
@@ -43,7 +50,7 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
         self.assertEqual(secret_result, None)
 
     @defer.inlineCallbacks
-    def testGetDataMultipleManagerService(self):
+    def testGetDataMultipleManagerService(self) -> InlineCallbacksType[None]:
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
@@ -56,7 +63,7 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
         self.assertEqual(secret_result, expectedSecretDetail)
 
     @defer.inlineCallbacks
-    def testGetDataMultipleManagerValues(self):
+    def testGetDataMultipleManagerValues(self) -> InlineCallbacksType[None]:
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": ""})
@@ -69,7 +76,7 @@ class TestSecretsManager(TestReactorMixin, unittest.TestCase):
         self.assertEqual(secret_result, expectedSecretDetail)
 
     @defer.inlineCallbacks
-    def testGetDataMultipleManagerServiceNoDatas(self):
+    def testGetDataMultipleManagerServiceNoDatas(self) -> InlineCallbacksType[None]:
         secret_service_manager = SecretManager()
         fakeStorageService = FakeSecretStorage()
         fakeStorageService.reconfigService(secretdict={"foo": "bar", "other": "value"})
