@@ -13,11 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
 
 from buildbot.config.master import MasterConfig
 
+if TYPE_CHECKING:
+    from twisted.trial import unittest
 
-class ConfiguratorMixin:
+    _ConfiguratorMixinBase = unittest.TestCase
+else:
+    _ConfiguratorMixinBase = object
+
+
+class ConfiguratorMixin(_ConfiguratorMixinBase):
     """
     Support for testing configurators.
 
@@ -25,43 +36,43 @@ class ConfiguratorMixin:
     @ivar config_dict: the config dict that the configurator is modifying
     """
 
-    def setUp(self):
-        self.config_dict = {}
+    def setUp(self) -> None:
+        self.config_dict: dict[str, Any] = {}
 
-    def setupConfigurator(self, *args, **kwargs):
-        self.configurator = self.ConfiguratorClass(*args, **kwargs)
+    def setupConfigurator(self, *args: Any, **kwargs: Any) -> Any:
+        self.configurator = self.ConfiguratorClass(*args, **kwargs)  # type: ignore[attr-defined]
         return self.configurator.configure(self.config_dict)
 
-    def expectWorker(self, name, klass):
+    def expectWorker(self, name: str, klass: type) -> Any:
         if 'workers' in self.config_dict and 'slaves' in self.config_dict:
             self.fail("both 'workers' and 'slaves' are in the config dict!")
         for worker in self.config_dict.get('workers', []) + self.config_dict.get('slaves', []):
-            if isinstance(worker, klass) and worker.name == name:
+            if isinstance(worker, klass) and worker.name == name:  # type: ignore[attr-defined]
                 return worker
         self.fail(f"expected a worker named {name} of class {klass}")
         return None
 
-    def expectScheduler(self, name, klass):
+    def expectScheduler(self, name: str, klass: type) -> Any:
         for scheduler in self.config_dict['schedulers']:
             if scheduler.name == name and isinstance(scheduler, klass):
                 return scheduler
         self.fail(f"expected a scheduler named {name} of class {klass}")
         return None
 
-    def expectBuilder(self, name):
+    def expectBuilder(self, name: str) -> Any:
         for builder in self.config_dict['builders']:
             if builder.name == name:
                 return builder
         self.fail(f"expected a builder named {name}")
         return None
 
-    def expectBuilderHasSteps(self, name, step_classes):
+    def expectBuilderHasSteps(self, name: str, step_classes: list[type]) -> None:
         builder = self.expectBuilder(name)
         for step_class in step_classes:
             found = [step for step in builder.factory.steps if step.step_class == step_class]
             if not found:
                 self.fail(f"expected a buildstep of {step_class!r} in {name}")
 
-    def expectNoConfigError(self):
-        config = MasterConfig()
-        config.loadFromDict(self.config_dict, "test")
+    def expectNoConfigError(self) -> None:
+        master_config = MasterConfig()
+        master_config.loadFromDict(self.config_dict, "test")
