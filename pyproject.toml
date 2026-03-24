@@ -200,7 +200,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.util.changesource",
       "buildbot.test.util.connector_component",
       "buildbot.test.util.integration",
-      "buildbot.test.util.reporter",
       "buildbot.test.util.scheduler",
       "buildbot.test",
       "buildbot.wamp.connector",
