@@ -13,7 +13,10 @@
 #
 # Portions Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import threading
+from typing import TYPE_CHECKING
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -21,32 +24,52 @@ from twisted.trial import unittest
 from buildbot.util.backoff import BackoffTimeoutExceededError
 from buildbot.util.queue import ConnectableThreadQueue
 
+if TYPE_CHECKING:
+    from twisted.python.failure import Failure
+    from twisted.trial import unittest as _unittest
+
+    from buildbot.util.twisted import InlineCallbacksType
+
+    _ConnectionErrorTestsBase = _unittest.TestCase
+else:
+    _ConnectionErrorTestsBase = object
+
 
 class FakeConnection:
     pass
 
 
 class TestableConnectableThreadQueue(ConnectableThreadQueue):
-    def __init__(self, case, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        case: unittest.TestCase,
+        connect_backoff_start_seconds: float = 1,
+        connect_backoff_multiplier: float = 1.1,
+        connect_backoff_max_wait_seconds: float = 3600,
+    ) -> None:
+        super().__init__(
+            connect_backoff_start_seconds=connect_backoff_start_seconds,
+            connect_backoff_multiplier=connect_backoff_multiplier,
+            connect_backoff_max_wait_seconds=connect_backoff_max_wait_seconds,
+        )
         self.case = case
         self.create_connection_called_count = 0
         self.close_connection_called_count = 0
-        self._test_conn = None
+        self._test_conn: FakeConnection | None = None
 
-    def create_connection(self):
+    def create_connection(self) -> FakeConnection:
         self.case.assertTrue(self.connecting)
         self.create_connection_called_count += 1
         self.case.assertIsNone(self._test_conn)
         self._test_conn = FakeConnection()
         return self._test_conn
 
-    def on_close_connection(self, conn):
+    def on_close_connection(self, conn: object) -> None:
         self.case.assertIs(conn, self._test_conn)
         self._test_conn = None
         self.close_connection()
 
-    def close_connection(self):
+    def close_connection(self) -> None:
         self.case.assertFalse(self.connecting)
         self._test_conn = None
         self.close_connection_called_count += 1
@@ -60,7 +83,7 @@ class TestException(Exception):
 class TestConnectableThreadQueue(unittest.TestCase):
     timeout = 10
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.queue = TestableConnectableThreadQueue(
             self,
             connect_backoff_start_seconds=0,
@@ -68,10 +91,10 @@ class TestConnectableThreadQueue(unittest.TestCase):
             connect_backoff_max_wait_seconds=0,
         )
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.join_queue()
 
-    def join_queue(self, connection_called_count=None):
+    def join_queue(self, connection_called_count: int | None = None) -> None:
         self.queue.join(timeout=self.timeout)
         if self.queue.is_alive():
             raise AssertionError('Thread is still alive')
@@ -79,12 +102,12 @@ class TestConnectableThreadQueue(unittest.TestCase):
             self.assertEqual(self.queue.create_connection_called_count, connection_called_count)
             self.assertEqual(self.queue.close_connection_called_count, connection_called_count)
 
-    def test_no_work(self):
+    def test_no_work(self) -> None:
         self.join_queue(0)
 
     @defer.inlineCallbacks
-    def test_single_item_called(self):
-        def work(conn, *args, **kwargs):
+    def test_single_item_called(self) -> InlineCallbacksType[None]:
+        def work(conn: object, *args: object, **kwargs: object) -> str:
             self.assertIs(conn, self.queue.conn)
             self.assertEqual(args, ('arg',))
             self.assertEqual(kwargs, {'kwarg': 'kwvalue'})
@@ -96,8 +119,8 @@ class TestConnectableThreadQueue(unittest.TestCase):
         self.join_queue(1)
 
     @defer.inlineCallbacks
-    def test_single_item_called_exception(self):
-        def work(conn):
+    def test_single_item_called_exception(self) -> InlineCallbacksType[None]:
+        def work(conn: object) -> None:
             raise TestException()
 
         with self.assertRaises(TestException):
@@ -106,11 +129,11 @@ class TestConnectableThreadQueue(unittest.TestCase):
         self.join_queue(1)
 
     @defer.inlineCallbacks
-    def test_exception_does_not_break_further_work(self):
-        def work_exception(conn):
+    def test_exception_does_not_break_further_work(self) -> InlineCallbacksType[None]:
+        def work_exception(conn: object) -> None:
             raise TestException()
 
-        def work_success(conn):
+        def work_success(conn: object) -> str:
             return 'work_result'
 
         with self.assertRaises(TestException):
@@ -122,8 +145,8 @@ class TestConnectableThreadQueue(unittest.TestCase):
         self.join_queue(1)
 
     @defer.inlineCallbacks
-    def test_single_item_called_disconnect(self):
-        def work(conn):
+    def test_single_item_called_disconnect(self) -> InlineCallbacksType[None]:
+        def work(conn: object) -> None:
             pass
 
         yield self.queue.execute_in_thread(work)
@@ -135,10 +158,10 @@ class TestConnectableThreadQueue(unittest.TestCase):
         self.join_queue(2)
 
     @defer.inlineCallbacks
-    def test_many_items_called_in_order(self):
+    def test_many_items_called_in_order(self) -> InlineCallbacksType[None]:
         self.expected_work_index = 0
 
-        def work(conn, work_index):
+        def work(conn: object, work_index: int) -> int:
             self.assertEqual(self.expected_work_index, work_index)
             self.expected_work_index = work_index + 1
             return work_index
@@ -152,25 +175,36 @@ class TestConnectableThreadQueue(unittest.TestCase):
 
 
 class FailingConnectableThreadQueue(ConnectableThreadQueue):
-    def __init__(self, case, lock, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        case: unittest.TestCase,
+        lock: threading.Lock,
+        connect_backoff_start_seconds: float = 1,
+        connect_backoff_multiplier: float = 1.1,
+        connect_backoff_max_wait_seconds: float = 3600,
+    ) -> None:
+        super().__init__(
+            connect_backoff_start_seconds=connect_backoff_start_seconds,
+            connect_backoff_multiplier=connect_backoff_multiplier,
+            connect_backoff_max_wait_seconds=connect_backoff_max_wait_seconds,
+        )
         self.case = case
         self.lock = lock
         self.create_connection_called_count = 0
 
-    def on_close_connection(self, conn):
+    def on_close_connection(self, conn: object) -> None:
         raise AssertionError("on_close_connection should not have been called")
 
-    def close_connection(self):
+    def close_connection(self) -> None:
         raise AssertionError("close_connection should not have been called")
 
-    def _drain_queue_with_exception(self, e):
+    def _drain_queue_with_exception(self, e: Failure | BaseException) -> bool:
         with self.lock:
             return super()._drain_queue_with_exception(e)
 
 
 class ThrowingConnectableThreadQueue(FailingConnectableThreadQueue):
-    def create_connection(self):
+    def create_connection(self) -> None:
         with self.lock:
             self.create_connection_called_count += 1
             self.case.assertTrue(self.connecting)
@@ -178,17 +212,18 @@ class ThrowingConnectableThreadQueue(FailingConnectableThreadQueue):
 
 
 class NoneReturningConnectableThreadQueue(FailingConnectableThreadQueue):
-    def create_connection(self):
+    def create_connection(self) -> None:
         with self.lock:
             self.create_connection_called_count += 1
             self.case.assertTrue(self.connecting)
             return None
 
 
-class ConnectionErrorTests:
+class ConnectionErrorTests(_ConnectionErrorTestsBase):
     timeout = 10
+    QueueClass: type[FailingConnectableThreadQueue]
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.lock = threading.Lock()
         self.queue = self.QueueClass(
             self,
@@ -198,14 +233,14 @@ class ConnectionErrorTests:
             connect_backoff_max_wait_seconds=0.0039,
         )
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.queue.join(timeout=self.timeout)
         if self.queue.is_alive():
             raise AssertionError('Thread is still alive')
 
     @defer.inlineCallbacks
-    def test_resets_after_reject(self):
-        def work(conn):
+    def test_resets_after_reject(self) -> InlineCallbacksType[None]:
+        def work(conn: object) -> None:
             raise AssertionError('work should not be executed')
 
         with self.lock:
@@ -226,8 +261,8 @@ class ConnectionErrorTests:
         self.flushLoggedErrors(TestException)
 
     @defer.inlineCallbacks
-    def test_multiple_work_rejected(self):
-        def work(conn):
+    def test_multiple_work_rejected(self) -> InlineCallbacksType[None]:
+        def work(conn: object) -> None:
             raise AssertionError('work should not be executed')
 
         with self.lock:

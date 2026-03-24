@@ -26,6 +26,7 @@ from typing import cast
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
+from typing_extensions import Concatenate
 from typing_extensions import ParamSpec
 
 from buildbot.util import backoff
@@ -38,8 +39,7 @@ if TYPE_CHECKING:
     from twisted.internet.interfaces import IReactorFromThreads
     from twisted.python.failure import Failure
 
-    _P = ParamSpec('_P')
-
+_P = ParamSpec('_P')
 _T = TypeVar('_T')
 
 
@@ -101,7 +101,7 @@ class ConnectableThreadQueue(threading.Thread):
 
     def execute_in_thread(
         self,
-        cb: Callable[_P, _T] | _TerminateRequest,
+        cb: Callable[Concatenate[Any, _P], _T] | _TerminateRequest,
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> Deferred[_T]:
