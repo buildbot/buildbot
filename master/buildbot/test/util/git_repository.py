@@ -40,21 +40,21 @@ class TestGitRepository:
 
         self.exec_git(['init', '--quiet', '--initial-branch=main'])
 
-    def advance_time(self, timedelta):
+    def advance_time(self, timedelta: datetime.timedelta) -> None:
         self.curr_date += timedelta
 
-    def create_file_text(self, relative_path: str, contents: str):
+    def create_file_text(self, relative_path: str, contents: str) -> None:
         path = self.repository_path / relative_path
         path.write_text(contents)
         os.utime(path, (self.curr_date.timestamp(), self.curr_date.timestamp()))
 
-    def amend_file_text(self, relative_path: str, contents: str):
+    def amend_file_text(self, relative_path: str, contents: str) -> None:
         path = self.repository_path / relative_path
         with path.open('a') as fp:
             fp.write(contents)
         os.utime(path, (self.curr_date.timestamp(), self.curr_date.timestamp()))
 
-    def exec_git(self, args: list[str], env: dict[str, str] | None = None):
+    def exec_git(self, args: list[str], env: dict[str, str] | None = None) -> None:
         final_env = self.git_author_env(
             author_name=self.curr_author_name, author_mail=self.curr_author_email
         )
@@ -89,7 +89,7 @@ class TestGitRepository:
         ).strip()
 
     @staticmethod
-    def git_author_env(author_name: str, author_mail: str):
+    def git_author_env(author_name: str, author_mail: str) -> dict[str, str]:
         return {
             "GIT_AUTHOR_NAME": author_name,
             "GIT_AUTHOR_EMAIL": author_mail,
@@ -98,7 +98,7 @@ class TestGitRepository:
         }
 
     @staticmethod
-    def git_date_env(date: datetime.datetime):
+    def git_date_env(date: datetime.datetime) -> dict[str, str]:
         def _format_date(_d: datetime.datetime) -> str:
             # just in case, make sure we use UTC
             return _d.astimezone(tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S +0000")

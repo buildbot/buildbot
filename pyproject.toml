@@ -199,7 +199,6 @@ plugins = "mypy_zope:plugin"
       "buildbot.test.unit.www.test_service",
       "buildbot.test.util.changesource",
       "buildbot.test.util.connector_component",
-      "buildbot.test.util.git_repository",
       "buildbot.test.util.integration",
       "buildbot.test.util.reporter",
       "buildbot.test.util.scheduler",
