@@ -12,6 +12,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -19,18 +21,18 @@ from buildbot.www.authz import roles
 
 
 class RolesFromGroups(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.roles = roles.RolesFromGroups("buildbot-")
 
-    def test_noGroups(self):
+    def test_noGroups(self) -> None:
         ret = self.roles.getRolesFromUser({"username": 'homer'})
         self.assertEqual(ret, [])
 
-    def test_noBuildbotGroups(self):
+    def test_noBuildbotGroups(self) -> None:
         ret = self.roles.getRolesFromUser({"username": "homer", "groups": ["employee"]})
         self.assertEqual(ret, [])
 
-    def test_someBuildbotGroups(self):
+    def test_someBuildbotGroups(self) -> None:
         ret = self.roles.getRolesFromUser({
             "username": "homer",
             "groups": ["employee", "buildbot-maintainer", "buildbot-admin"],
@@ -39,39 +41,39 @@ class RolesFromGroups(unittest.TestCase):
 
 
 class RolesFromEmails(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.roles = roles.RolesFromEmails(
             employee=["homer@plant.com", "burns@plant.com"], boss=["burns@plant.com"]
         )
 
-    def test_noUser(self):
+    def test_noUser(self) -> None:
         ret = self.roles.getRolesFromUser({"username": 'lisa', "email": 'lisa@school.com'})
         self.assertEqual(ret, [])
 
-    def test_User1(self):
+    def test_User1(self) -> None:
         ret = self.roles.getRolesFromUser({"username": 'homer', "email": 'homer@plant.com'})
         self.assertEqual(ret, ["employee"])
 
-    def test_User2(self):
+    def test_User2(self) -> None:
         ret = self.roles.getRolesFromUser({"username": 'burns', "email": 'burns@plant.com'})
         self.assertEqual(sorted(ret), ["boss", "employee"])
 
 
 class RolesFromOwner(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.roles = roles.RolesFromOwner("ownerofbuild")
 
-    def test_noOwner(self):
+    def test_noOwner(self) -> None:
         ret = self.roles.getRolesFromUser({"username": 'lisa', "email": 'lisa@school.com'}, None)
         self.assertEqual(ret, [])
 
-    def test_notOwner(self):
+    def test_notOwner(self) -> None:
         ret = self.roles.getRolesFromUser(
             {"username": 'lisa', "email": 'lisa@school.com'}, "homer@plant.com"
         )
         self.assertEqual(ret, [])
 
-    def test_owner(self):
+    def test_owner(self) -> None:
         ret = self.roles.getRolesFromUser(
             {"username": 'homer', "email": 'homer@plant.com'}, "homer@plant.com"
         )
@@ -79,28 +81,28 @@ class RolesFromOwner(unittest.TestCase):
 
 
 class RolesFromUsername(ConfigErrorsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.roles = roles.RolesFromUsername(roles=["admins"], usernames=["Admin"])
         self.roles2 = roles.RolesFromUsername(
             roles=["developers", "integrators"], usernames=["Alice", "Bob"]
         )
 
-    def test_anonymous(self):
+    def test_anonymous(self) -> None:
         ret = self.roles.getRolesFromUser({"anonymous": True})
         self.assertEqual(ret, [])
 
-    def test_normalUser(self):
+    def test_normalUser(self) -> None:
         ret = self.roles.getRolesFromUser({"username": 'Alice'})
         self.assertEqual(ret, [])
 
-    def test_admin(self):
+    def test_admin(self) -> None:
         ret = self.roles.getRolesFromUser({"username": 'Admin'})
         self.assertEqual(ret, ["admins"])
 
-    def test_multipleGroups(self):
+    def test_multipleGroups(self) -> None:
         ret = self.roles2.getRolesFromUser({"username": 'Bob'})
         self.assertEqual(ret, ["developers", "integrators"])
 
-    def test_badUsernames(self):
+    def test_badUsernames(self) -> None:
         with self.assertRaisesConfigError('Usernames cannot be None'):
-            roles.RolesFromUsername(roles=[], usernames=[None])
+            roles.RolesFromUsername(roles=[], usernames=[None])  # type: ignore[list-item]
