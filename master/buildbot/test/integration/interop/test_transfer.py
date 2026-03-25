@@ -21,6 +21,9 @@ import shutil
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet.base import DelayedCall
+from twisted.python import log
 
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.results import FAILURE
@@ -152,6 +155,33 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_globTransfer(self) -> InlineCallbacksType[None]:
+        # Enable DelayedCall debug tracebacks for this test so that if the
+        # reactor is left dirty on timeout/failure, the traceback pinpoints
+        # exactly which callLater created the orphaned delayed call.
+        _prev_debug = DelayedCall.debug
+        DelayedCall.debug = True
+
+        def _restore_delayed_call_debug() -> None:
+            DelayedCall.debug = _prev_debug
+
+        self.addCleanup(_restore_delayed_call_debug)
+
+        def _dump_delayed_calls_if_failed() -> None:
+            if self._passed:
+                return
+            pending = reactor.getDelayedCalls()
+            if pending:
+                log.msg(
+                    f"[test_globTransfer diagnostic] "
+                    f"{len(pending)} delayed call(s) still pending at test end:"
+                )
+                for dc in pending:
+                    log.msg(f"  {dc}")
+            else:
+                log.msg("[test_globTransfer diagnostic] no pending delayed calls at test end")
+
+        self.addCleanup(_dump_delayed_calls_if_failed)
+
         yield self.setup_config_glob()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)

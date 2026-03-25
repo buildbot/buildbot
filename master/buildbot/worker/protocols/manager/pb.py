@@ -90,6 +90,11 @@ class Dispatcher(BaseDispatcher):
         p = Properties()
         p.master = master
         username = bytes2unicode(creds.username)
+        creds_type = type(creds).__name__
+        log.msg(
+            f"requestAvatarId: authentication attempt for worker '{username}' "
+            f"using {creds_type} (registered workers: {sorted(self.users.keys())})"
+        )
         try:
             yield master.acquire_lock()
             if username in self.users:
@@ -97,10 +102,17 @@ class Dispatcher(BaseDispatcher):
                 password = yield p.render(password)
                 matched = creds.checkPassword(unicode2bytes(password))
                 if not matched:
-                    log.msg(f"invalid login from user '{username}'")
+                    log.msg(
+                        f"requestAvatarId: password mismatch for worker '{username}' "
+                        f"(credentials type: {creds_type}) -- UnauthorizedLogin"
+                    )
                     raise error.UnauthorizedLogin()
+                log.msg(f"requestAvatarId: successfully authenticated worker '{username}'")
                 return creds.username
-            log.msg(f"invalid login from unknown user '{username}'")
+            log.msg(
+                f"requestAvatarId: unknown worker '{username}' "
+                f"(credentials type: {creds_type}) -- UnauthorizedLogin"
+            )
             raise error.UnauthorizedLogin()
         finally:
             master.release_lock()

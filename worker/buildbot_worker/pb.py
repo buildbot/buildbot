@@ -320,6 +320,10 @@ class WorkerForBuilderPbLike(WorkerForBuilderBase):
         log.msg("lost remote step")
         if self.protocol_command:
             self.protocol_command.command_ref = None
+            # Cancel any pending buffer flush timer so it does not fire on a
+            # dead connection and leave a dirty reactor (which would shadow the
+            # real failure in test output).
+            self.protocol_command.buffer.stop()
         if self.stopCommandOnShutdown:
             self.stopCommand()
 

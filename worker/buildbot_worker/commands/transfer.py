@@ -22,6 +22,7 @@ from typing import Any
 
 from twisted.internet import defer
 from twisted.python import log
+from twisted.spread import pb
 
 from buildbot_worker.commands.base import Command
 
@@ -138,6 +139,12 @@ class WorkerFileUploadCommand(TransferCommand):
             d1: Deferred[_T] = self.protocol_command.protocol_update_upload_file_close(self.writer)  # type: ignore[attr-defined]
 
             def eb(f2: Failure) -> None:
+                if f2.check(pb.DeadReferenceError, pb.PBConnectionLost):
+                    self.log_msg(
+                        "ignoring dead reference error from remote close() during cleanup "
+                        f"({f2.type.__name__})"
+                    )
+                    return
                 self.log_msg("ignoring error from remote close():")
                 log.err(f2)
 
@@ -344,7 +351,17 @@ class WorkerFileDownloadCommand(TransferCommand):
         def _close(res: _T) -> Deferred[_T]:
             # close the file, but pass through any errors from _loop
             d1 = self.protocol_command.protocol_update_read_file_close(self.reader)  # type: ignore[attr-defined]
-            d1.addErrback(log.err, 'while trying to close reader')
+
+            def _close_eb(f: Failure) -> None:
+                if f.check(pb.DeadReferenceError, pb.PBConnectionLost):
+                    self.log_msg(
+                        "ignoring dead reference error while closing reader during cleanup "
+                        f"({f.type.__name__})"
+                    )
+                    return
+                log.err(f, 'while trying to close reader')
+
+            d1.addErrback(_close_eb)
             d1.addCallback(lambda ignored: res)
             return d1
 

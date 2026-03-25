@@ -214,3 +214,17 @@ class BufferManager:
     def flush(self) -> None:
         if len(self._buffered) > 0:
             self.send_message_from_buffer()
+
+    def stop(self) -> None:
+        """Cancel any pending send timer without flushing buffered data.
+
+        Call this during disconnect/cleanup to avoid scheduling new reactor
+        delayed calls on an already-torn-down connection, which would leave
+        the reactor dirty and obscure the real failure in test output.
+        """
+        if self._send_message_timer:
+            if self._send_message_timer.active():
+                self._send_message_timer.cancel()
+            self._send_message_timer = None
+        self._buffered = []
+        self._buflen = 0

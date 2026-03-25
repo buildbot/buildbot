@@ -167,6 +167,15 @@ class ProtocolCommandBase:
 
     def _ack_failed(self, why: Failure, where: str) -> None:
         self.log_msg(f"ProtocolCommandBase._ack_failed: {where}")
+        if why.check(pb.DeadReferenceError, pb.PBConnectionLost):
+            # During cleanup after a disconnect the remote reference may already
+            # be stale.  This is expected and should not pollute test logs with
+            # spurious errors that shadow the real root cause.
+            self.log_msg(
+                f"  ignoring dead reference error during cleanup "
+                f"({why.type.__name__}): {why.getErrorMessage()}"
+            )
+            return
         log.err(why)  # we don't really care
 
     # this is fired by the Deferred attached to each Command
