@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from twisted.trial import unittest
 
 from buildbot.configurators import ConfiguratorBase
@@ -22,7 +24,7 @@ from buildbot.test.util import configurators
 class ConfiguratorBaseTests(configurators.ConfiguratorMixin, unittest.SynchronousTestCase):
     ConfiguratorClass = ConfiguratorBase
 
-    def test_basic(self):
+    def test_basic(self) -> None:
         self.setupConfigurator()
         self.assertEqual(
             self.config_dict,

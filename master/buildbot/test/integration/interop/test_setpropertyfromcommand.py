@@ -61,7 +61,7 @@ class SetPropertyFromCommand(RunMasterBase):
             res = yield oldNewLog(*arg, **kw)
             return res
 
-        self.master.data.updates.addLog = newLog
+        self.master.data.updates.addLog = newLog  # type: ignore[attr-defined]
         build = yield self.doForceBuild(wantProperties=True)
 
         self.assertEqual(build['properties']['test'], ('foo', 'SetPropertyFromCommand Step'))

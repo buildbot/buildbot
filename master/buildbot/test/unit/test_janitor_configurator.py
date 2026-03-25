@@ -14,8 +14,11 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
 import datetime
 from datetime import timedelta
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from parameterized import parameterized
@@ -37,11 +40,14 @@ from buildbot.test.util import configurators
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.SynchronousTestCase):
     ConfiguratorClass = JanitorConfigurator
 
-    def test_nothing(self):
+    def test_nothing(self) -> None:
         self.setupConfigurator()
         self.assertEqual(self.config_dict, {})
 
@@ -54,7 +60,7 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
             [LogChunksJanitor, BuildDataJanitor],
         ),
     ])
-    def test_steps(self, name, configuration, exp_steps):
+    def test_steps(self, name: str, configuration: dict, exp_steps: list) -> None:
         self.setupConfigurator(**configuration)
         self.expectWorker(JANITOR_NAME, LocalWorker)
         self.expectScheduler(JANITOR_NAME, Nightly)
@@ -67,13 +73,13 @@ class LogChunksJanitorTests(
     TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
     @defer.inlineCallbacks
-    def setUp(self):
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         yield self.setup_test_build_step()
         self.patch(janitor, "now", lambda: datetime.datetime(year=2017, month=1, day=1))
 
     @defer.inlineCallbacks
-    def test_basic(self):
+    def test_basic(self) -> InlineCallbacksType[None]:
         self.setup_step(LogChunksJanitor(logHorizon=timedelta(weeks=1)))
         self.master.db.logs.deleteOldLogChunks = mock.Mock(return_value=3)
         self.expect_outcome(result=SUCCESS, state_string="deleted 3 logchunks")
@@ -82,7 +88,7 @@ class LogChunksJanitorTests(
         self.master.db.logs.deleteOldLogChunks.assert_called_with(expected_timestamp)
 
     @defer.inlineCallbacks
-    def test_build_data(self):
+    def test_build_data(self) -> InlineCallbacksType[None]:
         self.setup_step(BuildDataJanitor(build_data_horizon=timedelta(weeks=1)))
         self.master.db.build_data.deleteOldBuildData = mock.Mock(return_value=4)
         self.expect_outcome(result=SUCCESS, state_string="deleted 4 build data key-value pairs")

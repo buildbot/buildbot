@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import annotations
+
+from typing import Any
+from typing import cast
 from unittest import mock
 
 from twisted.internet import defer
@@ -24,39 +28,39 @@ from buildbot.mq import base
 
 
 class QueueRef(unittest.TestCase):
-    def test_success(self):
+    def test_success(self) -> None:
         cb = mock.Mock(name='cb')
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke(cast(tuple[str, ...], 'rk'), cast(dict[str, Any], 'd'))
 
         cb.assert_called_with('rk', 'd')
 
-    def test_success_deferred(self):
+    def test_success_deferred(self) -> None:
         cb = mock.Mock(name='cb')
         cb.return_value = defer.succeed(None)
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke(cast(tuple[str, ...], 'rk'), cast(dict[str, Any], 'd'))
 
         cb.assert_called_with('rk', 'd')
 
-    def test_exception(self):
+    def test_exception(self) -> None:
         cb = mock.Mock(name='cb')
         cb.side_effect = RuntimeError('oh noes!')
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke(cast(tuple[str, ...], 'rk'), cast(dict[str, Any], 'd'))
 
         cb.assert_called_with('rk', 'd')
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    def test_failure(self):
+    def test_failure(self) -> None:
         cb = mock.Mock(name='cb')
         cb.return_value = defer.fail(failure.Failure(RuntimeError('oh noes!')))
         qref = base.QueueRef(cb)
 
-        qref.invoke('rk', 'd')
+        qref.invoke(cast(tuple[str, ...], 'rk'), cast(dict[str, Any], 'd'))
 
         cb.assert_called_with('rk', 'd')
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)

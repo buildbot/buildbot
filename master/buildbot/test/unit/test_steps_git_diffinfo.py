@@ -13,7 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.trial import unittest
+
+if TYPE_CHECKING:
+    from twisted.internet import defer
 
 from buildbot.process import results
 from buildbot.steps import gitdiffinfo
@@ -31,11 +38,11 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     if not unidiff:
         skip = 'unidiff is required for GitDiffInfo tests'
 
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def test_merge_base_failure(self):
+    def test_merge_base_failure(self) -> defer.Deferred[None]:
         self.setup_step(gitdiffinfo.GitDiffInfo())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
@@ -46,7 +53,7 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
         return self.run_step()
 
-    def test_diff_failure(self):
+    def test_diff_failure(self) -> defer.Deferred[None]:
         self.setup_step(gitdiffinfo.GitDiffInfo())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
@@ -64,7 +71,7 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=results.FAILURE, state_string="GitDiffInfo (failure)")
         return self.run_step()
 
-    def test_empty_diff(self):
+    def test_empty_diff(self) -> defer.Deferred[None]:
         self.setup_step(gitdiffinfo.GitDiffInfo())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])
@@ -83,7 +90,7 @@ class TestDiffInfo(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_build_data('diffinfo-master', b'[]', 'GitDiffInfo')
         return self.run_step()
 
-    def test_complex_diff(self):
+    def test_complex_diff(self) -> defer.Deferred[None]:
         self.setup_step(gitdiffinfo.GitDiffInfo())
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['git', 'merge-base', 'HEAD', 'master'])

@@ -53,7 +53,7 @@ def waitFor(fn: Callable[[], bool | None]) -> InlineCallbacksType[None]:
 
 class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     def setUp(self) -> None:
-        self.master = None
+        self.master = None  # type: ignore[assignment]
         self.sch: trysched.TryBase | None = None
 
         def spawnProcess(

@@ -27,6 +27,8 @@ import buildbot
 from buildbot.process.buildstep import BuildStep
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from twisted.trial import unittest
 
     _StdoutAssertionsMixinBase = unittest.TestCase
@@ -75,7 +77,7 @@ class TimeoutableTestCase(TestCase):
 
 
 def encodeExecutableAndArgs(
-    executable: str | bytes, args: list[str | bytes], encoding: str = "utf-8"
+    executable: str | bytes, args: Sequence[str | bytes], encoding: str = "utf-8"
 ) -> tuple[bytes, list[bytes]]:
     """
     Encode executable and arguments from unicode to bytes.

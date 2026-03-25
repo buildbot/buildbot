@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 from pathlib import PureWindowsPath
+from typing import TYPE_CHECKING
 
 from parameterized import parameterized
 from twisted.internet import defer
@@ -38,6 +41,9 @@ from buildbot.test.steps import ExpectShell
 from buildbot.test.steps import ExpectStat
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
+
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
@@ -122,32 +128,32 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                             </entry>
                             </info>"""
 
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
-    def patch_workerVersionIsOlderThan(self, result):
+    def patch_workerVersionIsOlderThan(self, result: bool) -> None:
         self.patch(svn.SVN, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
-    def test_no_repourl(self):
+    def test_no_repourl(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             svn.SVN()
 
-    def test_incorrect_mode(self):
+    def test_incorrect_mode(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             svn.SVN(repourl='http://svn.local/app/trunk', mode='invalid')
 
-    def test_incorrect_method(self):
+    def test_incorrect_method(self) -> None:
         with self.assertRaises(config.ConfigErrors):
             svn.SVN(repourl='http://svn.local/app/trunk', method='invalid')
 
-    def test_svn_not_installed(self):
+    def test_svn_not_installed(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk'))
         self.expect_commands(ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(1))
         self.expect_exception(WorkerSetupError)
         return self.run_step()
 
-    def test_corrupt_xml(self):
+    def test_corrupt_xml(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),
@@ -170,7 +176,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         return self.run_step()
 
     @defer.inlineCallbacks
-    def test_revision_noninteger(self):
+    def test_revision_noninteger(self) -> InlineCallbacksType[None]:
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
         self.setup_step(svnTestStep)
         self.expect_commands(
@@ -198,7 +204,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         with self.assertRaises(ValueError):
             int(revision)
 
-    def test_revision_missing(self):
+    def test_revision_missing(self) -> defer.Deferred[None]:
         """Fail if 'revision' tag isn't there"""
         svn_info_stdout = self.svn_info_stdout_xml.replace('entry', 'Blah')
 
@@ -224,7 +230,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_mode_incremental(self):
+    def test_mode_incremental(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -249,7 +255,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             )
@@ -265,7 +271,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             ).exit(0),
@@ -277,7 +283,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_timeout(self):
+    def test_mode_incremental_timeout(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -304,7 +310,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             )
@@ -321,7 +327,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             ).exit(0),
@@ -333,7 +339,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_repourl_renderable(self):
+    def test_mode_incremental_repourl_renderable(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk'), mode='incremental')
         )
@@ -358,7 +364,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_repourl_canonical(self):
+    def test_mode_incremental_repourl_canonical(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/trunk/test app', mode='incremental'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),
@@ -381,7 +387,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_repourl_not_updatable(self):
+    def test_mode_incremental_repourl_not_updatable(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl=ConstantRenderable('http://svn.local/trunk/app'),
@@ -412,7 +418,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_retry(self):
+    def test_mode_incremental_retry(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl=ConstantRenderable('http://svn.local/trunk/app'),
@@ -456,7 +462,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_repourl_not_updatable_svninfo_mismatch(self):
+    def test_mode_incremental_repourl_not_updatable_svninfo_mismatch(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'), mode='incremental')
         )
@@ -491,7 +497,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_given_revision(self):
+    def test_mode_incremental_given_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='incremental'), {"revision": '100'}
         )
@@ -524,7 +530,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_win32path(self):
+    def test_mode_incremental_win32path(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -535,7 +541,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
             )
         )
         self.build.path_module = namedModule("ntpath")
-        self.build.path_cls = PureWindowsPath
+        self.build.path_cls = PureWindowsPath  # type: ignore[assignment]
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),
             ExpectStat(file=r'wkdir\.buildbot-patched', log_environ=True).exit(1),
@@ -551,7 +557,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             )
@@ -567,7 +573,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             ).exit(0),
@@ -578,7 +584,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_mode_incremental_preferLastChangedRev(self):
+    def test_mode_incremental_preferLastChangedRev(self) -> defer.Deferred[None]:
         """Give the last-changed rev if 'preferLastChangedRev' is set"""
         self.setup_step(
             svn.SVN(
@@ -605,7 +611,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             )
@@ -621,7 +627,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             ).exit(0),
@@ -633,7 +639,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '90', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_preferLastChangedRev_butMissing(self):
+    def test_mode_incremental_preferLastChangedRev_butMissing(self) -> defer.Deferred[None]:
         """If 'preferLastChangedRev' is set, but missing, fall back
         to the regular revision value."""
         svn_info_stdout = self.svn_info_stdout_xml.replace('commit', 'Blah')
@@ -663,7 +669,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             )
@@ -679,7 +685,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             ).exit(0),
@@ -691,7 +697,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_clobber(self):
+    def test_mode_full_clobber(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='clobber')
         )
@@ -718,7 +724,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_clobber_given_revision(self):
+    def test_mode_full_clobber_given_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='clobber'),
             {"revision": '100'},
@@ -748,7 +754,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_fresh(self):
+    def test_mode_full_fresh(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk', mode='full', method='fresh', depth='infinite'
@@ -807,7 +813,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_fresh_retry(self):
+    def test_mode_full_fresh_retry(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='fresh', retry=(0, 2))
         )
@@ -860,7 +866,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_fresh_given_revision(self):
+    def test_mode_full_fresh_given_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk', mode='full', method='fresh', depth='infinite'
@@ -922,7 +928,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_fresh_keep_on_purge(self):
+    def test_mode_full_fresh_keep_on_purge(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -970,7 +976,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_clean(self):
+    def test_mode_full_clean(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='clean'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),
@@ -999,7 +1005,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_clean_given_revision(self):
+    def test_mode_full_clean_given_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='clean'),
             {"revision": '100'},
@@ -1039,7 +1045,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_not_updatable(self):
+    def test_mode_full_not_updatable(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='clean'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),
@@ -1065,7 +1071,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_not_updatable_given_revision(self):
+    def test_mode_full_not_updatable_given_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='clean'),
             {"revision": '100'},
@@ -1096,7 +1102,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_clean_old_rmdir(self):
+    def test_mode_full_clean_old_rmdir(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='clean'))
         self.patch_workerVersionIsOlderThan(True)
         self.expect_commands(
@@ -1134,7 +1140,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_clean_new_rmdir(self):
+    def test_mode_full_clean_new_rmdir(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='clean'))
 
         self.patch_workerVersionIsOlderThan(False)
@@ -1173,7 +1179,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_copy(self):
+    def test_mode_full_copy(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk', mode='full', method='copy', codebase='app'
@@ -1203,7 +1209,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', {'app': '100'}, 'SVN')
         return self.run_step()
 
-    def test_mode_full_copy_given_revision(self):
+    def test_mode_full_copy_given_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='copy'),
             {"revision": '100'},
@@ -1239,7 +1245,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_export(self):
+    def test_mode_full_export(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='export'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),
@@ -1264,7 +1270,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_export_patch(self):
+    def test_mode_full_export_patch(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='export'),
             patch=(1, 'patch'),
@@ -1335,7 +1341,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_export_patch_worker_2_16(self):
+    def test_mode_full_export_patch_worker_2_16(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '2.16'})
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='export'),
@@ -1407,7 +1413,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_export_timeout(self):
+    def test_mode_full_export_timeout(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', timeout=1, mode='full', method='export')
         )
@@ -1439,7 +1445,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_export_given_revision(self):
+    def test_mode_full_export_given_revision(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='export'),
             {"revision": '100'},
@@ -1477,7 +1483,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_full_export_auth(self):
+    def test_mode_full_export_auth(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -1503,7 +1509,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'svn_username',
                     '--password',
-                    ('obfuscated', 'svn_password', 'XXXXXX'),
+                    ('obfuscated', 'svn_password', 'XXXXXX'),  # type: ignore[list-item]
                 ],
             )
             .stdout('<?xml version="1.0"?><url>http://svn.local/app/trunk</url>')
@@ -1518,7 +1524,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'svn_username',
                     '--password',
-                    ('obfuscated', 'svn_password', 'XXXXXX'),
+                    ('obfuscated', 'svn_password', 'XXXXXX'),  # type: ignore[list-item]
                 ],
             ).exit(0),
             ExpectShell(
@@ -1529,7 +1535,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'svn_username',
                     '--password',
-                    ('obfuscated', 'svn_password', 'XXXXXX'),
+                    ('obfuscated', 'svn_password', 'XXXXXX'),  # type: ignore[list-item]
                     'source',
                     'wkdir',
                 ],
@@ -1542,7 +1548,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_with_env(self):
+    def test_mode_incremental_with_env(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -1568,7 +1574,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
                 env={'abc': '123'},
@@ -1585,7 +1591,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
                 env={'abc': '123'},
@@ -1598,7 +1604,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_mode_incremental_log_environ(self):
+    def test_mode_incremental_log_environ(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -1624,7 +1630,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
                 log_environ=False,
@@ -1641,7 +1647,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
                 log_environ=False,
@@ -1654,7 +1660,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_property('got_revision', '100', 'SVN')
         return self.run_step()
 
-    def test_command_fails(self):
+    def test_command_fails(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -1679,7 +1685,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             )
@@ -1695,7 +1701,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             ).exit(1),
@@ -1703,7 +1709,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_bogus_svnversion(self):
+    def test_bogus_svnversion(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -1728,7 +1734,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             )
@@ -1749,7 +1755,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', 'pass', 'XXXXXX'),
+                    ('obfuscated', 'pass', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             ).exit(0),
@@ -1758,7 +1764,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_rmdir_fails_clobber(self):
+    def test_rmdir_fails_clobber(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='clobber')
         )
@@ -1770,7 +1776,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_rmdir_fails_copy(self):
+    def test_rmdir_fails_copy(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='copy'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),
@@ -1780,7 +1786,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_cpdir_fails_copy(self):
+    def test_cpdir_fails_copy(self) -> defer.Deferred[None]:
         self.setup_step(svn.SVN(repourl='http://svn.local/app/trunk', mode='full', method='copy'))
         self.expect_commands(
             ExpectShell(workdir='wkdir', command=['svn', '--version']).exit(0),
@@ -1801,7 +1807,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_rmdir_fails_purge(self):
+    def test_rmdir_fails_purge(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -1842,7 +1848,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=FAILURE)
         return self.run_step()
 
-    def test_worker_connection_lost(self):
+    def test_worker_connection_lost(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -1858,7 +1864,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=RETRY, state_string="update (retry)")
         return self.run_step()
 
-    def test_empty_password(self):
+    def test_empty_password(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -1883,7 +1889,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', '', 'XXXXXX'),
+                    ('obfuscated', '', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             )
@@ -1899,7 +1905,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
                     '--username',
                     'user',
                     '--password',
-                    ('obfuscated', '', 'XXXXXX'),
+                    ('obfuscated', '', 'XXXXXX'),  # type: ignore[list-item]
                     '--random',
                 ],
             ).exit(0),
@@ -1910,7 +1916,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
-    def test_omit_password(self):
+    def test_omit_password(self) -> defer.Deferred[None]:
         self.setup_step(
             svn.SVN(
                 repourl='http://svn.local/app/trunk',
@@ -1959,7 +1965,7 @@ class TestSVN(sourcesteps.SourceStepMixin, TestReactorMixin, unittest.TestCase):
 
 
 class TestGetUnversionedFiles(unittest.TestCase):
-    def test_getUnversionedFiles_does_not_list_externals(self):
+    def test_getUnversionedFiles_does_not_list_externals(self) -> None:
         svn_st_xml = """<?xml version="1.0"?>
         <status>
             <target path=".">
@@ -1977,7 +1983,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEqual(["svn_external_path/unversioned_file"], unversioned_files)
 
-    def test_getUnversionedFiles_does_not_list_missing(self):
+    def test_getUnversionedFiles_does_not_list_missing(self) -> None:
         svn_st_xml = """<?xml version="1.0"?>
         <status>
             <target path=".">
@@ -1990,7 +1996,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEqual([], unversioned_files)
 
-    def test_getUnversionedFiles_corrupted_xml(self):
+    def test_getUnversionedFiles_corrupted_xml(self) -> None:
         svn_st_xml_corrupt = """<?xml version="1.0"?>
             <target path=".">
                 <entry path="svn_external_path">
@@ -2007,7 +2013,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         with self.assertRaises(buildstep.BuildStepFailed):
             list(svn.SVN.getUnversionedFiles(svn_st_xml_corrupt, []))
 
-    def test_getUnversionedFiles_no_path(self):
+    def test_getUnversionedFiles_no_path(self) -> None:
         svn_st_xml = """<?xml version="1.0"?>
         <status>
             <target path=".">
@@ -2025,7 +2031,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEqual([], unversioned_files)
 
-    def test_getUnversionedFiles_no_item(self):
+    def test_getUnversionedFiles_no_item(self) -> None:
         svn_st_xml = """<?xml version="1.0"?>
         <status>
             <target path=".">
@@ -2043,7 +2049,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEqual(["svn_external_path/unversioned_file"], unversioned_files)
 
-    def test_getUnversionedFiles_unicode(self):
+    def test_getUnversionedFiles_unicode(self) -> None:
         svn_st_xml = """<?xml version="1.0"?>
         <status>
             <target path=".">
@@ -2103,5 +2109,5 @@ class TestSvnUriCanonicalize(unittest.TestCase):
             "http://foo.com/hello%20world",
         ),
     ])
-    def test_svn_uri(self, name, input, exp):
+    def test_svn_uri(self, name: str, input: str, exp: str) -> None:
         self.assertEqual(svn.SVN.svnUriCanonicalize(input), exp)

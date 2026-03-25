@@ -46,18 +46,18 @@ class Sender:
     @defer.inlineCallbacks
     def send(
         self,
-        branch: str | None,
-        revision: str | None,
-        comments: str,
-        files: list[str],
-        who: str | None = None,
-        category: str | None = None,
+        branch: str | bytes | None,
+        revision: str | bytes | None,
+        comments: str | bytes,
+        files: list[str | bytes] | tuple[str | bytes, ...],
+        who: str | bytes | None = None,
+        category: str | bytes | None = None,
         when: float | None = None,
-        properties: dict[str, Any] | None = None,
-        repository: str = '',
+        properties: dict[str | bytes, Any] | None = None,
+        repository: str | bytes = '',
         vc: str | None = None,
-        project: str = '',
-        revlink: str = '',
+        project: str | bytes = '',
+        revlink: str | bytes = '',
         codebase: str | None = None,
     ) -> InlineCallbacksType[None]:
         if properties is None:
@@ -89,7 +89,7 @@ class Sender:
         change['files'] = list(change['files'])  # type: ignore[arg-type]
         for i, file in enumerate(change.get('files', [])):  # type: ignore[arg-type]
             if isinstance(file, bytes):
-                change['files'][i] = file.decode(self.encoding, 'replace')
+                change['files'][i] = file.decode(self.encoding, 'replace')  # type: ignore[index]
 
         f = pb.PBClientFactory()
         d = f.login(credentials.UsernamePassword(self.username, self.password))

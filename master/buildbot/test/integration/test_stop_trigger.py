@@ -167,7 +167,7 @@ class TriggeringMaster(RunMasterBase):
             else:
 
                 def f() -> None:
-                    self.master.data.control("stop", {}, ("builds", self.higherBuild))
+                    self.master.data.control("stop", {}, ("builds", self.higherBuild))  # type: ignore[arg-type]
                     self.higherBuild = None
 
                 reactor.callLater(5.0, f)  # type: ignore[attr-defined]

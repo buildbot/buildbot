@@ -63,7 +63,7 @@ class FakeBuild(properties.PropertiesMixin):
             props = properties.Properties()
         props.build = self
         self.properties = props
-        self.master = None
+        self.master: fakemaster.FakeMaster | None = None
         self.config_version = 0
         self.requests = [FakeBuildRequest()]
         self.env: dict[str, str] = {}

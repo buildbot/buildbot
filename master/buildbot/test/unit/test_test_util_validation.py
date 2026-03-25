@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
 import datetime
 import locale
+from typing import Any
 
 from twisted.python import log
 from twisted.trial import unittest
@@ -24,7 +27,9 @@ from buildbot.util import UTC
 
 
 class VerifyDict(unittest.TestCase):
-    def doValidationTest(self, validator, good, bad):
+    def doValidationTest(
+        self, validator: validation.Validator | validation.NoneOk, good: list[Any], bad: list[Any]
+    ) -> None:
         for g in good:
             log.msg(f'expect {g!r} to be good')
             msgs = list(validator.validate('g', g))
@@ -37,27 +42,27 @@ class VerifyDict(unittest.TestCase):
             for msg in msgs:
                 log.msg("  " + msg)
 
-    def test_IntValidator(self):
+    def test_IntValidator(self) -> None:
         self.doValidationTest(
             validation.IntValidator(), good=[1, 10**100], bad=[1.0, "one", "1", None]
         )
 
-    def test_BooleanValidator(self):
+    def test_BooleanValidator(self) -> None:
         self.doValidationTest(
             validation.BooleanValidator(), good=[True, False], bad=["yes", "no", 1, 0, None]
         )
 
-    def test_StringValidator(self):
+    def test_StringValidator(self) -> None:
         self.doValidationTest(
             validation.StringValidator(), good=["unicode only"], bad=[None, b"bytestring"]
         )
 
-    def test_BinaryValidator(self):
+    def test_BinaryValidator(self) -> None:
         self.doValidationTest(
             validation.BinaryValidator(), good=[b"bytestring"], bad=[None, "no unicode"]
         )
 
-    def test_DateTimeValidator(self):
+    def test_DateTimeValidator(self) -> None:
         self.doValidationTest(
             validation.DateTimeValidator(),
             good=[
@@ -71,7 +76,7 @@ class VerifyDict(unittest.TestCase):
             ],
         )
 
-    def test_IdentifierValidator(self):
+    def test_IdentifierValidator(self) -> None:
         os_encoding = locale.getpreferredencoding()
         try:
             '\N{SNOWMAN}'.encode(os_encoding)
@@ -98,14 +103,14 @@ class VerifyDict(unittest.TestCase):
             ],
         )
 
-    def test_NoneOk(self):
+    def test_NoneOk(self) -> None:
         self.doValidationTest(
             validation.NoneOk(validation.BooleanValidator()),
             good=[True, False, None],
             bad=[1, "yes"],
         )
 
-    def test_DictValidator(self):
+    def test_DictValidator(self) -> None:
         self.doValidationTest(
             validation.DictValidator(
                 a=validation.BooleanValidator(), b=validation.StringValidator(), optionalNames=['b']
@@ -126,11 +131,11 @@ class VerifyDict(unittest.TestCase):
             ],
         )
 
-    def test_DictValidator_names(self):
+    def test_DictValidator_names(self) -> None:
         v = validation.DictValidator(a=validation.BooleanValidator())
         self.assertEqual(list(v.validate('v', {'a': 1})), ["v['a'] (1) is not a boolean"])
 
-    def test_ListValidator(self):
+    def test_ListValidator(self) -> None:
         self.doValidationTest(
             validation.ListValidator(validation.BooleanValidator()),
             good=[
@@ -141,11 +146,11 @@ class VerifyDict(unittest.TestCase):
             bad=[None, ['a'], [True, 'a'], 1, "hi"],
         )
 
-    def test_ListValidator_names(self):
+    def test_ListValidator_names(self) -> None:
         v = validation.ListValidator(validation.BooleanValidator())
         self.assertEqual(list(v.validate('v', ['a'])), ["v[0] ('a') is not a boolean"])
 
-    def test_SourcedPropertiesValidator(self):
+    def test_SourcedPropertiesValidator(self) -> None:
         self.doValidationTest(
             validation.SourcedPropertiesValidator(),
             good=[
@@ -165,7 +170,7 @@ class VerifyDict(unittest.TestCase):
             ],
         )
 
-    def test_MessageValidator(self):
+    def test_MessageValidator(self) -> None:
         self.doValidationTest(
             validation.MessageValidator(
                 events=[b'started', b'stopped'],
@@ -192,7 +197,7 @@ class VerifyDict(unittest.TestCase):
             ],
         )
 
-    def test_Selector(self):
+    def test_Selector(self) -> None:
         sel = validation.Selector()
         sel.add(lambda x: x == 'int', validation.IntValidator())
         sel.add(lambda x: x == 'str', validation.StringValidator())

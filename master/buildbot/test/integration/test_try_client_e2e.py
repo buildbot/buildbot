@@ -57,7 +57,7 @@ class TryClientE2E(RunMasterBase):
         yield self.setup_config()
 
         def trigger_callback() -> None:
-            port = self.master.pbmanager.dispatchers['tcp:0'].port.getHost().port
+            port = self.master.pbmanager.dispatchers['tcp:0'].port.getHost().port  # type: ignore[attr-defined]
 
             def thd() -> None:
                 os.system(

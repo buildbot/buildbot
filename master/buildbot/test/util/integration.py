@@ -48,13 +48,16 @@ from buildbot_worker.bot import Worker
 if TYPE_CHECKING:
     from twisted.application.service import Service
 
+    from buildbot.process.properties import Properties
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 @implementer(IConfigLoader)
 class DictLoader:
-    def __init__(self, config_dict):
+    def __init__(self, config_dict: dict[str, Any]) -> None:
         self.config_dict = config_dict
 
-    def loadConfig(self):
+    def loadConfig(self) -> MasterConfig:
         return MasterConfig.loadFromDict(self.config_dict, '<dict>')
 
 
@@ -64,7 +67,13 @@ class TestedMaster:
         self.is_master_shutdown = False
 
     @async_to_deferred
-    async def create_master(self, case, reactor, config_dict, basedir=None):
+    async def create_master(
+        self,
+        case: unittest.TestCase,
+        reactor: Any,
+        config_dict: dict[str, Any],
+        basedir: str | None = None,
+    ) -> BuildMaster:
         """
         Create a started ``BuildMaster`` with the given configuration.
         """
@@ -82,7 +91,7 @@ class TestedMaster:
         self.master.config.db.db_url = config_dict['db_url']
         await self.master.db.setup(check_version=False)
         await self.master.db.model.upgrade()
-        self.master.db.setup = lambda: None
+        self.master.db.setup = lambda: None  # type: ignore[method-assign, misc, assignment]
 
         await self.master.startService()
 
@@ -91,9 +100,10 @@ class TestedMaster:
         return self.master
 
     @async_to_deferred
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         if self.is_master_shutdown:
             return
+        assert self.master is not None
         try:
             await self.master.stopService()
         except Exception as e:
@@ -105,7 +115,7 @@ class TestedMaster:
         self.is_master_shutdown = True
 
 
-def print_test_log(l, out):
+def print_test_log(l: dict[str, Any], out: Any) -> None:
     print(" " * 8 + f"*********** LOG: {l['name']} *********", file=out)
     if l['type'] == 's':
         for line in l['contents']['content'].splitlines():
@@ -125,8 +135,12 @@ def print_test_log(l, out):
 
 @async_to_deferred
 async def enrich_build(
-    build, master: BuildMaster, want_steps=False, want_properties=False, want_logs=False
-):
+    build: dict[str, Any],
+    master: BuildMaster,
+    want_steps: bool = False,
+    want_properties: bool = False,
+    want_logs: bool = False,
+) -> None:
     # enrich the build result, with the step results
     if want_steps:
         build["steps"] = await master.data.get(("builds", build['buildid'], "steps"))
@@ -152,7 +166,9 @@ async def enrich_build(
 
 
 @async_to_deferred
-async def print_build(build, master: BuildMaster, out=sys.stdout, with_logs=False):
+async def print_build(
+    build: dict[str, Any], master: BuildMaster, out: Any = sys.stdout, with_logs: bool = False
+) -> None:
     # helper for debugging: print a build
     await enrich_build(build, master, want_steps=True, want_properties=True, want_logs=True)
     print(
@@ -175,48 +191,50 @@ async def print_build(build, master: BuildMaster, out=sys.stdout, with_logs=Fals
 
 
 class RunFakeMasterTestCase(TestReactorMixin, DebugIntegrationLogsMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.setup_test_reactor()
         self.setupDebugIntegrationLogs()
 
-        def cleanup():
+        def cleanup() -> None:
             self.assertFalse(self.master.running, "master is still running!")
 
         self.addCleanup(cleanup)
 
     @defer.inlineCallbacks
-    def setup_master(self, config_dict):
+    def setup_master(self, config_dict: dict[str, Any]) -> InlineCallbacksType[None]:
         self.tested_master = TestedMaster()
         self.master = yield self.tested_master.create_master(self, self.reactor, config_dict)
 
     @defer.inlineCallbacks
-    def reconfig_master(self, config_dict=None):
+    def reconfig_master(
+        self, config_dict: dict[str, Any] | None = None
+    ) -> InlineCallbacksType[None]:
         if config_dict is not None:
             self.master.config_loader.config_dict = config_dict
         yield self.master.doReconfig()
 
     @defer.inlineCallbacks
-    def clean_master_shutdown(self, quick=False):
+    def clean_master_shutdown(self, quick: bool = False) -> InlineCallbacksType[None]:
         yield self.master.botmaster.cleanShutdown(quickMode=quick, stopReactor=False)
 
-    def createLocalWorker(self, name, **kwargs):
+    def createLocalWorker(self, name: str, **kwargs: Any) -> LocalWorker:
         workdir = FilePath(self.mktemp())
         workdir.createDirectory()
         return LocalWorker(name, workdir.path, **kwargs)
 
     @defer.inlineCallbacks
-    def assertBuildResults(self, build_id, result):
+    def assertBuildResults(self, build_id: int, result: int | None) -> InlineCallbacksType[None]:
         dbdict = yield self.master.db.builds.getBuild(build_id)
         self.assertEqual(result, dbdict.results)
 
     @defer.inlineCallbacks
-    def assertStepStateString(self, step_id, state_string):
+    def assertStepStateString(self, step_id: int, state_string: str) -> InlineCallbacksType[None]:
         datadict = yield self.master.data.get(('steps', step_id))
         self.assertEqual(datadict['state_string'], state_string)
 
     @defer.inlineCallbacks
-    def assertLogs(self, build_id, exp_logs):
-        got_logs = {}
+    def assertLogs(self, build_id: int, exp_logs: dict[str, Any]) -> InlineCallbacksType[None]:  # type: ignore[override]
+        got_logs: dict[str, Any] = {}
         data_logs = yield self.master.data.get(('builds', build_id, 'steps', 1, 'logs'))
         for l in data_logs:
             self.assertTrue(l['complete'])
@@ -235,31 +253,33 @@ class RunFakeMasterTestCase(TestReactorMixin, DebugIntegrationLogsMixin, unittes
         self.assertEqual(got_logs, exp_logs)
 
     @defer.inlineCallbacks
-    def create_build_request(self, builder_ids, properties=None):
-        properties = properties.asDict() if properties is not None else None
+    def create_build_request(
+        self, builder_ids: list[int], properties: Properties | None = None
+    ) -> InlineCallbacksType[Any]:
+        props_dict = properties.asDict() if properties is not None else None
         ret = yield self.master.data.updates.addBuildset(
             waited_for=False,
             builderids=builder_ids,
             sourcestamps=[
                 {'codebase': '', 'repository': '', 'branch': None, 'revision': None, 'project': ''},
             ],
-            properties=properties,
+            properties=props_dict,
         )
         # run debounced calls
         self.master.reactor.advance(1)
         return ret
 
     @defer.inlineCallbacks
-    def do_test_build_by_name(self, builder_name):
+    def do_test_build_by_name(self, builder_name: str) -> InlineCallbacksType[None]:
         builder_id = yield self.master.data.updates.findBuilderId(builder_name)
         yield self.do_test_build(builder_id)
 
     @defer.inlineCallbacks
-    def do_test_build(self, builder_id):
+    def do_test_build(self, builder_id: int) -> InlineCallbacksType[None]:
         # setup waiting for build to finish
-        d_finished = defer.Deferred()
+        d_finished: defer.Deferred[None] = defer.Deferred()
 
-        def on_finished(_, __):
+        def on_finished(_: Any, __: Any) -> None:
             if not d_finished.called:
                 d_finished.callback(None)
 
@@ -283,13 +303,13 @@ class TestedRealMaster(TestedMaster):
     async def setup_master(
         self,
         case: unittest.TestCase,
-        reactor,
-        config_dict,
-        proto='null',
-        basedir=None,
-        start_worker=True,
-        **worker_kwargs,
-    ):
+        reactor: Any,
+        config_dict: dict[str, Any],
+        proto: str = 'null',
+        basedir: str | None = None,
+        start_worker: bool = True,
+        **worker_kwargs: Any,
+    ) -> None:
         """
         Setup and start a master configured by config_dict
         """
@@ -374,7 +394,7 @@ class TestedRealMaster(TestedMaster):
         case.addCleanup(self.dump_data_if_failed)
 
     @async_to_deferred
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         if self.is_master_shutdown:
             return
 
@@ -386,8 +406,9 @@ class TestedRealMaster(TestedMaster):
         await super().shutdown()
 
     @async_to_deferred
-    async def dump_data_if_failed(self):
+    async def dump_data_if_failed(self) -> None:
         if self.case is not None and not self.case._passed and not self.is_master_shutdown:
+            assert self.master is not None
             dump = StringIO()
             print("FAILED! dumping build db for debug", file=dump)
             builds = await self.master.data.get(("builds",))
@@ -399,13 +420,20 @@ class TestedRealMaster(TestedMaster):
 
 class RunMasterBase(unittest.TestCase):
     proto = "null"
+    master: BuildMaster
 
     # All tests that start master need higher timeout due to test runtime variability on
     # oversubscribed hosts.
     timeout = 60
 
     @defer.inlineCallbacks
-    def setup_master(self, config_dict, startWorker=True, basedir=None, **worker_kwargs):
+    def setup_master(
+        self,
+        config_dict: dict[str, Any],
+        startWorker: bool = True,
+        basedir: str | None = None,
+        **worker_kwargs: Any,
+    ) -> InlineCallbacksType[None]:
         self.tested_master = TestedRealMaster()
         yield self.tested_master.setup_master(
             self,
@@ -416,34 +444,35 @@ class RunMasterBase(unittest.TestCase):
             start_worker=startWorker,
             **worker_kwargs,
         )
+        assert self.tested_master.master is not None
         self.master = self.tested_master.master
         self.master_config_dict = self.tested_master.master_config_dict
 
     @defer.inlineCallbacks
     def doForceBuild(
         self,
-        wantSteps=False,
-        wantProperties=False,
-        wantLogs=False,
-        useChange=False,
-        forceParams=None,
-        triggerCallback=None,
-    ):
+        wantSteps: bool = False,
+        wantProperties: bool = False,
+        wantLogs: bool = False,
+        useChange: bool | dict[str, Any] = False,
+        forceParams: dict[str, Any] | None = None,
+        triggerCallback: Any = None,
+    ) -> InlineCallbacksType[Any]:
         if forceParams is None:
             forceParams = {}
         # force a build, and wait until it is finished
-        d = defer.Deferred()
+        d: defer.Deferred[dict[str, Any]] = defer.Deferred()
 
         # in order to allow trigger based integration tests
         # we wait until the first started build is finished
         self.firstbsid = None
 
-        def newCallback(_, data):
+        def newCallback(_: Any, data: dict[str, Any]) -> None:
             if self.firstbsid is None:
                 self.firstbsid = data['bsid']
                 newConsumer.stopConsuming()
 
-        def finishedCallback(_, data):
+        def finishedCallback(_: Any, data: dict[str, Any]) -> None:
             if self.firstbsid == data['bsid']:
                 d.callback(data)
 
@@ -479,7 +508,7 @@ class RunMasterBase(unittest.TestCase):
         yield enrich_build(build, self.master, wantSteps, wantProperties, wantLogs)
         return build
 
-    def _match_patterns_consume(self, text, patterns, is_regex):
+    def _match_patterns_consume(self, text: str, patterns: list[str], is_regex: bool) -> list[str]:
         for pattern in patterns[:]:
             if is_regex:
                 if re.search(pattern, text):
@@ -490,7 +519,13 @@ class RunMasterBase(unittest.TestCase):
         return patterns
 
     @defer.inlineCallbacks
-    def checkBuildStepLogExist(self, build, expectedLog, onlyStdout=False, regex=False):
+    def checkBuildStepLogExist(
+        self,
+        build: dict[str, Any],
+        expectedLog: str | list[str],
+        onlyStdout: bool = False,
+        regex: bool = False,
+    ) -> InlineCallbacksType[bool]:
         if isinstance(expectedLog, str):
             expectedLog = [expectedLog]
         if not isinstance(expectedLog, list):

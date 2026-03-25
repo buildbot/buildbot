@@ -38,6 +38,7 @@ from buildbot.steps.source.base import Source
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -51,7 +52,7 @@ class SVN(Source):
 
     def __init__(
         self,
-        repourl: str | None = None,
+        repourl: IMaybeRenderableType[str] | None = None,
         mode: str = 'incremental',
         method: str | None = None,
         username: str | None = None,
@@ -286,7 +287,7 @@ class SVN(Source):
         except xml.parsers.expat.ExpatError as e:
             yield self.stdio_log.addHeader("Corrupted xml, aborting step")  # type: ignore[attr-defined]
             raise buildstep.BuildStepFailed() from e
-        return extractedurl == self.svnUriCanonicalize(self.repourl)
+        return extractedurl == self.svnUriCanonicalize(self.repourl)  # type: ignore[arg-type]
 
     @defer.inlineCallbacks
     def parseGotRevision(self) -> InlineCallbacksType[int]:

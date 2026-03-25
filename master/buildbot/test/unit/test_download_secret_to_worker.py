@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
 
 import os
 import stat
+from typing import TYPE_CHECKING
 
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
@@ -32,18 +34,21 @@ from buildbot.test.steps import ExpectRmfile
 from buildbot.test.steps import TestBuildStepMixin
 from buildbot.test.util import config as configmixin
 
+if TYPE_CHECKING:
+    from twisted.internet import defer
+
 
 class TestDownloadFileSecretToWorkerCommand(
     TestBuildStepMixin, TestReactorMixin, unittest.TestCase
 ):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
         return self.setup_test_build_step()
 
-    def testBasic(self):
+    def testBasic(self) -> defer.Deferred[None]:
         self.setup_step(
             DownloadSecretsToWorker([
                 (os.path.join(self.temp_path, "pathA"), "something"),
@@ -75,14 +80,14 @@ class TestDownloadFileSecretToWorkerCommand(
 
 
 class TestRemoveWorkerFileSecretCommand30(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
         return self.setup_test_build_step()
 
-    def testBasic(self):
+    def testBasic(self) -> defer.Deferred[None]:
         self.setup_build(worker_version={'*': '3.0'})
         self.setup_step(
             RemoveWorkerFileSecret([
@@ -112,14 +117,14 @@ class TestRemoveWorkerFileSecretCommand30(TestBuildStepMixin, TestReactorMixin, 
 class TestRemoveFileSecretToWorkerCommand(
     TestBuildStepMixin, configmixin.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
 ):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         tempdir = FilePath(self.mktemp())
         tempdir.createDirectory()
         self.temp_path = tempdir.path
         return self.setup_test_build_step()
 
-    def testBasic(self):
+    def testBasic(self) -> defer.Deferred[None]:
         self.setup_step(
             RemoveWorkerFileSecret([
                 (os.path.join(self.temp_path, "pathA"), "something"),

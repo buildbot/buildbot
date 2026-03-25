@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from twisted.internet import defer
@@ -22,9 +25,12 @@ from twisted.trial import unittest
 
 from buildbot.clients import usersclient
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestUsersClient(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         # patch out some PB components and make up some mocks
         self.patch(pb, 'PBClientFactory', self._fake_PBClientFactory)
         self.patch(reactor, 'connectTCP', self._fake_connectTCP)
@@ -38,22 +44,31 @@ class TestUsersClient(unittest.TestCase):
         self.remote.broker.transport.loseConnection = self._fake_loseConnection
 
         # results
-        self.conn_host = self.conn_port = None
+        self.conn_host: str | None = None
+        self.conn_port: int | None = None
         self.lostConnection = False
 
-    def _fake_PBClientFactory(self):
+    def _fake_PBClientFactory(self) -> mock.Mock:
         return self.factory
 
-    def _fake_login(self, creds):
+    def _fake_login(self, creds: object) -> defer.Deferred[mock.Mock]:
         return self.factory.login_d
 
-    def _fake_connectTCP(self, host, port, factory):
+    def _fake_connectTCP(self, host: str, port: int, factory: object) -> None:
         self.conn_host = host
         self.conn_port = port
         self.assertIdentical(factory, self.factory)
         self.factory.login_d.callback(self.remote)
 
-    def _fake_callRemote(self, method, op, bb_username, bb_password, ids, info):
+    def _fake_callRemote(
+        self,
+        method: str,
+        op: str | None,
+        bb_username: str | None,
+        bb_password: str | None,
+        ids: list[str] | None,
+        info: list[dict[str, str]] | None,
+    ) -> defer.Deferred[None]:
         self.assertEqual(method, 'commandline')
         self.called_with = {
             "op": op,
@@ -64,16 +79,16 @@ class TestUsersClient(unittest.TestCase):
         }
         return defer.succeed(None)
 
-    def _fake_loseConnection(self):
+    def _fake_loseConnection(self) -> None:
         self.lostConnection = True
 
-    def assertProcess(self, host, port, called_with):
+    def assertProcess(self, host: str, port: int, called_with: dict[str, object]) -> None:
         self.assertEqual(
             [host, port, called_with], [self.conn_host, self.conn_port, self.called_with]
         )
 
     @defer.inlineCallbacks
-    def test_usersclient_info(self):
+    def test_usersclient_info(self) -> InlineCallbacksType[None]:
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
         yield uc.send(
             'update', 'bb_user', 'hashed_bb_pass', None, [{'identifier': 'x', 'svn': 'x'}]
@@ -92,7 +107,7 @@ class TestUsersClient(unittest.TestCase):
         )
 
     @defer.inlineCallbacks
-    def test_usersclient_ids(self):
+    def test_usersclient_ids(self) -> InlineCallbacksType[None]:
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
         yield uc.send('remove', None, None, ['x'], None)
 

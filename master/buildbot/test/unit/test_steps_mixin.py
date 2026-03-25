@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -25,19 +29,22 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.warnings import DeprecatedApiWarning
 
+if TYPE_CHECKING:
+    from buildbot.util.twisted import InlineCallbacksType
+
 
 class TestStep(buildstep.ShellMixin, buildstep.BuildStep):
-    def __init__(self, text):
+    def __init__(self, text: str) -> None:
         self.setupShellMixin({})
         super().__init__()
         self.text = text
 
     @defer.inlineCallbacks
-    def run(self):
-        for file in self.build.allFiles():
+    def run(self) -> InlineCallbacksType[int]:
+        for file in self.build.allFiles():  # type: ignore[union-attr]
             cmd = yield self.makeRemoteShellCommand(command=["echo", "build_file", file])
             yield self.runCommand(cmd)
-        version = self.build.getWorkerCommandVersion("shell", None)
+        version = self.build.getWorkerCommandVersion("shell", None)  # type: ignore[union-attr]
         if version != "99.99":
             cmd = yield self.makeRemoteShellCommand(command=["echo", "version", version])
             yield self.runCommand(cmd)
@@ -47,12 +54,12 @@ class TestStep(buildstep.ShellMixin, buildstep.BuildStep):
 
 
 class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
         self.setup_test_reactor()
         return self.setup_test_build_step()
 
     @defer.inlineCallbacks
-    def test_setup_build(self):
+    def test_setup_build(self) -> InlineCallbacksType[None]:
         self.setup_build(
             worker_version={"*": "2.9"}, worker_env={"key": "value"}, build_files=["build.txt"]
         )
@@ -72,7 +79,7 @@ class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         yield self.run_step()
 
     @defer.inlineCallbacks
-    def test_old_setup_step_args(self):
+    def test_old_setup_step_args(self) -> InlineCallbacksType[None]:
         with assertProducesWarnings(
             DeprecatedApiWarning,
             num_warnings=3,
@@ -99,7 +106,7 @@ class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
 
         yield self.run_step()
 
-    def test_get_nth_step(self):
+    def test_get_nth_step(self) -> None:
         self.setup_step(TestStep("step1"))
         self.assertTrue(isinstance(self.get_nth_step(0), TestStep))
 
@@ -107,7 +114,7 @@ class TestTestBuildStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
             self.assertTrue(isinstance(self.step, TestStep))
 
     @defer.inlineCallbacks
-    def test_multiple_steps(self):
+    def test_multiple_steps(self) -> InlineCallbacksType[None]:
         self.setup_step(TestStep("step1"))
         self.setup_step(TestStep("step2"))
         self.expect_commands(
