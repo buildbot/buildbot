@@ -58,43 +58,44 @@ The ``build`` parameter given to that function is of type :bb:rtype:`build`, opt
 Sending a MessageCard for Successful Builds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following example shows how to send a `MessageCard <https://learn.microsoft.com/en-us/outlook/actionable-messages/message-card-reference>`_-formatted JSON notification (e.g. for a Microsoft Teams incoming webhook) only when a build succeeds. It uses :ref:`Reportgen-BuildStatusGenerator` with ``mode=('passing',)`` to filter only successful builds, and :ref:`MessageFormatterFunction` to produce a MessageCard payload:
+The following example shows how to send a `MessageCard <https://learn.microsoft.com/en-us/outlook/actionable-messages/message-card-reference>`_-formatted JSON notification (e.g. for a Microsoft Teams incoming webhook) only when a build succeeds.
+It uses :ref:`Reportgen-BuildStatusGenerator` with ``mode=('passing',)`` to filter only successful builds, and :ref:`MessageFormatterFunction` to produce a MessageCard payload:
 
 .. code-block:: python
 
-    from buildbot.plugins import reporters
-    from buildbot.process.results import statusToString
+   from buildbot.plugins import reporters
+   from buildbot.process.results import Results as result_names
 
+   def message_card(context):
+       build = context['build']
+       builder_name = build['builder']['name']
 
-    def message_card(context):
-        build = context['build']
-        builder_name = build['builder']['name']
-        build_url = build['url']
-        result = statusToString(build['results'])
-        return {
-            '@type': 'MessageCard',
-            '@context': 'https://schema.org/extensions',
-            'themeColor': '00CC00',
-            'summary': f"Build by {builder_name} succeeded",
-            'sections': [{
-                'activityTitle': f"Build by {builder_name} succeeded",
-                'activitySubtitle': f"Build #{build['number']}",
-                'facts': [
-                    {'name': 'Builder', 'value': builder_name},
-                    {'name': 'Build number', 'value': str(build['number'])},
-                    {'name': 'Result', 'value': result},
-                    {'name': 'URL', 'value': build_url},
-                ],
-                'markdown': True,
-            }],
-        }
+       return {
+           '@type': 'MessageCard',
+           '@context': 'https://schema.org/extensions',
+           'themeColor': '00CC00',
+           'summary': f'Build by {builder_name} {result_names[build["results"]]}',
+           'sections': [{
+               'activityTitle': f'Build by {builder_name} {result_names[build["results"]]}',
+               'activitySubtitle': f'Build #{build["number"]}',
+               'facts': [
+                   {'name': 'Builder', 'value': builder_name},
+                   {'name': 'Build number', 'value': str(build['number'])},
+                   {'name': 'Result', 'value': result_names[build['results']]},
+                   {'name': 'URL', 'value': build['url']},
+               ],
+               'markdown': True,
+           }],
+       }
 
-    generator = reporters.BuildStatusGenerator(
-        mode=('passing',),
-        message_formatter=reporters.MessageFormatterFunction(message_card, 'json'),
-    )
-
-    c['services'].append(reporters.HttpStatusPush(
-        serverUrl='https://outlook.office.com/webhook/YOUR_WEBHOOK_URL',
-        generators=[generator],
-    ))
+   c['services'].append(
+       reporters.HttpStatusPush(
+           serverUrl='https://outlook.office.com/webhook/YOUR_WEBHOOK_URL',
+           generators=[
+               reporters.BuildStatusGenerator(
+                   mode=('passing',),
+                   message_formatter=reporters.MessageFormatterFunction(message_card, 'json'),
+               ),
+           ],
+       ),
+   )
