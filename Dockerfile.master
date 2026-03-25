@@ -41,14 +41,11 @@ RUN \
     apt-get -y install --no-install-recommends --no-install-suggests -q \
         make \
         nodejs \
-        npm \
         virtualenv \
         && \
     rm -rf /var/lib/apt/lists/*
 
-RUN \
-    npm install -g corepack && \
-    corepack enable npm
+RUN corepack enable npm
 
 COPY . /usr/src/buildbot
 
