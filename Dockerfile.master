@@ -42,6 +42,7 @@ RUN \
         make \
         nodejs \
         virtualenv \
+        git \
         && \
     rm -rf /var/lib/apt/lists/*
 
