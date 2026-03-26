@@ -18,22 +18,33 @@ from __future__ import annotations
 from random import randint
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Generic
+from typing import TypeVar
 
 from twisted.internet import defer
 from twisted.python import log
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable
     from collections.abc import Callable
 
     from twisted.internet.base import DelayedCall
     from twisted.internet.interfaces import IReactorTime
 
     from buildbot.util.twisted import InlineCallbacksType
+
+_T = TypeVar('_T')
+
 _poller_instances: list[tuple[Any, str]] | None = None
 
 
-class Poller:
-    def __init__(self, fn: Callable[..., Any], instance: Any, reactor: IReactorTime) -> None:
+class Poller(Generic[_T]):
+    def __init__(
+        self,
+        fn: Callable[[_T], Awaitable[None] | None],
+        instance: _T,
+        reactor: IReactorTime,
+    ) -> None:
         self.fn = fn
         self.instance = instance
 
@@ -145,16 +156,20 @@ class Poller:
             yield d
 
 
-class _Descriptor:
-    def __init__(self, fn: Callable[..., Any], attrName: str) -> None:
+class _Descriptor(Generic[_T]):
+    def __init__(self, fn: Callable[[_T], Awaitable[None] | None], attrName: str) -> None:
         self.fn = fn
         self.attrName = attrName
 
-    def __get__(self, instance: Any, cls: type[Any]) -> Poller:
+    def __get__(self, instance: _T, cls: type[Any]) -> Poller:
         try:
             poller = getattr(instance, self.attrName)
         except AttributeError:
-            poller = Poller(self.fn, instance, instance.master.reactor)
+            poller = Poller(
+                self.fn,
+                instance,
+                instance.master.reactor,  # type: ignore[attr-defined]
+            )
             setattr(instance, self.attrName, poller)
             # track instances when testing
             if _poller_instances is not None:
@@ -162,7 +177,7 @@ class _Descriptor:
         return poller
 
 
-def method(fn: Callable[..., Any]) -> _Descriptor:
+def method(fn: Callable[[_T], Awaitable[None] | None]) -> _Descriptor[_T]:
     stateName = "__poll_" + fn.__name__ + "__"
     return _Descriptor(fn, stateName)
 
