@@ -1,0 +1,3 @@
+Buildbot www packages are no longer built when installing via `pip install -e www/<package>` from Buildbot source code checkout.
+Use `make frontend` which will build all packages, or `npm ci && npm run build` in the packages you need.
+Only then `pip install -e www/<package>` will work.
