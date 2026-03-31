@@ -204,6 +204,7 @@ export const GridView = observer(() => {
   const fullChanges = settings.getBooleanSetting('Grid.fullChanges');
   const leftToRight = settings.getBooleanSetting('Grid.leftToRight');
 
+  const [detailedChanges, setDetailedChanges] = useState<Set<string>>(() => new Set());
   const [resultsFilterText, setResultsFilterText] = useState(RESULT_FILTER_ALL_TEXT);
   const [searchParams, setSearchParams] = useSearchParams();
   const branchesFilterText = searchParams.get('branch') ?? BRANCH_FILTER_ALL_TEXT;
@@ -306,8 +307,18 @@ export const GridView = observer(() => {
           <ChangeDetails
             change={ch.change}
             compact={!fullChanges}
-            showDetails={false}
-            setShowDetails={() => {}}
+            showDetails={detailedChanges.has(ch.change.id)}
+            setShowDetails={(show: boolean) => {
+              setDetailedChanges((current) => {
+                const updated = new Set(current);
+                if (show) {
+                  updated.add(ch.change.id);
+                } else {
+                  updated.delete(ch.change.id);
+                }
+                return updated;
+              });
+            }}
           />
         </th>
       );
