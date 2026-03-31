@@ -82,3 +82,53 @@ describe('ForceFieldBoolean component', function () {
     await assertRenderToSnapshot(true, true, true);
   });
 });
+
+describe('ForceFieldBoolean autopopulate', function () {
+  function setup(autopopulate: {[key: string]: {[key: string]: any}}) {
+    const field: ForceSchedulerFieldBoolean = {
+      name: 'dummy',
+      fullName: 'fullDummy',
+      label: 'dummyLabel',
+      tablabel: 'dummyTabLabel',
+      type: 'bool',
+      default: false,
+      multiple: false,
+      regex: null,
+      hide: false,
+      maxsize: null,
+      autopopulate: autopopulate,
+      tooltip: 'dummy',
+    };
+    const state = new ForceBuildModalFieldsState();
+    state.createNewField(field.fullName, field.default);
+    state.createNewField('target', 'initial');
+    const component = render(<FieldBoolean field={field} fieldsState={state} />);
+    return {field, state, component};
+  }
+
+  it('updates target field on mount and on change', async () => {
+    const {field, state, component} = setup({
+      false: {target: 'fromFalse'},
+      true: {target: 'fromTrue'},
+    });
+    expect(state.getValue('target')).toBe('fromFalse');
+
+    await userEvent.click(component.getByTestId(`force-field-${field.fullName}`));
+    expect(state.getValue('target')).toBe('fromTrue');
+  });
+
+  it('reports unknown target field', async () => {
+    const {field, state, component} = setup({false: {unknown: 'value'}});
+    const expectedErrors = [
+      'bad autopopulate (for value: false) configuration: unknown is not a field name',
+    ];
+    expect(state.fields.get(field.fullName)!.errors).toEqual(expectedErrors);
+    expect(state.getValue('target')).toBe('initial');
+
+    const checkbox = component.getByTestId(`force-field-${field.fullName}`);
+    await userEvent.click(checkbox);
+    expect(state.fields.get(field.fullName)!.errors).toEqual([]);
+    await userEvent.click(checkbox);
+    expect(state.fields.get(field.fullName)!.errors).toEqual(expectedErrors);
+  });
+});
