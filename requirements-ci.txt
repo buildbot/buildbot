@@ -82,7 +82,7 @@ unidiff==0.7.5
 # botocore for py3.9 depends on urllib3<1.27
 urllib3==1.26.19; python_version <= "3.9"  # pyup: ignore
 urllib3==2.6.3; python_version > "3.9"
-Werkzeug==3.1.6
+Werkzeug==3.1.7
 xmltodict==1.0.4
 zope.event==6.0; python_version < "3.10"  # pyup: ignore (6.1+ requires Python >= 3.10)
 zope.event==6.1; python_version >= "3.10"
