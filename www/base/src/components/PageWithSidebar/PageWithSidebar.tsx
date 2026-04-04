@@ -17,6 +17,7 @@
 
 import './PageWithSidebar.scss';
 import {observer} from 'mobx-react';
+import {useEffect, useRef} from 'react';
 import {FaAngleDown, FaAngleRight, FaBars, FaThumbtack} from 'react-icons/fa';
 import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
 import {
@@ -38,6 +39,31 @@ type PageWithSidebarProps = {
 export const PageWithSidebar = observer(
   ({menuSettings, sidebarStore, children}: PageWithSidebarProps) => {
     const {appTitle, groups, footerItems} = menuSettings;
+    const leaveTimeout = useRef<number | null>(null);
+
+    const clearLeaveTimeout = () => {
+      if (leaveTimeout.current !== null) {
+        window.clearTimeout(leaveTimeout.current);
+        leaveTimeout.current = null;
+      }
+    };
+
+    useEffect(() => {
+      return () => {
+        clearLeaveTimeout();
+      };
+    }, []);
+
+    const onSidebarMouseEnter = () => {
+      clearLeaveTimeout();
+      sidebarStore.enter();
+    };
+
+    const onSidebarMouseLeave = () => {
+      sidebarStore.leave();
+      clearLeaveTimeout();
+      leaveTimeout.current = window.setTimeout(() => sidebarStore.afterLeaveDelay(), 300);
+    };
 
     const pageWithSidebarClass =
       'gl-page-with-sidebar' +
@@ -140,7 +166,7 @@ export const PageWithSidebar = observer(
             <Link
               className="bb-sidebar-item bb-sidebar-button"
               to={group.route}
-              onClick={() => sidebarStore.toggleGroup(group.name)}
+              onClick={() => sidebarStore.hide()}
             >
               {group.caption}
               <span className="menu-icon">{group.icon}</span>
@@ -163,12 +189,19 @@ export const PageWithSidebar = observer(
 
     return (
       <div className={pageWithSidebarClass}>
+        {!sidebarStore.pinned && sidebarStore.active && (
+          <button
+            type="button"
+            className="sidebar-backdrop"
+            onClick={() => sidebarStore.hide()}
+            aria-label="Close navigation sidebar"
+          ></button>
+        )}
         <div
           role="button"
           tabIndex={0}
-          onMouseEnter={() => sidebarStore.enter()}
-          onMouseLeave={() => sidebarStore.leave()}
-          onClick={() => sidebarStore.show()}
+          onMouseEnter={onSidebarMouseEnter}
+          onMouseLeave={onSidebarMouseLeave}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               sidebarStore.show();

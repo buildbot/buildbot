@@ -1,0 +1,1 @@
+Fixed the sidebar on narrow screens so it can be collapsed without reloading by clicking outside the sidebar or a top-level navigation route (:issue:`7899`).
