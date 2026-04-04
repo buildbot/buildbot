@@ -41,7 +41,11 @@ class FakeBuildRequest:
 
 
 class FakeBuild(properties.PropertiesMixin):
-    def __init__(self, props: properties.Properties | None = None, master: Any = None) -> None:
+    def __init__(
+        self,
+        props: properties.Properties | None = None,
+        master: fakemaster.FakeMaster | None = None,
+    ) -> None:
         self.builder = fakemaster.FakeBuilder(master)
         self.workerforbuilder = mock.Mock(spec=workerforbuilder.WorkerForBuilder)
         self.workerforbuilder.worker = mock.Mock(spec=base.Worker)
@@ -63,7 +67,7 @@ class FakeBuild(properties.PropertiesMixin):
             props = properties.Properties()
         props.build = self
         self.properties = props
-        self.master: fakemaster.FakeMaster | None = None
+        self.master = master
         self.config_version = 0
         self.requests = [FakeBuildRequest()]
         self.env: dict[str, str] = {}
