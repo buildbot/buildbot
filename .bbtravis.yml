@@ -161,7 +161,16 @@ script:
 
   - title: master and worker tests
     condition: TESTS in ("dev_virtualenv", "trial")
-    cmd: /tmp/bbvenv/bin/trial -j8 --reporter=text --rterrors buildbot.test buildbot_worker.test
+    step: !ShellCommand
+      name: "master and worker tests"
+      command: |
+        rm -rf _trial_temp && \
+        /tmp/bbvenv/bin/trial \
+          --temp-directory=_trial_temp --logfile=test.log \
+          -j8 --reporter=text --rterrors \
+          buildbot.test buildbot_worker.test
+      logfiles:
+        testlog: _trial_temp/test.log
 
   - title: interop tests
     condition: TESTS == "interop"
