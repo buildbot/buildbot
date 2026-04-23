@@ -49,7 +49,7 @@ class MsTeamsStatusPush(ReporterBase):
         msgdict = yield self.formatter.render_message_dict(master, context)
         card = self._make_adaptive_card(msgdict)
         log.msg(f"MsTeamsStatusPush: Sending notification for build {build.get('number')}")
-        self._send_to_teams(card)
+        yield self._send_to_teams_async(card)
 
     def _get_context(self, build: Any, results: Any, master: Any) -> dict[str, Any]:
         # This should be expanded to match Buildbot's context for templates
@@ -74,22 +74,7 @@ class MsTeamsStatusPush(ReporterBase):
         card.update(self.card_config)
         return card
 
-    def _send_to_teams(self, card: dict[str, Any]) -> None:
-        """Send the Adaptive Card to MS Teams and handle errors, with rate limiting."""
-        now = time.time()
-        if now - self._last_sent < self._rate_limit_seconds:
-            log.msg("MsTeamsStatusPush: Rate limit exceeded, skipping notification.")
-            return
-        self._last_sent = now
-        headers = {"Content-Type": "application/json"}
-        try:
-            response = requests.post(self.webhook_url, headers=headers, data=json.dumps(card), timeout=10)
-            if response.status_code >= 400:
-                log.err(f"MsTeamsStatusPush: Failed to send card, status {response.status_code}, response: {response.text}")
-            else:
-                log.msg("MsTeamsStatusPush: Notification sent successfully.")
-        except Exception as e:
-            log.err(f"MsTeamsStatusPush: Exception sending card: {e}")
+    # Removed synchronous _send_to_teams; all notifications are now async
 
     @inlineCallbacks
     def _send_to_teams_async(self, card: dict[str, Any]) -> None:
@@ -111,4 +96,4 @@ class MsTeamsStatusPush(ReporterBase):
         msgdict = yield self.formatter.render_message_dict(master, context)
         card = self._make_adaptive_card(msgdict)
         log.msg(f"MsTeamsStatusPush: Sending start notification for build {build.get('number')}")
-        self._send_to_teams(card)
+        yield self._send_to_teams_async(card)
