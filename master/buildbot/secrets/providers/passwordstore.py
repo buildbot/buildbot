@@ -27,6 +27,8 @@ from twisted.internet import defer
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.util import runprocess
+from twisted.logger import Logger
+log=Logger()
 
 if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
@@ -65,15 +67,25 @@ class SecretInPass(SecretProviderBase):
         get the value from pass identified by 'entry'
         """
         try:
-            rc, output = yield runprocess.run_process(
+            rc, output, stderr = yield runprocess.run_process(
                 self.master.reactor,
                 ['pass', entry],
                 env=self._env,
-                collect_stderr=False,
-                stderr_is_error=True,
+                collect_stderr=True,
+                stderr_is_error=False, # usually this is true
             )
+            if stderr:
+                log.warn("Got stderr while accessing 'pass {entry}': {stderr}", entry=entry, stderr=stderr)
             if rc != 0:
+                log.error("Got RC != 0 accessing 'pass {entry}' RC = {rc}", entry=entry, rc=rc)
                 return None
-            return output.decode("utf-8", "ignore").splitlines()[0]
-        except OSError:
+
+            secret = "\n".join(output.decode("utf-8", "ignore").strip().splitlines())
+            if not secret:
+                return None
+            else:
+                return secret
+
+        except OSError as exception:
+            log.error("OSError accessing `pass {entry}`: {exception}", entry=entry, exception=exception)
             return None
