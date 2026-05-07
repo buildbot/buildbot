@@ -28,6 +28,8 @@ from twisted.logger import Logger
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.util import runprocess
+from twisted.logger import Logger
+log=Logger()
 
 log = Logger()
 
