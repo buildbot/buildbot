@@ -72,7 +72,7 @@ class SecretInPass(SecretProviderBase):
                 ['pass', entry],
                 env=self._env,
                 collect_stderr=True,
-                stderr_is_error=False, # usually this is true
+                stderr_is_error=False,
             )
             if stderr:
                 log.warn("Got stderr while accessing 'pass {entry}': {stderr}", entry=entry, stderr=stderr)
