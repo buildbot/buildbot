@@ -133,6 +133,7 @@ class ChangeHookResource(resource.Resource):
             options = self.dialects[dialect]
             if isinstance(options, dict) and 'custom_class' in options:
                 klass = options['custom_class']
+                del options['custom_class']
             else:
                 if dialect not in self._plugins:
                     m = (
@@ -142,7 +143,7 @@ class ChangeHookResource(resource.Resource):
                     log.msg(m)
                     raise ValueError(m)
                 klass = self._plugins.get(dialect)
-            self._dialect_handlers[dialect] = klass(self.master, self.dialects[dialect])
+            self._dialect_handlers[dialect] = klass(self.master, **options)
 
         return self._dialect_handlers[dialect]
 
