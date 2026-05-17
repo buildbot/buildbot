@@ -107,6 +107,7 @@ class BBRefTargetDirective(Directive):
             descnode += signode
 
             contentnode = addnodes.desc_content()
+            contentnode.document = self.state.document
             self.state.nested_parse(self.content, 0, contentnode)
             DocFieldTransformer(self).transform_all(contentnode)
             descnode += contentnode
