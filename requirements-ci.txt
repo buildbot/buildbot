@@ -41,7 +41,7 @@ evalidate==2.1.4
 greenlet==3.2.5; python_version < "3.10"  # pyup: ignore (3.3.0+ requires Python >= 3.10)
 greenlet==3.3.2; python_version >= "3.10"
 hyperlink==21.0.0
-idna==3.11
+idna==3.15
 incremental==24.11.0
 Jinja2==3.1.6
 jmespath==1.1.0
