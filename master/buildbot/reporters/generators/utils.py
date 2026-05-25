@@ -149,7 +149,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         if "passing" in self.mode and results == SUCCESS:
             return True
         if "problem" in self.mode and results == FAILURE:
-            if prev_result is not None and prev_result != FAILURE:
+            if prev_result is not None and prev_result in [SUCCESS, WARNINGS]:
                 return True
         if "warnings" in self.mode and results == WARNINGS:
             return True
