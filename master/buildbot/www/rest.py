@@ -82,6 +82,7 @@ def _is_request_finished(request: server.Request) -> bool:
 
 URL_ENCODED = b"application/x-www-form-urlencoded"
 JSON_ENCODED = b"application/json"
+_JSON_WRITE_BATCH_SIZE = 64 * 1024  # 64Kb
 
 
 class RestRootResource(resource.Resource):
@@ -522,10 +523,17 @@ class V2RootResource(resource.Resource):
         request.setHeader(b"content-length", unicode2bytes(str(content_length)))
 
         if request.method != b"HEAD":
+            buffer = bytearray()
             for chunk in encoder.iterencode(data):
                 if _is_request_finished(request):
                     return
-                threads.blockingCallFromThread(_reactor, request.write, unicode2bytes(chunk))
+                buffer += unicode2bytes(chunk)
+                if len(buffer) >= _JSON_WRITE_BATCH_SIZE:
+                    threads.blockingCallFromThread(_reactor, request.write, bytes(buffer))
+                    buffer.clear()
+
+            if buffer and not _is_request_finished(request):
+                threads.blockingCallFromThread(_reactor, request.write, bytes(buffer))
 
 
 RestRootResource.addApiVersion(2, V2RootResource)
