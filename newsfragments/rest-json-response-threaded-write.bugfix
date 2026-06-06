@@ -1,0 +1,1 @@
+Rest API JSON response no longer close before write finished (:issue:`9065`).
