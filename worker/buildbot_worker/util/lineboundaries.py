@@ -68,12 +68,12 @@ class LineBoundaryFinder:
             # finds too long lines and splits them, each element in ret_lines will be a line of
             # appropriate length
             while position - first_position >= self.max_line_length:
-                line = text[first_position : self.max_line_length - 1] + '\n'
+                line = text[first_position : first_position + self.max_line_length - 1] + '\n'
                 ret_lines.append(line)
                 ret_line_count += 1
                 ret_text_length = ret_text_length + len(line)
                 ret_indexes.append(ret_text_length)
-                first_position = first_position + self.max_line_length
+                first_position = first_position + self.max_line_length - 1
 
             line = text[first_position : (position + 1)]
             ret_lines.append(line)
@@ -84,8 +84,9 @@ class LineBoundaryFinder:
 
         position = len(text)
         while position - first_position >= self.max_line_length:
-            line = text[first_position : self.max_line_length - 1] + '\n'
+            line = text[first_position : first_position + self.max_line_length - 1] + '\n'
             ret_lines.append(line)
+            ret_line_count += 1
             ret_text_length = ret_text_length + len(line)
             ret_indexes.append(ret_text_length)
             first_position = first_position + self.max_line_length - 1
