@@ -285,6 +285,20 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_log_file('property changes', r"res: " + repr('abcdef'))
         return self.run_step()
 
+    def test_run_property_decodeRC_warning(self) -> defer.Deferred[None]:
+        self.setup_step(
+            shell.SetPropertyFromCommand(
+                property="res", command="cmd", decodeRC={1: WARNINGS}
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command="cmd").stdout('\n\nabcdef\n').exit(1)
+        )
+        self.expect_outcome(result=WARNINGS, state_string="property 'res' set (warnings)")
+        self.expect_property("res", "abcdef")
+        self.expect_log_file('property changes', r"res: " + repr('abcdef'))
+        return self.run_step()
+
     def test_run_extract_fn(self) -> defer.Deferred[None]:
         def extract_fn(rc: int, stdout: str, stderr: str) -> dict[str, int]:
             self.assertEqual((rc, stdout, stderr), (0, 'startend\n', 'STARTEND\n'))
@@ -326,6 +340,24 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_commands(ExpectShell(workdir='wkdir', command="cmd").exit(3))
         # note that extract_fn *is* called anyway, but returns no properties
         self.expect_outcome(result=FAILURE, state_string="'cmd' (failure)")
+        return self.run_step()
+
+    def test_run_extract_fn_decodeRC_warning(self) -> defer.Deferred[None]:
+        def extract_fn(rc: int, stdout: str, stderr: str) -> dict[str, str]:
+            self.assertEqual((rc, stdout, stderr), (1, 'stdout\n', ''))
+            return {"res": stdout.strip()}
+
+        self.setup_step(
+            shell.SetPropertyFromCommand(
+                extract_fn=extract_fn, command="cmd", decodeRC={1: WARNINGS}
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command="cmd").stdout('stdout\n').exit(1)
+        )
+        self.expect_outcome(result=WARNINGS, state_string="property 'res' set (warnings)")
+        self.expect_property("res", "stdout")
+        self.expect_log_file('property changes', r"res: " + repr('stdout'))
         return self.run_step()
 
     @defer.inlineCallbacks
