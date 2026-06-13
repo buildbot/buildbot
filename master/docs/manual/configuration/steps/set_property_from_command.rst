@@ -18,6 +18,7 @@ It is usually used like this:
 
 This runs ``uname -a`` and captures its stdout, stripped of leading and trailing whitespace, in the property ``uname``.
 To avoid stripping, add ``strip=False``.
+The property is updated from the captured output even if the command exits with a failure code.
 
 The ``property`` argument can be specified as an :ref:`Interpolate` object, allowing the property name to be built from other property values.
 
