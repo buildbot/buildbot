@@ -267,8 +267,22 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
             .stderr('cannot blarg: File not found')
             .exit(1)
         )
-        self.expect_outcome(result=FAILURE, state_string="'blarg' (failure)")
-        self.expect_no_property("res")
+        self.expect_outcome(result=FAILURE, state_string="property 'res' set (failure)")
+        self.expect_property("res", "")
+        self.expect_log_file('property changes', r"res: " + repr(''))
+        return self.run_step()
+
+    def test_run_failure_with_stdout(self) -> defer.Deferred[None]:
+        self.setup_step(shell.SetPropertyFromCommand(property="res", command="blarg"))
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command="blarg")
+            .stdout('\n\nabcdef\n')
+            .stderr('cannot blarg: File not found')
+            .exit(1)
+        )
+        self.expect_outcome(result=FAILURE, state_string="property 'res' set (failure)")
+        self.expect_property("res", "abcdef")
+        self.expect_log_file('property changes', r"res: " + repr('abcdef'))
         return self.run_step()
 
     def test_run_extract_fn(self) -> defer.Deferred[None]:

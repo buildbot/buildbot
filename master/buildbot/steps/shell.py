@@ -135,8 +135,6 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
         property_changes = {}
 
         if self.property:
-            if cmd.didFail():
-                return FAILURE
             result = self.observer.getStdout()
             if self.strip:
                 result = result.strip()
