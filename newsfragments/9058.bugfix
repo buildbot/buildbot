@@ -1,0 +1,1 @@
+Fixed the `Git` step to apply configured partial clone filters when fetching existing repositories (:issue:`9058`).

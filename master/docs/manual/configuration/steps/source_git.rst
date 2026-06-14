@@ -54,8 +54,9 @@ The Git step takes the following arguments:
    This renderable option allows that to be configured to an alternate name.
 
 ``filters`` (optional, type: ``list``)
-   For each string in the passed in list, adds a ``--filter <filter>`` argument to :command:`git clone`.
-   This allows for adding filters like ``--filter "tree:0"`` to speed up the clone step.
+   For each string in the passed in list, adds a ``--filter <filter>`` argument to :command:`git clone` and :command:`git fetch`.
+   For existing repositories, Buildbot also configures the remote as a partial clone promisor remote before fetching.
+   This allows for adding filters like ``--filter "tree:0"`` to speed up clone and fetch operations.
    This requires git version 2.27 or higher.
 
 ``progress`` (optional)
