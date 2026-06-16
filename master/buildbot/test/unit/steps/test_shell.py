@@ -260,6 +260,16 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_log_file('property changes', r"res: " + repr('\n\nabcdef\n'))
         return self.run_step()
 
+    def test_run_property_decodeRC(self) -> defer.Deferred[None]:
+        self.setup_step(
+            shell.SetPropertyFromCommand(property="res", command="cmd", decodeRC={1: WARNINGS})
+        )
+        self.expect_commands(ExpectShell(workdir='wkdir', command="cmd").stdout('abcdef\n').exit(1))
+        self.expect_outcome(result=WARNINGS)
+        self.expect_property("res", "abcdef")
+        self.expect_log_file('property changes', r"res: " + repr('abcdef'))
+        return self.run_step()
+
     def test_run_failure(self) -> defer.Deferred[None]:
         self.setup_step(shell.SetPropertyFromCommand(property="res", command="blarg"))
         self.expect_commands(
@@ -286,6 +296,30 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="2 properties set")
+        self.expect_log_file('property changes', 'a: 1\nb: 2')
+        self.expect_property("a", 1)
+        self.expect_property("b", 2)
+        return self.run_step()
+
+    def test_run_extract_fn_decodeRC(self) -> defer.Deferred[None]:
+        def extract_fn(rc: int, stdout: str, stderr: str) -> dict[str, int]:
+            self.assertEqual((rc, stdout, stderr), (1, 'startend\n', 'STARTEND\n'))
+            return {"a": 1, "b": 2}
+
+        self.setup_step(
+            shell.SetPropertyFromCommand(
+                extract_fn=extract_fn, command="cmd", decodeRC={1: WARNINGS}
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command="cmd")
+            .stdout('start')
+            .stderr('START')
+            .stdout('end')
+            .stderr('END')
+            .exit(1)
+        )
+        self.expect_outcome(result=WARNINGS)
         self.expect_log_file('property changes', 'a: 1\nb: 2')
         self.expect_property("a", 1)
         self.expect_property("b", 2)
