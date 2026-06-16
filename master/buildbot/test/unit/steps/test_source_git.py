@@ -127,6 +127,220 @@ class TestGit(
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
+    def test_mode_full_clean_filters_existing_repo_2_26(self) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clean',
+                filters=['tree:0'],
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.26.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'clean', '-f', '-f', '-d']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'fetch',
+                    '-f',
+                    '--progress',
+                    'http://github.com/buildbot/buildbot.git',
+                    'HEAD',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_mode_full_fresh_filters_existing_repo_2_27(self) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='fresh',
+                filters=['blob:limit=1m', 'tree:0'],
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.27.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'clean', '-f', '-f', '-d', '-x']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', '--get', 'remote.origin.promisor'],
+            ).exit(1),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', '--get', 'remote.origin.partialclonefilter'],
+            ).exit(1),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', 'remote.origin.promisor', 'true'],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'config',
+                    'remote.origin.partialclonefilter',
+                    'combine:blob:limit=1m+tree:0',
+                ],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'fetch',
+                    '-f',
+                    '--filter',
+                    'blob:limit=1m',
+                    '--filter',
+                    'tree:0',
+                    '--progress',
+                    'http://github.com/buildbot/buildbot.git',
+                    'HEAD',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_mode_incremental_filters_existing_repo_already_configured_2_27(
+        self,
+    ) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='incremental',
+                filters=['tree:0'],
+                origin='upstream',
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.27.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', '--get', 'remote.upstream.promisor'],
+            )
+            .stdout('true')
+            .exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', '--get', 'remote.upstream.partialclonefilter'],
+            )
+            .stdout('tree:0')
+            .exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'fetch',
+                    '-f',
+                    '--filter',
+                    'tree:0',
+                    '--progress',
+                    'http://github.com/buildbot/buildbot.git',
+                    'HEAD',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_mode_incremental_filters_existing_repo_changed_filter_2_27(
+        self,
+    ) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='incremental',
+                filters=['tree:0'],
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.27.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', '--get', 'remote.origin.promisor'],
+            )
+            .stdout('true')
+            .exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', '--get', 'remote.origin.partialclonefilter'],
+            )
+            .stdout('blob:none')
+            .exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', 'remote.origin.promisor', 'true'],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', 'remote.origin.partialclonefilter', 'tree:0'],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'fetch',
+                    '-f',
+                    '--filter',
+                    'tree:0',
+                    '--progress',
+                    'http://github.com/buildbot/buildbot.git',
+                    'HEAD',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    @parameterized.expand([
+        ('equals_unescaped', 'blob:limit=1m', 'blob:limit=1m'),
+        ('plus', 'sparse:oid=foo+bar', 'sparse:oid=foo%2Bbar'),
+        ('percent', 'sparse:oid=foo%bar', 'sparse:oid=foo%25bar'),
+        ('space', 'sparse:oid=foo bar', 'sparse:oid=foo%20bar'),
+        ('reserved', 'sparse:oid=foo?bar', 'sparse:oid=foo%3Fbar'),
+    ])
+    def test_encode_filter_for_combine(self, name: str, filter: str, encoded_filter: str) -> None:
+        step = self.stepClass(repourl='http://github.com/buildbot/buildbot.git')
+
+        self.assertEqual(step._encodeFilterForCombine(filter), encoded_filter)
+
     @parameterized.expand([
         ('url', 'ssh://github.com/test/test.git', 'ssh://github.com/test/test.git'),
         (

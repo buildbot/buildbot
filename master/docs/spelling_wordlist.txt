@@ -676,6 +676,7 @@ prev
 PrivateTemporaryDirectory
 procmail
 prois
+promisor
 ProjectModel
 propertiesDict
 propKey

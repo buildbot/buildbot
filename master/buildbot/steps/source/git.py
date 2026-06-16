@@ -42,6 +42,7 @@ if TYPE_CHECKING:
 
 
 GIT_HASH_LENGTH = 40
+COMBINE_FILTER_RESERVED_CHARS = frozenset('~!@#$^&*()[]{}\\;",<>?\'+%')
 
 
 def isTrueOrIsExactlyZero(v: Any) -> bool:
@@ -363,10 +364,66 @@ class Git(Source, GitStepMixin):
             return self.srcdir
         return self.workdir
 
+    def _getPartialCloneRemote(self) -> str:
+        return self.origin or 'origin'
+
+    def _getPartialCloneFilter(self) -> str:
+        assert self.filters is not None
+
+        if len(self.filters) == 1:
+            return self.filters[0]
+
+        return (
+            f"combine:{'+'.join(self._encodeFilterForCombine(filter) for filter in self.filters)}"
+        )
+
+    def _encodeFilterForCombine(self, filter: str) -> str:
+        return ''.join(
+            f'%{ord(char):02X}'
+            if ord(char) <= 0x20 or char in COMBINE_FILTER_RESERVED_CHARS
+            else char
+            for char in filter
+        )
+
+    @defer.inlineCallbacks
+    def _ensurePartialCloneConfig(self) -> InlineCallbacksType[None]:
+        if not self.filters or not self.supportsFilters:
+            return
+
+        remote = self._getPartialCloneRemote()
+        promisor_key = f'remote.{remote}.promisor'
+        filter_key = f'remote.{remote}.partialclonefilter'
+        expected_filter = self._getPartialCloneFilter()
+
+        promisor = yield self._dovccmd(
+            ['config', '--get', promisor_key],
+            abandonOnFailure=False,
+            collectStdout=True,
+        )
+        actual_filter = yield self._dovccmd(
+            ['config', '--get', filter_key],
+            abandonOnFailure=False,
+            collectStdout=True,
+        )
+
+        if promisor.strip() == 'true' and actual_filter.strip() == expected_filter:
+            return
+
+        yield self._dovccmd(
+            ['config', promisor_key, 'true'],
+            abandonOnFailure=False,
+        )
+        yield self._dovccmd(
+            ['config', filter_key, expected_filter],
+            abandonOnFailure=False,
+        )
+
     @defer.inlineCallbacks
     def _fetch(
         self, _: Any, shallowClone: bool | int, abandonOnFailure: bool = True
     ) -> InlineCallbacksType[int | None]:
+        yield self._ensurePartialCloneConfig()
+
         fetch_required = True
 
         # If the revision already exists in the repo, we don't need to fetch. However, if tags
@@ -380,6 +437,9 @@ class Git(Source, GitStepMixin):
             command = ['fetch', '-f']
             if shallowClone:
                 command += ['--depth', str(int(shallowClone))]
+            if self.filters and self.supportsFilters:
+                for filter in self.filters:
+                    command += ['--filter', filter]
             if self.tags:
                 command.append("--tags")
 
