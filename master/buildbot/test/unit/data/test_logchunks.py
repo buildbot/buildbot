@@ -16,17 +16,32 @@ from __future__ import annotations
 
 import textwrap
 from typing import TYPE_CHECKING
+from typing import cast
+from unittest import mock
 
 from twisted.internet import defer
+from twisted.internet.defer import Deferred
 from twisted.trial import unittest
+from typing_extensions import override
 
 from buildbot.data import base
 from buildbot.data import logchunks
 from buildbot.data import resultspec
+from buildbot.mq.simple import SimpleMQ
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import create_step_from_step_or_factory
+from buildbot.process.log import PlainLog
+from buildbot.process.results import SUCCESS
 from buildbot.test import fakedb
+from buildbot.test.fake.fakebuild import FakeBuild
+from buildbot.test.fake.fakedata import FakeDataConnector
+from buildbot.test.fake.fakemaster import make_master
+from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import endpoint
+from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    from buildbot.process.build import Build
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -59,7 +74,15 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                     id=13, builderid=77, masterid=88, workerid=13, buildrequestid=82, number=3
                 ),
                 fakedb.Step(id=50, buildid=13, number=9, name='make'),
-                fakedb.Log(id=60, stepid=50, name='stdio', slug='stdio', type='s', num_lines=7),
+                fakedb.Log(
+                    id=60,
+                    stepid=50,
+                    name='stdio',
+                    slug='stdio',
+                    type='s',
+                    num_lines=7,
+                    complete=1,
+                ),
                 fakedb.LogChunk(
                     logid=60,
                     first_line=0,
@@ -85,7 +108,15 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                 fakedb.LogChunk(
                     logid=60, first_line=6, last_line=6, compressed=0, content="yet another line"
                 ),
-                fakedb.Log(id=61, stepid=50, name='errors', slug='errors', type='t', num_lines=100),
+                fakedb.Log(
+                    id=61,
+                    stepid=50,
+                    name='errors',
+                    slug='errors',
+                    type='t',
+                    num_lines=100,
+                    complete=1,
+                ),
             ]
             + [
                 fakedb.LogChunk(
@@ -94,7 +125,15 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                 for i in range(100)
             ]
             + [
-                fakedb.Log(id=62, stepid=50, name='notes', slug='notes', type='t', num_lines=0),
+                fakedb.Log(
+                    id=62,
+                    stepid=50,
+                    name='notes',
+                    slug='notes',
+                    type='t',
+                    num_lines=0,
+                    complete=1,
+                ),
                 # logid 62 is empty
             ]
         )
@@ -240,3 +279,139 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
         self.assertEqual(
             logchunk, {'filename': expFilename, 'mime-type': "text/plain", 'raw': expContent}
         )
+
+
+class AsyncLoggingStep(BuildStep):
+    def __init__(self) -> None:
+        super().__init__(name='fake')
+        self.has_produced_initial_logs_future: Deferred[None] = Deferred()
+        self.has_produced_additional_logs_future: Deferred[None] = Deferred()
+
+        self._produce_more_log_future: Deferred[None] = Deferred()
+        self._finish_log_future: Deferred[None] = Deferred()
+
+        self.initial_lines_count = 10
+        self.additional_lines_count = 5
+
+    async def trigger_more_logs(self) -> None:
+        self._produce_more_log_future.callback(None)
+        await self.has_produced_additional_logs_future
+
+    def trigger_log_finish(self) -> None:
+        self._finish_log_future.callback(None)
+
+    @override
+    @async_to_deferred
+    async def run(self) -> int:
+        log = await self.addLog('test-log', type='t')
+        assert isinstance(log, PlainLog)
+
+        await log.addContent(''.join(f'line {idx}\n' for idx in range(self.initial_lines_count)))
+        await log.flush()
+
+        self.has_produced_initial_logs_future.callback(None)
+
+        await self._produce_more_log_future
+        await log.addContent(
+            ''.join(f'additional line {idx}\n' for idx in range(self.additional_lines_count))
+        )
+        await log.flush()
+
+        self.has_produced_additional_logs_future.callback(None)
+
+        await self._finish_log_future
+        await log.finish()
+
+        return SUCCESS
+
+
+class RawLogChunkEndpointFollowUncomplete(TestReactorMixin, unittest.TestCase):
+    async def setUp(self) -> None:  # type: ignore[override]
+        self.setup_test_reactor()
+        self.master = await make_master(
+            self,
+            wantDb=True,
+            # wantData forces wantMq to True
+            # but we want a real MQ as FakeMQ
+            # does not send events
+            wantData=False,
+            wantMq=False,
+        )
+
+        await self.master.db.insert_test_data([
+            fakedb.Master(id=fakedb.FakeDBConnector.MASTER_ID),
+            fakedb.Worker(id=400, name='linux'),
+            fakedb.Builder(id=100),
+            fakedb.Buildset(id=200),
+            fakedb.BuildRequest(id=300, buildsetid=200, builderid=100),
+            fakedb.Build(
+                id=92,
+                buildrequestid=300,
+                number=7,
+                masterid=fakedb.FakeDBConnector.MASTER_ID,
+                builderid=100,
+                workerid=400,
+            ),
+        ])
+
+        self.build = FakeBuild(master=self.master)
+
+        # Needs a real MQ to produce events
+        self.mq = self.master.mq = SimpleMQ()  # type: ignore[assignment]
+        self.mq.setServiceParent(self.master)
+        self.mq.startService()
+
+        self.master.data = FakeDataConnector(self.master, self)
+
+        @async_to_deferred
+        async def cleanup() -> None:
+            if self.mq.running:
+                await self.mq.stopService()
+
+        self.addCleanup(cleanup)
+
+    async def test_raw(self) -> None:
+        step = cast(AsyncLoggingStep, create_step_from_step_or_factory(AsyncLoggingStep()))
+        step.setBuild(cast("Build", self.build))
+
+        step_run_future = step.startStep(mock.Mock())
+
+        endpoint, kwargs = self.master.data.getEndpoint(
+            ('builds', str(self.build.buildid), 'steps', step.number, 'logs', 'test-log', 'raw'),
+        )
+        assert isinstance(endpoint, logchunks.RawLogChunkEndpoint)
+        stream_response = await endpoint.stream(resultSpec=resultspec.ResultSpec(), kwargs=kwargs)
+        assert stream_response is not None
+
+        streamed_lines: list[str] = []
+
+        async def _streamed_lines_consumer() -> None:
+            async for line in stream_response['raw']:
+                streamed_lines.append(line)
+
+        lines_consumer_future = Deferred.fromCoroutine(_streamed_lines_consumer())
+
+        await step.has_produced_initial_logs_future
+
+        initial_lines = [f"line {idx}\n" for idx in range(step.initial_lines_count)]
+        self.assertEqual(streamed_lines, initial_lines)
+        self.assertFalse(lines_consumer_future.called)
+
+        await step.trigger_more_logs()
+
+        additional_lines = [
+            f"additional line {idx}\n" for idx in range(step.additional_lines_count)
+        ]
+        self.assertEqual(streamed_lines, initial_lines + additional_lines)
+        self.assertFalse(lines_consumer_future.called)
+
+        step.trigger_log_finish()
+        step_res = await step_run_future
+
+        self.assertEqual(streamed_lines, initial_lines + additional_lines)
+        self.assertTrue(lines_consumer_future.called)
+
+        self.assertFalse(step._running)
+        errors = self.flushLoggedErrors()
+        self.assertEqual(len(errors), 0)
+        self.assertEqual(step_res, SUCCESS)
