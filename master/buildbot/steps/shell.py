@@ -31,6 +31,7 @@ from buildbot.process import remotetransfer
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
 from buildbot.process.properties import WithProperties
+from buildbot.process.results import CANCELLED
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
@@ -132,11 +133,13 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
         stdio_log = yield self.getLog('stdio')
         yield stdio_log.finish()
 
+        command_result = cmd.results()
+        if command_result in (FAILURE, CANCELLED):
+            return command_result
+
         property_changes = {}
 
         if self.property:
-            if cmd.didFail():
-                return FAILURE
             result = self.observer.getStdout()
             if self.strip:
                 result = result.strip()
@@ -158,7 +161,7 @@ class SetPropertyFromCommand(buildstep.ShellMixin, buildstep.BuildStep):
             self.descriptionDone = f'{len(property_changes)} properties set'
         elif len(property_changes) == 1:
             self.descriptionDone = f'property \'{next(iter(property_changes))}\' set'
-        return cmd.results()
+        return command_result
 
 
 class ShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
@@ -605,7 +608,7 @@ class PerlModuleTestObserver(logobserver.LogLineObserver):
     oldSuccessCountsRe = re.compile(r"Files=\d+, Tests=(\d+),")
 
     def outLineReceived(self, line: str) -> None:
-        if self.warningPattern.match(line):  # type: ignore[union-attr]
+        if self.warningPattern is not None and self.warningPattern.match(line):
             self.warnings += 1
         if self.newStyle:
             if line.startswith('Result: FAIL'):

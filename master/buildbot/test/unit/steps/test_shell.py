@@ -26,6 +26,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process import properties
 from buildbot.process import remotetransfer
+from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
@@ -325,28 +326,59 @@ class SetPropertyFromCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_property("b", 2)
         return self.run_step()
 
-    def test_run_extract_fn_cmdfail(self) -> defer.Deferred[None]:
+    @defer.inlineCallbacks
+    def test_run_extract_fn_cmdfail(self) -> InlineCallbacksType[None]:
+        called = False
+
         def extract_fn(rc: int, stdout: str, stderr: str) -> dict[str, int]:
-            self.assertEqual((rc, stdout, stderr), (3, '', ''))
+            nonlocal called
+            called = True
             return {"a": 1, "b": 2}
 
         self.setup_step(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expect_commands(ExpectShell(workdir='wkdir', command="cmd").exit(3))
-        # note that extract_fn *is* called anyway
-        self.expect_outcome(result=FAILURE, state_string="2 properties set (failure)")
-        self.expect_log_file('property changes', 'a: 1\nb: 2')
-        return self.run_step()
+        self.expect_outcome(result=FAILURE, state_string="'cmd' (failure)")
+        self.expect_no_property("a")
+        self.expect_no_property("b")
+        yield self.run_step()
+        self.assertFalse(called)
+        self.assertNotIn('property changes', self.get_nth_step(0).logs)
 
-    def test_run_extract_fn_cmdfail_empty(self) -> defer.Deferred[None]:
+    @defer.inlineCallbacks
+    def test_run_extract_fn_cmdfail_empty(self) -> InlineCallbacksType[None]:
+        called = False
+
         def extract_fn(rc: int, stdout: str, stderr: str) -> dict[str, int]:
-            self.assertEqual((rc, stdout, stderr), (3, '', ''))
+            nonlocal called
+            called = True
             return {}
 
         self.setup_step(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expect_commands(ExpectShell(workdir='wkdir', command="cmd").exit(3))
-        # note that extract_fn *is* called anyway, but returns no properties
         self.expect_outcome(result=FAILURE, state_string="'cmd' (failure)")
-        return self.run_step()
+        yield self.run_step()
+        self.assertFalse(called)
+        self.assertNotIn('property changes', self.get_nth_step(0).logs)
+
+    @defer.inlineCallbacks
+    def test_run_extract_fn_cancelled(self) -> InlineCallbacksType[None]:
+        called = False
+
+        def extract_fn(rc: int, stdout: str, stderr: str) -> dict[str, int]:
+            nonlocal called
+            called = True
+            return {"a": 1}
+
+        exp = ExpectShell(workdir='wkdir', command="cmd").exit(0)
+        exp.interrupted = True
+        self.setup_step(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
+        self.expect_commands(exp)
+        self.expect_outcome(result=CANCELLED)
+        self.expect_no_property("a")
+        self.interrupt_nth_remote_command(0)
+        yield self.run_step()
+        self.assertFalse(called)
+        self.assertNotIn('property changes', self.get_nth_step(0).logs)
 
     @defer.inlineCallbacks
     def test_run_extract_fn_exception(self) -> InlineCallbacksType[None]:
