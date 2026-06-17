@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -30,6 +31,13 @@ if TYPE_CHECKING:
 # tool call cannot overrun an LLM's context window.
 DEFAULT_LIMIT = 25
 MAX_LIMIT = 100
+
+# Log content bounds (in lines).
+DEFAULT_LOG_LINES = 200
+MAX_LOG_LINES = 1000
+# When searching, cap how many lines are scanned and how many matches returned.
+MAX_SEARCH_LINES = 5000
+MAX_MATCHES = 100
 
 
 class ToolError(Exception):
@@ -128,6 +136,47 @@ class McpTools:
                     "required": ["build_id"],
                 },
                 "handler": self.get_build,
+            },
+            "get_build_logs": {
+                "description": (
+                    "Inspect the logs of a build. Called with only build_id, it lists the "
+                    "available logs (per step). Pass step (number) and log (slug) to fetch "
+                    "that log's contents, paginated by line. Add query to return only the "
+                    "lines matching a regular expression (or substring)."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "build_id": {
+                            "type": "integer",
+                            "description": "The numeric build id (buildid).",
+                        },
+                        "step": {
+                            "type": "integer",
+                            "description": "Step number within the build (from the log listing).",
+                        },
+                        "log": {
+                            "type": "string",
+                            "description": "Log slug within the step (from the log listing).",
+                        },
+                        "query": {
+                            "type": "string",
+                            "description": (
+                                "Optional regex (or substring) to return only matching lines."
+                            ),
+                        },
+                        "offset": {
+                            "type": "integer",
+                            "description": "First line to read (default 0).",
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Max lines to return in content mode (default 200, cap 1000).",
+                        },
+                    },
+                    "required": ["build_id"],
+                },
+                "handler": self.get_build_logs,
             },
         }
 
@@ -301,4 +350,126 @@ class McpTools:
                 }
                 for s in steps
             ],
+        }
+
+    @defer.inlineCallbacks
+    def get_build_logs(self, args: dict[str, Any]) -> Any:
+        build_id = args.get('build_id')
+        if build_id is None:
+            raise ToolError("build_id is required")
+        build = yield self.master.data.get(('builds', build_id))
+        if build is None:
+            raise ToolError(f"no build with id {build_id}")
+
+        step = args.get('step')
+        log_slug = args.get('log')
+
+        # Without a specific step+log, list the logs available in the build.
+        if step is None or log_slug is None:
+            manifest = yield self._build_log_manifest(build_id)
+            return {"build_id": build_id, "logs": manifest}
+
+        log_path = ('builds', build_id, 'steps', step, 'logs', log_slug)
+        log_dict = yield self.master.data.get(log_path)
+        if log_dict is None:
+            raise ToolError(f"no log '{log_slug}' in step {step} of build {build_id}")
+        # stdio logs (type 's') store a per-line stream channel prefix (o/e/h);
+        # strip it so callers get clean text, mirroring Buildbot's raw-log
+        # endpoint (buildbot.data.logchunks.LogChunkEndpointBase.get_log_lines).
+        is_stdio = log_dict.get('type') == 's'
+
+        contents_path = (*log_path, 'contents')
+        query = args.get('query')
+        if query:
+            result = yield self._search_log(contents_path, query, args, is_stdio)
+        else:
+            result = yield self._fetch_log(contents_path, args, is_stdio)
+        return result
+
+    @staticmethod
+    def _split_log_lines(content: str, is_stdio: bool) -> list[str]:
+        lines = content.splitlines()
+        if is_stdio:
+            # drop the leading stream-channel character from each stdio line
+            lines = [line[1:] for line in lines]
+        return lines
+
+    @defer.inlineCallbacks
+    def _build_log_manifest(self, build_id: Any) -> Any:
+        steps = yield self.master.data.get(('builds', build_id, 'steps'))
+        manifest = []
+        for s in steps:
+            logs = yield self.master.data.get(('steps', s['stepid'], 'logs'))
+            for lg in logs:
+                manifest.append({
+                    "step": s["number"],
+                    "step_name": s["name"],
+                    "name": lg["name"],
+                    "slug": lg["slug"],
+                    "type": lg["type"],
+                    "num_lines": lg["num_lines"],
+                    "complete": lg["complete"],
+                })
+        return manifest
+
+    @defer.inlineCallbacks
+    def _fetch_log(self, path: tuple[Any, ...], args: dict[str, Any], is_stdio: bool) -> Any:
+        try:
+            offset = max(0, int(args.get('offset', 0)))
+        except (TypeError, ValueError):
+            offset = 0
+        try:
+            limit = int(args.get('limit', DEFAULT_LOG_LINES))
+        except (TypeError, ValueError):
+            limit = DEFAULT_LOG_LINES
+        limit = max(1, min(limit, MAX_LOG_LINES))
+
+        chunk = yield self.master.data.get(path, offset=offset, limit=limit)
+        if chunk is None:
+            return {"firstline": offset, "lines_returned": 0, "content": ""}
+        lines = self._split_log_lines(chunk.get('content', ''), is_stdio)
+        return {
+            "firstline": chunk.get('firstline', offset),
+            "lines_returned": len(lines),
+            "content": "\n".join(lines),
+        }
+
+    @defer.inlineCallbacks
+    def _search_log(
+        self, path: tuple[Any, ...], query: str, args: dict[str, Any], is_stdio: bool
+    ) -> Any:
+        try:
+            pattern = re.compile(query)
+        except re.error:
+            # Fall back to a literal substring search on an invalid regex.
+            pattern = re.compile(re.escape(query))
+        try:
+            offset = max(0, int(args.get('offset', 0)))
+        except (TypeError, ValueError):
+            offset = 0
+
+        chunk = yield self.master.data.get(path, offset=offset, limit=MAX_SEARCH_LINES)
+        if chunk is None:
+            return {
+                "query": query,
+                "scanned_lines": 0,
+                "match_count": 0,
+                "matches": [],
+                "truncated_matches": False,
+                "scan_capped": False,
+            }
+        firstline = chunk.get('firstline', offset)
+        lines = self._split_log_lines(chunk.get('content', ''), is_stdio)
+        matches = [
+            {"line": firstline + i, "text": line}
+            for i, line in enumerate(lines)
+            if pattern.search(line)
+        ]
+        return {
+            "query": query,
+            "scanned_lines": len(lines),
+            "match_count": len(matches),
+            "matches": matches[:MAX_MATCHES],
+            "truncated_matches": len(matches) > MAX_MATCHES,
+            "scan_capped": len(lines) >= MAX_SEARCH_LINES,
         }

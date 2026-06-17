@@ -182,6 +182,22 @@ class McpTools(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 state_string="building",
                 results=None,
             ),
+            fakedb.Step(id=50, number=0, name="compile", buildid=15),
+            fakedb.Log(id=60, stepid=50, name="text", slug="text", type="t", num_lines=4),
+            fakedb.LogChunk(
+                logid=60,
+                first_line=0,
+                last_line=3,
+                content="alpha\nbeta\nERROR boom\ngamma",
+            ),
+            # a stdio (type 's') log: each line carries a leading channel char
+            fakedb.Log(id=61, stepid=50, name="stdio", slug="stdio", type="s", num_lines=3),
+            fakedb.LogChunk(
+                logid=61,
+                first_line=0,
+                last_line=2,
+                content="ohello\neoops ERROR\nodone",
+            ),
         ])
 
     @defer.inlineCallbacks
@@ -222,7 +238,14 @@ class McpTools(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         names = {t["name"] for t in res["result"]["tools"]}
         self.assertEqual(
             names,
-            {"get_status", "get_builders", "get_workers", "get_recent_builds", "get_build"},
+            {
+                "get_status",
+                "get_builders",
+                "get_workers",
+                "get_recent_builds",
+                "get_build",
+                "get_build_logs",
+            },
         )
 
     @defer.inlineCallbacks
@@ -301,3 +324,56 @@ class McpTools(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def test_unknown_tool(self) -> InlineCallbacksType[None]:
         res = yield self._call("does_not_exist")
         self.assertEqual(res["error"]["code"], -32602)
+
+    @defer.inlineCallbacks
+    def test_get_build_logs_manifest(self) -> InlineCallbacksType[None]:
+        res = yield self._call("get_build_logs", {"build_id": 15})
+        data = self._tool_data(res)
+        self.assertEqual(data["build_id"], 15)
+        self.assertEqual({lg["slug"] for lg in data["logs"]}, {"text", "stdio"})
+        self.assertTrue(all(lg["step"] == 0 for lg in data["logs"]))
+
+    @defer.inlineCallbacks
+    def test_get_build_logs_content_text(self) -> InlineCallbacksType[None]:
+        # a text (type 't') log is returned verbatim, with no stripping
+        res = yield self._call("get_build_logs", {"build_id": 15, "step": 0, "log": "text"})
+        data = self._tool_data(res)
+        self.assertEqual(data["lines_returned"], 4)
+        self.assertIn("alpha", data["content"])
+        self.assertIn("ERROR boom", data["content"])
+
+    @defer.inlineCallbacks
+    def test_get_build_logs_search_text(self) -> InlineCallbacksType[None]:
+        res = yield self._call(
+            "get_build_logs", {"build_id": 15, "step": 0, "log": "text", "query": "ERROR"}
+        )
+        data = self._tool_data(res)
+        self.assertEqual(data["match_count"], 1)
+        self.assertIn("ERROR boom", data["matches"][0]["text"])
+        self.assertEqual(data["matches"][0]["line"], 2)
+
+    @defer.inlineCallbacks
+    def test_get_build_logs_content_stdio_strips_channel(self) -> InlineCallbacksType[None]:
+        # stdio (type 's') lines carry a leading channel char (o/e/h) which must
+        # be stripped from the returned content.
+        res = yield self._call("get_build_logs", {"build_id": 15, "step": 0, "log": "stdio"})
+        data = self._tool_data(res)
+        self.assertEqual(data["lines_returned"], 3)
+        self.assertEqual(data["content"], "hello\noops ERROR\ndone")
+        self.assertNotIn("ohello", data["content"])
+
+    @defer.inlineCallbacks
+    def test_get_build_logs_search_stdio_strips_channel(self) -> InlineCallbacksType[None]:
+        res = yield self._call(
+            "get_build_logs", {"build_id": 15, "step": 0, "log": "stdio", "query": "ERROR"}
+        )
+        data = self._tool_data(res)
+        self.assertEqual(data["match_count"], 1)
+        # the matched text is the line without its leading channel character
+        self.assertEqual(data["matches"][0]["text"], "oops ERROR")
+        self.assertEqual(data["matches"][0]["line"], 1)
+
+    @defer.inlineCallbacks
+    def test_get_build_logs_unknown_build(self) -> InlineCallbacksType[None]:
+        res = yield self._call("get_build_logs", {"build_id": 999})
+        self.assertTrue(res["result"]["isError"])
