@@ -27,8 +27,11 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import bytes2unicode
+from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
+from buildbot.www.mcp.tools import McpTools
+from buildbot.www.mcp.tools import ToolError
 
 if TYPE_CHECKING:
     from twisted.web import server
@@ -73,10 +76,13 @@ class McpResource(resource.Resource):
     def __init__(self, master: BuildMaster) -> None:
         super().__init__(master)
         self.origins: list[re.Pattern[str]] = []
+        self.tools = McpTools(master)
         # method name -> handler(params) -> result (may return a Deferred)
         self._methods: dict[str, Callable[[dict[str, Any]], Any]] = {
             'initialize': self._handle_initialize,
             'ping': self._handle_ping,
+            'tools/list': self._handle_tools_list,
+            'tools/call': self._handle_tools_call,
         }
         # notification name -> handler(params) -> None (may return a Deferred)
         self._notifications: dict[str, Callable[[dict[str, Any]], Any]] = {
@@ -92,6 +98,7 @@ class McpResource(resource.Resource):
         for o in new_config.www.get('allowed_origins', [origin_self]):
             origin = bytes2unicode(o).lower()
             self.origins.append(re.compile(fnmatch.translate(origin)))
+        self.tools.reset_caches()
 
     # -- transport --------------------------------------------------------
 
@@ -209,9 +216,9 @@ class McpResource(resource.Resource):
         version = requested if requested in SUPPORTED_PROTOCOL_VERSIONS else PROTOCOL_VERSION
         return {
             "protocolVersion": version,
-            # Server capabilities (tools, resources) are declared as they are
-            # implemented in later commits.
-            "capabilities": {},
+            # Resource capabilities (live log streaming) are added in a later
+            # commit; tools are available now.
+            "capabilities": {"tools": {}},
             "serverInfo": {
                 "name": "buildbot",
                 "version": bbversion,
@@ -224,3 +231,23 @@ class McpResource(resource.Resource):
     def _handle_initialized(self, params: dict[str, Any]) -> None:
         # The client signals it is ready for normal operation; nothing to do.
         return None
+
+    def _handle_tools_list(self, params: dict[str, Any]) -> dict[str, Any]:
+        return {"tools": self.tools.list_tools()}
+
+    @defer.inlineCallbacks
+    def _handle_tools_call(self, params: dict[str, Any]) -> Any:
+        name = params.get('name')
+        if not isinstance(name, str) or not self.tools.has_tool(name):
+            raise JsonRpcError(INVALID_PARAMS, f"unknown tool: {name}")
+        arguments = params.get('arguments') or {}
+        try:
+            data = yield self.tools.call_tool(name, arguments)
+        except ToolError as e:
+            # Tool-level errors are reported inside the result, not as a
+            # protocol error, per the MCP tools specification.
+            return {"content": [{"type": "text", "text": str(e)}], "isError": True}
+        return {
+            "content": [{"type": "text", "text": json.dumps(data, default=toJson)}],
+            "isError": False,
+        }
