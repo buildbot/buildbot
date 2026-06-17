@@ -30,6 +30,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
+from buildbot.www.authz import Forbidden
 from buildbot.www.mcp.tools import McpTools
 from buildbot.www.mcp.tools import ToolError
 
@@ -77,15 +78,15 @@ class McpResource(resource.Resource):
         super().__init__(master)
         self.origins: list[re.Pattern[str]] = []
         self.tools = McpTools(master)
-        # method name -> handler(params) -> result (may return a Deferred)
-        self._methods: dict[str, Callable[[dict[str, Any]], Any]] = {
+        # method name -> handler(params, request) -> result (may return a Deferred)
+        self._methods: dict[str, Callable[..., Any]] = {
             'initialize': self._handle_initialize,
             'ping': self._handle_ping,
             'tools/list': self._handle_tools_list,
             'tools/call': self._handle_tools_call,
         }
-        # notification name -> handler(params) -> None (may return a Deferred)
-        self._notifications: dict[str, Callable[[dict[str, Any]], Any]] = {
+        # notification name -> handler(params, request) -> None (may return a Deferred)
+        self._notifications: dict[str, Callable[..., Any]] = {
             'notifications/initialized': self._handle_initialized,
         }
 
@@ -167,7 +168,7 @@ class McpResource(resource.Resource):
             if isinstance(method, str) and method in self._notifications:
                 try:
                     yield defer.maybeDeferred(
-                        self._notifications[method], message.get('params') or {}
+                        self._notifications[method], message.get('params') or {}, request
                     )
                 except Exception as e:
                     log.err(e, 'while handling MCP notification')
@@ -190,7 +191,7 @@ class McpResource(resource.Resource):
 
         params = message.get('params') or {}
         try:
-            result = yield defer.maybeDeferred(handler, params)
+            result = yield defer.maybeDeferred(handler, params, request)
         except JsonRpcError as e:
             return self._json_response(
                 request, 200, self._error_obj(msg_id, e.code, e.message, e.data)
@@ -207,7 +208,7 @@ class McpResource(resource.Resource):
 
     # -- method handlers --------------------------------------------------
 
-    def _handle_initialize(self, params: dict[str, Any]) -> dict[str, Any]:
+    def _handle_initialize(self, params: dict[str, Any], request: server.Request) -> dict[str, Any]:
         from buildbot import version as bbversion  # noqa: PLC0415
 
         # Version negotiation: echo the client's version if we support it,
@@ -225,24 +226,30 @@ class McpResource(resource.Resource):
             },
         }
 
-    def _handle_ping(self, params: dict[str, Any]) -> dict[str, Any]:
+    def _handle_ping(self, params: dict[str, Any], request: server.Request) -> dict[str, Any]:
         return {}
 
-    def _handle_initialized(self, params: dict[str, Any]) -> None:
+    def _handle_initialized(self, params: dict[str, Any], request: server.Request) -> None:
         # The client signals it is ready for normal operation; nothing to do.
         return None
 
-    def _handle_tools_list(self, params: dict[str, Any]) -> dict[str, Any]:
+    def _handle_tools_list(self, params: dict[str, Any], request: server.Request) -> dict[str, Any]:
         return {"tools": self.tools.list_tools()}
 
     @defer.inlineCallbacks
-    def _handle_tools_call(self, params: dict[str, Any]) -> Any:
+    def _handle_tools_call(self, params: dict[str, Any], request: server.Request) -> Any:
         name = params.get('name')
         if not isinstance(name, str) or not self.tools.has_tool(name):
             raise JsonRpcError(INVALID_PARAMS, f"unknown tool: {name}")
         arguments = params.get('arguments') or {}
         try:
-            data = yield self.tools.call_tool(name, arguments)
+            data = yield self.tools.call_tool(name, arguments, request)
+        except Forbidden:
+            # Authorization failure -> report as a tool error result.
+            return {
+                "content": [{"type": "text", "text": "permission denied"}],
+                "isError": True,
+            }
         except ToolError as e:
             # Tool-level errors are reported inside the result, not as a
             # protocol error, per the MCP tools specification.

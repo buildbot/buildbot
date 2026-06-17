@@ -178,6 +178,55 @@ class McpTools:
                 },
                 "handler": self.get_build_logs,
             },
+            "force_build": {
+                "description": (
+                    "Trigger a build by invoking a force scheduler. Provide the force "
+                    "scheduler name; optionally a builder name and extra parameters "
+                    "(e.g. branch, revision). Requires force permission."
+                ),
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "scheduler": {
+                            "type": "string",
+                            "description": "Name of the force scheduler to invoke.",
+                        },
+                        "builder": {
+                            "type": "string",
+                            "description": "Builder name to build (optional; resolved to builderid).",
+                        },
+                        "reason": {
+                            "type": "string",
+                            "description": "Reason recorded for the build (optional).",
+                        },
+                        "params": {
+                            "type": "object",
+                            "description": "Extra force-scheduler parameters (e.g. branch, revision).",
+                            "additionalProperties": True,
+                        },
+                    },
+                    "required": ["scheduler"],
+                },
+                "handler": self.force_build,
+            },
+            "cancel_build": {
+                "description": "Stop a running build by its build id. Requires stop permission.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "build_id": {
+                            "type": "integer",
+                            "description": "The numeric build id (buildid) to stop.",
+                        },
+                        "reason": {
+                            "type": "string",
+                            "description": "Reason recorded for stopping (optional).",
+                        },
+                    },
+                    "required": ["build_id"],
+                },
+                "handler": self.cancel_build,
+            },
         }
 
     def list_tools(self) -> list[dict[str, Any]]:
@@ -193,11 +242,18 @@ class McpTools:
     def has_tool(self, name: str) -> bool:
         return name in self._tools
 
-    def call_tool(self, name: str, arguments: dict[str, Any]) -> defer.Deferred[Any]:
+    def call_tool(self, name: str, arguments: dict[str, Any], request: Any) -> defer.Deferred[Any]:
         spec = self._tools.get(name)
         if spec is None:
             raise ToolError(f"unknown tool: {name}")
-        return defer.maybeDeferred(spec["handler"], arguments or {})
+        return defer.maybeDeferred(spec["handler"], arguments or {}, request)
+
+    def _assert_allowed(
+        self, request: Any, ep: tuple[Any, ...], action: str, args: dict[str, Any]
+    ) -> defer.Deferred[Any]:
+        # Route through Buildbot's authorization exactly as the REST layer does
+        # (www/rest.py): never call data.control() without this check first.
+        return defer.maybeDeferred(self.master.www.assertUserAllowed, request, ep, action, args)
 
     # -- helpers ----------------------------------------------------------
 
@@ -250,7 +306,7 @@ class McpTools:
     # -- tool handlers ----------------------------------------------------
 
     @defer.inlineCallbacks
-    def get_status(self, args: dict[str, Any]) -> Any:
+    def get_status(self, args: dict[str, Any], request: Any) -> Any:
         builders = yield self.master.data.get(('builders',))
         workers = yield self.master.data.get(('workers',))
         running = yield self.master.data.get(
@@ -275,7 +331,7 @@ class McpTools:
         }
 
     @defer.inlineCallbacks
-    def get_builders(self, args: dict[str, Any]) -> Any:
+    def get_builders(self, args: dict[str, Any], request: Any) -> Any:
         limit, offset = self._paginate(args)
         builders = yield self.master.data.get(
             ('builders',), order=['name'], limit=limit, offset=offset
@@ -295,7 +351,7 @@ class McpTools:
         }
 
     @defer.inlineCallbacks
-    def get_workers(self, args: dict[str, Any]) -> Any:
+    def get_workers(self, args: dict[str, Any], request: Any) -> Any:
         limit, offset = self._paginate(args)
         workers = yield self.master.data.get(
             ('workers',), order=['name'], limit=limit, offset=offset
@@ -312,7 +368,7 @@ class McpTools:
         return {"workers": items, **self._page_meta(items, getattr(workers, 'total', None), offset)}
 
     @defer.inlineCallbacks
-    def get_recent_builds(self, args: dict[str, Any]) -> Any:
+    def get_recent_builds(self, args: dict[str, Any], request: Any) -> Any:
         limit, offset = self._paginate(args)
         filters = []
         if args.get('only_running'):
@@ -331,7 +387,7 @@ class McpTools:
         return {"builds": items, **self._page_meta(items, getattr(builds, 'total', None), offset)}
 
     @defer.inlineCallbacks
-    def get_build(self, args: dict[str, Any]) -> Any:
+    def get_build(self, args: dict[str, Any], request: Any) -> Any:
         build_id = args.get('build_id')
         if build_id is None:
             raise ToolError("build_id is required")
@@ -353,7 +409,7 @@ class McpTools:
         }
 
     @defer.inlineCallbacks
-    def get_build_logs(self, args: dict[str, Any]) -> Any:
+    def get_build_logs(self, args: dict[str, Any], request: Any) -> Any:
         build_id = args.get('build_id')
         if build_id is None:
             raise ToolError("build_id is required")
@@ -473,3 +529,44 @@ class McpTools:
             "truncated_matches": len(matches) > MAX_MATCHES,
             "scan_capped": len(lines) >= MAX_SEARCH_LINES,
         }
+
+    # -- write tool handlers ----------------------------------------------
+
+    @defer.inlineCallbacks
+    def force_build(self, args: dict[str, Any], request: Any) -> Any:
+        scheduler = args.get('scheduler')
+        if not scheduler:
+            raise ToolError("scheduler is required (the name of a force scheduler)")
+
+        force_args = dict(args.get('params') or {})
+        builder = args.get('builder')
+        if builder:
+            force_args['builderid'] = yield self._resolve_builder_id(builder)
+        if args.get('reason') and 'reason' not in force_args:
+            force_args['reason'] = args['reason']
+
+        ep = ('forceschedulers', scheduler)
+        yield self._assert_allowed(request, ep, 'force', force_args)
+        try:
+            res = yield self.master.data.control('force', force_args, ep)
+        except Exception as e:
+            raise ToolError(f"force failed: {e}") from e
+        return {"forced": True, "scheduler": scheduler, "result": res}
+
+    @defer.inlineCallbacks
+    def cancel_build(self, args: dict[str, Any], request: Any) -> Any:
+        build_id = args.get('build_id')
+        if build_id is None:
+            raise ToolError("build_id is required")
+        build = yield self.master.data.get(('builds', build_id))
+        if build is None:
+            raise ToolError(f"no build with id {build_id}")
+
+        control_args: dict[str, Any] = {}
+        if args.get('reason'):
+            control_args['reason'] = args['reason']
+
+        ep = ('builds', build_id)
+        yield self._assert_allowed(request, ep, 'stop', control_args)
+        yield self.master.data.control('stop', control_args, ep)
+        return {"stopped": True, "build_id": build_id}

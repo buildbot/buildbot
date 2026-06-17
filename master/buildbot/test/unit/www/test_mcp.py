@@ -28,6 +28,7 @@ from buildbot.test.util import www
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import mcp
+from buildbot.www.authz import Forbidden
 
 if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
@@ -154,6 +155,9 @@ class McpTools(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         self.master = yield self.make_master(url=b'http://localhost:8010/')  # type: ignore[arg-type]
         self.mcp = mcp.McpResource(self.master)
         self.mcp.reconfigResource(self.master.config)
+        # www is a Mock here; authorization is exercised explicitly per test.
+        # (Mock blocks attribute names starting with "assert", so set it.)
+        self.master.www.assertUserAllowed = lambda *a, **k: defer.succeed(None)
         yield self.master.db.insert_test_data([
             fakedb.Builder(id=21, name="builder-a"),
             fakedb.Builder(id=22, name="builder-b"),
@@ -245,6 +249,8 @@ class McpTools(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
                 "get_recent_builds",
                 "get_build",
                 "get_build_logs",
+                "force_build",
+                "cancel_build",
             },
         )
 
@@ -377,3 +383,63 @@ class McpTools(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
     def test_get_build_logs_unknown_build(self) -> InlineCallbacksType[None]:
         res = yield self._call("get_build_logs", {"build_id": 999})
         self.assertTrue(res["result"]["isError"])
+
+    @defer.inlineCallbacks
+    def test_force_build(self) -> InlineCallbacksType[None]:
+        calls = []
+
+        def fake_control(action: str, args: dict[str, Any], path: Any) -> defer.Deferred[Any]:
+            calls.append((action, args, path))
+            return defer.succeed((1, {21: 2}))
+
+        self.master.data.control = fake_control
+        res = yield self._call(
+            "force_build", {"scheduler": "force", "builder": "builder-a", "reason": "ci"}
+        )
+        data = self._tool_data(res)
+        self.assertTrue(data["forced"])
+        self.assertEqual(calls[0][0], "force")
+        self.assertEqual(calls[0][2], ("forceschedulers", "force"))
+        self.assertEqual(calls[0][1]["builderid"], 21)
+        self.assertEqual(calls[0][1]["reason"], "ci")
+
+    @defer.inlineCallbacks
+    def test_force_build_requires_scheduler(self) -> InlineCallbacksType[None]:
+        res = yield self._call("force_build", {"builder": "builder-a"})
+        self.assertTrue(res["result"]["isError"])
+
+    @defer.inlineCallbacks
+    def test_cancel_build(self) -> InlineCallbacksType[None]:
+        calls = []
+
+        def fake_control(action: str, args: dict[str, Any], path: Any) -> defer.Deferred[Any]:
+            calls.append((action, args, path))
+            return defer.succeed(None)
+
+        self.master.data.control = fake_control
+        res = yield self._call("cancel_build", {"build_id": 18, "reason": "stop it"})
+        data = self._tool_data(res)
+        self.assertTrue(data["stopped"])
+        self.assertEqual(calls[0][0], "stop")
+        self.assertEqual(calls[0][2], ("builds", 18))
+        self.assertEqual(calls[0][1]["reason"], "stop it")
+
+    @defer.inlineCallbacks
+    def test_cancel_build_not_found(self) -> InlineCallbacksType[None]:
+        res = yield self._call("cancel_build", {"build_id": 999})
+        self.assertTrue(res["result"]["isError"])
+
+    @defer.inlineCallbacks
+    def test_write_tool_authz_denied(self) -> InlineCallbacksType[None]:
+        control_called = []
+        self.master.www.assertUserAllowed = lambda *a: defer.fail(Forbidden(b"need role"))
+
+        def fake_control(*a: Any) -> defer.Deferred[Any]:
+            control_called.append(a)
+            return defer.succeed(None)
+
+        self.master.data.control = fake_control
+        res = yield self._call("cancel_build", {"build_id": 18})
+        self.assertTrue(res["result"]["isError"])
+        # authorization must be checked before any control action runs
+        self.assertEqual(control_called, [])
