@@ -28,7 +28,7 @@ autobahn==24.4.2; python_version < "3.11"  # pyup: ignore
 autobahn==25.12.2; python_version >= "3.11"
 Automat==25.4.16
 boto==2.49.0
-boto3==1.42.73
+boto3==1.42.80
 botocore==1.42.73
 certifi==2026.2.25
 cffi==2.0.0
