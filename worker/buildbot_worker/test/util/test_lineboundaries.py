@@ -135,5 +135,51 @@ class LBF(unittest.TestCase):
         self.assertEqual(self.lbf.append('123456789012', 4.0), None)
         self.assertEqual(self.lbf.flush(), ('5123456789012\n', [13], [3.0]))
 
+    def test_long_line_split_no_data_loss(self) -> None:
+        """A long terminated line is split into chunks that reassemble bit-for-bit.
+
+        Regression test for https://github.com/buildbot/buildbot/issues/7192:
+        prior to the fix the splitting code's slice end was an absolute index,
+        so iterations after the first emitted empty content (just '\\n') and
+        most of the line was silently dropped. With max_line_length=20 a
+        50-char line splits into chunks of 19 + 19 + 12 source chars.
+        """
+        long_line = 'x' * 50
+        out = self.lbf.append(long_line + '\n', 1.0)
+        self.assertEqual(
+            out,
+            (
+                'x' * 19 + '\n' + 'x' * 19 + '\n' + 'x' * 12 + '\n',
+                [19, 39, 52],
+                [1.0, 1.0, 1.0],
+            ),
+        )
+        assert out is not None
+        self.assertEqual(''.join(out[0].splitlines()), long_line)
+
+    def test_long_partial_line_split_no_data_loss(self) -> None:
+        """A long unterminated line is split via the partial-line path without data loss."""
+        long_partial = 'p' * 50
+        out = self.lbf.append(long_partial, 1.0)
+        self.assertEqual(
+            out,
+            ('p' * 19 + '\n' + 'p' * 19 + '\n', [19, 39], [1.0, 1.0]),
+        )
+        flushed = self.lbf.flush()
+        self.assertEqual(flushed, ('p' * 12 + '\n', [12], [1.0]))
+        assert out is not None and flushed is not None
+        self.assertEqual(''.join((out[0] + flushed[0]).splitlines()), long_partial)
+
+    def test_long_json_line_round_trip(self) -> None:
+        """Reassembling worker-split chunks via splitlines + ''.join recovers the original.
+
+        Mirrors the consumer pattern used by SetPropertyFromCommand-style
+        callers in https://github.com/buildbot/buildbot/issues/7192.
+        """
+        payload = '{"data":"' + 'A' * 5000 + '"}'
+        out = self.lbf.append(payload + '\n', 1.0)
+        assert out is not None
+        self.assertEqual(''.join(out[0].splitlines()), payload)
+
     def test_empty_flush(self) -> None:
         self.assertEqual(self.lbf.flush(), None)
