@@ -1,0 +1,1 @@
+`SetPropertyFromCommand` now stops on command failure before running `extract_fn` or recording property changes.
