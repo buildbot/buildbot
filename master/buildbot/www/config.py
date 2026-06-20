@@ -197,7 +197,7 @@ class IndexResource(resource.Resource):
     def __init__(self, master: BuildMaster, staticdir: str) -> None:
         super().__init__(master)
         self.static_dir = staticdir
-        with open(os.path.join(self.static_dir, 'index.html')) as index_f:
+        with open(os.path.join(self.static_dir, 'index.html'), encoding='utf-8') as index_f:
             self.index_template = index_f.read()
 
     def reconfigResource(self, new_config: Any) -> None:
