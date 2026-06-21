@@ -31,6 +31,7 @@ from buildbot.process.buildstep import CANCELLED
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
+from buildbot.util import bytes2unicode
 from buildbot.util import deferwaiter
 from buildbot.util import runprocess
 
@@ -39,6 +40,31 @@ if TYPE_CHECKING:
 
     from buildbot.interfaces import IMaybeRenderableType
     from buildbot.util.twisted import InlineCallbacksType
+
+
+class _SecretFilteringLog:
+    def __init__(self, step: BuildStep, log: Any) -> None:
+        self.step = step
+        self.log = log
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.log, name)
+
+    def addHeader(self, data: str | bytes) -> defer.Deferred[None]:
+        return self.log.addHeader(self._cleanup(data))
+
+    def addStdout(self, data: str | bytes) -> defer.Deferred[None]:
+        return self.log.addStdout(self._cleanup(data))
+
+    def addStderr(self, data: str | bytes) -> defer.Deferred[None]:
+        return self.log.addStderr(self._cleanup(data))
+
+    def _cleanup(self, data: str | bytes) -> str:
+        if isinstance(data, bytes):
+            decoder = getattr(self.log, "decoder", None)
+            data = decoder(data) if decoder is not None else bytes2unicode(data, errors="replace")
+        assert self.step.build is not None
+        return self.step.build.properties.cleanupTextFromSecrets(data)
 
 
 class MasterShellCommand(BuildStep):
@@ -98,7 +124,7 @@ class MasterShellCommand(BuildStep):
             else:
                 argv = command
 
-        self.stdio_log = yield self.addLog("stdio")
+        self.stdio_log = _SecretFilteringLog(self, (yield self.addLog("stdio")))
 
         if isinstance(command, (str, bytes)):
             yield self.stdio_log.addHeader(command.strip() + "\n\n")
