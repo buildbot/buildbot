@@ -180,10 +180,29 @@ class TestCheckconfig(unittest.TestCase):
 
     def test_checkconfig_syntaxError_quiet(self) -> None:
         """
-        When C{base.getConfigFileFromTac} raises L{SyntaxError},
+        When C{base.getConfigFromTacForCheckConfig} raises L{SyntaxError},
         C{checkconfig.checkconfig} return an error.
         """
-        mockGetConfig = mock.Mock(spec=base.getConfigFileFromTac, side_effect=SyntaxError)
-        self.patch(checkconfig, 'getConfigFileFromTac', mockGetConfig)
+        mockGetConfig = mock.Mock(
+            spec=base.getConfigFromTacForCheckConfig, side_effect=SyntaxError
+        )
+        self.patch(checkconfig, 'getConfigFromTacForCheckConfig', mockGetConfig)
         config: dict[str, Any] = {"configFile": '.', "quiet": True}
         self.assertEqual(checkconfig.checkconfig(config), 1)
+
+    def test_checkconfig_given_dir_custom_basedir(self) -> None:
+        """
+        When C{base.getConfigFromTacForCheckConfig} returns a custom basedir
+        from buildbot.tac, C{checkconfig} uses that basedir instead of the
+        directory argument.
+        """
+        mockGetConfig = mock.Mock(
+            spec=base.getConfigFromTacForCheckConfig,
+            return_value=('/custom/basedir', 'custom.cfg'),
+        )
+        self.patch(checkconfig, 'getConfigFromTacForCheckConfig', mockGetConfig)
+        config: dict[str, Any] = {"configFile": '.'}
+        self.assertEqual(checkconfig.checkconfig(config), 3)
+        self.loadConfig.assert_called_with(
+            basedir='/custom/basedir', configFile='custom.cfg', quiet=None
+        )

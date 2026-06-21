@@ -140,6 +140,111 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         self.assertEqual(foundConfigFile, os.path.join(self.basedir, "relative.cfg"))
 
 
+class TestGetConfigFromTacForCheckConfig(dirs.DirsMixin, unittest.TestCase):
+    """
+    Tests for L{base.getConfigFromTacForCheckConfig}.
+    """
+
+    def setUp(self) -> None:
+        self.basedir = os.path.abspath('basedir')
+        return self.setUpDirs('basedir')  # type: ignore[return-value]
+
+    def _createBuildbotTac(self, contents: str) -> str:
+        tacfile = os.path.join(self.basedir, "buildbot.tac")
+        with open(tacfile, "w", encoding='utf-8') as f:
+            f.write(contents)
+        return tacfile
+
+    def test_basic(self) -> None:
+        """
+        When buildbot.tac creates a BuildMaster with standard variable names,
+        getConfigFromTacForCheckConfig returns the basedir and configFile
+        from the BuildMaster constructor.
+        """
+        self._createBuildbotTac(
+            textwrap.dedent("""\
+            from buildbot.master import BuildMaster
+            basedir = '/src/project'
+            configfile = 'mymaster.cfg'
+            m = BuildMaster(basedir, configfile, umask=None)
+            """)
+        )
+        result = base.getConfigFromTacForCheckConfig(self.basedir)
+        self.assertEqual(result, ('/src/project', 'mymaster.cfg'))
+
+    def test_custom_variable_names(self) -> None:
+        """
+        When buildbot.tac uses custom variable names (e.g., base_dir, cfg_file),
+        getConfigFromTacForCheckConfig still captures the correct values from
+        the BuildMaster constructor call.
+        """
+        self._createBuildbotTac(
+            textwrap.dedent("""\
+            from buildbot.master import BuildMaster
+            base_dir = '/custom/path'
+            cfg_file = 'custom.cfg'
+            m = BuildMaster(base_dir, cfg_file, umask=None)
+            """)
+        )
+        result = base.getConfigFromTacForCheckConfig(self.basedir)
+        self.assertEqual(result, ('/custom/path', 'custom.cfg'))
+
+    def test_no_tac_file(self) -> None:
+        """
+        When there is no buildbot.tac file, getConfigFromTacForCheckConfig
+        returns the tacdir and 'master.cfg' as defaults.
+        """
+        result = base.getConfigFromTacForCheckConfig(self.basedir)
+        self.assertEqual(result, (self.basedir, 'master.cfg'))
+
+    def test_tac_without_buildmaster(self) -> None:
+        """
+        When buildbot.tac doesn't instantiate BuildMaster,
+        getConfigFromTacForCheckConfig returns the tacdir and 'master.cfg'.
+        """
+        self._createBuildbotTac("# no BuildMaster here\nx = 1\n")
+        result = base.getConfigFromTacForCheckConfig(self.basedir)
+        self.assertEqual(result, (self.basedir, 'master.cfg'))
+
+    def test_tac_with_syntax_error(self) -> None:
+        """
+        When buildbot.tac has a syntax error, getConfigFromTacForCheckConfig
+        raises SyntaxError.
+        """
+        self._createBuildbotTac("def foo(:\n")
+        with self.assertRaises(SyntaxError):
+            base.getConfigFromTacForCheckConfig(self.basedir, quiet=True)
+
+    def test_buildmaster_init_restored(self) -> None:
+        """
+        After getConfigFromTacForCheckConfig returns, BuildMaster.__init__
+        is restored to its original value.
+        """
+        from buildbot.master import BuildMaster  # noqa: PLC0415
+
+        original_init = BuildMaster.__init__
+        self._createBuildbotTac(
+            textwrap.dedent("""\
+            from buildbot.master import BuildMaster
+            m = BuildMaster('/tmp/test', 'master.cfg', umask=None)
+            """)
+        )
+        base.getConfigFromTacForCheckConfig(self.basedir)
+        self.assertIs(BuildMaster.__init__, original_init)
+
+    def test_buildmaster_init_restored_on_error(self) -> None:
+        """
+        Even when buildbot.tac raises an exception, BuildMaster.__init__
+        is restored to its original value.
+        """
+        from buildbot.master import BuildMaster  # noqa: PLC0415
+
+        original_init = BuildMaster.__init__
+        self._createBuildbotTac("raise RuntimeError('boom')\n")
+        with self.assertRaises(RuntimeError):
+            base.getConfigFromTacForCheckConfig(self.basedir, quiet=True)
+        self.assertIs(BuildMaster.__init__, original_init)
+
 class TestSubcommandOptions(unittest.TestCase):
     def fakeOptionsFile(self, **kwargs: Any) -> None:
         self.patch(base.SubcommandOptions, 'loadOptionsFile', lambda self: kwargs.copy())
