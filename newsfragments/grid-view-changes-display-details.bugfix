@@ -1,0 +1,1 @@
+Fixed a regression in Grid View where arrow icons no longer expanded to reveal details of the change (:issue:`8268`)
