@@ -831,6 +831,7 @@ class MasterConfig(util.ComparableMixin):
             'logRotateLength',
             'logfileName',
             'maxRotatedFiles',
+            'mcp',
             'plugins',
             'port',
             'rest_minimum_version',
