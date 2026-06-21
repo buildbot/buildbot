@@ -1313,8 +1313,10 @@ All parameter types have a few common arguments:
 
 ``autopopulate`` (optional; default: None)
 
-    If not None, ``autopopulate`` is a dictionary which describes how other parameters are updated
-    if this one changes. This is useful for when you have lots of parameters, and defaults depends
+    If not None, ``autopopulate`` is a dictionary (where the keys are this field's value,
+    and values are dictionaries of the target field full name and new value) which describes
+    how other parameters are updated if this one changes.
+    This is useful for when you have lots of parameters, and defaults depends
     on e.g. the branch. This is implemented generically, and all parameters can update others.
     Beware of infinite loops!
 
