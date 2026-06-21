@@ -530,7 +530,7 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                         {'email': 'bar@foo', 'is_primary': True},
                     ]
                 },  # /user/emails
-                {"values": [{'slug': 'hello'}, {'slug': 'grp'}]},  # /workspaces?role=member
+                {"values": [{'workspace': {'slug': 'hello'}}, {'workspace': {'slug': 'grp'}}]},  # /user/workspaces?role=member
             ]
         )
         res = yield auth.verifyCode("code!")
