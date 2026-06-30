@@ -26,7 +26,6 @@ from twisted.python import log
 from buildbot.data import resultspec
 from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
-from buildbot.process.results import RETRY
 from buildbot.util import flatten
 
 if TYPE_CHECKING:
@@ -39,16 +38,15 @@ if TYPE_CHECKING:
 def getPreviousBuild(
     master: BuildMaster, build: dict[str, Any]
 ) -> InlineCallbacksType[dict[str, Any] | None]:
-    # naive n-1 algorithm. Still need to define what we should skip
-    # SKIP builds? forced builds? rebuilds?
-    # don't hesitate to contribute improvements to that algorithm
-    n = build['number'] - 1
-    while n >= 0:
-        prev = yield master.data.get(("builders", build['builderid'], "builds", n))
+    builderid = build["builderid"]
+    prev_build_number, prev_build_results = yield master.db.builds.getPrevBuild(
+        builderid, build["number"], master.config.reporters_scheduler_filter
+    )
+    # If results is None it means that the previous build is incomplete yet.
+    if prev_build_number is not None and prev_build_results is not None:
+        prev_build = yield master.data.get(("builders", builderid, "builds", prev_build_number))
+        return prev_build
 
-        if prev and prev['results'] != RETRY:
-            return prev
-        n -= 1
     return None
 
 
@@ -121,16 +119,22 @@ def getDetailsForBuild(
     build['parentbuild'] = parentbuild
     build['parentbuilder'] = parentbuilder
 
-    ret = yield getDetailsForBuilds(
+    # getDetailsForBuilds() will request only the missing data.
+    # Don't try to call it in parallel.
+    # We will significantly improve performance in case of many reporters if
+    # allow the first call to completely request the necessary data just once.
+    l = build.setdefault('details_lock', defer.DeferredLock())
+    ret = yield l.run(
+        getDetailsForBuilds,
         master,
         buildset,
         [build],
-        want_properties=want_properties,
-        want_steps=want_steps,
-        want_previous_build=want_previous_build,
-        want_logs=want_logs,
-        add_logs=add_logs,
-        want_logs_content=want_logs_content,
+        want_properties,
+        want_steps,
+        want_previous_build,
+        want_logs,
+        add_logs,
+        want_logs_content,
     )
     return ret
 
@@ -177,28 +181,54 @@ def getDetailsForBuilds(
     add_logs: list[str] | bool | None = None,
     want_logs_content: bool | list[str] = False,
 ) -> InlineCallbacksType[None]:
-    builderids = {build['builderid'] for build in builds}
+    # The master buildbot may have a lot of reporters.
+    # Each reporter's generator calls getDetailsForBuilds().
+    # Request only the missing data.
 
-    builders = yield defer.gatherResults(
-        [master.data.get(("builders", _id)) for _id in builderids], consumeErrors=True
-    )
+    # Collect builds where the builder is missing.
+    _builds = []
+    for build in builds:
+        if not build.get('builder'):
+            _builds.append(build)
 
-    buildersbyid = {builder['builderid']: builder for builder in builders}
-
-    if want_properties:
-        buildproperties = yield defer.gatherResults(
-            [master.data.get(("builds", build['buildid'], 'properties')) for build in builds],
+    if _builds:
+        # Request missing builders.
+        builders = yield defer.gatherResults(
+            [master.data.get(("builders", build['builderid'])) for build in _builds],
             consumeErrors=True,
         )
-    else:  # we still need a list for the big zip
-        buildproperties = list(range(len(builds)))
+        buildersbyid = {builder['builderid']: builder for builder in builders}
+        for build in _builds:
+            build['builder'] = buildersbyid[build['builderid']]
+
+    if want_properties:
+        # Collect builds where properties are missing.
+        _builds = []
+        for build in builds:
+            if not build.get('properties'):
+                _builds.append(build)
+        if _builds:
+            # Request missing properties.
+            buildproperties = yield defer.gatherResults(
+                [master.data.get(("builds", build['buildid'], 'properties')) for build in _builds],
+                consumeErrors=True,
+            )
+            for build, properties in zip(_builds, buildproperties):
+                build['properties'] = properties
 
     if want_previous_build:
-        prev_builds = yield defer.gatherResults(
-            [getPreviousBuild(master, build) for build in builds], consumeErrors=True
-        )
-    else:  # we still need a list for the big zip
-        prev_builds = list(range(len(builds)))
+        # Collect builds where the prev build is missing.
+        _builds = []
+        for build in builds:
+            if not build.get('prev_build'):
+                _builds.append(build)
+        if _builds:
+            # Request missing prev_build.
+            prev_builds = yield defer.gatherResults(
+                [getPreviousBuild(master, build) for build in _builds], consumeErrors=True
+            )
+            for build, prev_build in zip(_builds, prev_builds):
+                build['prev_build'] = prev_build
 
     if add_logs is not None:
         logs_config = add_logs
@@ -213,13 +243,26 @@ def getDetailsForBuilds(
         want_steps = True
 
     if want_steps:  # pylint: disable=too-many-nested-blocks
-        buildsteps = yield defer.gatherResults(
-            [master.data.get(("builds", build['buildid'], 'steps')) for build in builds],
-            consumeErrors=True,
-        )
+        # Collect builds where steps are missing.
+        _builds = []
+        for build in builds:
+            if not build.get('steps'):
+                _builds.append(build)
+        if _builds:
+            # Request missing steps.
+            buildsteps = yield defer.gatherResults(
+                [master.data.get(("builds", build['buildid'], 'steps')) for build in _builds],
+                consumeErrors=True,
+            )
+            for build, steps in zip(_builds, buildsteps):
+                build['steps'] = list(steps)
+
         if want_logs:
-            for build, build_steps in zip(builds, buildsteps):
-                for s in build_steps:
+            for build in builds:
+                for s in build['steps']:
+                    # Request logs if necessary.
+                    if s.get('logs'):
+                        continue
                     logs = yield master.data.get(("steps", s['stepid'], 'logs'))
                     s['logs'] = list(logs)
                     for l in s['logs']:
@@ -229,26 +272,17 @@ def getDetailsForBuilds(
                         )
                         l['url_raw'] = get_url_for_log_raw(master, l['logid'], 'raw')
                         l['url_raw_inline'] = get_url_for_log_raw(master, l['logid'], 'raw_inline')
+                for s in build['steps']:
+                    for l in s['logs']:
+                        # Request logs content if necessary.
+                        if l.get('content'):
+                            continue
                         if should_attach_log(logs_config, l):
                             l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
-    else:  # we still need a list for the big zip
-        buildsteps = list(range(len(builds)))
-
-    # a big zip to connect everything together
-    for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
-        build['builder'] = buildersbyid[build['builderid']]
+    for build in builds:
         build['buildset'] = buildset
         build['url'] = getURLForBuild(master, build['builderid'], build['number'])
-
-        if want_properties:
-            build['properties'] = properties
-
-        if want_steps:
-            build['steps'] = list(steps)
-
-        if want_previous_build:
-            build['prev_build'] = prev
 
 
 # perhaps we need data api for users with sourcestamps/:id/users
