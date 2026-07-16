@@ -16,6 +16,8 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
+import warnings
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
@@ -215,13 +217,41 @@ class BuildbotService(
     configured = False
     objectid: int | None = None
 
+    _legacy_check_config: ClassVar[bool] = False
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        spec = inspect.getfullargspec(cls.checkConfig)
+
+        if not (
+            'name' in spec.args
+            or 'name' in spec.kwonlyargs
+            or spec.varkw is not None
+        ):
+            warnings.warn(
+                f"{cls.__name__}.checkConfig does not accept a `name` argument",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            cls._legacy_check_config = True
+        else:
+            cls._legacy_check_config = any(
+                i._legacy_check_config for i in cls.mro() if issubclass(i, BuildbotService)
+            )
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        name = kwargs.pop("name", None)
-        if name is not None:
-            self.name = bytes2unicode(name)
+        if (name := kwargs.get('name', None)) is not None:
+            self.name = kwargs['name'] = bytes2unicode(name)
+
+        # gracefully handle some services not accepting the name argument
+        if 'name' in kwargs and self._legacy_check_config:
+            kwargs.pop('name')
+
         self.checkConfig(*args, **kwargs)
         if self.name is None:
             raise ValueError(f"{type(self)}: must pass a name to constructor")
+        elif not isinstance(self.name, str):
+            self.name = bytes2unicode(self.name)
         self._config_args = args
         self._config_kwargs = kwargs
         self.rendered = False
