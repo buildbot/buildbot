@@ -135,3 +135,11 @@ warnings.filterwarnings(
     r".* not in path importer cache \(PEP 302 violation - check your local configuration\)",
     category=UserWarning,
 )
+
+# See https://github.com/twisted/twisted/issues/12666
+# (Twisted use deprecated APIs from pyOpenSSL)
+warnings.filterwarnings(
+    "ignore",
+    r"Passing pyOpenSSL (X509|PKey) objects is deprecated\.",
+    category=DeprecationWarning,
+)
