@@ -80,7 +80,7 @@ class SecretInPass(SecretProviderBase):
                 log.error("Got RC != 0 accessing 'pass {entry}' RC = {rc}", entry=entry, rc=rc)
                 return None
 
-            secret = "\n".join(output.decode("utf-8", "ignore").strip().splitlines())
+            secret = "\n".join(output.decode("utf-8", "ignore").rstrip('\r\n').splitlines())
             if not secret:
                 return None
             else:
