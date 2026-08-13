@@ -814,7 +814,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             self.assertIn("can't create dir", logs_by_name[i])
             # make sure stacktrace is present in html
             self.assertIn(
-                "buildbot.test.integration.test_worker_latent.TestException", logs_by_name[i]
+                "buildbot.test.integration.worker.test_latent.TestException", logs_by_name[i]
             )
         yield controller.auto_stop(True)
 
@@ -866,7 +866,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
             self.assertIn("can't ping", logs_by_name[i])
             # make sure stacktrace is present in html
             self.assertIn(
-                "buildbot.test.integration.test_worker_latent.TestException", logs_by_name[i]
+                "buildbot.test.integration.worker.test_latent.TestException", logs_by_name[i]
             )
         yield controller.auto_stop(True)
 
@@ -1154,7 +1154,7 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertTrue(controller.started)
 
         # Shutdown master
-        d = self.master.stopService()
+        d = self.tested_master.shutdown()
         yield controller.stop_instance(True)
         yield d
 

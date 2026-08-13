@@ -23,6 +23,7 @@ from twisted.trial.unittest import SkipTest
 
 from buildbot.test.fake.worker import SeverWorkerConnectionMixin
 from buildbot.test.fake.worker import disconnect_master_side_worker
+from buildbot.util.twisted import any_to_async
 from buildbot.util.twisted import async_to_deferred
 from buildbot.worker import AbstractLatentWorker
 
@@ -150,7 +151,7 @@ class LatentController(SeverWorkerConnectionMixin):
         workdir = FilePath(self.case.mktemp())
         workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
-        await self.remote_worker.setServiceParent(self.worker)
+        await any_to_async(self.remote_worker.setServiceParent(self.worker))
 
     @async_to_deferred
     async def disconnect_worker(self) -> None:
