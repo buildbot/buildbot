@@ -33,7 +33,6 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    'setuptools >= 8.0',
     'Twisted >= 24.7.0',
     'treq >= 20.9',
     'Jinja2 >= 2.1',
@@ -73,6 +72,8 @@ test = [
     "Markdown>=3.0.0",
     'parameterized',
     'lz4',
+    # imported by buildbot.test
+    'setuptools >= 8.0',
 ]
 
 # NOTE: packages in the 'bundle' extra will be pinned to

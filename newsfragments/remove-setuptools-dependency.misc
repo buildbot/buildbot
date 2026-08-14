@@ -1,0 +1,1 @@
+Remove unnecessary run-time dependency on setuptools.
