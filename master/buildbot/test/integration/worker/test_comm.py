@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -25,7 +26,6 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.endpoints import clientFromString
 from twisted.python import log
-from twisted.python import util
 from twisted.spread import pb
 from twisted.trial import unittest
 
@@ -48,7 +48,8 @@ if TYPE_CHECKING:
     from buildbot.worker.base import AbstractWorker
     from buildbot.worker.protocols.pb import Connection
 
-PKI_DIR = util.sibpath(__file__, 'pki')
+
+PKI_DIR = Path(__file__).parents[1] / "pki"
 
 
 class FakeWorkerForBuilder(pb.Referenceable):
