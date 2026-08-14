@@ -47,22 +47,9 @@ jobs:
         if: ${{ matrix.tests == 'docs' }}
         run: sudo apt-get update && sudo apt-get install -y libenchant-2-2
 
-      - uses: "actions/setup-python@v6"
+      - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "${{ matrix.python-version }}"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ci.txt
-            requirements-cidocs.txt
-            master/setup.py
-            worker/setup.py
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ci.txt
-          python -m pip install -e master -e worker
 
       - name: "Install docs dependencies"
         if: ${{ matrix.tests == 'docs' }}
@@ -116,20 +103,9 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "${{ matrix.python-version }}"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ci.txt
-            master/setup.py
-            worker/setup.py
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ci.txt
 
       - name: "Install pinned dependency versions"
         if: ${{ matrix.twisted || matrix.treq || matrix.sqlalchemy }}
@@ -152,22 +128,13 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "3.9"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
+          requirements: |
             requirements-ci.txt
             requirements-ciworker.txt
             requirements-cidocs.txt
-            master/setup.py
-            worker/setup.py
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
 
       - name: "Run tests"
         run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
@@ -210,20 +177,9 @@ jobs:
 
       # Set up the master Python last so it becomes the default "python".
       - name: "Set up master Python 3.9"
-        uses: "actions/setup-python@v6"
+        uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "3.9"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ci.txt
-            master/setup.py
-            worker/setup.py
-
-      - name: "Install master dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ci.txt
 
       - name: "Run interop tests"
         env:
@@ -247,20 +203,13 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "${{ matrix.python-version }}"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ciworker.txt
-            worker/setup.py
+          requirements: "requirements-ciworker.txt"
 
-      - name: "Install dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ciworker.txt
-          python -m pip install treq==22.2.0 Twisted==21.2.0 "setuptools<82.0.0"
+      - name: "Install pinned dependency versions"
+        run: python -m pip install treq==22.2.0 Twisted==21.2.0 "setuptools<82.0.0"
 
       - name: "Run worker tests"
         run: "python -m twisted.trial --reporter=text --rterrors buildbot_worker.test"
@@ -278,20 +227,9 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "3.9"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ci.txt
-            master/setup.py
-            worker/setup.py
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ci.txt
 
       - name: "Run tests"
         env:
@@ -322,25 +260,9 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "${{ matrix.python-version }}"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-ci.txt
-            requirements-cidb.txt
-            master/setup.py
-            worker/setup.py
-
-      - name: "Install dependencies"
-        run: |
-          python -c "import sys; print(sys.prefix)"
-          python -c "import sys; print(sys.exec_prefix)"
-          python -c "import sys; print(sys.executable)"
-          python -V -V
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ci.txt
-          python -m pip list
 
       - name: "Check PyWin32"
         if: ${{ startsWith(matrix.os, 'windows-') }}
@@ -366,23 +288,14 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "=3.10"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ci.txt
-            requirements-ci-pyinstaller.txt
-            master/setup.py
-            worker/setup.py
+          requirements: "requirements-ci-pyinstaller.txt"
 
-      - name: "Install dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ci-pyinstaller.txt
-          # do a true, non-editable install
-          python -m pip install ./worker
+      - name: "Install worker"
+        # do a true, non-editable install
+        run: python -m pip install ./worker
       - run: pyinstaller pyinstaller/buildbot-worker.spec
       - run: trial --reporter=text --rterrors buildbot.test.integration.interop
         env:
