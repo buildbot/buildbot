@@ -8,8 +8,95 @@ on:
 permissions:
   contents: read
 
+env:
+  # Needed to ignore specific warns, otherwise, it'll warn a generic message
+  SQLALCHEMY_WARN_20: 1
+
+
 jobs:
+  lint:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.9"
+            tests: ruff
+          - python-version: "3.9"
+            tests: docs
+          - python-version: "3.9"
+            tests: mypy
+          - python-version: "3.13"
+            tests: mypy
+          - python-version: "3.9"
+            tests: prettier
+
+    name: ${{ matrix.tests }} / python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: "actions/checkout@v6"
+
+      - uses: "actions/setup-node@v7"
+        if: ${{ matrix.tests == 'prettier' }}
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: "Install enchant (docs spell checker)"
+        if: ${{ matrix.tests == 'docs' }}
+        run: sudo apt-get update && sudo apt-get install -y libenchant-2-2
+
+      - uses: "actions/setup-python@v6"
+        with:
+          python-version: "${{ matrix.python-version }}"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ci.txt
+            requirements-cidocs.txt
+            master/setup.py
+            worker/setup.py
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install -r requirements-pip.txt
+          python -m pip install -r requirements-ci.txt
+          python -m pip install -e master -e worker
+
+      - name: "Install docs dependencies"
+        if: ${{ matrix.tests == 'docs' }}
+        run: python -m pip install -r requirements-cidocs.txt
+
+      - name: "ruff"
+        if: ${{ matrix.tests == 'ruff' }}
+        run: |
+          ruff check $(git ls-files | grep '.py$')
+          ruff format --check $(git ls-files | grep '.py$')
+
+      - name: "mypy"
+        if: ${{ matrix.tests == 'mypy' }}
+        run: |
+          [ "${{ matrix.python-version }}" = "3.9" ] && export MYPY_EXTRA_FLAGS=--no-warn-unused-ignores || true
+          make -j mypy
+
+      - name: "docs"
+        if: ${{ matrix.tests == 'docs' }}
+        run: make docs-release
+
+      - name: "docs spelling"
+        if: ${{ matrix.tests == 'docs' }}
+        run: make docs-release-spelling
+
+      - name: "prettier"
+        if: ${{ matrix.tests == 'prettier' }}
+        run: |
+          make frontend_npm_install
+          make prettier-check
+
   ci:
+    needs:
+      - lint
     strategy:
       fail-fast: false
       matrix:
@@ -26,10 +113,6 @@ jobs:
 
     name: ${{ matrix.os }} / python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
-
-    env:
-      # Needed to ignore specific warns, otherwise, it'll warn a generic message
-      SQLALCHEMY_WARN_20: 1
 
     steps:
       - uses: "actions/checkout@v6"
@@ -64,6 +147,8 @@ jobs:
         timeout-minutes: 30
 
   sandboxed-worker:
+    needs:
+      - lint
     strategy:
       fail-fast: false
       matrix:
