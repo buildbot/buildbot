@@ -109,6 +109,7 @@ jobs:
           - "3.14"
         os:
           - ubuntu-24.04-arm
+          - ubuntu-latest
           - windows-2022
 
     name: ${{ matrix.os }} / python ${{ matrix.python-version }}
