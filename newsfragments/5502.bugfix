@@ -1,0 +1,1 @@
+Fixed ``UnicodeDecodeError`` when starting the master without ``LC_ALL``/``LANG`` set. The web UI ``index.html`` is now always read and served as UTF-8 instead of using the locale-dependent default encoding (:issue:`5502`).

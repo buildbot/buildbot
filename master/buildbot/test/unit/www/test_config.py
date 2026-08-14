@@ -240,3 +240,29 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
             "plugins": {},
         }
         self.assertEqual(config_json, exp)
+
+    @defer.inlineCallbacks
+    def test_render_non_ascii_index(self) -> InlineCallbacksType[None]:
+        # index.html must be read and served as UTF-8 regardless of the system
+        # locale, which may be ASCII when LC_ALL/LANG are not set (issue #5502)
+        static_dir = self.mktemp()
+        os.mkdir(static_dir)
+        with open(os.path.join(static_dir, 'index.html'), 'w', encoding='utf-8') as f:
+            f.write(
+                '<!DOCTYPE html>\n'
+                '<html lang="en">\n'
+                '<head><meta charset="utf-8"><title>Büildböt ✓</title></head>\n'
+                '<body> <!-- BUILDBOT_CONFIG_PLACEHOLDER --></body>\n'
+                '</html>\n'
+            )
+
+        master = yield self.make_master(url='h:/a/b/', plugins={})
+        master.www.authz = mock.Mock(spec=Authz, unsafe=True)
+
+        rsrc = config.IndexResource(master, static_dir)
+        rsrc.reconfigResource(master.config)
+
+        res = yield self.render_resource(rsrc, b'/')
+        page = res.decode('utf-8')
+        self.assertIn('Büildböt ✓', page)
+        self.assertIn('window.buildbotFrontendConfig', page)
