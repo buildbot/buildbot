@@ -144,6 +144,35 @@ jobs:
         run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
         timeout-minutes: 30
 
+  dev-virtualenv:
+    needs:
+      - lint
+    name: dev_virtualenv / python 3.9
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "actions/setup-python@v6"
+        with:
+          python-version: "3.9"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ci.txt
+            requirements-ciworker.txt
+            requirements-cidocs.txt
+            master/setup.py
+            worker/setup.py
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install -r requirements-pip.txt
+          python -m pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
+
+      - name: "Run tests"
+        run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+        timeout-minutes: 30
+
   ci:
     needs:
       - lint
