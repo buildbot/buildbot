@@ -1,0 +1,111 @@
+name: Frontend
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  js:
+    strategy:
+      matrix:
+        include:
+          - tests: js_build
+          - tests: js_unit
+
+    name: ${{ matrix.tests }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "actions/setup-node@v7"
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - uses: "actions/setup-python@v6"
+        with:
+          python-version: "3.9"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ci.txt
+            master/setup.py
+            worker/setup.py
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install -r requirements-pip.txt
+          # the Makefile frontend/tarball targets build their own virtualenv
+          python -m pip install virtualenv
+
+      - name: "js_build"
+        if: ${{ matrix.tests == 'js_build' }}
+        run: make frontend_build
+
+      - name: "js_unit"
+        if: ${{ matrix.tests == 'js_unit' }}
+        run: make frontend_tests
+
+  e2e:
+    needs:
+      - js
+    strategy:
+      matrix:
+        include:
+          - python-version: "3.9"
+            tests: e2e_react_whl
+          - python-version: "3.9"
+            tests: e2e_react_tgz
+          - python-version: "3.14"
+            tests: e2e_react_whl
+          - python-version: "3.14"
+            tests: e2e_react_tgz
+
+    name: ${{ matrix.tests }} / python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "actions/setup-node@v7"
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - uses: "actions/setup-python@v6"
+        with:
+          python-version: "${{ matrix.python-version }}"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ci.txt
+            master/setup.py
+            worker/setup.py
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install -r requirements-pip.txt
+          # the Makefile frontend/tarball targets build their own virtualenv
+          python -m pip install virtualenv
+
+      - name: "Install Playwright browsers"
+        run: |
+          cd e2e
+          npm ci
+          npx playwright install --with-deps
+
+      - name: "maketarballs"
+        run: make tarballs
+
+      - name: "e2e (whl)"
+        if: ${{ matrix.tests == 'e2e_react_whl' }}
+        run: ./common/smokedist-react.sh whl
+
+      - name: "e2e (tar.gz)"
+        if: ${{ matrix.tests == 'e2e_react_tgz' }}
+        run: ./common/smokedist-react.sh tar.gz
