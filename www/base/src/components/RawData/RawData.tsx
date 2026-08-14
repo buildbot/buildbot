@@ -62,7 +62,19 @@ type RawDataProps = {
 };
 
 export const RawData = ({data, displayCallback}: RawDataProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedState, setExpandedState] = useState<Set<string>>(() => new Set());
+  const isExpanded = (key: string) => expandedState.has(key);
+  const setIsExpanded = (key: string, expand: boolean) => {
+    setExpandedState((current) => {
+      const updated = new Set(current);
+      if (expand) {
+        updated.add(key);
+      } else {
+        updated.delete(key);
+      }
+      return updated;
+    });
+  };
 
   const renderArrayElements = (value: any[]) => {
     return (
@@ -86,16 +98,26 @@ export const RawData = ({data, displayCallback}: RawDataProps) => {
     if (isArrayOfObjectsRaw(value)) {
       return (
         <dd>
-          <ArrowExpander isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
-          {isExpanded ? renderArrayElements(value as any[]) : <span>{JSON.stringify(value)}</span>}
+          <ArrowExpander
+            isExpanded={isExpanded(key)}
+            setIsExpanded={(expanded: boolean) => setIsExpanded(key, expanded)}
+          />
+          {isExpanded(key) ? (
+            renderArrayElements(value as any[])
+          ) : (
+            <span>{JSON.stringify(value)}</span>
+          )}
         </dd>
       );
     }
     if (isObjectRaw(value)) {
       return (
         <dd>
-          <ArrowExpander isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
-          {isExpanded ? (
+          <ArrowExpander
+            isExpanded={isExpanded(key)}
+            setIsExpanded={(expanded: boolean) => setIsExpanded(key, expanded)}
+          />
+          {isExpanded(key) ? (
             <div>
               <RawData data={value} displayCallback={displayCallback} />
             </div>
