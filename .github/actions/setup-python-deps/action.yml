@@ -1,0 +1,41 @@
+name: "Set up Python with dependencies"
+description: >
+  Set up a Python version with pip caching, then install requirements-pip.txt
+  and the given requirement files.
+
+inputs:
+  python-version:
+    description: "Python version passed to actions/setup-python"
+    required: false
+    default: "3.9"
+  requirements:
+    description: >
+      Whitespace/newline separated list of requirement files to install,
+      in addition to requirements-pip.txt.
+    required: false
+    default: "requirements-ci.txt"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: "actions/setup-python@v6"
+      with:
+        python-version: "${{ inputs.python-version }}"
+        cache: "pip"
+        cache-dependency-path: |
+          requirements-pip.txt
+          ${{ inputs.requirements }}
+          */setup.py
+          */pyproject.toml
+
+    - name: "Install Python dependencies"
+      shell: bash
+      env:
+        REQUIREMENTS: ${{ inputs.requirements }}
+      run: |
+        set -e
+        args="-r requirements-pip.txt"
+        for f in $REQUIREMENTS; do
+          args="$args -r $f"
+        done
+        python -m pip install $args

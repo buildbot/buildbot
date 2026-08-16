@@ -8,8 +8,238 @@ on:
 permissions:
   contents: read
 
+env:
+  # Needed to ignore specific warns, otherwise, it'll warn a generic message
+  SQLALCHEMY_WARN_20: 1
+
+
 jobs:
+  lint:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.9"
+            tests: ruff
+          - python-version: "3.9"
+            tests: docs
+          - python-version: "3.9"
+            tests: mypy
+          - python-version: "3.13"
+            tests: mypy
+          - python-version: "3.9"
+            tests: prettier
+
+    name: ${{ matrix.tests }} / python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: "actions/checkout@v6"
+
+      - uses: "actions/setup-node@v7"
+        if: ${{ matrix.tests == 'prettier' }}
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: "Install enchant (docs spell checker)"
+        if: ${{ matrix.tests == 'docs' }}
+        run: sudo apt-get update && sudo apt-get install -y libenchant-2-2
+
+      - uses: "./.github/actions/setup-python-deps"
+        with:
+          python-version: "${{ matrix.python-version }}"
+
+      - name: "Install docs dependencies"
+        if: ${{ matrix.tests == 'docs' }}
+        run: python -m pip install -r requirements-cidocs.txt
+
+      - name: "ruff"
+        if: ${{ matrix.tests == 'ruff' }}
+        run: |
+          ruff check $(git ls-files | grep '.py$')
+          ruff format --check $(git ls-files | grep '.py$')
+
+      - name: "mypy"
+        if: ${{ matrix.tests == 'mypy' }}
+        run: |
+          [ "${{ matrix.python-version }}" = "3.9" ] && export MYPY_EXTRA_FLAGS=--no-warn-unused-ignores || true
+          make -j mypy
+
+      - name: "docs"
+        if: ${{ matrix.tests == 'docs' }}
+        run: make docs-release
+
+      - name: "docs spelling"
+        if: ${{ matrix.tests == 'docs' }}
+        run: make docs-release-spelling
+
+      - name: "prettier"
+        if: ${{ matrix.tests == 'prettier' }}
+        run: |
+          make frontend_npm_install
+          make prettier-check
+
+  ci-backward-compat:
+    needs:
+      - lint
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # older twisted/treq, for backward compatibility
+          - name: "py3.9 / twisted 24.7.0 / treq 22.2.0"
+            python-version: "3.9"
+            twisted: "24.7.0"
+            treq: "22.2.0"
+          # older SQLAlchemy 1.4.x
+          - name: "py3.9 / sqlalchemy 1.4.52"
+            python-version: "3.9"
+            sqlalchemy: "1.4.52"
+
+    name: trial / ${{ matrix.name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "./.github/actions/setup-python-deps"
+        with:
+          python-version: "${{ matrix.python-version }}"
+
+      - name: "Install pinned dependency versions"
+        if: ${{ matrix.twisted || matrix.treq || matrix.sqlalchemy }}
+        run: |
+          pkgs=""
+          if [ -n "${{ matrix.treq }}" ]; then pkgs="$pkgs treq==${{ matrix.treq }}"; fi
+          if [ -n "${{ matrix.twisted }}" ]; then pkgs="$pkgs Twisted==${{ matrix.twisted }}"; fi
+          if [ -n "${{ matrix.sqlalchemy }}" ]; then pkgs="$pkgs SQLAlchemy==${{ matrix.sqlalchemy }}"; fi
+          python -m pip install $pkgs
+
+      - name: "Run tests"
+        run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+        timeout-minutes: 30
+
+  dev-virtualenv:
+    needs:
+      - lint
+    name: dev_virtualenv / python 3.9
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "./.github/actions/setup-python-deps"
+        with:
+          python-version: "3.9"
+          requirements: |
+            requirements-ci.txt
+            requirements-ciworker.txt
+            requirements-cidocs.txt
+
+      - name: "Run tests"
+        run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+        timeout-minutes: 30
+
+  worker-interop:
+    needs:
+      - lint
+    strategy:
+      fail-fast: false
+      matrix:
+        worker-python:
+          - "3.9"
+          - "3.8"
+          - "3.7"
+
+    name: interop / master / worker py${{ matrix.worker-python }}
+    # Older Python versions (3.7, 3.8) are not available on the newest runners.
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: "actions/checkout@v6"
+
+      - name: "Set up worker Python ${{ matrix.worker-python }}"
+        uses: "actions/setup-python@v6"
+        id: worker-python
+        with:
+          python-version: "${{ matrix.worker-python }}"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ciworker.txt
+            worker/setup.py
+
+      - name: "Set up worker virtualenv"
+        run: |
+          "${{ steps.worker-python.outputs.python-path }}" -m venv /tmp/bbworkervenv
+          /tmp/bbworkervenv/bin/pip install -r requirements-pip.txt
+          /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt
+
+      # Set up the master Python last so it becomes the default "python".
+      - name: "Set up master Python 3.9"
+        uses: "./.github/actions/setup-python-deps"
+        with:
+          python-version: "3.9"
+
+      - name: "Run interop tests"
+        env:
+          SANDBOXED_WORKER_PATH: /tmp/bbworkervenv/bin/buildbot-worker
+        run: "python -m twisted.trial --reporter=text --rterrors buildbot.test.integration.interop"
+        timeout-minutes: 30
+
+  worker-older-python:
+    needs:
+      - lint
+    strategy:
+      matrix:
+        python-version:
+          - "3.7"
+          - "3.8"
+          - "3.9"
+
+    name: trial_worker / python ${{ matrix.python-version }} / twisted 21.2.0
+    # Older Python versions (3.7, 3.8) are not available on the newest runners.
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "./.github/actions/setup-python-deps"
+        with:
+          python-version: "${{ matrix.python-version }}"
+          requirements: "requirements-ciworker.txt"
+
+      - name: "Install pinned dependency versions"
+        run: python -m pip install treq==22.2.0 Twisted==21.2.0 "setuptools<82.0.0"
+
+      - name: "Run worker tests"
+        run: "python -m twisted.trial --reporter=text --rterrors buildbot_worker.test"
+        timeout-minutes: 30
+
+  # Configuration when SQLite database is persistent between running tests
+  # (by default in other tests in-memory SQLite database is used which is
+  # recreated for each test).
+  # Helps to detect issues with incorrect database setup/cleanup in tests.
+  test-persisted-sqlite:
+    needs:
+      - lint
+    name: trial / sqlite persistent file
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "./.github/actions/setup-python-deps"
+        with:
+          python-version: "3.9"
+
+      - name: "Run tests"
+        env:
+          BUILDBOT_TEST_DB_URL: "sqlite:///${{ runner.temp }}/test_db{TEST_ID}.sqlite"
+        run: "python -m twisted.trial -j4 --reporter=text --rterrors buildbot.test buildbot_worker.test"
+        timeout-minutes: 30
+
   ci:
+    needs:
+      - lint
     strategy:
       fail-fast: false
       matrix:
@@ -22,36 +252,17 @@ jobs:
           - "3.14"
         os:
           - ubuntu-24.04-arm
+          - ubuntu-latest
           - windows-2022
 
     name: ${{ matrix.os }} / python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
 
-    env:
-      # Needed to ignore specific warns, otherwise, it'll warn a generic message
-      SQLALCHEMY_WARN_20: 1
-
     steps:
       - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "${{ matrix.python-version }}"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-ci.txt
-            requirements-cidb.txt
-            master/setup.py
-            worker/setup.py
-
-      - name: "Install dependencies"
-        run: |
-          python -c "import sys; print(sys.prefix)"
-          python -c "import sys; print(sys.exec_prefix)"
-          python -c "import sys; print(sys.executable)"
-          python -V -V
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ci.txt
-          python -m pip list
 
       - name: "Check PyWin32"
         if: ${{ startsWith(matrix.os, 'windows-') }}
@@ -64,6 +275,8 @@ jobs:
         timeout-minutes: 30
 
   sandboxed-worker:
+    needs:
+      - lint
     strategy:
       fail-fast: false
       matrix:
@@ -75,23 +288,14 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v6"
-      - uses: "actions/setup-python@v6"
+      - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "=3.10"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ci.txt
-            requirements-ci-pyinstaller.txt
-            master/setup.py
-            worker/setup.py
+          requirements: "requirements-ci-pyinstaller.txt"
 
-      - name: "Install dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          python -m pip install -r requirements-ci-pyinstaller.txt
-          # do a true, non-editable install
-          python -m pip install ./worker
+      - name: "Install worker"
+        # do a true, non-editable install
+        run: python -m pip install ./worker
       - run: pyinstaller pyinstaller/buildbot-worker.spec
       - run: trial --reporter=text --rterrors buildbot.test.integration.interop
         env:
