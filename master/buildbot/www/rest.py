@@ -23,6 +23,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Callable
+from typing import cast
 from urllib.parse import urlparse
 
 from twisted.internet import defer
@@ -48,6 +49,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
     from typing import Any
 
+    from twisted.internet.interfaces import IReactorThreads
     from twisted.web import server
 
     from buildbot.data.base import Endpoint
@@ -80,6 +82,7 @@ def _is_request_finished(request: server.Request) -> bool:
 
 URL_ENCODED = b"application/x-www-form-urlencoded"
 JSON_ENCODED = b"application/json"
+_JSON_WRITE_BATCH_SIZE = 64 * 1024  # 64Kb
 
 
 class RestRootResource(resource.Resource):
@@ -419,7 +422,15 @@ class V2RootResource(resource.Resource):
             else:
                 encoder.indent = 2
 
-            yield threads.deferToThread(V2RootResource._write_json_data, request, encoder, data)
+            _reactor = cast("IReactorThreads", self.master.reactor)
+            yield threads.deferToThreadPool(
+                _reactor,
+                _reactor.getThreadPool(),
+                self._write_json_data,
+                request,
+                encoder,
+                data,
+            )
 
     def reconfigResource(self, new_config: Any) -> None:
         # buildbotURL may contain reverse proxy path, Origin header is just
@@ -496,12 +507,14 @@ class V2RootResource(resource.Resource):
 
         return res
 
-    @staticmethod
     def _write_json_data(
+        self,
         request: server.Request,
         encoder: json.encoder.JSONEncoder,
         data: Any,
     ) -> None:
+        _reactor = cast("IReactorThreads", self.master.reactor)
+
         content_length = 0
         for chunk in encoder.iterencode(data):
             if _is_request_finished(request):
@@ -510,10 +523,17 @@ class V2RootResource(resource.Resource):
         request.setHeader(b"content-length", unicode2bytes(str(content_length)))
 
         if request.method != b"HEAD":
+            buffer = bytearray()
             for chunk in encoder.iterencode(data):
                 if _is_request_finished(request):
                     return
-                request.write(unicode2bytes(chunk))
+                buffer += unicode2bytes(chunk)
+                if len(buffer) >= _JSON_WRITE_BATCH_SIZE:
+                    threads.blockingCallFromThread(_reactor, request.write, bytes(buffer))
+                    buffer.clear()
+
+            if buffer and not _is_request_finished(request):
+                threads.blockingCallFromThread(_reactor, request.write, bytes(buffer))
 
 
 RestRootResource.addApiVersion(2, V2RootResource)

@@ -31,6 +31,7 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util import www
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
+from buildbot.util.twisted import async_to_deferred
 from buildbot.www import authz
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES
@@ -374,6 +375,25 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
         head = yield self.render_resource(self.rsrc, b'/test', method=b'HEAD')
         self.assertEqual(head, b'')
         self.assertEqual(int(self.request.headers[b'content-length'][0]), len(get))
+
+    @async_to_deferred
+    async def test_api_response_finished_only_after_body_written(self) -> None:
+        request = self.make_request(b'/test')
+
+        written_at_finish: list[bytes] = []
+        original_finish = request.finish
+
+        def finish_spy() -> None:
+            written_at_finish.append(bytes(request.written))
+            original_finish()
+
+        request.finish = finish_spy  # type: ignore[method-assign]
+
+        content = await self.render_resource(self.rsrc, b'/test', request=request)
+
+        self.assertEqual(len(written_at_finish), 1)
+        self.assertEqual(written_at_finish[0], content)
+        self.assertEqual(int(request.headers[b'content-length'][0]), len(written_at_finish[0]))
 
     @defer.inlineCallbacks
     def test_api_collection(self) -> InlineCallbacksType[None]:
