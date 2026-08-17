@@ -98,7 +98,7 @@ class TestSecretInPass(
         )
 
         value = yield self.srvpass.get("secret")
-        self.assertEqual(value, "value1")
+        self.assertEqual(value, "value1\nvalue2\nvalue3")
 
         self.assert_all_commands_ran()
 
@@ -109,7 +109,7 @@ class TestSecretInPass(
         )
 
         value = yield self.srvpass.get("secret")
-        self.assertEqual(value, "value1")
+        self.assertEqual(value, "value1\nvalue2\nvalue3")
 
         self.assert_all_commands_ran()
 
@@ -120,7 +120,7 @@ class TestSecretInPass(
         )
 
         value = yield self.srvpass.get("secret")
-        self.assertEqual(value, "value1")
+        self.assertEqual(value, "value1\nvalue2\nvalue3")
 
         self.assert_all_commands_ran()
 
