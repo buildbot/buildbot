@@ -20,6 +20,7 @@ import pprint
 import sys
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import cast
 
 from twisted.internet import defer
 from twisted.python import runtime
@@ -31,6 +32,7 @@ from buildbot.process.properties import renderer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import master
+from buildbot.test.fake.logfile import FakeLogFile
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.steps import ExpectMasterShell
 from buildbot.test.steps import TestBuildStepMixin
@@ -105,6 +107,41 @@ class TestMasterShellCommand(TestBuildStepMixin, TestReactorMixin, unittest.Test
             yield self.run_step()
         finally:
             del os.environ['WORLD']
+
+    @defer.inlineCallbacks
+    def test_logs_obfuscate_secrets(self) -> InlineCallbacksType[None]:
+        secret = "master-shell-secret"
+        self.setup_step(
+            master.MasterShellCommand(
+                command=["echo", secret],
+                env={"TOKEN": secret},
+            )
+        )
+        self.build.properties.useSecret(secret, "shell_secret")
+
+        if runtime.platformType == 'win32':
+            exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'echo', secret]
+        else:
+            exp_argv = ["echo", secret]
+
+        self.expect_commands(
+            ExpectMasterShell(exp_argv)
+            .env({"TOKEN": secret})
+            .stdout(f"{secret}\n".encode())
+            .stderr(f"{secret}\n".encode())
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+
+        yield self.run_step()
+
+        stdio = cast(FakeLogFile, self.get_nth_step(0).logs["stdio"])
+        self.assertNotIn(secret, stdio.header)
+        self.assertNotIn(secret, stdio.stdout)
+        self.assertNotIn(secret, stdio.stderr)
+        self.assertIn("<shell_secret>", stdio.header)
+        self.assertIn("<shell_secret>", stdio.stdout)
+        self.assertIn("<shell_secret>", stdio.stderr)
 
     @defer.inlineCallbacks
     def test_env_list_subst(self) -> InlineCallbacksType[None]:
