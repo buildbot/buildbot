@@ -10,7 +10,8 @@ coverage==7.13.5; python_version >= "3.10"
 docker==7.1.0
 hvac==2.4.0
 ldap3==2.9.1
-mypy==1.19.1
+mypy==1.19.1; python_version < "3.10"  # pyup: ignore
+mypy==1.20.0; python_version >= "3.10"
 mypy-zope==1.0.14
 psutil==7.2.2
 
@@ -28,8 +29,8 @@ autobahn==24.4.2; python_version < "3.11"  # pyup: ignore
 autobahn==25.12.2; python_version >= "3.11"
 Automat==25.4.16
 boto==2.49.0
-boto3==1.42.73
-botocore==1.42.73
+boto3==1.42.80
+botocore==1.42.80
 certifi==2026.2.25
 cffi==2.0.0
 charset-normalizer==3.4.6
@@ -51,21 +52,23 @@ Brotli==1.2.0
 Mako==1.3.12
 MarkupSafe==3.0.3
 moto==5.1.22
-msgpack==1.1.2
+msgpack==1.1.2; python_version < "3.10"  # pyup: ignore
+msgpack==1.2.1; python_version >= "3.10"
 mypy-extensions==1.1.0
 packaging==26.0
 parameterized==0.9.0
-pyasn1==0.6.3
+pyasn1==0.6.4
 pyasn1-modules==0.4.2
 pycparser==2.22; python_version < "3.10"  # pyup: ignore
 pycparser==3.0; python_version >= "3.10"
-PyJWT==2.12.1
+PyJWT==2.13.0
 pyOpenSSL==26.0.0
 pypugjs==6.0.1
 python-dateutil==2.9.0.post0
 pytz==2026.1.post1
 PyYAML==6.0.3
-requests==2.32.5
+requests==2.32.5; python_version < "3.10"  # pyup: ignore
+requests==2.33.0; python_version >= "3.10"
 responses==0.26.0
 ruff==0.15.8
 s3transfer==0.16.0
