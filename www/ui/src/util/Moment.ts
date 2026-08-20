@@ -17,6 +17,7 @@
 
 import moment from 'moment';
 import {useContext, useEffect} from 'react';
+import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
 import {TimeContext} from '../contexts/Time';
 
 export function durationFormat(time: number) {
@@ -44,8 +45,11 @@ export function durationFormat(time: number) {
   }
 }
 
+const DEFAULT_DATE_FORMAT = 'LLL';
+
 export function dateFormat(time: number) {
-  return moment.unix(time).format('LLL');
+  const fmt = buildbotGetSettings().getStringSetting('Dates.date_format') || DEFAULT_DATE_FORMAT;
+  return moment.unix(time).format(fmt);
 }
 
 export function dateFormatSeconds(time: number) {
@@ -70,3 +74,18 @@ export function useCurrentTimeSetupTimers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
+
+buildbotSetupPlugin((reg) => {
+  reg.registerSettingGroup({
+    name: 'Dates',
+    caption: 'Date formatting settings',
+    items: [
+      {
+        type: 'string',
+        name: 'date_format',
+        caption: 'Moment.js format string for dates (e.g. LLL, YYYY-MM-DD HH:mm, lll)',
+        defaultValue: DEFAULT_DATE_FORMAT,
+      },
+    ],
+  });
+});
