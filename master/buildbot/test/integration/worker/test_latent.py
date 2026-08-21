@@ -632,6 +632,42 @@ class Latent(TimeoutableTestCase, RunFakeMasterTestCase):
         self.assertEqual(registered_workers, [('local', 'password_1'), ('local', 'password_1')])
 
     @defer.inlineCallbacks
+    def test_builder_removed_and_readded_by_reconfig_still_starts_worker(
+        self,
+    ) -> InlineCallbacksType[None]:
+        """
+        A builder removed by one reconfig and restored by a later one must still
+        be able to start its latent workers. The removal leaves the worker's
+        workerforbuilders entry behind, and that stale entry must not prevent
+        the re-added builder from getting its WorkerForBuilder back.
+        """
+        controller = LatentController(self, 'local')
+        builders = [
+            BuilderConfig(name="testy-1", workernames=["local"], factory=BuildFactory()),
+            BuilderConfig(name="testy-2", workernames=["local"], factory=BuildFactory()),
+        ]
+        config_dict = {
+            'builders': builders,
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            'multiMaster': True,
+        }
+        yield self.setup_master(config_dict)
+
+        # testy-2 disappears in one reconfig and comes back in the next
+        yield self.reconfig_master({**config_dict, 'builders': builders[:1]})
+        yield self.reconfig_master(config_dict)
+
+        builder_id = yield self.master.data.updates.findBuilderId('testy-2')
+        yield self.create_build_request([builder_id])
+
+        self.assertEqual(controller.starting, True)
+
+        yield controller.start_instance(False)
+        yield controller.auto_stop(True)
+        self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
+
+    @defer.inlineCallbacks
     def test_substantiation_cancelled_by_insubstantiation_when_waiting_for_insubstantiation(
         self,
     ) -> InlineCallbacksType[None]:
