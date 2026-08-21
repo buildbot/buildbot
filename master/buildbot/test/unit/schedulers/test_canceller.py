@@ -522,6 +522,12 @@ class TestOldBuildCanceller(TestReactorMixin, unittest.TestCase):
 
         self.master.mq.assertProductions(expected_productions)
 
+
+    def test_canceller_with_keyword_arguments():
+        self.assertEqual(
+            OldBuildCanceller(name='canceller', filters=[]).name, 'canceller'
+        )
+
     @defer.inlineCallbacks
     def test_buildrequest_no_branch(self) -> InlineCallbacksType[None]:
         yield self.setup_canceller_with_filters()
