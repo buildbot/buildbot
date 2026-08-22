@@ -694,6 +694,8 @@ pylint
 pypi
 pypugjs
 pysqlite
+pytest
+Pytest
 pythonic
 Pythonic
 pywin
