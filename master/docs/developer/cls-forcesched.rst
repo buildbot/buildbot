@@ -79,15 +79,13 @@ types.
 
     .. py:attribute:: type
 
-           A string identifying the type that the parameter conforms to. It is used by the angular
-           application to find which angular directive to use for showing the form widget. The
-           available values are visible in
-           :src:`www/base/src/app/common/directives/forcefields/forcefields.directive.js`.
+           A string identifying the type that the parameter conforms to. It is used by the web
+           frontend to find which form widget to use for showing the parameter. The available
+           values, and the React components that render them, are visible in
+           :src:`www/base/src/components/ForceBuildModal/Fields/FieldAny.tsx`.
 
-           Examples of how to create a custom parameter widgets are available in the Buildbot source code in directories:
-
-           * :src:`www/codeparameter`
-           * :src:`www/nestedexample`
+           The web frontend does not currently support custom parameter types: a parameter whose
+           ``type`` is not one of the known values is not rendered in the force build form.
 
     .. py:attribute:: default
 
