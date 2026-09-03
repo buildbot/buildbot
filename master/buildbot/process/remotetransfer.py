@@ -23,11 +23,11 @@ import os
 import shutil
 import tarfile
 import tempfile
+from codecs import getincrementaldecoder
 from io import BytesIO
 from typing import IO
 from typing import Literal
 
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.worker.protocols import base
 
@@ -190,12 +190,25 @@ class StringFileWriter(base.FileWriterImpl):
 
     def __init__(self) -> None:
         self.buffer = ""
+        # Data arrives in fixed-size chunks (see FileWriterImpl blocksize), so a multi-byte
+        # UTF-8 character can be split across two remote_write() calls, or the data may simply
+        # not be valid UTF-8 at all (e.g. mixed-encoding log output). Either way, decoding each
+        # chunk independently would raise UnicodeDecodeError, which propagates out of a Twisted
+        # PB remote-message handler rather than through buildbot's normal command-failure path,
+        # hanging the step forever (see issue #3982). An incremental decoder retains the
+        # undecoded tail of a chunk and prepends it to the next one, avoiding false positives on
+        # split characters; errors='replace' (matching RunProcessPP's stdout/stderr decoding)
+        # avoids raising at all, since a days-long hang is worse than a stray U+FFFD.
+        self._decoder = getincrementaldecoder('utf-8')(errors='replace')
 
     def remote_write(self, data: str | bytes) -> None:  # type: ignore[override]
-        self.buffer += bytes2unicode(data)
+        if isinstance(data, str):
+            self.buffer += data
+        else:
+            self.buffer += self._decoder.decode(data)
 
     def remote_close(self) -> None:  # type: ignore[override]
-        pass
+        self.buffer += self._decoder.decode(b"", final=True)
 
 
 class StringFileReader(FileReader):
