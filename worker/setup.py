@@ -76,6 +76,7 @@ setup_args = {
     'maintainer': "Dustin J. Mitchell",
     'maintainer_email': "dustin@v.igoro.us",
     'url': "http://buildbot.net/",
+    'python_requires': ">=3.7",
     'classifiers': [
         'Development Status :: 5 - Production/Stable',
         'Environment :: No Input/Output (Daemon)',
