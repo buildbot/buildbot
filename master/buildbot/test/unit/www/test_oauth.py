@@ -488,19 +488,25 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         requests.get.side_effect = []
         requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
         auth.get = mock.Mock(
+            return_value={
+                "name": "Foo Bar",
+                "username": "fbar",
+                "id": 5,
+                "avatar_url": "https://avatar/fbar.png",
+                "email": "foo@bar",
+                "twitter": "fb",
+            }
+        )
+        auth.getWithHeaders = mock.Mock(
             side_effect=[
-                {  # /user
-                    "name": "Foo Bar",
-                    "username": "fbar",
-                    "id": 5,
-                    "avatar_url": "https://avatar/fbar.png",
-                    "email": "foo@bar",
-                    "twitter": "fb",
-                },
-                [  # /groups
-                    {"id": 10, "name": "Hello", "path": "hello"},
-                    {"id": 20, "name": "Group", "path": "grp"},
-                ],
+                (
+                    [{"id": 10, "name": "Hello", "path": "hello"}],
+                    {"X-Next-Page": "2"},
+                ),
+                (
+                    [{"id": 20, "name": "Group", "path": "grp"}],
+                    {"X-Next-Page": ""},
+                ),
             ]
         )
         res = yield auth.verifyCode("code!")
@@ -513,6 +519,10 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                 "groups": ["hello", "grp"],
             },
             res,
+        )
+        self.assertEqual(
+            [call.args[1] for call in auth.getWithHeaders.call_args_list],
+            ["/groups?per_page=100&page=1", "/groups?per_page=100&page=2"],
         )
 
     @defer.inlineCallbacks
