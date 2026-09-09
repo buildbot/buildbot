@@ -23,7 +23,6 @@ import os
 import shutil
 import tarfile
 import tempfile
-from codecs import getincrementaldecoder
 from io import BytesIO
 from typing import IO
 from typing import Literal
@@ -189,19 +188,23 @@ class StringFileWriter(base.FileWriterImpl):
     """
 
     def __init__(self) -> None:
-        self.buffer = ""
-        # Chunks can split a multi-byte UTF-8 character, or contain invalid UTF-8 outright; an
-        # incremental decoder with errors='replace' handles both without raising (#3982).
-        self._decoder = getincrementaldecoder('utf-8')(errors='replace')
+        self._buffer = BytesIO()
+
+    @property
+    def buffer(self) -> str:
+        return self._buffer.getvalue().decode(errors='replace')
+
+    @buffer.setter
+    def buffer(self, value: str) -> None:
+        self._buffer = BytesIO(value.encode())
 
     def remote_write(self, data: str | bytes) -> None:  # type: ignore[override]
-        if isinstance(data, str):
-            self.buffer += data
-        else:
-            self.buffer += self._decoder.decode(data)
+        if not isinstance(data, bytes):
+            data = data.encode(errors='replace')
+        self._buffer.write(data)
 
     def remote_close(self) -> None:  # type: ignore[override]
-        self.buffer += self._decoder.decode(b"", final=True)
+        pass
 
 
 class StringFileReader(FileReader):
