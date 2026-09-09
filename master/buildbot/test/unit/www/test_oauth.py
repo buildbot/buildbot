@@ -497,15 +497,20 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                 "twitter": "fb",
             }
         )
-        auth.getWithHeaders = mock.Mock(
+        auth.getWithHeadersFromUrl = mock.Mock(
             side_effect=[
                 (
                     [{"id": 10, "name": "Hello", "path": "hello"}],
-                    {"X-Next-Page": "2"},
+                    {
+                        "Link": (
+                            '<https://gitlab.test/api/v4/groups?page=2&per_page=100>; rel="next", '
+                            '<https://gitlab.test/api/v4/groups?page=1&per_page=100>; rel="first"'
+                        )
+                    },
                 ),
                 (
                     [{"id": 20, "name": "Group", "path": "grp"}],
-                    {"X-Next-Page": ""},
+                    {},
                 ),
             ]
         )
@@ -521,8 +526,11 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             res,
         )
         self.assertEqual(
-            [call.args[1] for call in auth.getWithHeaders.call_args_list],
-            ["/groups?per_page=100&page=1", "/groups?per_page=100&page=2"],
+            [call.args[1] for call in auth.getWithHeadersFromUrl.call_args_list],
+            [
+                "https://gitlab.test/api/v4/groups?per_page=100",
+                "https://gitlab.test/api/v4/groups?page=2&per_page=100",
+            ],
         )
 
     @defer.inlineCallbacks

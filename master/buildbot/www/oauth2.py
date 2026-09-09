@@ -163,9 +163,12 @@ class OAuth2Auth(auth.AuthBase):
         return ret.json()
 
     def getResponse(self, session: requests.Session, path: str) -> requests.Response:
-        ret = session.get(self.resourceEndpoint + path)
+        return self.getResponseFromUrl(session, self.resourceEndpoint + path)
+
+    def getResponseFromUrl(self, session: requests.Session, url: str) -> requests.Response:
+        ret = session.get(url)
         if ret.status_code >= 400:
-            msg = f'OAuth2 session: error accessing resource {path}: {ret.status_code}'
+            msg = f'OAuth2 session: error accessing resource {url}: {ret.status_code}'
             extra_info = ret.headers.get('www-authenticate', None)
             if extra_info:
                 msg += f' www-authenticate: {extra_info}'
@@ -175,7 +178,12 @@ class OAuth2Auth(auth.AuthBase):
     def getWithHeaders(
         self, session: requests.Session, path: str
     ) -> tuple[Any, requests.structures.CaseInsensitiveDict[str]]:
-        ret = self.getResponse(session, path)
+        return self.getWithHeadersFromUrl(session, self.resourceEndpoint + path)
+
+    def getWithHeadersFromUrl(
+        self, session: requests.Session, url: str
+    ) -> tuple[Any, requests.structures.CaseInsensitiveDict[str]]:
+        ret = self.getResponseFromUrl(session, url)
         return ret.json(), ret.headers
 
     # based on https://github.com/maraujop/requests-oauth
@@ -438,12 +446,12 @@ class GitLabAuth(OAuth2Auth):
     def getUserInfoFromOAuthClient(self, c: requests.Session) -> dict[str, Any]:
         user = self.get(c, "/user")
         groups = []
-        page = 1
-        while page:
-            page_groups, headers = self.getWithHeaders(c, f"/groups?per_page=100&page={page}")
+        url = f"{self.resourceEndpoint}/groups?per_page=100"
+        while url:
+            page_groups, headers = self.getWithHeadersFromUrl(c, url)
             groups.extend(page_groups)
-            next_page = headers.get("X-Next-Page", "")
-            page = int(next_page) if next_page else 0
+            next_url = self._parse_next_link(headers)
+            url = next_url or ""
         return {
             "full_name": user["name"],
             "username": user["username"],
@@ -451,6 +459,14 @@ class GitLabAuth(OAuth2Auth):
             "avatar_url": user["avatar_url"],
             "groups": [g["path"] for g in groups],
         }
+
+    @staticmethod
+    def _parse_next_link(headers: requests.structures.CaseInsensitiveDict[str]) -> str | None:
+        for part in headers.get("Link", "").split(","):
+            segments = [segment.strip() for segment in part.split(";")]
+            if len(segments) >= 2 and 'rel="next"' in segments[1:]:
+                return segments[0].strip("<>")
+        return None
 
 
 class BitbucketAuth(OAuth2Auth):
