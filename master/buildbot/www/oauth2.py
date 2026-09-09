@@ -159,13 +159,10 @@ class OAuth2Auth(auth.AuthBase):
         return s
 
     def get(self, session: requests.Session, path: str) -> Any:
-        ret = self.getResponse(session, path)
+        ret = self.get_response(session, self.resourceEndpoint + path)
         return ret.json()
 
-    def getResponse(self, session: requests.Session, path: str) -> requests.Response:
-        return self.getResponseFromUrl(session, self.resourceEndpoint + path)
-
-    def getResponseFromUrl(self, session: requests.Session, url: str) -> requests.Response:
+    def get_response(self, session: requests.Session, url: str) -> requests.Response:
         ret = session.get(url)
         if ret.status_code >= 400:
             msg = f'OAuth2 session: error accessing resource {url}: {ret.status_code}'
@@ -174,17 +171,6 @@ class OAuth2Auth(auth.AuthBase):
                 msg += f' www-authenticate: {extra_info}'
             raise Error(503, msg.encode('utf-8'))
         return ret
-
-    def getWithHeaders(
-        self, session: requests.Session, path: str
-    ) -> tuple[Any, requests.structures.CaseInsensitiveDict[str]]:
-        return self.getWithHeadersFromUrl(session, self.resourceEndpoint + path)
-
-    def getWithHeadersFromUrl(
-        self, session: requests.Session, url: str
-    ) -> tuple[Any, requests.structures.CaseInsensitiveDict[str]]:
-        ret = self.getResponseFromUrl(session, url)
-        return ret.json(), ret.headers
 
     # based on https://github.com/maraujop/requests-oauth
     # from Miguel Araujo, augmented to support header based clientSecret
@@ -446,12 +432,14 @@ class GitLabAuth(OAuth2Auth):
     def getUserInfoFromOAuthClient(self, c: requests.Session) -> dict[str, Any]:
         user = self.get(c, "/user")
         groups = []
-        url = f"{self.resourceEndpoint}/groups?per_page=100"
+        url = f"{self.resourceEndpoint}/groups?all_available=false&per_page=100"
         while url:
-            page_groups, headers = self.getWithHeadersFromUrl(c, url)
-            groups.extend(page_groups)
-            next_url = self._parse_next_link(headers)
-            url = next_url or ""
+            response = self.get_response(c, url)
+            groups.extend(response.json())
+            next_url = self._parse_next_link(response.headers)
+            if next_url is None:
+                break
+            url = next_url
         return {
             "full_name": user["name"],
             "username": user["username"],

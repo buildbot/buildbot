@@ -497,20 +497,24 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                 "twitter": "fb",
             }
         )
-        auth.getWithHeadersFromUrl = mock.Mock(
+        auth.get_response = mock.Mock(
             side_effect=[
-                (
-                    [{"id": 10, "name": "Hello", "path": "hello"}],
-                    {
+                mock.Mock(
+                    json=mock.Mock(
+                        return_value=[{"id": 10, "name": "Hello", "path": "hello"}]
+                    ),
+                    headers={
                         "Link": (
                             '<https://gitlab.test/api/v4/groups?page=2&per_page=100>; rel="next", '
                             '<https://gitlab.test/api/v4/groups?page=1&per_page=100>; rel="first"'
                         )
                     },
                 ),
-                (
-                    [{"id": 20, "name": "Group", "path": "grp"}],
-                    {},
+                mock.Mock(
+                    json=mock.Mock(
+                        return_value=[{"id": 20, "name": "Group", "path": "grp"}]
+                    ),
+                    headers={},
                 ),
             ]
         )
@@ -526,9 +530,9 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             res,
         )
         self.assertEqual(
-            [call.args[1] for call in auth.getWithHeadersFromUrl.call_args_list],
+            [call.args[1] for call in auth.get_response.call_args_list],
             [
-                "https://gitlab.test/api/v4/groups?per_page=100",
+                "https://gitlab.test/api/v4/groups?all_available=false&per_page=100",
                 "https://gitlab.test/api/v4/groups?page=2&per_page=100",
             ],
         )
