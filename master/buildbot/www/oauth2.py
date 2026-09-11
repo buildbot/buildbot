@@ -436,7 +436,7 @@ class GitLabAuth(OAuth2Auth):
         while url:
             response = self.get_response(c, url)
             groups.extend(response.json())
-            next_url = self._parse_next_link(response.headers)
+            next_url = response.links.get("next", {}).get("url")
             if next_url is None:
                 break
             url = next_url
@@ -447,14 +447,6 @@ class GitLabAuth(OAuth2Auth):
             "avatar_url": user["avatar_url"],
             "groups": [g["path"] for g in groups],
         }
-
-    @staticmethod
-    def _parse_next_link(headers: requests.structures.CaseInsensitiveDict[str]) -> str | None:
-        for part in headers.get("Link", "").split(","):
-            segments = [segment.strip() for segment in part.split(";")]
-            if len(segments) >= 2 and 'rel="next"' in segments[1:]:
-                return segments[0].strip("<>")
-        return None
 
 
 class BitbucketAuth(OAuth2Auth):

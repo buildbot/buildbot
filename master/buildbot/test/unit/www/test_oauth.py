@@ -503,18 +503,17 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                     json=mock.Mock(
                         return_value=[{"id": 10, "name": "Hello", "path": "hello"}]
                     ),
-                    headers={
-                        "Link": (
-                            '<https://gitlab.test/api/v4/groups?page=2&per_page=100>; rel="next", '
-                            '<https://gitlab.test/api/v4/groups?page=1&per_page=100>; rel="first"'
-                        )
+                    links={
+                        "next": {
+                            "url": "https://gitlab.test/api/v4/groups?page=2&per_page=100"
+                        }
                     },
                 ),
                 mock.Mock(
                     json=mock.Mock(
                         return_value=[{"id": 20, "name": "Group", "path": "grp"}]
                     ),
-                    headers={},
+                    links={},
                 ),
             ]
         )
