@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "@playwright/test": "~1.62.1",
-    "qs": "^6.15",
+    "qs": "^6.16",
     "request": "^2.88.2",
     "typescript": "^7.0.2"
   },
