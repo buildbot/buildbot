@@ -27,7 +27,6 @@ from io import BytesIO
 from typing import IO
 from typing import Literal
 
-from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.worker.protocols import base
 
@@ -189,10 +188,20 @@ class StringFileWriter(base.FileWriterImpl):
     """
 
     def __init__(self) -> None:
-        self.buffer = ""
+        self._buffer = BytesIO()
+
+    @property
+    def buffer(self) -> str:
+        return self._buffer.getvalue().decode(errors='replace')
+
+    @buffer.setter
+    def buffer(self, value: str) -> None:
+        self._buffer = BytesIO(value.encode())
 
     def remote_write(self, data: str | bytes) -> None:  # type: ignore[override]
-        self.buffer += bytes2unicode(data)
+        if not isinstance(data, bytes):
+            data = data.encode(errors='replace')
+        self._buffer.write(data)
 
     def remote_close(self) -> None:  # type: ignore[override]
         pass

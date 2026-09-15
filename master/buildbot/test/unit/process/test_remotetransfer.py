@@ -73,4 +73,35 @@ class TestStringFileWriter(unittest.TestCase):
         # StringFileWriter takes bytes or native string and outputs native strings
         sfw.remote_write(b'bytes')
         sfw.remote_write(' or str')
+        sfw.remote_close()
         self.assertEqual(sfw.buffer, 'bytes or str')
+
+    def testMultiByteCharacterSplitAcrossChunks(self) -> None:
+        # A multi-byte UTF-8 character (e.g. U+00E9, 'é', encoded as b'\xc3\xa9') can land on a
+        # chunk boundary when data is split into fixed-size blocks for transfer. Decoding each
+        # chunk independently would raise UnicodeDecodeError; an incremental decoder must
+        # instead buffer the incomplete tail and complete it with the next chunk.
+        sfw = remotetransfer.StringFileWriter()
+        data = 'café'.encode()
+        for i in range(len(data)):
+            sfw.remote_write(data[i : i + 1])
+        sfw.remote_close()
+        self.assertEqual(sfw.buffer, 'café')
+
+    def testInvalidUtf8IsReplacedNotRaised(self) -> None:
+        # Genuinely invalid (e.g. mixed-encoding) input must not raise either: raising here
+        # would escape through the same PB remote-message handler that causes the hang, so
+        # errors='replace' is used instead of errors='strict'.
+        sfw = remotetransfer.StringFileWriter()
+        sfw.remote_write(b'\xff\xfe')
+        sfw.remote_close()
+        self.assertEqual(sfw.buffer, '��')
+
+    def testTruncatedFinalCharacterIsReplacedOnClose(self) -> None:
+        # A file that ends mid-character (the final chunk's trailing bytes are an incomplete
+        # sequence) is only resolved when remote_close() flushes the decoder with final=True.
+        sfw = remotetransfer.StringFileWriter()
+        data = 'café'.encode()
+        sfw.remote_write(data[:-1])  # drop the final byte of the trailing 'é'
+        sfw.remote_close()
+        self.assertEqual(sfw.buffer, 'caf�')

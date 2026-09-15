@@ -1,0 +1,1 @@
+Fixed ``StringFileWriter`` raising ``UnicodeDecodeError`` (and hanging the build step forever) on invalid or chunk-split UTF-8 data, by decoding incrementally with ``errors='replace'`` instead of decoding each transfer chunk independently (:issue:`3982`).
