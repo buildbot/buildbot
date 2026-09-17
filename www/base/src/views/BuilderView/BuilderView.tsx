@@ -145,6 +145,7 @@ export const BuilderView = observer(() => {
         query: {
           builderid: builder.builderid,
           claimed: false,
+          property: ['owner', 'owners'],
         },
       }),
     ),
