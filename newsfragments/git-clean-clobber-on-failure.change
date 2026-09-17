@@ -1,0 +1,1 @@
+The :bb:step:`Git` step with ``mode='full'`` and ``method='clean'`` now falls back to clobbering the work directory when the clean command fails and ``clobberOnFailure=True``, instead of failing the step. The same configuration now also succeeds when the fetch fails and the clobber that follows it succeeds; previously the step clobbered and then failed anyway.

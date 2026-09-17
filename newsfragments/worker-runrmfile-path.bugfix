@@ -1,0 +1,1 @@
+Fixed removing a file on workers older than 3.1, where the fallback path passed a master-side absolute path to the worker's ``rmdir`` command instead of the worker-relative path.

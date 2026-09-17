@@ -15,6 +15,10 @@
 
 from __future__ import annotations
 
+import hashlib
+import ipaddress
+import urllib.parse
+import weakref
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import cast
@@ -24,12 +28,14 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot import config as bbconfig
+from buildbot import interfaces
 from buildbot.interfaces import WorkerSetupError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util.git import RC_SUCCESS
+from buildbot.util.git import SHARED_CACHE_MINIMUM_GIT_VERSION
 from buildbot.util.git import GitStepMixin
 from buildbot.util.git_credential import GitCredentialOptions
 from buildbot.util.git_credential import add_user_password_to_credentials
@@ -43,6 +49,22 @@ if TYPE_CHECKING:
 
 GIT_HASH_LENGTH = 40
 COMBINE_FILTER_RESERVED_CHARS = frozenset('~!@#$^&*()[]{}\\;",<>?\'+%')
+SHARED_CACHE_DIR = '.git-cache'
+SHARED_CACHE_HASH_LENGTH = 16
+SHARED_CACHE_ALTERNATES_MARKER = 'buildbot-shared-cache'
+SHARED_CACHE_OWNER_CONFIG = 'buildbot.sharedCacheOwner'
+SHARED_CACHE_LAST_FSCK_CONFIG = 'buildbot.sharedCacheLastFsck'
+SHARED_CACHE_FSCK_FAILED_CONFIG = 'buildbot.sharedCacheFsckFailed'
+SHARED_CACHE_FSCK_INTERVAL = 24 * 60 * 60
+SHARED_CACHE_METADATA_MAX_SIZE = 256 * 1024
+SHARED_CACHE_DEFAULT_PORTS = {'ssh': 22, 'git': 9418, 'http': 80, 'https': 443}
+_shared_cache_locks: weakref.WeakKeyDictionary[Any, dict[str, defer.DeferredLock]] = (
+    weakref.WeakKeyDictionary()
+)
+
+
+class _SharedCacheMetadataReadError(Exception):
+    pass
 
 
 def isTrueOrIsExactlyZero(v: Any) -> bool:
@@ -84,7 +106,16 @@ git_describe_flags = [
 
 class Git(Source, GitStepMixin):
     name = 'git'
-    renderables = ["repourl", "reference", "branch", "codebase", "mode", "method", "origin"]
+    renderables = [
+        "repourl",
+        "reference",
+        "branch",
+        "codebase",
+        "mode",
+        "method",
+        "origin",
+        "shared_cache",
+    ]
 
     def __init__(
         self,
@@ -110,6 +141,7 @@ class Git(Source, GitStepMixin):
         sshKnownHosts: Any = None,
         auth_credentials: tuple[IRenderable | str, IRenderable | str] | None = None,
         git_credentials: GitCredentialOptions | None = None,
+        shared_cache: IMaybeRenderableType[bool | str] = False,
         **kwargs: Any,
     ) -> None:
         if not getDescription and not isinstance(getDescription, dict):
@@ -120,6 +152,10 @@ class Git(Source, GitStepMixin):
         self.repourl = repourl  # type: ignore[assignment]
         self.port = port
         self.reference = reference
+        self.shared_cache = shared_cache
+        self._shared_cache_path: str | None = None
+        self._shared_cache_active = False
+        self._shared_cache_lock: defer.DeferredLock | None = None
         self.retryFetch = retryFetch
         self.submodules = submodules
         self.remoteSubmodules = remoteSubmodules
@@ -171,17 +207,109 @@ class Git(Source, GitStepMixin):
                     )
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
+        if not (
+            isinstance(self.shared_cache, (bool, str))
+            or interfaces.IRenderable.providedBy(self.shared_cache)
+        ):
+            bbconfig.error("Git: shared_cache must be a boolean, string, or renderable.")
+        if (
+            not interfaces.IRenderable.providedBy(self.shared_cache)
+            and self.shared_cache
+            and not interfaces.IRenderable.providedBy(self.reference)
+            and self.reference
+        ):
+            bbconfig.error(
+                "Git: shared_cache and reference cannot both be set. "
+                "shared_cache manages the reference automatically."
+            )
+
+    def _validateRenderedSharedCache(self) -> None:
+        if not isinstance(self.shared_cache, (bool, str)):
+            raise buildstep.BuildStepFailed(
+                "Git: rendered shared_cache must be a boolean or string"
+            )
+        if isinstance(self.shared_cache, str) and any(
+            character in self.shared_cache for character in '\0\r\n'
+        ):
+            raise buildstep.BuildStepFailed(
+                "Git: rendered shared_cache path must not contain NUL or newline characters"
+            )
+        if (
+            isinstance(self.shared_cache, str)
+            and self.worker is not None
+            and self.worker.worker_system == 'nt'
+            and self._isPartiallyQualifiedWindowsPath(self.shared_cache)
+        ):
+            raise buildstep.BuildStepFailed(
+                "Git: Windows shared_cache paths must be fully qualified or relative"
+            )
+        if self.shared_cache and self.reference:
+            raise buildstep.BuildStepFailed("Git: shared_cache and reference cannot both be set")
+        if self.shared_cache:
+            try:
+                parsed_repourl = urllib.parse.urlsplit(self.repourl)
+            except ValueError:
+                parsed_repourl = None
+            if (
+                parsed_repourl is not None
+                and parsed_repourl.scheme.lower() in ('http', 'https')
+                and (parsed_repourl.query or parsed_repourl.fragment)
+            ):
+                raise buildstep.BuildStepFailed(
+                    "Git: shared_cache does not support HTTP(S) repository URLs "
+                    "with a query or fragment"
+                )
+        if self.shared_cache and self._isRelativeLocalRepository():
+            raise buildstep.BuildStepFailed(
+                "Git: shared_cache does not support relative local repository paths"
+            )
+
+    def _isRelativeLocalRepository(self) -> bool:
+        assert self.build is not None
+        path_module = self.build.path_module
+        if '://' in self.repourl:
+            return False
+
+        if self.worker is not None and self.worker.worker_system == 'nt':
+            windows_path = self.build.path_cls(self.repourl)
+            if self._isPartiallyQualifiedWindowsPath(self.repourl):
+                return True
+            if windows_path.is_absolute():
+                return False
+        elif path_module.isabs(self.repourl):
+            return False
+
+        drive, _ = path_module.splitdrive(self.repourl)
+        if drive:
+            return True
+
+        return ':' not in self.repourl or self.repourl.startswith(('./', '../', '.\\', '..\\'))
+
+    def _isPartiallyQualifiedWindowsPath(self, path: str) -> bool:
+        assert self.build is not None and self.build.path_cls is not None
+        windows_path = self.build.path_cls(path)
+        incomplete_unc = windows_path.drive.startswith('\\\\') and not windows_path.root
+        return bool(windows_path.drive or windows_path.root) and (
+            not windows_path.is_absolute() or incomplete_unc
+        )
 
     @defer.inlineCallbacks
     def run_vc(
         self, branch: str | None, revision: str | None, patch: Any
     ) -> InlineCallbacksType[int]:
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
+
+        try:
+            self._validateRenderedSharedCache()
+        except buildstep.BuildStepFailed as e:
+            self._reportSharedCache(str(e))
+            raise
+
         self.setup_repourl()
         self.branch = branch or 'HEAD'
         self.revision = revision
 
         self.method = self._getMethod()
-        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
 
         auth_workdir = self._get_auth_data_workdir()
 
@@ -198,6 +326,8 @@ class Git(Source, GitStepMixin):
 
             yield self._git_auth.download_auth_files_if_needed(auth_workdir)
 
+            yield self._ensureSharedCache()
+
             yield self._getAttrGroupMember('mode', self.mode)()
             if patch:
                 yield self.patch(patch)
@@ -205,6 +335,7 @@ class Git(Source, GitStepMixin):
             res = yield self.parseCommitDescription()
             return res
         finally:
+            self._releaseSharedCacheLock()
             yield self._git_auth.remove_auth_files_if_needed(auth_workdir)
 
     @defer.inlineCallbacks
@@ -250,8 +381,15 @@ class Git(Source, GitStepMixin):
     @defer.inlineCallbacks
     def clean(self) -> InlineCallbacksType[int]:
         clean_command = ['clean', '-f', '-f', '-d']
-        rc = yield self._dovccmd(clean_command)
+        rc = yield self._dovccmd(
+            clean_command,
+            abandonOnFailure=not self.clobberOnFailure,
+        )
         if rc != RC_SUCCESS:
+            if self.clobberOnFailure:
+                # clobber's full clone initializes submodules itself
+                yield self.clobber()
+                return RC_SUCCESS
             raise buildstep.BuildStepFailed
 
         rc = yield self._fetchOrFallback()
@@ -276,7 +414,11 @@ class Git(Source, GitStepMixin):
     @defer.inlineCallbacks
     def clobber(self) -> InlineCallbacksType[None]:
         yield self._doClobber()
-        res = yield self._fullClone(shallowClone=self.shallow)
+        res = yield self._fullCloneCacheAware(shallowClone=self.shallow)
+        if res != RC_SUCCESS and self._shared_cache_active:
+            self._disableSharedCache()
+            yield self._doClobber()
+            res = yield self._fullClone(shallowClone=self.shallow)
         if res != RC_SUCCESS:
             raise buildstep.BuildStepFailed
 
@@ -364,6 +506,767 @@ class Git(Source, GitStepMixin):
             return self.srcdir
         return self.workdir
 
+    def _computeCachePath(self) -> str:
+        assert self.worker is not None
+        worker_basedir = self.worker.worker_basedir
+        if self.worker.worker_system == 'nt':
+            basedir_is_absolute = self.build.path_cls(
+                worker_basedir
+            ).is_absolute() and not self._isPartiallyQualifiedWindowsPath(worker_basedir)
+        else:
+            basedir_is_absolute = self.build.path_module.isabs(worker_basedir)
+        if not worker_basedir or not basedir_is_absolute:
+            raise ValueError("shared_cache requires an absolute worker basedir")
+
+        if isinstance(self.shared_cache, str):
+            cache_path = self.shared_cache
+            if self.worker.worker_system == 'nt':
+                if self._isPartiallyQualifiedWindowsPath(cache_path):
+                    raise ValueError(
+                        "Windows shared_cache paths must be fully qualified or relative"
+                    )
+                cache_path_is_absolute = self.build.path_cls(cache_path).is_absolute()
+            else:
+                cache_path_is_absolute = self.build.path_module.isabs(cache_path)
+            if not cache_path_is_absolute:
+                cache_path = self.build.path_module.join(worker_basedir, cache_path)
+            return self.build.path_module.normpath(cache_path)
+
+        repo_hash = hashlib.sha256(self._getSharedCacheIdentity().encode('utf-8')).hexdigest()[
+            :SHARED_CACHE_HASH_LENGTH
+        ]
+        return self.build.path_module.join(worker_basedir, SHARED_CACHE_DIR, f'{repo_hash}.git')
+
+    def _getSharedCacheIdentity(self, url: str | None = None) -> str:
+        if url is None:
+            url = self.repourl
+        try:
+            parsed = urllib.parse.urlsplit(url)
+        except ValueError:
+            return url
+        if not parsed.scheme or parsed.hostname is None:
+            return url
+        if '[' in parsed.netloc:
+            try:
+                ipaddress.IPv6Address(parsed.hostname)
+            except ValueError:
+                return url
+
+        scheme = parsed.scheme.lower()
+        try:
+            port = parsed.port
+        except ValueError:
+            netloc = parsed.netloc.rsplit('@', 1)[-1]
+        else:
+            hostname = parsed.hostname
+            if ':' in hostname:
+                hostname = f'[{hostname}]'
+            netloc = hostname
+            if port is not None and port != SHARED_CACHE_DEFAULT_PORTS.get(scheme):
+                netloc += f':{port}'
+        if scheme not in ('http', 'https') and parsed.username:
+            netloc = f'{urllib.parse.quote(parsed.username, safe="")}@{netloc}'
+        return urllib.parse.urlunsplit((
+            scheme,
+            netloc,
+            parsed.path,
+            parsed.query,
+            parsed.fragment,
+        ))
+
+    def _getSharedCacheLock(self, cache_path: str) -> defer.DeferredLock:
+        assert self.worker is not None
+        worker_locks = _shared_cache_locks.setdefault(self.worker, {})
+        lock_path = self.build.path_module.normcase(cache_path)
+        return worker_locks.setdefault(lock_path, defer.DeferredLock())
+
+    def _acquireSharedCacheLock(
+        self, lock: defer.DeferredLock
+    ) -> defer.Deferred[defer.DeferredLock]:
+        assert self.master is not None
+        d = lock.acquire()
+        if self.timeout is not None:
+            d.addTimeout(self.timeout, self.master.reactor)
+        return d
+
+    def _dovccmd(
+        self,
+        command: list[str],
+        abandonOnFailure: str | bool = True,
+        collectStdout: bool = False,
+        initialStdin: str | None = None,
+        workdir: str | None = None,
+        config_overrides: dict[str, Any] | None = None,
+        sanitize_repository_environment: bool = False,
+        use_step_config: bool = True,
+        auth_command: str | None = None,
+    ) -> defer.Deferred[str | int | None]:
+        if self.shared_cache and self.worker is not None and self.worker.worker_system == 'nt':
+            config_overrides = dict(config_overrides or {})
+            step_config = self.config if use_step_config else None
+            if not step_config or 'core.longpaths' not in step_config:
+                config_overrides['core.longpaths'] = 'true'
+            source_safe_directory = self._getWindowsSourceSafeDirectory()
+            if source_safe_directory is not None:
+                config_overrides.setdefault('safe.directory', source_safe_directory)
+
+        return super()._dovccmd(
+            command,
+            abandonOnFailure=abandonOnFailure,
+            collectStdout=collectStdout,
+            initialStdin=initialStdin,
+            workdir=workdir,
+            config_overrides=config_overrides,
+            sanitize_repository_environment=sanitize_repository_environment,
+            use_step_config=use_step_config,
+            auth_command=auth_command,
+        )
+
+    def _getWindowsSafeDirectory(self, path: str) -> str:
+        normalized_path = path.replace('\\', '/')
+        if normalized_path.startswith('//') and not normalized_path.startswith('//?/'):
+            return f'%(prefix)/{normalized_path}'
+        return path
+
+    def _getWindowsSourceSafeDirectory(self) -> list[str] | None:
+        if (
+            self.worker is None
+            or self.worker.worker_system != 'nt'
+            or not self.build.path_cls(self.repourl).is_absolute()
+        ):
+            return None
+        # Git checks the git directory, which is <path>/.git when non-bare
+        return [
+            self._getWindowsSafeDirectory(self.repourl),
+            self._getWindowsSafeDirectory(self.build.path_module.join(self.repourl, '.git')),
+        ]
+
+    def _getSharedCacheGitConfig(self, cache_path: str) -> dict[str, str]:
+        assert self.build is not None
+        config = {
+            'core.hooksPath': self.build.path_module.join(cache_path, 'buildbot-hooks'),
+            'fetch.writeCommitGraph': 'false',
+            'gc.auto': '0',
+            'maintenance.auto': 'false',
+            'protocol.ext.allow': 'never',
+        }
+        if self.worker is not None and self.worker.worker_system == 'nt':
+            config['core.longpaths'] = 'true'
+            config['safe.directory'] = self._getWindowsSafeDirectory(cache_path)
+        return config
+
+    def _dovccache(
+        self,
+        cache_path: str,
+        command: list[str],
+        *,
+        abandonOnFailure: bool = True,
+        collectStdout: bool = False,
+        initialStdin: str | None = None,
+        use_cache_repository: bool = True,
+    ) -> defer.Deferred[Any]:
+        assert self.worker is not None
+        cache_command = command
+        workdir = cache_path
+        auth_kwargs: dict[str, str] = {}
+        if self.worker.worker_system == 'nt':
+            workdir = self.worker.worker_basedir
+            if use_cache_repository:
+                subcommand = next((arg for arg in command if not arg.startswith('-')), None)
+                if subcommand is not None:
+                    auth_kwargs['auth_command'] = subcommand
+                cache_command = ['-C', cache_path, *command]
+                source_safe_directory = self._getWindowsSourceSafeDirectory()
+                cache_safe_directory = self._getWindowsSafeDirectory(cache_path)
+                if source_safe_directory is not None:
+                    trust_arguments: list[str] = []
+                    for entry in source_safe_directory:
+                        if entry != cache_safe_directory:
+                            trust_arguments += ['-c', f'safe.directory={entry}']
+                    cache_command = [*trust_arguments, *cache_command]
+        elif not use_cache_repository:
+            workdir = self.worker.worker_basedir
+
+        return self._dovccmd(
+            cache_command,
+            abandonOnFailure=abandonOnFailure,
+            collectStdout=collectStdout,
+            initialStdin=initialStdin,
+            workdir=workdir,
+            config_overrides=self._getSharedCacheGitConfig(cache_path),
+            sanitize_repository_environment=True,
+            use_step_config=False,
+            **auth_kwargs,
+        )
+
+    @defer.inlineCallbacks
+    def _isBareRepository(self, cache_path: str) -> InlineCallbacksType[bool]:
+        stdout = yield self._dovccache(
+            cache_path,
+            [f'--git-dir={cache_path}', 'rev-parse', '--is-bare-repository'],
+            abandonOnFailure=False,
+            collectStdout=True,
+        )
+        return isinstance(stdout, str) and stdout.strip() == 'true'
+
+    @defer.inlineCallbacks
+    def _isPartialCloneRepository(self, cache_path: str) -> InlineCallbacksType[bool]:
+        partial_config = yield self._dovccache(
+            cache_path,
+            [
+                'config',
+                '--local',
+                '--get-regexp',
+                r'^(extensions\.partialclone|remote\..*\.(promisor|partialclonefilter))$',
+            ],
+            abandonOnFailure=False,
+            collectStdout=True,
+        )
+        for line in partial_config.splitlines():
+            key, separator, value = line.partition(' ')
+            key = key.lower()
+            if key.endswith('.partialclonefilter') or key == 'extensions.partialclone':
+                return True
+            if key.endswith('.promisor'):
+                if not separator:
+                    return True
+                if value.strip().lower() not in ('0', 'off', 'false', 'no', ''):
+                    return True
+        return False
+
+    @defer.inlineCallbacks
+    def _findSharedCacheAlternate(self, cache_path: str) -> InlineCallbacksType[str | None]:
+        assert self.build is not None
+        info_path = self.build.path_module.join(cache_path, 'objects', 'info')
+        for filename in ('alternates', 'http-alternates'):
+            alternate_path = self.build.path_module.join(info_path, filename)
+            if (yield self.pathExists(alternate_path)):
+                return alternate_path
+        return None
+
+    @defer.inlineCallbacks
+    def _getSharedCacheRecordedIdentity(self, cache_path: str) -> InlineCallbacksType[str]:
+        identity = yield self._dovccache(
+            cache_path,
+            ['config', '--local', '--get', 'buildbot.sharedCacheIdentity'],
+            abandonOnFailure=False,
+            collectStdout=True,
+        )
+        if not isinstance(identity, str):
+            return ''
+        return identity.rstrip('\r\n')
+
+    @defer.inlineCallbacks
+    def _getSharedCacheOwner(self, cache_path: str) -> InlineCallbacksType[str]:
+        owner = yield self._dovccache(
+            cache_path,
+            ['config', '--local', '--get', SHARED_CACHE_OWNER_CONFIG],
+            abandonOnFailure=False,
+            collectStdout=True,
+        )
+        return owner.rstrip('\r\n')
+
+    @defer.inlineCallbacks
+    def _markSharedCacheOwned(self, cache_path: str) -> InlineCallbacksType[bool]:
+        rc = yield self._dovccache(
+            cache_path,
+            [
+                'config',
+                '--local',
+                SHARED_CACHE_OWNER_CONFIG,
+                self._getSharedCacheIdentity(),
+            ],
+            abandonOnFailure=False,
+        )
+        return rc == RC_SUCCESS
+
+    @defer.inlineCallbacks
+    def _initializeSharedCache(self, cache_path: str) -> InlineCallbacksType[bool]:
+        assert self.worker is not None
+        parent_path = self.build.path_module.dirname(cache_path)
+        rc = yield self.runMkdir(parent_path, abandonOnFailure=False)
+        if rc != RC_SUCCESS:
+            return False
+
+        rc = yield self._dovccache(
+            cache_path,
+            ['init', '--bare', cache_path],
+            use_cache_repository=False,
+            abandonOnFailure=False,
+        )
+        if rc != RC_SUCCESS:
+            yield self._removeSharedCache(cache_path)
+        return rc == RC_SUCCESS
+
+    @defer.inlineCallbacks
+    def _removeSharedCache(self, cache_path: str) -> InlineCallbacksType[bool]:
+        rc = yield self.runRmdir(cache_path, abandonOnFailure=False, timeout=self.timeout)
+        return rc == RC_SUCCESS
+
+    @defer.inlineCallbacks
+    def _prepareSharedCacheRepository(
+        self, cache_path: str, managed_cache: bool
+    ) -> InlineCallbacksType[bool]:
+        assert self.build is not None
+        cache_exists = yield self.pathExists(cache_path)
+        created_cache = False
+        if cache_exists and not (yield self._isBareRepository(cache_path)):
+            self._reportSharedCache(f"Git shared cache at {cache_path!r} is not a bare repository")
+            return False
+
+        if not cache_exists:
+            if not (yield self._initializeSharedCache(cache_path)):
+                return False
+            created_cache = True
+
+        alternate_path = yield self._findSharedCacheAlternate(cache_path)
+        if alternate_path is not None:
+            self._reportSharedCache(
+                f"Git shared cache at {cache_path!r} uses alternate object database "
+                f"file {alternate_path!r}"
+            )
+            if created_cache:
+                yield self._removeSharedCache(cache_path)
+            return False
+
+        identity = self._getSharedCacheIdentity()
+        if cache_exists and not managed_cache:
+            owner = yield self._getSharedCacheOwner(cache_path)
+            if owner != identity:
+                self._reportSharedCache(
+                    f"Git shared cache at {cache_path!r} is not marked as a "
+                    "Buildbot-owned cache for this repository"
+                )
+                return False
+
+        if cache_exists and managed_cache and not created_cache:
+            recorded = yield self._getSharedCacheRecordedIdentity(cache_path)
+            if recorded and recorded != identity:
+                self._reportSharedCache(
+                    f"Git shared cache at {cache_path!r} records a different repository"
+                )
+                return False
+
+        if (yield self._isPartialCloneRepository(cache_path)):
+            self._reportSharedCache(f"Git shared cache at {cache_path!r} is a partial clone")
+            if created_cache:
+                yield self._removeSharedCache(cache_path)
+            return False
+
+        if created_cache and not managed_cache:
+            if not (yield self._markSharedCacheOwned(cache_path)):
+                yield self._removeSharedCache(cache_path)
+                return False
+
+        remote_url = yield self._dovccache(
+            cache_path,
+            ['config', '--local', '--get', 'remote.origin.url'],
+            abandonOnFailure=False,
+            collectStdout=True,
+        )
+        remote_url = remote_url.rstrip('\r\n') if isinstance(remote_url, str) else ''
+        if remote_url:
+            if not managed_cache and self._getSharedCacheIdentity(remote_url) != identity:
+                self._reportSharedCache(
+                    f"Git shared cache at {cache_path!r} belongs to a different repository"
+                )
+                if created_cache:
+                    yield self._removeSharedCache(cache_path)
+                return False
+            rc = yield self._dovccache(
+                cache_path,
+                ['remote', 'set-url', 'origin', identity],
+                abandonOnFailure=False,
+            )
+        else:
+            rc = yield self._dovccache(
+                cache_path,
+                ['remote', 'add', 'origin', identity],
+                abandonOnFailure=False,
+            )
+            if rc != RC_SUCCESS:
+                rc = yield self._dovccache(
+                    cache_path,
+                    ['remote', 'set-url', 'origin', identity],
+                    abandonOnFailure=False,
+                )
+        if rc != RC_SUCCESS:
+            if created_cache:
+                yield self._removeSharedCache(cache_path)
+            return False
+
+        hooks_path = self.build.path_module.join(cache_path, 'buildbot-hooks')
+        rc = yield self.runRmdir(hooks_path, abandonOnFailure=False, timeout=self.timeout)
+        if rc != RC_SUCCESS:
+            self._reportSharedCache(
+                f"Failed to clear Git shared cache hooks directory at {hooks_path!r}"
+            )
+            if created_cache:
+                yield self._removeSharedCache(cache_path)
+            return False
+        rc = yield self.runMkdir(hooks_path, abandonOnFailure=False)
+        if rc != RC_SUCCESS:
+            if created_cache:
+                yield self._removeSharedCache(cache_path)
+            return False
+
+        for name, value in [
+            ('gc.auto', '0'),
+            ('maintenance.auto', 'false'),
+            ('fetch.writeCommitGraph', 'false'),
+            ('core.hooksPath', hooks_path),
+        ]:
+            rc = yield self._dovccache(
+                cache_path,
+                ['config', '--local', name, value],
+                abandonOnFailure=False,
+            )
+            if rc != RC_SUCCESS:
+                if created_cache:
+                    yield self._removeSharedCache(cache_path)
+                return False
+        return True
+
+    @defer.inlineCallbacks
+    def _isSharedCacheHealthy(self, cache_path: str) -> InlineCallbacksType[bool]:
+        assert self.master is not None
+        identity = yield self._getSharedCacheRecordedIdentity(cache_path)
+        if identity != self._getSharedCacheIdentity():
+            return False
+
+        now = int(self.master.reactor.seconds())
+        last_fsck = yield self._getSharedCacheTimestamp(cache_path, SHARED_CACHE_LAST_FSCK_CONFIG)
+        if last_fsck is not None and 0 <= now - last_fsck < SHARED_CACHE_FSCK_INTERVAL:
+            return True
+
+        last_failure = yield self._getSharedCacheTimestamp(
+            cache_path, SHARED_CACHE_FSCK_FAILED_CONFIG
+        )
+        if last_failure is not None and 0 <= now - last_failure < SHARED_CACHE_FSCK_INTERVAL:
+            self._reportSharedCache(
+                f"Git shared cache at {cache_path!r} failed its last integrity check; "
+                "not re-checking it yet"
+            )
+            return False
+
+        rc = yield self._dovccache(cache_path, ['fsck', '--no-dangling'], abandonOnFailure=False)
+        if rc != RC_SUCCESS:
+            yield self._recordSharedCacheFsckTime(cache_path, SHARED_CACHE_FSCK_FAILED_CONFIG)
+            return False
+
+        yield self._recordSharedCacheFsckTime(cache_path, SHARED_CACHE_LAST_FSCK_CONFIG)
+        yield self._dovccache(
+            cache_path,
+            ['config', '--local', '--unset', SHARED_CACHE_FSCK_FAILED_CONFIG],
+            abandonOnFailure=False,
+        )
+        return True
+
+    @defer.inlineCallbacks
+    def _getSharedCacheTimestamp(
+        self, cache_path: str, key: str
+    ) -> InlineCallbacksType[int | None]:
+        output = yield self._dovccache(
+            cache_path,
+            ['config', '--local', '--get', key],
+            abandonOnFailure=False,
+            collectStdout=True,
+        )
+        if not isinstance(output, str):
+            return None
+        try:
+            return int(output.strip())
+        except ValueError:
+            return None
+
+    @defer.inlineCallbacks
+    def _recordSharedCacheFsckTime(self, cache_path: str, key: str) -> InlineCallbacksType[None]:
+        assert self.master is not None
+        rc = yield self._dovccache(
+            cache_path,
+            ['config', '--local', key, str(int(self.master.reactor.seconds()))],
+            abandonOnFailure=False,
+        )
+        if rc != RC_SUCCESS:
+            log.msg(f"Failed to record the Git shared cache check time at {cache_path!r}")
+
+    @defer.inlineCallbacks
+    def _markSharedCachePopulated(self, cache_path: str) -> InlineCallbacksType[bool]:
+        rc = yield self._dovccache(
+            cache_path,
+            ['config', '--local', 'buildbot.sharedCacheIdentity', self._getSharedCacheIdentity()],
+            abandonOnFailure=False,
+        )
+        return rc == RC_SUCCESS
+
+    @defer.inlineCallbacks
+    def _updateSharedCache(self, cache_path: str) -> InlineCallbacksType[bool]:
+        if getattr(self, 'revision', None) and not self.tags:
+            rc = yield self._dovccache(
+                cache_path,
+                ['cat-file', '-e', f'{self.revision}^0'],
+                abandonOnFailure=False,
+            )
+            if rc == RC_SUCCESS:
+                return (yield self._markSharedCachePopulated(cache_path))
+
+        fetch_cmd = [
+            'fetch',
+            '--prune',
+            '--no-tags',
+        ]
+        if self.prog and self.supportsProgress:
+            fetch_cmd.append('--progress')
+        fetch_cmd += [
+            # not origin, which is deliberately credential-free
+            self.repourl,
+            '+refs/heads/*:refs/heads/*',
+            # With no destination, Git records this ref only in FETCH_HEAD.
+            self.branch,  # type: ignore[list-item]
+        ]
+        if self.tags:
+            fetch_cmd.append('+refs/tags/*:refs/tags/*')
+
+        rc = yield self._dovccache(
+            cache_path,
+            fetch_cmd,
+            abandonOnFailure=False,
+        )
+        if rc != RC_SUCCESS:
+            self._reportSharedCache(f"Failed to update Git shared cache at {cache_path!r}")
+            return False
+        return (yield self._markSharedCachePopulated(cache_path))
+
+    def _isCacheInDeletedBasedir(self, cache_path: str) -> bool:
+        assert self.build is not None
+        if not getattr(self.worker, 'worker_deletes_leftover_dirs', False):
+            return False
+        basedir = getattr(self.worker, 'worker_basedir', None)
+        if not basedir:
+            return False
+        path_module = self.build.path_module
+        normalized_base = path_module.normcase(path_module.normpath(basedir))
+        normalized_cache = path_module.normcase(path_module.normpath(cache_path))
+        normalized_base = normalized_base.rstrip(path_module.sep) + path_module.sep
+        return normalized_cache.startswith(normalized_base)
+
+    @defer.inlineCallbacks
+    def _ensureSharedCache(self) -> InlineCallbacksType[None]:
+        self._shared_cache_path = None
+        self._shared_cache_active = False
+        if not self.shared_cache:
+            return
+        if not self.supportsSharedCache:
+            self._reportSharedCache(
+                f"shared_cache requires Git {SHARED_CACHE_MINIMUM_GIT_VERSION} or later"
+            )
+            return
+
+        try:
+            cache_path = self._computeCachePath()
+        except ValueError as e:
+            self._reportSharedCache(str(e))
+            return
+
+        if self._isCacheInDeletedBasedir(cache_path):
+            self._reportSharedCache(
+                f"The worker deletes leftover directories, which would remove the Git shared "
+                f"cache at {cache_path!r} on every reconnect; configure shared_cache with an "
+                "absolute path outside the worker base directory to use it"
+            )
+            return
+
+        managed_cache = not isinstance(self.shared_cache, str)
+        lock = self._getSharedCacheLock(cache_path)
+        try:
+            yield self._acquireSharedCacheLock(lock)
+        except defer.TimeoutError:
+            self._reportSharedCache(
+                f"Timed out waiting for the Git shared cache lock for {cache_path!r}; "
+                "continuing without the cache"
+            )
+            return
+        self._shared_cache_lock = lock
+        try:
+            cache_ready = yield self._prepareSharedCacheRepository(cache_path, managed_cache)
+            if not cache_ready:
+                self._reportSharedCache(
+                    f"Continuing without the Git shared cache at {cache_path!r}"
+                )
+                self._disableSharedCache()
+                return
+            cache_updated = yield self._updateSharedCache(cache_path)
+            if not cache_updated:
+                self._reportSharedCache(
+                    f"Retaining Git shared cache at {cache_path!r} after an update failure"
+                )
+                self._disableSharedCache()
+                return
+            if not (yield self._isSharedCacheHealthy(cache_path)):
+                self._reportSharedCache(f"Preserving unusable Git shared cache at {cache_path!r}")
+                self._disableSharedCache()
+                return
+            self._shared_cache_path = cache_path
+            self._shared_cache_active = True
+            log.msg(f"Using Git shared cache at {cache_path!r}")
+        finally:
+            self._releaseSharedCacheLock()
+
+    def _reportSharedCache(self, message: str) -> None:
+        if self.build is not None:
+            message = self.build.properties.cleanupTextFromSecrets(message)
+        log.msg(message)
+        stdio_log = getattr(self, 'stdio_log', None)
+        if stdio_log is not None:
+            stdio_log.addHeader(message + '\n')
+
+    def _disableSharedCache(self) -> None:
+        self._shared_cache_path = None
+        self._shared_cache_active = False
+        self._releaseSharedCacheLock()
+
+    def _releaseSharedCacheLock(self) -> None:
+        lock = self._shared_cache_lock
+        if lock is not None:
+            self._shared_cache_lock = None
+            lock.release()
+
+    @defer.inlineCallbacks
+    def _getAlternatesPaths(self) -> InlineCallbacksType[tuple[str, str] | None]:
+        assert self.build is not None
+        info_dir = yield self._dovccmd(
+            ['rev-parse', '--git-path', 'objects/info'],
+            abandonOnFailure=False,
+            collectStdout=True,
+        )
+        if not isinstance(info_dir, str):
+            return None
+        info_dir = info_dir.rstrip('\r\n')
+        if not info_dir or '\0' in info_dir or '\r' in info_dir or '\n' in info_dir:
+            log.msg("Could not determine the Git object info directory")
+            return None
+        return (
+            self.build.path_module.join(info_dir, 'alternates'),
+            self.build.path_module.join(info_dir, SHARED_CACHE_ALTERNATES_MARKER),
+        )
+
+    def _getWorkerFilePath(self, path: str) -> str:
+        assert self.build is not None
+        if self.build.path_module.isabs(path):
+            return path
+        return self.build.path_module.join(self.workdir, path)
+
+    @defer.inlineCallbacks
+    def _writeWorkerFileAtomically(self, path: str, content: str) -> InlineCallbacksType[bool]:
+        assert self.worker is not None
+        temporary_path = path + '.buildbot-tmp'
+        result = yield self.downloadFileContentToWorker(
+            temporary_path,
+            content,
+            workdir=self.workdir,
+            abandonOnFailure=False,
+        )
+        if result is None:
+            return False
+
+        if self.worker.worker_system == 'nt':
+            command = ['cmd.exe', '/c', 'move', '/Y', temporary_path, path]
+        else:
+            command = ['mv', '-f', temporary_path, path]
+        cmd = remotecommand.RemoteShellCommand(
+            self.workdir,
+            command,
+            env=self.env,
+            logEnviron=self.logEnviron,
+            timeout=self.timeout,
+        )
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
+        if cmd.didFail():
+            yield self.runRmFile(
+                self._getWorkerFilePath(temporary_path),
+                abandonOnFailure=False,
+            )
+            return False
+        return True
+
+    @defer.inlineCallbacks
+    def _readWorkerFile(self, path: str) -> InlineCallbacksType[str | None]:
+        try:
+            content = yield self.getFileContentFromWorker(
+                path,
+                abandonOnFailure=False,
+                maxsize=SHARED_CACHE_METADATA_MAX_SIZE,
+            )
+        except UnicodeDecodeError:
+            raise _SharedCacheMetadataReadError(
+                f"Git shared-cache metadata file {path!r} is not valid UTF-8"
+            ) from None
+
+        if content is None:
+            if (yield self.pathExists(self._getWorkerFilePath(path))):
+                raise _SharedCacheMetadataReadError(
+                    f"Git shared-cache metadata file {path!r} could not be read safely"
+                )
+            return None
+        return content
+
+    @defer.inlineCallbacks
+    def _ensureAlternates(self) -> InlineCallbacksType[None]:
+        assert self.build is not None
+        if not self.shared_cache:
+            return
+        if not self._shared_cache_active or not self._shared_cache_path:
+            # Existing checkouts may still depend on their configured alternate.
+            return
+
+        alternates_paths = yield self._getAlternatesPaths()
+        if alternates_paths is None:
+            return
+        alternates_path, marker_path = alternates_paths
+        try:
+            marker_content = yield self._readWorkerFile(marker_path)
+            alternates_content = yield self._readWorkerFile(alternates_path)
+        except _SharedCacheMetadataReadError as e:
+            log.msg(str(e))
+            return
+
+        lines = alternates_content.splitlines() if alternates_content is not None else []
+        old_managed_path = marker_content.strip() if marker_content else None
+
+        new_managed_path = self.build.path_module.join(self._shared_cache_path, 'objects')
+        new_managed_path = new_managed_path.replace('\\', '/')
+        if old_managed_path and old_managed_path != new_managed_path:
+            log.msg(
+                "Not replacing the existing Git shared-cache alternate "
+                f"{old_managed_path!r} with {new_managed_path!r}; "
+                "clobber or recreate the checkout to migrate it"
+            )
+            return
+
+        if new_managed_path not in lines:
+            lines.append(new_managed_path)
+
+        desired_alternates = '\n'.join(lines) + '\n'
+        alternates_changed = alternates_content != desired_alternates
+        if alternates_changed and not (
+            yield self._writeWorkerFileAtomically(alternates_path, desired_alternates)
+        ):
+            return
+
+        desired_marker = new_managed_path + '\n'
+        if marker_content != desired_marker and not (
+            yield self._writeWorkerFileAtomically(marker_path, desired_marker)
+        ):
+            if alternates_changed:
+                if alternates_content is None:
+                    yield self.runRmFile(
+                        self._getWorkerFilePath(alternates_path),
+                        abandonOnFailure=False,
+                    )
+                else:
+                    yield self._writeWorkerFileAtomically(alternates_path, alternates_content)
+
     def _getPartialCloneRemote(self) -> str:
         return self.origin or 'origin'
 
@@ -409,20 +1312,26 @@ class Git(Source, GitStepMixin):
         if promisor.strip() == 'true' and actual_filter.strip() == expected_filter:
             return
 
-        yield self._dovccmd(
+        rc = yield self._dovccmd(
             ['config', promisor_key, 'true'],
             abandonOnFailure=False,
         )
-        yield self._dovccmd(
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed("Failed to configure Git partial-clone promisor")
+
+        rc = yield self._dovccmd(
             ['config', filter_key, expected_filter],
             abandonOnFailure=False,
         )
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed("Failed to configure Git partial-clone filter")
 
     @defer.inlineCallbacks
     def _fetch(
         self, _: Any, shallowClone: bool | int, abandonOnFailure: bool = True
     ) -> InlineCallbacksType[int | None]:
         yield self._ensurePartialCloneConfig()
+        yield self._ensureAlternates()
 
         fetch_required = True
 
@@ -484,13 +1393,18 @@ class Git(Source, GitStepMixin):
         res = yield self._fetch(None, shallowClone=self.shallow, abandonOnFailure=abandonOnFailure)
         if res == RC_SUCCESS:
             return res
-        elif self.retryFetch:
-            yield self._fetch(None, shallowClone=self.shallow)
-        elif self.clobberOnFailure:
+        if self.retryFetch:
+            res = yield self._fetch(
+                None,
+                shallowClone=self.shallow,
+                abandonOnFailure=not self.clobberOnFailure,
+            )
+            if res == RC_SUCCESS:
+                return res
+        if self.clobberOnFailure:
             yield self.clobber()
-        else:
-            raise buildstep.BuildStepFailed()
-        return None
+            return RC_SUCCESS
+        raise buildstep.BuildStepFailed()
 
     @defer.inlineCallbacks
     def _clone(self, shallowClone: bool | int) -> InlineCallbacksType[int | None]:
@@ -508,8 +1422,9 @@ class Git(Source, GitStepMixin):
                 command += ['--branch', self.branch]  # type: ignore[list-item]
         if shallowClone:
             command += ['--depth', str(int(shallowClone))]
-        if self.reference:
-            command += ['--reference', self.reference]
+        reference = self._shared_cache_path if self._shared_cache_active else self.reference
+        if reference:
+            command += ['--reference', reference]
         if self.origin:
             command += ['--origin', self.origin]
         if self.filters:
@@ -530,10 +1445,18 @@ class Git(Source, GitStepMixin):
         else:
             abandonOnFailure = True
         # If it's a shallow clone abort build step
-        res = yield self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))  # type: ignore[arg-type]
+        res = yield self._dovccmd(
+            command,
+            abandonOnFailure=bool(
+                abandonOnFailure and shallowClone and not self._shared_cache_active
+            ),
+        )
 
         if switchToBranch:
             res = yield self._fetch(None, shallowClone=shallowClone)
+
+        if res != RC_SUCCESS and self._shared_cache_active:
+            return res
 
         done = self.stopped or res == RC_SUCCESS  # or shallow clone??
         if self.retry and not done:
@@ -559,6 +1482,8 @@ class Git(Source, GitStepMixin):
         if res != RC_SUCCESS:
             return res
 
+        yield self._ensureAlternates()
+
         # If revision specified checkout that revision
         if self.revision:
             res = yield self._dovccmd(['checkout', '-f', self.revision], shallowClone)  # type: ignore[arg-type]
@@ -576,12 +1501,26 @@ class Git(Source, GitStepMixin):
         return res
 
     @defer.inlineCallbacks
+    def _fullCloneCacheAware(self, shallowClone: bool | int) -> InlineCallbacksType[int | None]:
+        try:
+            res = yield self._fullClone(shallowClone)
+        except buildstep.BuildStepFailed:
+            if not self._shared_cache_active:
+                raise
+            res = 1
+        return res
+
+    @defer.inlineCallbacks
     def _fullCloneOrFallback(self, shallowClone: bool | int) -> InlineCallbacksType[int | None]:
         """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure
         is set to True remove the build directory and try a full clone again.
         """
 
-        res = yield self._fullClone(shallowClone)
+        res = yield self._fullCloneCacheAware(shallowClone)
+        if res != RC_SUCCESS and self._shared_cache_active:
+            self._disableSharedCache()
+            yield self._doClobber()
+            res = yield self._fullClone(shallowClone)
         if res != RC_SUCCESS:
             if not self.clobberOnFailure:
                 raise buildstep.BuildStepFailed()

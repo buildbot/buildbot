@@ -24,6 +24,7 @@ from buildbot.util.git import check_ssh_config
 from buildbot.util.git import ensureSshKeyNewline
 from buildbot.util.git import escapeShellArgIfNeeded
 from buildbot.util.git import getSshKnownHostsContents
+from buildbot.util.git import obfuscate_url_userinfo
 from buildbot.util.git import scp_style_to_url_syntax
 
 
@@ -55,6 +56,49 @@ class TestEscapeShellArgIfNeeded(unittest.TestCase):
         self.assert_does_not_escape('a_b')
         self.assert_does_not_escape('-opt')
         self.assert_does_not_escape('--opt')
+
+
+class TestObfuscateUrlUserinfo(unittest.TestCase):
+    @parameterized.expand([
+        ('no_userinfo', 'https://github.com/buildbot/buildbot.git', None),
+        (
+            'http_password',
+            'https://user:secret@example.com/repo.git?x=1#ref',
+            'https://XXXXXX@example.com/repo.git?x=1#ref',
+        ),
+        (
+            'http_token_only',
+            'https://token@example.com/repo.git',
+            'https://XXXXXX@example.com/repo.git',
+        ),
+        ('ssh_username_only', 'ssh://git@example.com:22/repo.git', None),
+        ('ssh_uppercase_scheme', 'SSH://git@example.com/repo.git', None),
+        (
+            'ssh_password',
+            'ssh://user:secret@example.com/repo.git',
+            'ssh://XXXXXX@example.com/repo.git',
+        ),
+        (
+            'git_username_only',
+            'git://user@example.com/repo.git',
+            'git://XXXXXX@example.com/repo.git',
+        ),
+        (
+            'ssh_encoded_colon',
+            'ssh://user%3Apass@example.com/repo.git',
+            'ssh://XXXXXX@example.com/repo.git',
+        ),
+        ('ssh_invalid_escape', 'ssh://us%zzer@example.com/repo.git', None),
+        ('ssh_bare_percent', 'ssh://100%@example.com/repo.git', None),
+        ('ssh_double_encoded_colon', 'ssh://user%253Apass@example.com/repo.git', None),
+        ('bracket_unterminated', 'https://[', None),
+        ('bracket_not_ipv6', 'https://[server]/path', None),
+        ('scp_style', 'git@example.com:buildbot/buildbot.git', None),
+        ('local_path', '/srv/repos/buildbot.git', None),
+    ])
+    def test_obfuscation(self, name: str, url: str, obfuscated: str | None) -> None:
+        expected = url if obfuscated is None else ('obfuscated', url, obfuscated)
+        self.assertEqual(obfuscate_url_userinfo(url), expected)
 
 
 class TestSetUpGit(config.ConfigErrorsMixin, unittest.TestCase):
@@ -122,6 +166,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSubmoduleCheckout)
         self.assertFalse(self.supportsSshPrivateKeyAsEnvOption)
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
+        self.assertFalse(self.supportsSharedCache)
         self.assertFalse(self.supports_lsremote_symref)
         self.assertFalse(self.supports_credential_store)
 
@@ -133,6 +178,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSubmoduleCheckout)
         self.assertFalse(self.supportsSshPrivateKeyAsEnvOption)
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
+        self.assertFalse(self.supportsSharedCache)
         self.assertFalse(self.supports_lsremote_symref)
         self.assertFalse(self.supports_credential_store)
 
@@ -144,8 +190,17 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertFalse(self.supportsSubmoduleCheckout)
         self.assertFalse(self.supportsSshPrivateKeyAsEnvOption)
         self.assertFalse(self.supportsSshPrivateKeyAsConfigOption)
+        self.assertFalse(self.supportsSharedCache)
         self.assertFalse(self.supports_lsremote_symref)
         self.assertFalse(self.supports_credential_store)
+
+    @parameterized.expand([
+        ('before_minimum', '2.11.12', False),
+        ('minimum', '2.12.0', True),
+    ])
+    def test_git_shared_cache(self, name: str, version: str, supported: bool) -> None:
+        self.parseGitFeatures(f'git version {version}')
+        self.assertEqual(self.supportsSharedCache, supported)
 
     def test_git_2_10_0(self) -> None:
         self.parseGitFeatures('git version 2.10.0')
@@ -155,6 +210,7 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertTrue(self.supportsSubmoduleCheckout)
         self.assertTrue(self.supportsSshPrivateKeyAsEnvOption)
         self.assertTrue(self.supportsSshPrivateKeyAsConfigOption)
+        self.assertFalse(self.supportsSharedCache)
         self.assertTrue(self.supports_lsremote_symref)
         self.assertTrue(self.supports_credential_store)
 

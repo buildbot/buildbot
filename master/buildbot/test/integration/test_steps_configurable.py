@@ -87,7 +87,7 @@ class BuildbotTestCiTest(RunMasterBase):
         yield super().setUp()
         try:
             self.repo = TestGitRepository(
-                repository_path=tempfile.mkdtemp(  # type: ignore[arg-type]
+                repository_path=tempfile.mkdtemp(
                     prefix="TestRepository_",
                     dir=os.getcwd(),
                 )
@@ -100,7 +100,7 @@ class BuildbotTestCiTest(RunMasterBase):
     def prepare_repository(self) -> None:
         self.repo.create_file_text('.bbtravis.yml', buildbot_ci_yml)
         self.repo.exec_git(['add', '.bbtravis.yml'])
-        self.repo.commit(message='Initial commit', files=['.bbtravis.yml'])  # type: ignore[list-item]
+        self.repo.commit(message='Initial commit', files=['.bbtravis.yml'])
 
     @defer.inlineCallbacks
     def setup_config(self) -> InlineCallbacksType[None]:
