@@ -649,7 +649,10 @@ class AbstractLatentWorker(AbstractWorker):
         @return: a Deferred that indicates when an attached worker has
         accepted the new builders and/or released the old ones."""
         for b in self.botmaster.getBuildersForWorker(self.name):  # type: ignore[union-attr]
-            if b.name not in self.workerforbuilders:
+            # Check the builder's pool rather than self.workerforbuilders: removing a
+            # builder in a reconfig leaves a stale entry in the latter, which must not
+            # prevent re-attaching when a later reconfig re-adds the builder.
+            if not any(wfb.worker is self for wfb in b.workers):
                 b.addLatentWorker(self)
         return super().updateWorker()
 
