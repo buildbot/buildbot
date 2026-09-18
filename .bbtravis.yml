@@ -161,7 +161,16 @@ script:
 
   - title: master and worker tests
     condition: TESTS in ("dev_virtualenv", "trial")
-    cmd: /tmp/bbvenv/bin/trial -j8 --reporter=text --rterrors buildbot.test buildbot_worker.test
+    step: !ShellCommand
+      name: "master and worker tests"
+      command: |
+        rm -rf _trial_temp && \
+        /tmp/bbvenv/bin/trial \
+          --temp-directory=_trial_temp --logfile=test.log \
+          -j8 --reporter=text --rterrors \
+          buildbot.test buildbot_worker.test
+      logfiles:
+        testlog: _trial_temp/test.log
 
   - title: interop tests
     condition: TESTS == "interop"
@@ -229,11 +238,23 @@ script:
 
   - title: end to end tests
     condition: TESTS == "e2e_react_whl"
-    cmd: ./common/smokedist-react.sh whl
+    step: !ShellCommand
+      name: "end to end tests"
+      command: ./common/smokedist-react.sh whl
+      logfiles:
+        master-http: e2e/workdir/http.log
+        master-log: e2e/workdir/twistd.log
+        worker-log: e2e/workdir/worker/twistd.log
 
   - title: tarballs end to end tests
     condition: TESTS == "e2e_react_tgz"
-    cmd: ./common/smokedist-react.sh tar.gz
+    step: !ShellCommand
+      name: "tarballs end to end tests"
+      command: ./common/smokedist-react.sh tar.gz
+      logfiles:
+        master-http: e2e/workdir/http.log
+        master-log: e2e/workdir/twistd.log
+        worker-log: e2e/workdir/worker/twistd.log
 
 notifications:
   email: false
