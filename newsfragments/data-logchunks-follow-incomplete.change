@@ -1,0 +1,2 @@
+Logs ``/raw`` and ``/raw_inline`` endpoint now follow the incomplete logs until completion.
+Previously, they would only provide content received by the master at that point.
