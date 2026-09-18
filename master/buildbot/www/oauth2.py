@@ -451,13 +451,19 @@ class BitbucketAuth(OAuth2Auth):
             if email.get('is_primary', False):
                 user['email'] = email['email']
                 break
-        orgs = self.get(c, '/workspaces?role=member')
+        orgs = self.get(c, '/user/workspaces?role=member')
         return {
             "full_name": user['display_name'],
             "email": user['email'],
             "username": user['username'],
-            "groups": [org['slug'] for org in orgs["values"]],
+            "groups": [org['workspace']['slug'] for org in orgs["values"]],
         }
+
+    def createSessionFromToken(self, token: dict[str, Any]) -> requests.Session:
+        s: requests.Session = requests.Session()
+        s.headers = {'Authorization': 'Bearer ' + token['access_token']}
+        s.verify = self.ssl_verify
+        return s
 
 
 class KeyCloakAuth(OAuth2Auth):
