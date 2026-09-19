@@ -184,6 +184,9 @@ class BuildDictLookAlike:
             "url",
             "workerid",
         ]
+        self.ignore_keys = [
+            "details_lock",
+        ]
         if extra_keys:
             self.keys.extend(extra_keys)
         if expected_missing_keys is not None:
@@ -193,11 +196,12 @@ class BuildDictLookAlike:
         self.assertions = assertions
 
     def __eq__(self, b: Any) -> bool:
-        if sorted(b.keys()) != self.keys:
+        b_keys = [k for k in b.keys() if k not in self.ignore_keys]
+        if sorted(b_keys) != self.keys:
             raise AssertionError(
                 'BuildDictLookAlike is not equal to build: '
-                f'Extra keys: {set(b.keys()) - set(self.keys)} '
-                f'Missing keys: {set(self.keys) - set(b.keys())}'
+                f'Extra keys: {set(b_keys) - set(self.keys)} '
+                f'Missing keys: {set(self.keys) - set(b_keys)}'
             )
         for k, v in self.assertions.items():
             if b[k] != v:
