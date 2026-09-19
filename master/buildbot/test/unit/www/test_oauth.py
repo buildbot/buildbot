@@ -501,7 +501,9 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
             side_effect=[
                 mock.Mock(
                     json=mock.Mock(return_value=[{"id": 10, "name": "Hello", "path": "hello"}]),
-                    links={"next": {"url": "https://gitlab.test/api/v4/groups?page=2&per_page=100"}},
+                    links={
+                        "next": {"url": "https://gitlab.test/api/v4/groups?page=2&per_page=100"}
+                    },
                 ),
                 mock.Mock(
                     json=mock.Mock(return_value=[{"id": 20, "name": "Group", "path": "grp"}]),
