@@ -159,14 +159,18 @@ class OAuth2Auth(auth.AuthBase):
         return s
 
     def get(self, session: requests.Session, path: str) -> Any:
-        ret = session.get(self.resourceEndpoint + path)
+        ret = self.get_response(session, self.resourceEndpoint + path)
+        return ret.json()
+
+    def get_response(self, session: requests.Session, url: str) -> requests.Response:
+        ret = session.get(url)
         if ret.status_code >= 400:
-            msg = f'OAuth2 session: error accessing resource {path}: {ret.status_code}'
+            msg = f'OAuth2 session: error accessing resource {url}: {ret.status_code}'
             extra_info = ret.headers.get('www-authenticate', None)
             if extra_info:
                 msg += f' www-authenticate: {extra_info}'
             raise Error(503, msg.encode('utf-8'))
-        return ret.json()
+        return ret
 
     # based on https://github.com/maraujop/requests-oauth
     # from Miguel Araujo, augmented to support header based clientSecret
@@ -427,7 +431,15 @@ class GitLabAuth(OAuth2Auth):
 
     def getUserInfoFromOAuthClient(self, c: requests.Session) -> dict[str, Any]:
         user = self.get(c, "/user")
-        groups = self.get(c, "/groups")
+        groups = []
+        url = f"{self.resourceEndpoint}/groups?all_available=false&per_page=100"
+        while url:
+            response = self.get_response(c, url)
+            groups.extend(response.json())
+            next_url = response.links.get("next", {}).get("url")
+            if next_url is None:
+                break
+            url = next_url
         return {
             "full_name": user["name"],
             "username": user["username"],
