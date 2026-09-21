@@ -488,19 +488,27 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
         requests.get.side_effect = []
         requests.post.side_effect = [FakeResponse({"access_token": 'TOK3N'})]
         auth.get = mock.Mock(
+            return_value={
+                "name": "Foo Bar",
+                "username": "fbar",
+                "id": 5,
+                "avatar_url": "https://avatar/fbar.png",
+                "email": "foo@bar",
+                "twitter": "fb",
+            }
+        )
+        auth.get_response = mock.Mock(
             side_effect=[
-                {  # /user
-                    "name": "Foo Bar",
-                    "username": "fbar",
-                    "id": 5,
-                    "avatar_url": "https://avatar/fbar.png",
-                    "email": "foo@bar",
-                    "twitter": "fb",
-                },
-                [  # /groups
-                    {"id": 10, "name": "Hello", "path": "hello"},
-                    {"id": 20, "name": "Group", "path": "grp"},
-                ],
+                mock.Mock(
+                    json=mock.Mock(return_value=[{"id": 10, "name": "Hello", "path": "hello"}]),
+                    links={
+                        "next": {"url": "https://gitlab.test/api/v4/groups?page=2&per_page=100"}
+                    },
+                ),
+                mock.Mock(
+                    json=mock.Mock(return_value=[{"id": 20, "name": "Group", "path": "grp"}]),
+                    links={},
+                ),
             ]
         )
         res = yield auth.verifyCode("code!")
@@ -513,6 +521,13 @@ class OAuth2Auth(TestReactorMixin, www.WwwTestMixin, ConfigErrorsMixin, unittest
                 "groups": ["hello", "grp"],
             },
             res,
+        )
+        self.assertEqual(
+            [call.args[1] for call in auth.get_response.call_args_list],
+            [
+                "https://gitlab.test/api/v4/groups?all_available=false&per_page=100",
+                "https://gitlab.test/api/v4/groups?page=2&per_page=100",
+            ],
         )
 
     @defer.inlineCallbacks
