@@ -263,6 +263,26 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
     ) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("problem", FAILURE, FAILURE, False)
 
+    @defer.inlineCallbacks
+    def test_is_message_needed_mode_problem_ignores_incomplete_previous_build(
+        self,
+    ) -> InlineCallbacksType[None]:
+        build = yield self.insert_build_finished_get_props(FAILURE)
+        build['prev_build'] = copy.deepcopy(build)
+        build['prev_build']['results'] = None
+        g = self.create_generator(mode="problem")
+        self.assertFalse(g.is_message_needed_by_results(build))
+
+    @defer.inlineCallbacks
+    def test_is_message_needed_mode_change_ignores_incomplete_previous_build(
+        self,
+    ) -> InlineCallbacksType[None]:
+        build = yield self.insert_build_finished_get_props(FAILURE)
+        build['prev_build'] = copy.deepcopy(build)
+        build['prev_build']['results'] = None
+        g = self.create_generator(mode="change")
+        self.assertFalse(g.is_message_needed_by_results(build))
+
     def test_is_message_needed_mode_change_sends_on_change(self) -> defer.Deferred[None]:
         return self.run_sends_message_for_problems("change", FAILURE, SUCCESS, True)
 
