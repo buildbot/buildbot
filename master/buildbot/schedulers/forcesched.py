@@ -107,7 +107,7 @@ class BaseParameter:
     debug = True
     hide = False
     maxsize: int | None = None
-    autopopulate = None
+    autopopulate: dict[str, dict[str, Any]] | None = None
     tooltip = ""
 
     @property

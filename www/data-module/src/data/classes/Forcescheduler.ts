@@ -24,7 +24,7 @@ export type ForceSchedulerFieldBase = {
   regex: string | null;
   hide: boolean;
   maxsize: number | null;
-  autopopulate: boolean | null;
+  autopopulate: {[key: string]: {[key: string]: any}} | null;
   tooltip: string;
 };
 
