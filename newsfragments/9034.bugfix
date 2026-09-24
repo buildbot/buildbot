@@ -1,0 +1,1 @@
+SecretInPass no longer fails to get secret when lock file goes missing mid call
