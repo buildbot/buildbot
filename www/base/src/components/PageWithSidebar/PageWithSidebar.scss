@@ -136,6 +136,9 @@ $gl-sidebar-width: 600px;
         .bb-sidebar-item {
           font-size: 18px;
           line-height: 50px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .menu-icon {
           float: right;
