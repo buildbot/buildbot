@@ -614,6 +614,19 @@ class TestAbstractWorker(logging.LoggingMixin, TestReactorMixin, unittest.TestCa
         self.assertEqual(worker.worker_basedir, 'TheBaseDir')
         self.assertEqual(worker.worker_system, 'TheWorkerSystem')
         self.assertEqual(worker.worker_commands, COMMANDS)
+        self.assertFalse(worker.worker_deletes_leftover_dirs)
+
+    @defer.inlineCallbacks
+    def test_attached_delete_leftover_dirs(self) -> InlineCallbacksType[None]:
+        worker = yield self.createWorker()
+        yield worker.startService()
+
+        conn = fakeprotocol.FakeConnection(worker)
+        info: dict[str, Any] = {'basedir': 'TheBaseDir', 'delete_leftover_dirs': True}
+        conn.info = info
+        yield worker.attached(conn)
+
+        self.assertTrue(worker.worker_deletes_leftover_dirs)
 
     @defer.inlineCallbacks
     def test_attached_callsMaybeStartBuildsForWorker(self) -> InlineCallbacksType[None]:

@@ -529,9 +529,10 @@ This class can only be used in new-style steps.
         This uses Python's ``glob`` module.
         If the ``runGlob`` method fails, it aborts the step.
 
-    .. py:method:: getFileContentFromWorker(path, abandonOnFailure=False)
+    .. py:method:: getFileContentFromWorker(path, abandonOnFailure=False, maxsize=None)
 
         :param path: path of the file to download from worker
+        :param maxsize: maximum number of bytes to transfer; a larger file fails the transfer
         :returns: string via deferred (content of the file)
 
         Get the content of a file on the worker.

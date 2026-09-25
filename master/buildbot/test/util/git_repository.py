@@ -23,7 +23,9 @@ from pathlib import Path
 
 
 class TestGitRepository:
-    def __init__(self, repository_path: os.PathLike, git_bin: os.PathLike | None | str = None):
+    def __init__(
+        self, repository_path: os.PathLike | str, git_bin: os.PathLike | None | str = None
+    ):
         if git_bin is None:
             git_bin = shutil.which('git')
             if git_bin is None:
@@ -73,7 +75,7 @@ class TestGitRepository:
     def commit(
         self,
         message: str,
-        files: list[os.PathLike] | None = None,
+        files: list[os.PathLike | str] | None = None,
         env: dict[str, str] | None = None,
     ) -> str:
         args = ['commit', '--quiet', f'--message={message}']
@@ -82,10 +84,16 @@ class TestGitRepository:
 
         self.exec_git(args, env=env)
 
+        # safe.directory trust applies per git process, including this one
+        rev_parse_env = dict(os.environ)
+        if env is not None:
+            rev_parse_env.update(env)
+
         return subprocess.check_output(
             [str(self.git_bin), 'rev-parse', 'HEAD'],
             cwd=self.repository_path,
             text=True,
+            env=rev_parse_env,
         ).strip()
 
     @staticmethod

@@ -16,6 +16,9 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
+
+from twisted.internet import defer
 
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source import github
@@ -25,12 +28,70 @@ from buildbot.test.steps import ExpectStat
 from buildbot.test.unit.steps import test_source_git
 
 if TYPE_CHECKING:
-    from twisted.internet import defer
+    from buildbot.util.twisted import InlineCallbacksType
 
 
 # GitHub step shall behave exactly like Git, and thus is inheriting its tests
 class TestGitHub(test_source_git.TestGit):
     stepClass = github.GitHub
+
+    @defer.inlineCallbacks
+    def test_merge_branch_shared_cache_fetches_merge_ref(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+                progress=False,
+            )
+        )
+
+        def fake_run_vc(
+            source_step: github.GitHub,
+            branch: str | None,
+            revision: str | None,
+            patch: Any,
+        ) -> defer.Deferred[int]:
+            source_step.branch = branch or 'HEAD'
+            source_step.revision = revision
+            return defer.succeed(SUCCESS)
+
+        self.patch(test_source_git.git.Git, 'run_vc', fake_run_vc)
+
+        yield step.run_vc('refs/pull/1234/merge', '12345678', None)
+        self.assertIsNone(step.revision)
+
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[int]:
+            commands.append(command)
+            return defer.succeed(SUCCESS)
+
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        self.assertTrue((yield step._updateSharedCache('/cache/repo.git')))
+        self.assertEqual(
+            commands,
+            [
+                [
+                    'fetch',
+                    '--prune',
+                    '--no-tags',
+                    'http://github.com/buildbot/buildbot.git',
+                    '+refs/heads/*:refs/heads/*',
+                    'refs/pull/1234/merge',
+                ],
+                [
+                    'config',
+                    '--local',
+                    'buildbot.sharedCacheIdentity',
+                    'http://github.com/buildbot/buildbot.git',
+                ],
+            ],
+        )
 
     def test_with_merge_branch(self) -> defer.Deferred[None]:
         self.setup_step(
