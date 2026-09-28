@@ -212,6 +212,7 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
         del build['buildrequest']
         del build['parentbuild']
         del build['parentbuilder']
+        del build['details_lock']
 
         self.assertEqual(
             report,
@@ -451,6 +452,7 @@ class TestBuildSetCombinedGenerator(TestBuildSetGeneratorBase):
         del build['buildrequest']
         del build['parentbuild']
         del build['parentbuilder']
+        del build['details_lock']
 
         self.assertEqual(
             report,
