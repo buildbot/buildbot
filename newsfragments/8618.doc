@@ -1,0 +1,1 @@
+Fix outdated links to the web frontend sources in the developer documentation of :py:class:`~buildbot.schedulers.forcesched.BaseParameter` (:issue:`8618`)
