@@ -1,0 +1,10 @@
+Fix data loss in worker-side log line splitting. ``LineBoundaryFinder``
+in the worker had two slicing bugs that caused most of any log line
+longer than ``2 * max_line_length`` (4096 bytes by default) to be
+silently dropped before being sent to the master, surfacing as broken
+output for build steps that capture long single-line content such as
+JSON parsed via ``SetPropertyFromCommand`` (:issue:`7192`). After this
+fix, each split chunk contains ``max_line_length - 1`` contiguous source
+characters plus an appended newline and consumers that reassemble via
+``str.splitlines()`` followed by ``''.join()`` recover the original line
+intact.
