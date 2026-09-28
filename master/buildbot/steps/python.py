@@ -25,6 +25,7 @@ from twisted.internet import defer
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
+from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
@@ -462,3 +463,107 @@ class Sphinx(buildstep.ShellMixin, buildstep.BuildStep):
                 return SUCCESS
             return WARNINGS
         return FAILURE
+
+
+class Pytest(buildstep.ShellMixin, buildstep.BuildStep):
+    """A step that runs the Python test suite with pytest and extracts the
+    test counts from its output."""
+
+    name = "pytest"
+    command = ["python", "-m", "pytest"]
+    description = "running pytest"
+    descriptionDone = "pytest"
+
+    # categories reported by pytest in its final summary line, in the order
+    # they should appear in the step summary
+    _CATEGORIES = (
+        "passed",
+        "failed",
+        "errors",
+        "skipped",
+        "xfailed",
+        "xpassed",
+        "warnings",
+        "deselected",
+    )
+
+    # e.g. "===== 2 failed, 3 passed, 1 warning in 12.34s (0:00:12) ====="
+    _summary_line_re = re.compile(r'^=+ (?P<counts>.+) in [0-9.]+s(?: \([0-9:]+\))? =+$')
+    _count_re = re.compile(
+        r'(?P<count>\d+) (?P<category>passed|failed|errors?|skipped|xfailed|xpassed'
+        r'|warnings?|deselected)'
+    )
+
+    def __init__(self, **kwargs: Any) -> None:
+        # pytest exit codes: 0 all tests passed, 1 some tests failed,
+        # 2 interrupted, 3 internal error, 4 usage error, 5 no tests collected
+        kwargs.setdefault(
+            'decodeRC',
+            {0: SUCCESS, 1: FAILURE, 2: EXCEPTION, 3: EXCEPTION, 4: EXCEPTION, 5: FAILURE},
+        )
+        kwargs = self.setupShellMixin(kwargs)
+        super().__init__(**kwargs)
+
+        self.counts: dict[str, int] = {}
+        self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self._log_consumer))
+
+    def _log_consumer(self) -> Generator[Any, Any, None]:
+        while True:
+            stream, line = yield
+            if stream == 'h':
+                continue
+            m = self._summary_line_re.match(line)
+            if m is None:
+                continue
+            counts = {}
+            for count_match in self._count_re.finditer(m.group('counts')):
+                category = count_match.group('category')
+                # normalize the categories that pytest emits in singular form
+                if category == 'error':
+                    category = 'errors'
+                elif category == 'warning':
+                    category = 'warnings'
+                counts[category] = int(count_match.group('count'))
+            if counts:
+                # in case multiple lines match, the last one wins: it is the
+                # final summary of the run
+                self.counts = counts
+
+    def _get_tests_total(self) -> int:
+        # warnings are not tests and deselected tests were not run
+        return sum(
+            self.counts.get(c, 0)
+            for c in ('passed', 'failed', 'errors', 'skipped', 'xfailed', 'xpassed')
+        )
+
+    def getResultSummary(self) -> dict[str, str]:
+        summary = ' '.join(self.descriptionDone)
+        if self.counts:
+            summary += f' {self._get_tests_total()} tests'
+            for category in self._CATEGORIES:
+                count = self.counts.get(category)
+                if count:
+                    label = category
+                    if count == 1 and category in ('errors', 'warnings'):
+                        label = category[:-1]
+                    summary += f' {count} {label}'
+
+        if self.results != SUCCESS:
+            summary += f' ({statusToString(self.results)})'
+
+        return {'step': summary}
+
+    @defer.inlineCallbacks
+    def run(self) -> InlineCallbacksType[int]:
+        cmd = yield self.makeRemoteShellCommand()
+        yield self.runCommand(cmd)
+
+        stdio_log = yield self.getLog('stdio')
+        yield stdio_log.finish()
+
+        if self.counts:
+            self.setStatistic('tests-total', self._get_tests_total())
+            for category in self._CATEGORIES:
+                self.setStatistic(f'tests-{category}', self.counts.get(category, 0))
+
+        return cmd.results()
