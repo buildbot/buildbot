@@ -1,0 +1,1 @@
+Latent workers are now re-attached to a builder that was removed and re-added by a reconfiguration. Previously such a builder could never start any of its latent workers (:issue:`9135`)
