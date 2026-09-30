@@ -87,6 +87,15 @@ $gl-sidebar-width: 600px;
       transition: all $gl-sidebar-transition-time ease-out 0s;
     }
   }
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
+
   /* sidebar */
   .sidebar {
     z-index: 3000;
