@@ -21,7 +21,7 @@
     "vite": "~8.0.16",
     "vite-plugin-checker": "^0.9.0",
     "vite-plugin-dts": "^4.1.0",
-    "vitest": "~4.1.9"
+    "vitest": "~4.1.11"
   },
   "packageManager": "npm@11.10.1",
   "license": "MPL-2.0"
