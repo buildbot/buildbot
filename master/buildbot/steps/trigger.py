@@ -266,8 +266,24 @@ class Trigger(BuildStep):
         event = ('buildrequests', str(brid), 'complete')
         yield self.master.mq.waitUntilEvent(event, lambda: _is_buildrequest_complete(brid))  # type: ignore[union-attr]
         builds = yield self.master.db.builds.getBuilds(buildrequestid=brid)  # type: ignore[union-attr]
+        builderNames: dict[Any, Any] = {}
         for build in builds:
             self._result_list.append(build.results)
+            # When waitForFinish is False the step returns before the child finishes.
+            # Still attach build URLs once the buildrequest completes so the UI can
+            # drop its "pending build" count (see issue #8204). waitForFinish=True
+            # already adds these via addBuildUrls after DeferredList completes.
+            if not self.waitForFinish:
+                builderid = build.builderid
+                if builderid not in builderNames:
+                    builderDict = yield self.master.data.get(("builders", builderid))  # type: ignore[union-attr]
+                    builderNames[builderid] = builderDict["name"]
+                num = build.number
+                url = getURLForBuild(self.master, builderid, num)  # type: ignore[arg-type]
+                yield self.addURL(
+                    f'{statusToString(build.results)}: {builderNames[builderid]} #{num}',
+                    url,
+                )
         self.updateSummary()
 
     @defer.inlineCallbacks

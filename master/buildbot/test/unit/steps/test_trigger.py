@@ -509,6 +509,32 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.run_step()
 
     @defer.inlineCallbacks
+    def test_waitForFinish_false_adds_build_urls_on_complete(self) -> InlineCallbacksType[None]:
+        # Regression for #8204: with waitForFinish=False the step finishes while the
+        # child is still pending. Once the buildrequest completes, build URLs must
+        # be attached so the web UI stops showing a stale "pending build" count.
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], waitForFinish=False))
+        self.expect_outcome(result=SUCCESS, state_string='triggered a')
+        self.expectTriggeredWith(a=(False, [], {}))
+        yield self.run_step()
+
+        yield self.master.db.builds.finishBuild(BRID_TO_BID(11), SUCCESS)
+        yield self.master.db.buildrequests.completeBuildRequests([11], SUCCESS)
+        # FakeMQ.produce does not deliver; callConsumer wakes waitUntilEvent.
+        self.master.mq.verifyMessages = False
+        self.master.mq.callConsumer(
+            ('buildrequests', '11', 'complete'), {'buildrequestid': 11}
+        )
+        yield self.master.mq.wait_consumed()
+
+        step_data = yield self.master.data.get(('steps', self.get_nth_step(0).stepid))
+        step_urls = [(url['name'], url['url']) for url in step_data['urls']]
+        self.assertIn(
+            ('success: A #4011', 'baseurl/#/builders/77/builds/4011'),
+            step_urls,
+        )
+
+    @defer.inlineCallbacks
     def test_waitForFinish(self) -> InlineCallbacksType[None]:
         yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
         self.expect_outcome(result=SUCCESS, state_string='triggered a, b')
