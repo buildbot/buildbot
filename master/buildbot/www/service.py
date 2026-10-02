@@ -48,6 +48,7 @@ from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www import change_hook
 from buildbot.www import config as wwwconfig
+from buildbot.www import mcp
 from buildbot.www import resource as buildbot_resource
 from buildbot.www import rest
 from buildbot.www import sse
@@ -328,6 +329,10 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # /sse
         root.putChild(b'sse', sse.EventResource(self.master))
+
+        # /mcp
+        if new_config.www.get('mcp'):
+            root.putChild(b'mcp', mcp.McpResource(self.master))
 
         # /change_hook
         resource_obj: resource.IResource = change_hook.ChangeHookResource(master=self.master)
