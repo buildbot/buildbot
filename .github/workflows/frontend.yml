@@ -61,9 +61,9 @@ jobs:
             tests: e2e_react_whl
           - python-version: "3.9"
             tests: e2e_react_tgz
-          - python-version: "3.14"
+          - python-version: "3.15"
             tests: e2e_react_whl
-          - python-version: "3.14"
+          - python-version: "3.15"
             tests: e2e_react_tgz
 
     name: ${{ matrix.tests }} / python ${{ matrix.python-version }}
