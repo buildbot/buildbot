@@ -189,8 +189,7 @@ SecretInPass
     )]
 
 Passwords can be stored in a unix password store, encrypted using GPG keys. Buildbot can query
-secrets via the ``pass`` binary found in the PATH of each worker. While ``pass`` allows for
-multiline entries, the secret must be on the first line of each entry. The only caveat is that all
+secrets via the ``pass`` binary found in the PATH of each worker. The only caveat is that all
 passwords Buildbot needs to access have to be encrypted using the same GPG key.
 
 For more information about ``pass``, please visit _`pass`: https://www.passwordstore.org/
