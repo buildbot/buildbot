@@ -42,7 +42,12 @@ updates:
       cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
 
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    groups:
+      actions:
+        group-by: dependency-name
     commit-message:
       prefix: "github: "
     schedule:
