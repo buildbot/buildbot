@@ -14,7 +14,7 @@ mypy==1.19.1
 mypy-zope==1.0.14
 psutil==7.2.2
 
-pywin32==311; platform_system=="Windows"
+pywin32==312; platform_system=="Windows"
 
 # The following are transitive dependencies of the above. The versions are pinned so that tests
 # are reproducible. The versions should be upgraded whenever we see new versions to catch problems
