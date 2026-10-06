@@ -23,8 +23,7 @@ runs:
         python-version: "${{ inputs.python-version }}"
         cache: "pip"
         cache-dependency-path: |
-          requirements-pip.txt
-          ${{ inputs.requirements }}
+          requirements*.txt
           */setup.py
           */pyproject.toml
 
