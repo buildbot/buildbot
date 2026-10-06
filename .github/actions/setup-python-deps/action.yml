@@ -34,8 +34,11 @@ runs:
         REQUIREMENTS: ${{ inputs.requirements }}
       run: |
         set -e
-        args="-r requirements-pip.txt"
+        python -m pip install -r requirements-pip.txt
+        args=""
         for f in $REQUIREMENTS; do
           args="$args -r $f"
         done
-        python -m pip install $args
+        if [ -n "$args" ]; then
+          python -m pip install $args
+        fi
