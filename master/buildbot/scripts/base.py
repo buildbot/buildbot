@@ -177,6 +177,56 @@ def getConfigFileFromTac(basedir: str, quiet: bool = False) -> str:
     return "master.cfg"
 
 
+def getConfigFromTacForCheckConfig(
+    tacdir: str, quiet: bool = False
+) -> tuple[str, str]:
+    """Execute buildbot.tac and extract basedir and configFile from BuildMaster.
+
+    Instead of looking for specific variable names, this intercepts the
+    BuildMaster constructor to capture the actual basedir and configFileName
+    arguments, regardless of what variable names the user chose in their
+    buildbot.tac file.
+
+    Returns (basedir, configFile) tuple. Falls back to (tacdir, 'master.cfg')
+    if BuildMaster is not instantiated or buildbot.tac doesn't exist.
+    """
+    from buildbot.master import BuildMaster  # noqa: PLC0415
+
+    captured: dict[str, Any] = {}
+
+    original_init = BuildMaster.__init__
+
+    def capturing_init(
+        self: Any,
+        basedir: str | None,
+        configFileName: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        captured['basedir'] = basedir
+        captured['configFileName'] = configFileName
+
+    tacFile = os.path.join(tacdir, 'buildbot.tac')
+    if not os.path.exists(tacFile):
+        return (tacdir, 'master.cfg')
+
+    tacGlobals: dict[str, Any] = {'__file__': tacFile}
+    try:
+        BuildMaster.__init__ = capturing_init  # type: ignore[assignment]
+        with open(tacFile, encoding='utf-8') as f:
+            exec(f.read(), tacGlobals)  # pylint: disable=exec-used
+    except Exception:
+        if not quiet:
+            traceback.print_exc()
+        raise
+    finally:
+        BuildMaster.__init__ = original_init  # type: ignore[method-assign]
+
+    basedir = captured.get('basedir', tacdir)
+    configFile = captured.get('configFileName') or 'master.cfg'
+
+    return (basedir, configFile)
+
+
 class SubcommandOptions(usage.Options):
     # subclasses should set this to a list-of-lists in order to source the
     # .buildbot/options file.  Note that this *only* works with optParameters,
