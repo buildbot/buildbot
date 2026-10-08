@@ -275,6 +275,13 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
+    def test_rmfile_old_worker_preserves_worker_path(self) -> defer.Deferred[None]:
+        self.setup_build(worker_version={'*': '99.99', 'rmfile': '3.0'})
+        self.setup_step(CompositeUser(lambda x: x.runRmFile("worker/path")))
+        self.expect_commands(ExpectRmdir(dir='worker/path', log_environ=False).exit(0))
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
     def test_mkdir(self) -> defer.Deferred[None]:
         self.setup_step(CompositeUser(lambda x: x.runMkdir("d")))
         self.expect_commands(ExpectMkdir(dir='d', log_environ=False).exit(0))
@@ -372,6 +379,27 @@ class TestCompositeStepMixin(TestBuildStepMixin, TestReactorMixin, unittest.Test
                 workdir='wkdir',
                 blocksize=32 * 1024,
                 maxsize=None,
+                writer=ExpectRemoteRef(remotetransfer.StringFileWriter),
+            )
+            .upload_string("Hello world!")
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_getFileContentFromWorkerMaxsize(self) -> defer.Deferred[None]:
+        @defer.inlineCallbacks
+        def testFunc(x: Any) -> InlineCallbacksType[None]:
+            res = yield x.getFileContentFromWorker("file.txt", maxsize=123)
+            self.assertEqual(res, "Hello world!")
+
+        self.setup_step(CompositeUser(testFunc))
+        self.expect_commands(
+            ExpectUploadFile(
+                workersrc="file.txt",
+                workdir='wkdir',
+                blocksize=32 * 1024,
+                maxsize=123,
                 writer=ExpectRemoteRef(remotetransfer.StringFileWriter),
             )
             .upload_string("Hello world!")

@@ -440,6 +440,30 @@ class TestConnection(TestReactorMixin, unittest.TestCase):
         })
 
     @defer.inlineCallbacks
+    def test_remote_start_command_flattens_obfuscated_arguments(
+        self,
+    ) -> InlineCallbacksType[None]:
+        self.protocol.get_message_result.return_value = defer.succeed(None)
+
+        rc_instance = base.RemoteCommandImpl()
+        self.protocol.command_id_to_command_map = {}
+        args: dict[str, Any] = {
+            'command': [
+                'git',
+                'fetch',
+                ('obfuscated', 'https://user:secret@example.com/r.git', 'https://XXXXXX@e/r.git'),
+            ]
+        }
+
+        yield self.conn.remoteStartCommand(rc_instance, 'builder', "1", 'command', args)
+
+        sent = self.protocol.get_message_result.call_args[0][0]['args']['command']
+        self.assertEqual(
+            sent,
+            ['git', 'fetch', 'https://user:secret@example.com/r.git'],
+        )
+
+    @defer.inlineCallbacks
     def test_remote_shutdown(self) -> InlineCallbacksType[None]:
         self.protocol.get_message_result.return_value = defer.succeed(None)
         yield self.conn.remoteShutdown()

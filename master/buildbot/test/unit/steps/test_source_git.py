@@ -25,6 +25,7 @@ from twisted.trial import unittest
 
 from buildbot import config as bbconfig
 from buildbot.interfaces import WorkerSetupError
+from buildbot.process import buildstep
 from buildbot.process import remotetransfer
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import EXCEPTION
@@ -330,6 +331,35 @@ class TestGit(
         return self.run_step()
 
     @parameterized.expand([
+        ('promisor_write', 0),
+        ('filter_write', 1),
+    ])
+    @defer.inlineCallbacks
+    def test_partial_clone_config_write_failure(
+        self, name: str, failing_write: int
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                filters=['blob:none'],
+            )
+        )
+        object.__setattr__(step, 'supportsFilters', True)
+        writes: list[list[str]] = []
+
+        def fake_dovccmd(command: list[str], **kwargs: Any) -> defer.Deferred[str | int]:
+            if '--get' in command:
+                return defer.succeed('')
+            write_number = len(writes)
+            writes.append(command)
+            return defer.succeed(FAILURE if write_number == failing_write else SUCCESS)
+
+        self.patch(step, '_dovccmd', fake_dovccmd)
+
+        yield self.assertFailure(step._ensurePartialCloneConfig(), buildstep.BuildStepFailed)
+        self.assertEqual(len(writes), failing_write + 1)
+
+    @parameterized.expand([
         ('equals_unescaped', 'blob:limit=1m', 'blob:limit=1m'),
         ('plus', 'sparse:oid=foo+bar', 'sparse:oid=foo%2Bbar'),
         ('percent', 'sparse:oid=foo%bar', 'sparse:oid=foo%25bar'),
@@ -378,6 +408,43 @@ class TestGit(
                 ],
             ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        self.expect_property(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName
+        )
+        return self.run_step()
+
+    def test_mode_full_clean_failure_clobbers_when_configured(self) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clean',
+                clobberOnFailure=True,
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 1.7.5')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'clean', '-f', '-f', '-d']).exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'clone',
+                    'http://github.com/buildbot/buildbot.git',
+                    '.',
+                    '--progress',
+                ],
+            ).exit(0),
             ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
             .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
             .exit(0),
@@ -2847,6 +2914,42 @@ class TestGit(
         )
         return self.run_step()
 
+    @defer.inlineCallbacks
+    def test_fetch_or_fallback_clobbers_after_retry_failure(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                retryFetch=True,
+                clobberOnFailure=True,
+            )
+        )
+        fetch_calls: list[bool] = []
+        clobber_calls = 0
+
+        def fetch(
+            _: Any,
+            shallowClone: bool | int,
+            abandonOnFailure: bool = True,
+        ) -> defer.Deferred[int]:
+            fetch_calls.append(abandonOnFailure)
+            return defer.succeed(FAILURE)
+
+        def clobber() -> defer.Deferred[None]:
+            nonlocal clobber_calls
+            clobber_calls += 1
+            return defer.succeed(None)
+
+        self.patch(step, '_fetch', fetch)
+        self.patch(step, 'clobber', clobber)
+
+        result = yield step._fetchOrFallback()
+
+        self.assertEqual(fetch_calls, [False, False])
+        self.assertEqual(clobber_calls, 1)
+        self.assertEqual(result, SUCCESS)
+
     def test_mode_incremental_clobberOnFailure(self) -> defer.Deferred[None]:
         self.setup_step(
             self.stepClass(
@@ -5293,3 +5396,2787 @@ class TestGitCommit(
         self.expect_outcome(result=EXCEPTION)
         self.run_step()
         self.flushLoggedErrors(WorkerSetupError)
+
+
+class TestGitSharedCache(
+    sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, TestReactorMixin, unittest.TestCase
+):
+    stepClass = git.Git
+
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
+        self.setup_test_reactor()
+        self.sourceName = self.stepClass.__name__
+        return self.setup_test_build_step()
+
+    @parameterized.expand([
+        ('root_basedir_posix', '/', '/.git-cache/x.git', True),
+        ('root_basedir_windows', 'C:\\', 'C:\\.git-cache\\x.git', True),
+        ('drive_basedir_windows', 'C:\\wrk', 'C:\\wrk\\.git-cache\\x.git', True),
+        ('outside_root_windows', 'C:\\wrk', 'D:\\cache\\x.git', False),
+    ])
+    def test_cache_in_deleted_basedir_handles_root_directories(
+        self, name: str, basedir: str, cache_path: str, expected: bool
+    ) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        if '\\' in basedir:
+            self.change_worker_system('nt')
+        object.__setattr__(step.worker, 'worker_deletes_leftover_dirs', True)
+        self.worker.worker_basedir = basedir
+
+        self.assertEqual(step._isCacheInDeletedBasedir(cache_path), expected)
+
+    @parameterized.expand([
+        ('default_cache_in_basedir', True, True, False),
+        ('relative_custom_in_basedir', 'shared/repo.git', True, False),
+        ('absolute_custom_outside_basedir', '/srv/git/repo.git', True, True),
+        ('flag_not_set', True, False, True),
+    ])
+    @defer.inlineCallbacks
+    def test_shared_cache_refuses_basedir_cache_when_worker_deletes_leftovers(
+        self, name: str, shared_cache: bool | str, deletes: bool, active: bool
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=shared_cache,
+            )
+        )
+        object.__setattr__(step, 'supportsSharedCache', True)
+        object.__setattr__(step.worker, 'worker_deletes_leftover_dirs', deletes)
+        headers: list[str] = []
+
+        class FakeLog:
+            def addHeader(self, text: str) -> None:
+                headers.append(text)
+
+        object.__setattr__(step, 'stdio_log', FakeLog())
+        self.patch(step, '_prepareSharedCacheRepository', lambda *a: defer.succeed(True))
+        self.patch(step, '_updateSharedCache', lambda *a: defer.succeed(True))
+        self.patch(step, '_isSharedCacheHealthy', lambda *a: defer.succeed(True))
+
+        yield step._ensureSharedCache()
+
+        self.assertEqual(step._shared_cache_active, active)
+        if not active:
+            self.assertIn('deletes leftover directories', headers[0])
+
+    @parameterized.expand([
+        ('default_cache_in_basedir', True, False),
+        ('custom_on_another_drive', r'D:\git\repo.git', True),
+        ('unc_cache_outside_basedir', r'\\server\share\repo.git', True),
+    ])
+    @defer.inlineCallbacks
+    def test_shared_cache_basedir_deletion_guard_on_windows(
+        self, name: str, shared_cache: bool | str, active: bool
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=shared_cache,
+            )
+        )
+        self.change_worker_system('nt')
+        self.worker.worker_basedir = r'C:\wrk'
+        object.__setattr__(step, 'supportsSharedCache', True)
+        object.__setattr__(step.worker, 'worker_deletes_leftover_dirs', True)
+        self.patch(step, '_prepareSharedCacheRepository', lambda *a: defer.succeed(True))
+        self.patch(step, '_updateSharedCache', lambda *a: defer.succeed(True))
+        self.patch(step, '_isSharedCacheHealthy', lambda *a: defer.succeed(True))
+
+        yield step._ensureSharedCache()
+
+        self.assertEqual(step._shared_cache_active, active)
+
+    @defer.inlineCallbacks
+    def test_shared_cache_is_prepared_before_the_checkout(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clobber',
+                shared_cache=True,
+            )
+        )
+        events: list[str] = []
+
+        def record(name: str, result: Any) -> Any:
+            def fake(*args: Any, **kwargs: Any) -> defer.Deferred[Any]:
+                events.append(name)
+                return defer.succeed(result)
+
+            return fake
+
+        def fake_dovccmd(command: list[str], **kwargs: Any) -> defer.Deferred[Any]:
+            events.append(' '.join(command))
+            if kwargs.get('collectStdout'):
+                return defer.succeed('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            return defer.succeed(0)
+
+        def fake_write(path: str, content: str) -> defer.Deferred[bool]:
+            events.append('write ' + path)
+            return defer.succeed(True)
+
+        object.__setattr__(step, 'supportsSharedCache', True)
+        self.patch(step, '_dovccmd', fake_dovccmd)
+        self.patch(step, '_writeWorkerFileAtomically', fake_write)
+        self.patch(step, '_readWorkerFile', lambda path: defer.succeed(None))
+        self.patch(step, '_getAlternatesPaths', lambda: defer.succeed(('alt', 'marker')))
+        self.patch(step, 'runRmdir', record('rmdir', 0))
+        self.patch(step, 'checkFeatureSupport', lambda: defer.succeed(True))
+        self.patch(step, 'sourcedirIsPatched', lambda: defer.succeed(False))
+        self.patch(step, '_prepareSharedCacheRepository', record('cache prepare', True))
+        self.patch(step, '_isSharedCacheHealthy', record('cache health', True))
+        self.patch(step, '_updateSharedCache', record('cache update', True))
+
+        yield step.run_vc('main', None, None)
+
+        self.assertTrue(step._shared_cache_active, f"cache never activated: {events}")
+        clone = next(i for i, event in enumerate(events) if event.startswith('clone '))
+        self.assertIn(f'--reference {step._computeCachePath()}', events[clone])
+        self.assertEqual(
+            [event for event in events[:clone] if event.startswith('cache ')],
+            ['cache prepare', 'cache update', 'cache health'],
+            f"cache was not fully prepared before the checkout: {events}",
+        )
+        self.assertFalse(
+            [event for event in events[clone:] if event.startswith('cache ')],
+            f"cache work continued after the checkout: {events}",
+        )
+        self.assertGreater(
+            events.index('write marker'), clone, f"marker written before the checkout: {events}"
+        )
+
+    def test_old_git_ignores_shared_cache_end_to_end(self) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clobber',
+                shared_cache=True,
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.11.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'clone',
+                    'http://github.com/buildbot/buildbot.git',
+                    '.',
+                    '--progress',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_shared_cache_preserves_positional_submodules_argument(self) -> None:
+        step = self.stepClass(
+            'http://github.com/buildbot/buildbot.git',
+            22,
+            'HEAD',
+            'incremental',
+            None,
+            None,
+            True,
+        )
+
+        self.assertTrue(step.submodules)
+        self.assertFalse(step.shared_cache)
+
+    @parameterized.expand([
+        (
+            'default',
+            True,
+            '/wrk/.git-cache/51509057e6aa2288.git',
+        ),
+        ('relative_custom', 'shared/repo.git', '/wrk/shared/repo.git'),
+        ('absolute_custom', '/srv/git/repo.git', '/srv/git/repo.git'),
+    ])
+    def test_shared_cache_path(
+        self, name: str, shared_cache: bool | str, expected_path: str
+    ) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=shared_cache,
+            )
+        )
+
+        self.assertEqual(step._computeCachePath(), expected_path)
+
+    def test_shared_cache_path_uses_windows_worker_root(self) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache='shared/repo.git',
+            )
+        )
+        self.change_worker_system('nt')
+        self.worker.worker_basedir = r'C:\wrk'
+
+        self.assertEqual(step._computeCachePath(), r'C:\wrk\shared\repo.git')
+
+    def test_shared_cache_rejects_incomplete_windows_worker_root(self) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        self.change_worker_system('nt')
+        self.worker.worker_basedir = r'\\server'
+
+        with self.assertRaisesRegex(ValueError, 'requires an absolute worker basedir'):
+            step._computeCachePath()
+
+    @parameterized.expand([
+        ('drive_relative', r'C:cache'),
+        ('root_relative_backslash', r'\cache'),
+        ('root_relative_slash', '/cache'),
+        ('incomplete_unc', r'\\server'),
+    ])
+    def test_windows_shared_cache_path_rejects_partially_qualified_path(
+        self, name: str, cache_path: str
+    ) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=cache_path,
+            )
+        )
+        self.change_worker_system('nt')
+        self.worker.worker_basedir = r'C:\wrk'
+
+        with self.assertRaisesRegex(
+            buildstep.BuildStepFailed,
+            'Windows shared_cache paths must be fully qualified or relative',
+        ):
+            step._validateRenderedSharedCache()
+
+        with self.assertRaisesRegex(
+            ValueError,
+            'Windows shared_cache paths must be fully qualified or relative',
+        ):
+            step._computeCachePath()
+
+    @parameterized.expand([
+        (
+            'http_ipv6_with_port',
+            'https://user:secret@[2001:db8::1]:8443/repo.git',
+            'https://[2001:db8::1]:8443/repo.git',
+        ),
+        (
+            'ssh_username_preserved',
+            'ssh://git@example.com:2222/buildbot/buildbot.git',
+            'ssh://git@example.com:2222/buildbot/buildbot.git',
+        ),
+        (
+            'scheme_normalized',
+            'HTTPS://Example.COM/repo.git',
+            'https://example.com/repo.git',
+        ),
+        (
+            'scp_style_without_scheme',
+            'git@example.com:buildbot/buildbot.git',
+            'git@example.com:buildbot/buildbot.git',
+        ),
+        (
+            'malformed_port_keeps_host_text',
+            'ssh://git@host:notaport/repo.git',
+            'ssh://git@host:notaport/repo.git',
+        ),
+        (
+            'malformed_port_still_drops_userinfo',
+            'https://user:secret@example.com:notaport/repo.git',
+            'https://example.com:notaport/repo.git',
+        ),
+        (
+            'default_ssh_port_dropped',
+            'ssh://git@example.com:22/buildbot/buildbot.git',
+            'ssh://git@example.com/buildbot/buildbot.git',
+        ),
+        (
+            'default_https_port_dropped',
+            'https://example.com:443/repo.git',
+            'https://example.com/repo.git',
+        ),
+        (
+            'non_default_port_kept',
+            'https://example.com:8443/repo.git',
+            'https://example.com:8443/repo.git',
+        ),
+        (
+            'malformed_bracket_host',
+            'https://[server]/repo.git',
+            'https://[server]/repo.git',
+        ),
+        (
+            'ipv6_literal_host',
+            'https://[::1]:8443/repo.git',
+            'https://[::1]:8443/repo.git',
+        ),
+    ])
+    def test_shared_cache_identity_edge_cases(
+        self, name: str, repourl: str, expected_identity: str
+    ) -> None:
+        step = self.stepClass(repourl=repourl, shared_cache=True)
+
+        self.assertEqual(step._getSharedCacheIdentity(), expected_identity)
+
+    def test_shared_cache_identity_ignores_http_credential_scope(self) -> None:
+        identities = {
+            self.stepClass(repourl=repourl, shared_cache=True)._getSharedCacheIdentity()
+            for repourl in (
+                'https://alice:secret-a@example.com/repo.git',
+                'https://bob:secret-b@example.com/repo.git',
+            )
+        }
+
+        self.assertEqual(identities, {'https://example.com/repo.git'})
+
+    def test_shared_cache_requires_valid_type(self) -> None:
+        self.assertRaisesConfigError(
+            'Git: shared_cache must be a boolean, string, or renderable',
+            lambda: self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=object(),  # type: ignore[arg-type]
+            ),
+        )
+
+    @parameterized.expand([
+        ('invalid_type', 1, None, 'rendered shared_cache must be a boolean or string'),
+        (
+            'invalid_path',
+            'cache\npath',
+            None,
+            'rendered shared_cache path must not contain NUL or newline characters',
+        ),
+        ('reference_conflict', True, 'some/ref', 'shared_cache and reference cannot both be set'),
+    ])
+    def test_validate_rendered_shared_cache(
+        self,
+        name: str,
+        shared_cache: Any,
+        reference: str | None,
+        expected_error: str,
+    ) -> None:
+        step = self.stepClass(
+            repourl='https://github.com/buildbot/buildbot.git',
+            shared_cache=True,
+        )
+        object.__setattr__(step, 'shared_cache', shared_cache)
+        object.__setattr__(step, 'reference', reference)
+
+        with self.assertRaisesRegex(buildstep.BuildStepFailed, expected_error):
+            step._validateRenderedSharedCache()
+
+    @parameterized.expand([
+        ('query', 'https://example.com/repo.git?token=secret'),
+        ('fragment', 'https://example.com/repo.git#credential'),
+    ])
+    def test_validate_shared_cache_rejects_http_url_suffix(self, name: str, repourl: str) -> None:
+        step = self.setup_step(self.stepClass(repourl=repourl, shared_cache=True))
+
+        with self.assertRaisesRegex(
+            buildstep.BuildStepFailed,
+            r'shared_cache does not support HTTP\(S\) repository URLs with a query or fragment',
+        ):
+            step._validateRenderedSharedCache()
+
+    def test_validate_shared_cache_allows_malformed_bracket_repourl(self) -> None:
+        step = self.setup_step(
+            self.stepClass(repourl='https://[server]/repo.git', shared_cache=True)
+        )
+
+        step._validateRenderedSharedCache()
+
+        self.assertEqual(step._getSharedCacheIdentity(), 'https://[server]/repo.git')
+
+    def test_validate_http_url_suffix_without_shared_cache(self) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://example.com/repo.git?token=secret',
+                shared_cache=False,
+            )
+        )
+
+        step._validateRenderedSharedCache()
+
+    @parameterized.expand([
+        ('posix_relative', 'posix', '../repository.git', True),
+        ('posix_relative_with_colon', 'posix', './repository:name.git', True),
+        ('posix_absolute', 'posix', '/srv/git/repository.git', False),
+        ('scp_remote', 'posix', 'git@example.com:repository.git', False),
+        ('windows_relative', 'nt', r'..\repository.git', True),
+        ('windows_drive_relative', 'nt', r'C:repository.git', True),
+        ('windows_root_relative_backslash', 'nt', r'\repository.git', True),
+        ('windows_root_relative_slash', 'nt', '/repository.git', True),
+        ('windows_incomplete_unc', 'nt', r'\\server', True),
+        ('windows_absolute', 'nt', r'C:\repository.git', False),
+        ('windows_unc', 'nt', r'\\server\share\repository.git', False),
+    ])
+    def test_validate_shared_cache_repository_location(
+        self,
+        name: str,
+        worker_system: str,
+        repourl: str,
+        invalid: bool,
+    ) -> None:
+        step = self.setup_step(self.stepClass(repourl=repourl, shared_cache=True))
+        self.change_worker_system(worker_system)
+
+        if invalid:
+            with self.assertRaisesRegex(
+                buildstep.BuildStepFailed,
+                'shared_cache does not support relative local repository paths',
+            ):
+                step._validateRenderedSharedCache()
+        else:
+            step._validateRenderedSharedCache()
+
+    @defer.inlineCallbacks
+    def test_run_vc_rejects_relative_repository_before_scp_conversion(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='./repository:name.git',
+                shared_cache=True,
+            )
+        )
+        setup_repourl_called = False
+
+        def setup_repourl() -> None:
+            nonlocal setup_repourl_called
+            setup_repourl_called = True
+
+        self.patch(step, 'setup_repourl', setup_repourl)
+
+        headers: list[str] = []
+        original_add_log = step.addLogForRemoteCommands
+
+        @defer.inlineCallbacks
+        def add_log(name: str) -> InlineCallbacksType[Any]:
+            stdio_log = yield original_add_log(name)
+            object.__setattr__(stdio_log, 'addHeader', headers.append)
+            return stdio_log
+
+        self.patch(step, 'addLogForRemoteCommands', add_log)
+
+        failure = yield self.assertFailure(
+            step.run_vc('main', None, None),
+            buildstep.BuildStepFailed,
+        )
+        self.assertIn(
+            'shared_cache does not support relative local repository paths',
+            str(failure),
+        )
+        self.assertFalse(setup_repourl_called)
+        self.assertTrue(
+            any('relative local repository paths' in header for header in headers),
+        )
+
+    def test_shared_cache_with_reference_error(self) -> None:
+        self.assertRaisesConfigError(
+            'Git: shared_cache and reference cannot both be set',
+            lambda: self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+                reference='some/ref',
+            ),
+        )
+
+    @defer.inlineCallbacks
+    def test_shared_cache_is_disabled_on_old_git(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, 'supportsSharedCache', False)
+
+        yield step._ensureSharedCache()
+
+        self.assertFalse(step._shared_cache_active)
+        self.assertIsNone(step._shared_cache_path)
+
+    @defer.inlineCallbacks
+    def test_shared_cache_releases_lock_when_cache_is_inactive(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        cache_path = step._computeCachePath()
+        lock = step._getSharedCacheLock(cache_path)
+        object.__setattr__(step, 'supportsSharedCache', True)
+        prepare_calls = 0
+
+        def fake_prepare(path: str, managed_cache: bool) -> defer.Deferred[bool]:
+            nonlocal prepare_calls
+            prepare_calls += 1
+            return defer.succeed(False)
+
+        self.patch(step, '_prepareSharedCacheRepository', fake_prepare)
+
+        yield step._ensureSharedCache()
+
+        self.assertEqual(prepare_calls, 1)
+        self.assertFalse(lock.locked)
+        self.assertIsNone(step._shared_cache_lock)
+        self.assertIsNone(step._shared_cache_path)
+        self.assertFalse(step._shared_cache_active)
+
+    @defer.inlineCallbacks
+    def test_shared_cache_lock_acquire_times_out(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+                timeout=5,
+            )
+        )
+        lock = defer.DeferredLock()
+        yield lock.acquire()
+
+        wait_for_lock = step._acquireSharedCacheLock(lock)
+
+        self.assertFalse(wait_for_lock.called)
+        self.reactor.advance(5)
+        yield self.assertFailure(wait_for_lock, defer.TimeoutError)
+        lock.release()
+
+    @defer.inlineCallbacks
+    def test_shared_cache_lock_acquire_without_timeout(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+                timeout=None,
+            )
+        )
+        lock = defer.DeferredLock()
+
+        yield step._acquireSharedCacheLock(lock)
+        self.assertTrue(lock.locked)
+        lock.release()
+
+    @defer.inlineCallbacks
+    def test_shared_cache_reports_disable_reason_to_the_build_log(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, 'supportsSharedCache', True)
+        headers: list[str] = []
+
+        class FakeLog:
+            def addHeader(self, text: str) -> None:
+                headers.append(text)
+
+        object.__setattr__(step, 'stdio_log', FakeLog())
+        self.patch(
+            step,
+            '_acquireSharedCacheLock',
+            lambda lock: defer.fail(defer.TimeoutError()),
+        )
+
+        yield step._ensureSharedCache()
+
+        self.assertFalse(step._shared_cache_active)
+        self.assertEqual(len(headers), 1)
+        self.assertIn('continuing without the cache', headers[0])
+
+    def test_shared_cache_report_removes_secrets(self) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        headers: list[str] = []
+
+        class FakeLog:
+            def addHeader(self, text: str) -> None:
+                headers.append(text)
+
+        object.__setattr__(step, 'stdio_log', FakeLog())
+        step.build.properties.useSecret('s3cr3t', 'cache_secret')
+
+        step._reportSharedCache("Preserving unusable Git shared cache at '/cache/s3cr3t.git'")
+
+        self.assertEqual(
+            headers, ["Preserving unusable Git shared cache at '/cache/<cache_secret>.git'\n"]
+        )
+
+    @defer.inlineCallbacks
+    def test_ensure_shared_cache_continues_without_cache_on_lock_timeout(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, 'supportsSharedCache', True)
+        prepared: list[str] = []
+
+        def fake_acquire(lock: defer.DeferredLock) -> defer.Deferred[Any]:
+            return defer.fail(defer.TimeoutError())
+
+        def fake_prepare(path: str, managed_cache: bool) -> defer.Deferred[bool]:
+            prepared.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, '_acquireSharedCacheLock', fake_acquire)
+        self.patch(step, '_prepareSharedCacheRepository', fake_prepare)
+
+        yield step._ensureSharedCache()
+
+        self.assertFalse(step._shared_cache_active)
+        self.assertIsNone(step._shared_cache_path)
+        self.assertIsNone(step._shared_cache_lock)
+        self.assertEqual(prepared, [])
+
+    @defer.inlineCallbacks
+    def test_ensure_shared_cache_continues_without_cache_on_invalid_path(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, 'supportsSharedCache', True)
+
+        def fake_compute() -> str:
+            raise ValueError("shared_cache requires an absolute worker basedir")
+
+        self.patch(step, '_computeCachePath', fake_compute)
+
+        yield step._ensureSharedCache()
+
+        self.assertFalse(step._shared_cache_active)
+        self.assertIsNone(step._shared_cache_path)
+        self.assertIsNone(step._shared_cache_lock)
+
+    @defer.inlineCallbacks
+    def test_ensure_shared_cache_happy_path_releases_lock(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        cache_path = step._computeCachePath()
+        lock = step._getSharedCacheLock(cache_path)
+        object.__setattr__(step, 'supportsSharedCache', True)
+
+        def fake_prepare(path: str, managed_cache: bool) -> defer.Deferred[bool]:
+            self.assertEqual(path, cache_path)
+            self.assertTrue(managed_cache)
+            return defer.succeed(True)
+
+        def fake_update(path: str) -> defer.Deferred[bool]:
+            self.assertEqual(path, cache_path)
+            self.assertIsNone(step._shared_cache_path)
+            return defer.succeed(True)
+
+        def fake_health(path: str, **kwargs: Any) -> defer.Deferred[bool]:
+            self.assertEqual(path, cache_path)
+            return defer.succeed(True)
+
+        self.patch(step, '_prepareSharedCacheRepository', fake_prepare)
+        self.patch(step, '_updateSharedCache', fake_update)
+        self.patch(step, '_isSharedCacheHealthy', fake_health)
+
+        yield step._ensureSharedCache()
+
+        self.assertEqual(step._shared_cache_path, cache_path)
+        self.assertTrue(step._shared_cache_active)
+        self.assertFalse(lock.locked)
+        self.assertIsNone(step._shared_cache_lock)
+
+    @defer.inlineCallbacks
+    def test_ensure_shared_cache_preserves_healthy_cache_after_update_failure(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        cache_path = step._computeCachePath()
+        prepare_count = 0
+        update_count = 0
+        remove_count = 0
+        health_count = 0
+        object.__setattr__(step, 'supportsSharedCache', True)
+
+        def fake_prepare(path: str, managed_cache: bool) -> defer.Deferred[bool]:
+            nonlocal prepare_count
+            prepare_count += 1
+            return defer.succeed(True)
+
+        def fake_update(path: str) -> defer.Deferred[bool]:
+            nonlocal update_count
+            update_count += 1
+            self.assertIsNone(step._shared_cache_path)
+            return defer.succeed(False)
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            nonlocal remove_count
+            remove_count += 1
+            self.assertEqual(path, cache_path)
+            return defer.succeed(True)
+
+        def fake_health(path: str, **kwargs: Any) -> defer.Deferred[bool]:
+            nonlocal health_count
+            health_count += 1
+            return defer.succeed(True)
+
+        self.patch(step, '_prepareSharedCacheRepository', fake_prepare)
+        self.patch(step, '_updateSharedCache', fake_update)
+        self.patch(step, '_removeSharedCache', fake_remove)
+        self.patch(step, '_isSharedCacheHealthy', fake_health)
+
+        yield step._ensureSharedCache()
+
+        self.assertEqual(prepare_count, 1)
+        self.assertEqual(update_count, 1)
+        self.assertEqual(remove_count, 0)
+        self.assertEqual(health_count, 0)
+        self.assertFalse(step._shared_cache_active)
+        self.assertIsNone(step._shared_cache_path)
+        self.assertIsNone(step._shared_cache_lock)
+
+    @defer.inlineCallbacks
+    def test_ensure_shared_cache_preserves_cache_after_health_failure(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        prepare_count = 0
+        update_count = 0
+        remove_count = 0
+        health_count = 0
+        object.__setattr__(step, 'supportsSharedCache', True)
+
+        def fake_prepare(path: str, managed_cache: bool) -> defer.Deferred[bool]:
+            nonlocal prepare_count
+            prepare_count += 1
+            return defer.succeed(True)
+
+        def fake_update(path: str) -> defer.Deferred[bool]:
+            nonlocal update_count
+            update_count += 1
+            return defer.succeed(True)
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            nonlocal remove_count
+            remove_count += 1
+            return defer.succeed(True)
+
+        def fake_health(path: str, **kwargs: Any) -> defer.Deferred[bool]:
+            nonlocal health_count
+            health_count += 1
+            return defer.succeed(False)
+
+        self.patch(step, '_prepareSharedCacheRepository', fake_prepare)
+        self.patch(step, '_updateSharedCache', fake_update)
+        self.patch(step, '_removeSharedCache', fake_remove)
+        self.patch(step, '_isSharedCacheHealthy', fake_health)
+
+        yield step._ensureSharedCache()
+
+        self.assertEqual(prepare_count, 1)
+        self.assertEqual(update_count, 1)
+        self.assertEqual(remove_count, 0)
+        self.assertEqual(health_count, 1)
+        self.assertFalse(step._shared_cache_active)
+        self.assertIsNone(step._shared_cache_path)
+        self.assertIsNone(step._shared_cache_lock)
+
+    @defer.inlineCallbacks
+    def test_ensure_shared_cache_releases_lock_after_exception(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        lock = step._getSharedCacheLock(step._computeCachePath())
+        object.__setattr__(step, 'supportsSharedCache', True)
+
+        def fake_prepare(path: str, managed_cache: bool) -> defer.Deferred[bool]:
+            return defer.succeed(True)
+
+        def fake_update(path: str) -> defer.Deferred[bool]:
+            return defer.fail(RuntimeError("cache update failed"))
+
+        self.patch(step, '_prepareSharedCacheRepository', fake_prepare)
+        self.patch(step, '_updateSharedCache', fake_update)
+
+        with self.assertRaisesRegex(RuntimeError, "cache update failed"):
+            yield step._ensureSharedCache()
+
+        self.assertFalse(lock.locked)
+        self.assertIsNone(step._shared_cache_lock)
+
+    @parameterized.expand([
+        ('missing', ''),
+        ('different_repository', 'https://github.com/example/other.git\n'),
+    ])
+    @defer.inlineCallbacks
+    def test_existing_custom_shared_cache_requires_matching_owner_marker(
+        self, name: str, recorded_identity: str
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache='/cache/repo.git',
+            )
+        )
+        commands: list[list[str]] = []
+        removed: list[str] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str]:
+            commands.append(command)
+            return defer.succeed(recorded_identity)
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(True))
+        self.patch(step, '_isBareRepository', lambda path: defer.succeed(True))
+        self.patch(step, '_findSharedCacheAlternate', lambda path: defer.succeed(None))
+        self.patch(
+            step,
+            '_isPartialCloneRepository',
+            lambda path: defer.fail(AssertionError("partial-clone check must not run")),
+        )
+        self.patch(step, '_dovccache', fake_cache_command)
+        self.patch(step, '_removeSharedCache', fake_remove)
+
+        self.assertFalse((yield step._prepareSharedCacheRepository('/cache/repo.git', False)))
+        self.assertEqual(
+            commands,
+            [['config', '--local', '--get', 'buildbot.sharedCacheOwner']],
+        )
+        self.assertEqual(removed, [])
+
+    @defer.inlineCallbacks
+    def test_existing_owned_custom_shared_cache_is_prepared(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache='/cache/repo.git',
+            )
+        )
+        identity = 'https://github.com/buildbot/buildbot.git'
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command == ['config', '--local', '--get', 'buildbot.sharedCacheOwner']:
+                return defer.succeed(f'{identity}\n')
+            if command == ['config', '--local', '--get', 'remote.origin.url']:
+                return defer.succeed(f'{identity}\n')
+            return defer.succeed(0)
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(True))
+        self.patch(step, '_isBareRepository', lambda path: defer.succeed(True))
+        self.patch(step, '_findSharedCacheAlternate', lambda path: defer.succeed(None))
+        self.patch(step, '_isPartialCloneRepository', lambda path: defer.succeed(False))
+        self.patch(step, '_dovccache', fake_cache_command)
+        self.patch(step, 'runRmdir', lambda path, **kwargs: defer.succeed(0))
+        self.patch(step, 'runMkdir', lambda path, **kwargs: defer.succeed(0))
+
+        self.assertTrue((yield step._prepareSharedCacheRepository('/cache/repo.git', False)))
+        self.assertIn(
+            ['remote', 'set-url', 'origin', identity],
+            commands,
+        )
+
+    @defer.inlineCallbacks
+    def test_existing_cache_rejects_hooks_cleanup_failure(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        identity = 'https://github.com/buildbot/buildbot.git'
+        mkdir_calls: list[str] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            if command == ['config', '--local', '--get', 'remote.origin.url']:
+                return defer.succeed(f'{identity}\n')
+            return defer.succeed(0)
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(True))
+        self.patch(step, '_isBareRepository', lambda path: defer.succeed(True))
+        self.patch(step, '_findSharedCacheAlternate', lambda path: defer.succeed(None))
+        self.patch(step, '_isPartialCloneRepository', lambda path: defer.succeed(False))
+        self.patch(step, '_dovccache', fake_cache_command)
+        self.patch(step, 'runRmdir', lambda path, **kwargs: defer.succeed(1))
+
+        def fake_mkdir(path: str, **kwargs: Any) -> defer.Deferred[int]:
+            mkdir_calls.append(path)
+            return defer.succeed(0)
+
+        self.patch(step, 'runMkdir', fake_mkdir)
+
+        self.assertFalse((yield step._prepareSharedCacheRepository('/cache/repo.git', True)))
+        self.assertEqual(mkdir_calls, [])
+
+    @defer.inlineCallbacks
+    def test_new_custom_shared_cache_records_ownership(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache='/cache/repo.git',
+            )
+        )
+        identity = 'https://github.com/buildbot/buildbot.git'
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command == ['config', '--local', '--get', 'remote.origin.url']:
+                return defer.succeed(f'{identity}\n')
+            return defer.succeed(0)
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(False))
+        self.patch(step, '_initializeSharedCache', lambda path: defer.succeed(True))
+        self.patch(step, '_findSharedCacheAlternate', lambda path: defer.succeed(None))
+        self.patch(step, '_isPartialCloneRepository', lambda path: defer.succeed(False))
+        self.patch(step, '_dovccache', fake_cache_command)
+        self.patch(step, 'runRmdir', lambda path, **kwargs: defer.succeed(0))
+        self.patch(step, 'runMkdir', lambda path, **kwargs: defer.succeed(0))
+
+        self.assertTrue((yield step._prepareSharedCacheRepository('/cache/repo.git', False)))
+        self.assertEqual(
+            commands[0],
+            ['config', '--local', 'buildbot.sharedCacheOwner', identity],
+        )
+
+    @defer.inlineCallbacks
+    def test_new_custom_shared_cache_is_removed_if_ownership_write_fails(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache='/cache/repo.git',
+            )
+        )
+        removed: list[str] = []
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(False))
+        self.patch(step, '_initializeSharedCache', lambda path: defer.succeed(True))
+        self.patch(step, '_findSharedCacheAlternate', lambda path: defer.succeed(None))
+        self.patch(step, '_isPartialCloneRepository', lambda path: defer.succeed(False))
+        self.patch(step, '_dovccache', lambda path, command, **kwargs: defer.succeed(1))
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, '_removeSharedCache', fake_remove)
+
+        self.assertFalse((yield step._prepareSharedCacheRepository('/cache/repo.git', False)))
+        self.assertEqual(removed, ['/cache/repo.git'])
+
+    @defer.inlineCallbacks
+    def test_new_custom_shared_cache_with_different_remote_is_removed(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache='/cache/repo.git',
+            )
+        )
+        removed: list[str] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            if command == ['config', '--local', '--get', 'remote.origin.url']:
+                return defer.succeed('https://github.com/example/other.git\n')
+            return defer.succeed(0)
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(False))
+        self.patch(step, '_initializeSharedCache', lambda path: defer.succeed(True))
+        self.patch(step, '_findSharedCacheAlternate', lambda path: defer.succeed(None))
+        self.patch(step, '_isPartialCloneRepository', lambda path: defer.succeed(False))
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, '_removeSharedCache', fake_remove)
+
+        self.assertFalse((yield step._prepareSharedCacheRepository('/cache/repo.git', False)))
+        self.assertEqual(removed, ['/cache/repo.git'])
+
+    @defer.inlineCallbacks
+    def test_owned_custom_shared_cache_rejects_different_remote(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache='/cache/repo.git',
+            )
+        )
+        commands: list[list[str]] = []
+        removed: list[str] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command == ['config', '--local', '--get', 'buildbot.sharedCacheOwner']:
+                return defer.succeed('https://github.com/buildbot/buildbot.git\n')
+            if command == ['config', '--local', '--get', 'remote.origin.url']:
+                return defer.succeed('https://github.com/example/other.git\n')
+            return defer.succeed(0)
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(True))
+        self.patch(step, '_isBareRepository', lambda path: defer.succeed(True))
+        self.patch(step, '_findSharedCacheAlternate', lambda path: defer.succeed(None))
+        self.patch(step, '_isPartialCloneRepository', lambda path: defer.succeed(False))
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, '_removeSharedCache', fake_remove)
+
+        self.assertFalse((yield step._prepareSharedCacheRepository('/cache/repo.git', False)))
+        self.assertNotIn(
+            ['remote', 'set-url', 'origin', 'https://github.com/buildbot/buildbot.git'],
+            commands,
+        )
+        self.assertEqual(removed, [])
+
+    @defer.inlineCallbacks
+    def test_new_shared_cache_is_removed_when_preparation_fails(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://user:secret@github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        removed: list[str] = []
+
+        def fake_path_exists(path: str) -> defer.Deferred[bool]:
+            return defer.succeed(False)
+
+        def fake_initialize(path: str) -> defer.Deferred[bool]:
+            return defer.succeed(True)
+
+        def fake_is_partial(path: str) -> defer.Deferred[bool]:
+            return defer.succeed(False)
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            if command == ['config', '--local', '--get', 'remote.origin.url']:
+                return defer.succeed('https://user:secret@github.com/buildbot/buildbot.git\n')
+            if command == [
+                'remote',
+                'set-url',
+                'origin',
+                'https://github.com/buildbot/buildbot.git',
+            ]:
+                return defer.succeed(1)
+            return defer.succeed(0)
+
+        self.patch(step, 'pathExists', fake_path_exists)
+        self.patch(step, '_initializeSharedCache', fake_initialize)
+        self.patch(step, '_isPartialCloneRepository', fake_is_partial)
+        self.patch(step, '_removeSharedCache', fake_remove)
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        self.assertFalse((yield step._prepareSharedCacheRepository('/cache/repo.git', True)))
+        self.assertEqual(removed, ['/cache/repo.git'])
+
+    @parameterized.expand([
+        ('hooks_rmdir', 'rmdir', None),
+        ('hooks_mkdir', 'mkdir', None),
+        ('config_write', 'config', ['config', '--local', 'gc.auto', '0']),
+    ])
+    @defer.inlineCallbacks
+    def test_new_shared_cache_is_removed_when_setup_step_fails(
+        self, name: str, failing_stage: str, failing_command: list[str] | None
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        removed: list[str] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            if command == ['config', '--local', '--get', 'remote.origin.url']:
+                return defer.succeed('')
+            if failing_command is not None and command == failing_command:
+                return defer.succeed(1)
+            return defer.succeed(0)
+
+        def fake_rmdir(path: str, **kwargs: Any) -> defer.Deferred[int]:
+            return defer.succeed(1 if failing_stage == 'rmdir' else 0)
+
+        def fake_mkdir(path: str, **kwargs: Any) -> defer.Deferred[int]:
+            return defer.succeed(1 if failing_stage == 'mkdir' else 0)
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(False))
+        self.patch(step, '_initializeSharedCache', lambda path: defer.succeed(True))
+        self.patch(step, '_isPartialCloneRepository', lambda path: defer.succeed(False))
+        self.patch(step, '_removeSharedCache', fake_remove)
+        self.patch(step, '_dovccache', fake_cache_command)
+        self.patch(step, 'runRmdir', fake_rmdir)
+        self.patch(step, 'runMkdir', fake_mkdir)
+
+        self.assertFalse((yield step._prepareSharedCacheRepository('/cache/repo.git', True)))
+        self.assertEqual(removed, ['/cache/repo.git'])
+
+    @defer.inlineCallbacks
+    def test_shared_cache_without_origin_adds_remote(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command == ['config', '--local', '--get', 'remote.origin.url']:
+                return defer.succeed('')
+            return defer.succeed(0)
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(True))
+        self.patch(step, '_isBareRepository', lambda path: defer.succeed(True))
+        self.patch(step, '_findSharedCacheAlternate', lambda path: defer.succeed(None))
+        self.patch(step, '_isPartialCloneRepository', lambda path: defer.succeed(False))
+        self.patch(step, '_dovccache', fake_cache_command)
+        self.patch(step, 'runRmdir', lambda path, **kwargs: defer.succeed(0))
+        self.patch(step, 'runMkdir', lambda path, **kwargs: defer.succeed(0))
+
+        self.assertTrue((yield step._prepareSharedCacheRepository('/cache/repo.git', True)))
+        self.assertIn(
+            ['remote', 'add', 'origin', 'https://github.com/buildbot/buildbot.git'],
+            commands,
+        )
+
+    @parameterized.expand([
+        ('local', 'alternates'),
+        ('http', 'http-alternates'),
+    ])
+    @defer.inlineCallbacks
+    def test_shared_cache_detects_alternate_object_database(
+        self, name: str, filename: str
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        cache_path = '/cache/repo.git'
+        alternate_path = f'{cache_path}/objects/info/{filename}'
+
+        def fake_path_exists(path: str) -> defer.Deferred[bool]:
+            return defer.succeed(path == alternate_path)
+
+        self.patch(step, 'pathExists', fake_path_exists)
+
+        self.assertEqual(
+            (yield step._findSharedCacheAlternate(cache_path)),
+            alternate_path,
+        )
+
+    @parameterized.expand([
+        ('managed', True),
+        ('custom', False),
+    ])
+    @defer.inlineCallbacks
+    def test_existing_shared_cache_with_alternate_is_preserved_and_rejected(
+        self, name: str, managed_cache: bool
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        cache_path = '/cache/repo.git'
+        removed: list[str] = []
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(True))
+        self.patch(step, '_isBareRepository', lambda path: defer.succeed(True))
+        self.patch(
+            step,
+            '_findSharedCacheAlternate',
+            lambda path: defer.succeed(f'{cache_path}/objects/info/alternates'),
+        )
+        self.patch(
+            step,
+            '_isPartialCloneRepository',
+            lambda path: defer.fail(AssertionError("partial-clone check must not run")),
+        )
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, '_removeSharedCache', fake_remove)
+
+        self.assertFalse((yield step._prepareSharedCacheRepository(cache_path, managed_cache)))
+        self.assertEqual(removed, [])
+
+    @defer.inlineCallbacks
+    def test_new_shared_cache_with_alternate_is_removed(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        cache_path = '/cache/repo.git'
+        removed: list[str] = []
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(False))
+        self.patch(step, '_initializeSharedCache', lambda path: defer.succeed(True))
+        self.patch(
+            step,
+            '_findSharedCacheAlternate',
+            lambda path: defer.succeed(f'{cache_path}/objects/info/alternates'),
+        )
+        self.patch(
+            step,
+            '_isPartialCloneRepository',
+            lambda path: defer.fail(AssertionError("partial-clone check must not run")),
+        )
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, '_removeSharedCache', fake_remove)
+
+        self.assertFalse((yield step._prepareSharedCacheRepository(cache_path, True)))
+        self.assertEqual(removed, [cache_path])
+
+    @parameterized.expand([
+        ('non_bare', False, False),
+        ('partial', True, True),
+    ])
+    @defer.inlineCallbacks
+    def test_existing_unusable_managed_cache_is_preserved(
+        self,
+        name: str,
+        is_bare: bool,
+        is_partial: bool,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        removed: list[str] = []
+        initialized: list[str] = []
+
+        def fake_path_exists(path: str) -> defer.Deferred[bool]:
+            return defer.succeed(path == '/cache/repo.git')
+
+        def fake_is_bare(path: str) -> defer.Deferred[bool]:
+            return defer.succeed(is_bare)
+
+        def fake_is_partial(path: str) -> defer.Deferred[bool]:
+            return defer.succeed(is_partial)
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        def fake_initialize(path: str) -> defer.Deferred[bool]:
+            initialized.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, 'pathExists', fake_path_exists)
+        self.patch(step, '_isBareRepository', fake_is_bare)
+        self.patch(step, '_isPartialCloneRepository', fake_is_partial)
+        self.patch(step, '_removeSharedCache', fake_remove)
+        self.patch(step, '_initializeSharedCache', fake_initialize)
+        self.patch(step, '_getSharedCacheRecordedIdentity', lambda path: defer.succeed(''))
+
+        self.assertFalse((yield step._prepareSharedCacheRepository('/cache/repo.git', True)))
+        self.assertEqual(removed, [])
+        self.assertEqual(initialized, [])
+
+    @parameterized.expand([
+        ('foreign_identity', 'https://example.com/other.git', False),
+        ('unpopulated_retry', '', True),
+        ('same_identity', 'https://github.com/buildbot/buildbot.git', True),
+    ])
+    @defer.inlineCallbacks
+    def test_existing_managed_cache_checks_recorded_identity(
+        self, name: str, recorded: str, adopted: bool
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        removed: list[str] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[Any]:
+            if command[-1] == 'remote.origin.url':
+                return defer.succeed('https://github.com/buildbot/buildbot.git')
+            return defer.succeed(0)
+
+        self.patch(step, 'pathExists', lambda path: defer.succeed(path == '/cache/repo.git'))
+        self.patch(step, '_isBareRepository', lambda path: defer.succeed(True))
+        self.patch(step, '_isPartialCloneRepository', lambda path: defer.succeed(False))
+        self.patch(step, '_getSharedCacheRecordedIdentity', lambda path: defer.succeed(recorded))
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, '_removeSharedCache', fake_remove)
+        self.patch(step, 'runRmdir', lambda *args, **kwargs: defer.succeed(0))
+        self.patch(step, 'runMkdir', lambda *args, **kwargs: defer.succeed(0))
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        result = yield step._prepareSharedCacheRepository('/cache/repo.git', True)
+
+        self.assertEqual(result, adopted)
+        self.assertEqual(removed, [])
+
+    def test_shared_cache_windows_auth_command_skips_leading_flags(self) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        self.change_worker_system('nt')
+        self.worker.worker_basedir = r'C:\wrk'
+        calls: list[dict[str, Any]] = []
+
+        def fake_dovccmd(command: list[str], **kwargs: Any) -> defer.Deferred[int]:
+            calls.append(kwargs)
+            return defer.succeed(0)
+
+        self.patch(step, '_dovccmd', fake_dovccmd)
+
+        step._dovccache('/cache/repo.git', ['--git-dir=/cache/repo.git', 'rev-parse'])
+
+        self.assertEqual(calls[0]['auth_command'], 'rev-parse')
+
+    @parameterized.expand([
+        ('bare', 'true\n', True),
+        ('non_bare', 'false\n', False),
+        ('not_a_repository', 128, False),
+    ])
+    @defer.inlineCallbacks
+    def test_shared_cache_bare_probe_pins_the_git_directory(
+        self, name: str, output: str | int, expected: bool
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[Any]:
+            commands.append(command)
+            return defer.succeed(output)
+
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        self.assertEqual((yield step._isBareRepository('/cache/repo.git')), expected)
+        self.assertEqual(
+            commands,
+            [['--git-dir=/cache/repo.git', 'rev-parse', '--is-bare-repository']],
+        )
+
+    @parameterized.expand([
+        ('promisor_yes', 'remote.upstream.promisor yes\n', True),
+        ('promisor_valueless', 'remote.upstream.promisor\n', True),
+        ('promisor_empty', 'remote.upstream.promisor \n', False),
+        ('promisor_false', 'remote.upstream.promisor false\n', False),
+        ('filter', 'remote.upstream.partialclonefilter blob:none\n', True),
+        ('extension', 'extensions.partialclone upstream\n', True),
+        ('unrelated', 'remote.upstream.url https://example.com/repo.git\n', False),
+    ])
+    @defer.inlineCallbacks
+    def test_shared_cache_detects_partial_clone_config(
+        self, name: str, config_output: str, expected: bool
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str]:
+            commands.append(command)
+            return defer.succeed(config_output)
+
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        self.assertEqual((yield step._isPartialCloneRepository('/cache/repo.git')), expected)
+        self.assertEqual(
+            commands,
+            [
+                [
+                    'config',
+                    '--local',
+                    '--get-regexp',
+                    r'^(extensions\.partialclone|remote\..*\.(promisor|partialclonefilter))$',
+                ]
+            ],
+        )
+
+    def test_shared_cache_commands_are_isolated(self) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        calls: list[dict[str, Any]] = []
+
+        def fake_dovccmd(command: list[str], **kwargs: Any) -> defer.Deferred[int]:
+            calls.append(kwargs)
+            return defer.succeed(0)
+
+        self.patch(step, '_dovccmd', fake_dovccmd)
+
+        step._dovccache('/cache/repo.git', ['status'])
+
+        self.assertEqual(calls[0]['workdir'], '/cache/repo.git')
+        self.assertFalse(calls[0]['use_step_config'])
+        self.assertTrue(calls[0]['sanitize_repository_environment'])
+        overrides = calls[0]['config_overrides']
+        self.assertEqual(overrides['gc.auto'], '0')
+        self.assertEqual(overrides['maintenance.auto'], 'false')
+        self.assertEqual(overrides['fetch.writeCommitGraph'], 'false')
+        self.assertEqual(overrides['protocol.ext.allow'], 'never')
+        self.assertNotIn('credential.helper', overrides)
+        self.assertEqual(overrides['core.hooksPath'], '/cache/repo.git/buildbot-hooks')
+        self.assertNotIn('safe.directory', overrides)
+
+    def test_shared_cache_windows_cache_commands_avoid_unc_workdir(self) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        self.change_worker_system('nt')
+        calls: list[tuple[list[str], dict[str, Any]]] = []
+
+        def fake_dovccmd(command: list[str], **kwargs: Any) -> defer.Deferred[int]:
+            calls.append((command, kwargs))
+            return defer.succeed(0)
+
+        self.patch(step, '_dovccmd', fake_dovccmd)
+
+        cache_path = r'\\server\share\repo.git'
+        self.worker.worker_basedir = r'C:\wrk'
+        step._dovccache(cache_path, ['status'])
+
+        command, kwargs = calls[0]
+        self.assertEqual(command, ['-C', cache_path, 'status'])
+        self.assertEqual(kwargs['workdir'], r'C:\wrk')
+        self.assertEqual(kwargs['auth_command'], 'status')
+        self.assertEqual(kwargs['config_overrides']['core.longpaths'], 'true')
+        self.assertEqual(
+            kwargs['config_overrides']['safe.directory'],
+            '%(prefix)///server/share/repo.git',
+        )
+
+    def test_shared_cache_windows_cache_fetch_trusts_unc_source(self) -> None:
+        source_path = r'\\source\repositories\project.git'
+        cache_path = r'\\cache\buildbot\project.git'
+        step = self.setup_step(
+            self.stepClass(
+                repourl=source_path,
+                shared_cache=cache_path,
+            )
+        )
+        self.change_worker_system('nt')
+        self.worker.worker_basedir = r'C:\wrk'
+        calls: list[tuple[list[str], dict[str, Any]]] = []
+
+        def fake_dovccmd(command: list[str], **kwargs: Any) -> defer.Deferred[int]:
+            calls.append((command, kwargs))
+            return defer.succeed(0)
+
+        self.patch(step, '_dovccmd', fake_dovccmd)
+
+        step._dovccache(cache_path, ['fetch', source_path, 'main'])
+
+        command, kwargs = calls[0]
+        self.assertEqual(
+            command,
+            [
+                '-c',
+                'safe.directory=%(prefix)///source/repositories/project.git',
+                '-c',
+                'safe.directory=%(prefix)///source/repositories/project.git/.git',
+                '-C',
+                cache_path,
+                'fetch',
+                source_path,
+                'main',
+            ],
+        )
+        self.assertEqual(kwargs['auth_command'], 'fetch')
+        self.assertEqual(
+            kwargs['config_overrides']['safe.directory'],
+            '%(prefix)///cache/buildbot/project.git',
+        )
+
+    @defer.inlineCallbacks
+    def test_git_command_auth_override_handles_cache_prefix(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        checked_commands: list[str] = []
+
+        def is_auth_needed(command: str) -> bool:
+            checked_commands.append(command)
+            return False
+
+        def run_command(command: Any) -> defer.Deferred[None]:
+            command.rc = 0
+            return defer.succeed(None)
+
+        self.patch(step._git_auth, 'is_auth_needed_for_git_command', is_auth_needed)
+        self.patch(step, 'runCommand', run_command)
+        step.stdio_log = yield step.addLogForRemoteCommands('stdio')
+
+        yield git.GitStepMixin._dovccmd(
+            step,
+            ['-C', '/cache/repo.git', 'fetch'],
+            workdir='/wrk',
+            auth_command='fetch',
+        )
+
+        self.assertEqual(checked_commands, ['fetch'])
+
+    @defer.inlineCallbacks
+    def test_shared_cache_windows_git_commands_enable_long_paths(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        self.change_worker_system('nt')
+        calls: list[dict[str, Any]] = []
+
+        def fake_dovccmd(
+            step: git.GitStepMixin,
+            command: list[str],
+            **kwargs: Any,
+        ) -> defer.Deferred[int]:
+            calls.append(kwargs)
+            return defer.succeed(0)
+
+        self.patch(git.GitStepMixin, '_dovccmd', fake_dovccmd)
+
+        yield step._dovccmd(
+            ['status'],
+            config_overrides={'core.longpaths': 'false', 'test.option': 'value'},
+        )
+
+        self.assertEqual(
+            calls[0]['config_overrides'],
+            {'core.longpaths': 'true', 'test.option': 'value'},
+        )
+
+    @defer.inlineCallbacks
+    def test_shared_cache_windows_git_commands_trust_unc_source(
+        self,
+    ) -> InlineCallbacksType[None]:
+        source_path = r'\\server\share\repository.git'
+        step = self.setup_step(
+            self.stepClass(
+                repourl=source_path,
+                shared_cache=True,
+            )
+        )
+        self.change_worker_system('nt')
+        calls: list[dict[str, Any]] = []
+
+        def fake_dovccmd(
+            step: git.GitStepMixin,
+            command: list[str],
+            **kwargs: Any,
+        ) -> defer.Deferred[int]:
+            calls.append(kwargs)
+            return defer.succeed(0)
+
+        self.patch(git.GitStepMixin, '_dovccmd', fake_dovccmd)
+
+        yield step._dovccmd(['clone', source_path, '.'])
+
+        self.assertEqual(
+            calls[0]['config_overrides']['safe.directory'],
+            [
+                '%(prefix)///server/share/repository.git',
+                '%(prefix)///server/share/repository.git/.git',
+            ],
+        )
+
+    def test_windows_source_trust_covers_the_git_directory(self) -> None:
+        step = self.setup_step(
+            self.stepClass(
+                repourl=r'\\server\share\repository',
+                shared_cache=True,
+            )
+        )
+        self.change_worker_system('nt')
+
+        self.assertEqual(
+            step._getWindowsSourceSafeDirectory(),
+            [
+                '%(prefix)///server/share/repository',
+                '%(prefix)///server/share/repository/.git',
+            ],
+        )
+
+    @defer.inlineCallbacks
+    def test_config_override_emits_one_argument_per_value(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        commands: list[list[str]] = []
+
+        def run_command(command: Any) -> defer.Deferred[None]:
+            commands.append(command.command)
+            command.rc = 0
+            return defer.succeed(None)
+
+        self.patch(step, 'runCommand', run_command)
+        step.stdio_log = yield step.addLogForRemoteCommands('stdio')
+
+        yield git.GitStepMixin._dovccmd(
+            step,
+            ['status'],
+            config_overrides={'safe.directory': ['/first', '/second']},
+        )
+
+        self.assertEqual(
+            commands[0][:5],
+            ['git', '-c', 'safe.directory=/first', '-c', 'safe.directory=/second'],
+        )
+
+    @defer.inlineCallbacks
+    def test_shared_cache_windows_keeps_explicit_long_paths_config(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+                config={'core.longpaths': 'false'},
+            )
+        )
+        self.change_worker_system('nt')
+        calls: list[dict[str, Any]] = []
+
+        def fake_dovccmd(
+            step: git.GitStepMixin,
+            command: list[str],
+            **kwargs: Any,
+        ) -> defer.Deferred[int]:
+            calls.append(kwargs)
+            return defer.succeed(0)
+
+        self.patch(git.GitStepMixin, '_dovccmd', fake_dovccmd)
+
+        yield step._dovccmd(['status'])
+
+        self.assertNotIn('core.longpaths', calls[0]['config_overrides'])
+
+    @defer.inlineCallbacks
+    def test_initialize_shared_cache_uses_bare_init_and_cleans_failure(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='https://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        calls: list[tuple[list[str], bool]] = []
+        removed: list[str] = []
+
+        def fake_mkdir(path: str, **kwargs: Any) -> defer.Deferred[int]:
+            return defer.succeed(0)
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[int]:
+            calls.append((command, kwargs.get('use_cache_repository', True)))
+            return defer.succeed(1)
+
+        def fake_remove(path: str) -> defer.Deferred[bool]:
+            removed.append(path)
+            return defer.succeed(True)
+
+        self.patch(step, 'runMkdir', fake_mkdir)
+        self.patch(step, '_dovccache', fake_cache_command)
+        self.patch(step, '_removeSharedCache', fake_remove)
+
+        self.assertFalse((yield step._initializeSharedCache('/cache/repo.git')))
+        self.assertEqual(
+            calls,
+            [(['init', '--bare', '/cache/repo.git'], False)],
+        )
+        self.assertEqual(removed, ['/cache/repo.git'])
+
+    @parameterized.expand([
+        ('missing', ''),
+        ('invalid', 'not-a-timestamp\n'),
+        ('expired', '113600\n'),
+        ('future', '200001\n'),
+    ])
+    @defer.inlineCallbacks
+    def test_shared_cache_health_runs_full_fsck_when_due(
+        self, name: str, last_fsck: str
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        self.reactor.advance(200000)
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command == ['config', '--local', '--get', 'buildbot.sharedCacheIdentity']:
+                return defer.succeed('http://github.com/buildbot/buildbot.git\n')
+            if command == ['config', '--local', '--get', 'buildbot.sharedCacheLastFsck']:
+                return defer.succeed(last_fsck)
+            return defer.succeed(0)
+
+        object.__setattr__(step, '_dovccache', fake_cache_command)
+
+        self.assertTrue((yield step._isSharedCacheHealthy('/cache/repo.git')))
+        self.assertEqual(
+            commands[-3:],
+            [
+                ['fsck', '--no-dangling'],
+                [
+                    'config',
+                    '--local',
+                    'buildbot.sharedCacheLastFsck',
+                    '200000',
+                ],
+                ['config', '--local', '--unset', 'buildbot.sharedCacheFsckFailed'],
+            ],
+        )
+
+    @defer.inlineCallbacks
+    def test_shared_cache_health_skips_recent_full_fsck(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        self.reactor.advance(200000)
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command[-1] == 'buildbot.sharedCacheIdentity':
+                return defer.succeed('http://github.com/buildbot/buildbot.git\n')
+            return defer.succeed('113601\n')
+
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        self.assertTrue((yield step._isSharedCacheHealthy('/cache/repo.git')))
+        self.assertEqual(
+            commands,
+            [
+                ['config', '--local', '--get', 'buildbot.sharedCacheIdentity'],
+                ['config', '--local', '--get', 'buildbot.sharedCacheLastFsck'],
+            ],
+        )
+
+    @defer.inlineCallbacks
+    def test_shared_cache_health_failure_does_not_update_timestamp(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command[-1] == 'buildbot.sharedCacheIdentity':
+                return defer.succeed('http://github.com/buildbot/buildbot.git\n')
+            if command[0] == 'fsck':
+                return defer.succeed(1)
+            return defer.succeed('')
+
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        self.assertFalse((yield step._isSharedCacheHealthy('/cache/repo.git')))
+        self.assertEqual(commands[-2], ['fsck', '--no-dangling'])
+        self.assertEqual(
+            commands[-1],
+            ['config', '--local', 'buildbot.sharedCacheFsckFailed', '0'],
+        )
+        written_keys = [c[2] for c in commands if len(c) == 4 and c[0] == 'config']
+        self.assertNotIn('buildbot.sharedCacheLastFsck', written_keys)
+
+    @defer.inlineCallbacks
+    def test_shared_cache_health_skips_fsck_after_recent_failure(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        self.reactor.advance(200000)
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command[-1] == 'buildbot.sharedCacheIdentity':
+                return defer.succeed('http://github.com/buildbot/buildbot.git\n')
+            if command[-1] == 'buildbot.sharedCacheFsckFailed':
+                return defer.succeed('199000\n')
+            return defer.succeed(0)
+
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        self.assertFalse((yield step._isSharedCacheHealthy('/cache/repo.git')))
+        self.assertNotIn(['fsck', '--no-dangling'], commands)
+
+    @defer.inlineCallbacks
+    def test_shared_cache_health_retries_fsck_after_stale_failure(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        self.reactor.advance(200000)
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command[-1] == 'buildbot.sharedCacheIdentity':
+                return defer.succeed('http://github.com/buildbot/buildbot.git\n')
+            if command[-1] == 'buildbot.sharedCacheFsckFailed':
+                return defer.succeed('1000\n')
+            return defer.succeed(0)
+
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        self.assertTrue((yield step._isSharedCacheHealthy('/cache/repo.git')))
+        self.assertIn(['fsck', '--no-dangling'], commands)
+
+    @defer.inlineCallbacks
+    def test_shared_cache_health_skips_fsck_on_identity_mismatch(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        cache_path = '/cache/repo.git'
+        commands: list[list[str]] = []
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[str | int]:
+            commands.append(command)
+            if command[0] == 'config':
+                return defer.succeed('http://github.com/example/other.git\n')
+            return defer.succeed(0)
+
+        self.patch(step, '_dovccache', fake_cache_command)
+
+        self.assertFalse((yield step._isSharedCacheHealthy(cache_path)))
+        self.assertEqual(
+            commands,
+            [['config', '--local', '--get', 'buildbot.sharedCacheIdentity']],
+        )
+
+    @defer.inlineCallbacks
+    def test_update_shared_cache_uses_fetch_head_for_requested_ref(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+                filters=['blob:none'],
+                tags=True,
+            )
+        )
+        object.__setattr__(step, 'branch', 'refs/pull/1/merge')
+        object.__setattr__(step, 'revision', None)
+        object.__setattr__(step, 'supportsProgress', True)
+        calls: list[tuple[list[str], str | None]] = []
+
+        @defer.inlineCallbacks
+        def fake_dovccmd(
+            command: list[str],
+            abandonOnFailure: bool = True,
+            collectStdout: bool = False,
+            initialStdin: str | None = None,
+            workdir: str | None = None,
+            config_overrides: dict[str, Any] | None = None,
+            sanitize_repository_environment: bool = False,
+            use_step_config: bool = True,
+        ) -> InlineCallbacksType[str | int]:
+            yield None
+            calls.append((command, initialStdin))
+            return 0
+
+        object.__setattr__(step, '_dovccmd', fake_dovccmd)
+        self.assertTrue((yield step._updateSharedCache('/cache/repo.git')))
+        self.assertEqual(
+            calls[0][0],
+            [
+                'fetch',
+                '--prune',
+                '--no-tags',
+                '--progress',
+                'http://github.com/buildbot/buildbot.git',
+                '+refs/heads/*:refs/heads/*',
+                'refs/pull/1/merge',
+                '+refs/tags/*:refs/tags/*',
+            ],
+        )
+        self.assertEqual(
+            calls[1][0],
+            [
+                'config',
+                '--local',
+                'buildbot.sharedCacheIdentity',
+                'http://github.com/buildbot/buildbot.git',
+            ],
+        )
+
+    @defer.inlineCallbacks
+    def test_update_shared_cache_reports_fetch_failure(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, 'revision', None)
+
+        def fake_cache_command(
+            cache_path: str, command: list[str], **kwargs: Any
+        ) -> defer.Deferred[int]:
+            self.assertEqual(command[0], 'fetch')
+            return defer.succeed(1)
+
+        def fake_health(cache_path: str) -> defer.Deferred[bool]:
+            return defer.succeed(True)
+
+        self.patch(step, '_dovccache', fake_cache_command)
+        self.patch(step, '_isSharedCacheHealthy', fake_health)
+
+        self.assertFalse((yield step._updateSharedCache('/cache/repo.git')))
+
+    @defer.inlineCallbacks
+    def test_update_shared_cache_fetches_when_tags_requested(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+                tags=True,
+            )
+        )
+        object.__setattr__(step, 'branch', 'main')
+        object.__setattr__(step, 'revision', 'a' * 40)
+        commands: list[list[str]] = []
+
+        def fake_dovccmd(
+            command: list[str],
+            abandonOnFailure: bool = True,
+            collectStdout: bool = False,
+            initialStdin: str | None = None,
+            workdir: str | None = None,
+            config_overrides: dict[str, Any] | None = None,
+            sanitize_repository_environment: bool = False,
+            use_step_config: bool = True,
+        ) -> defer.Deferred[int | str]:
+            commands.append(command)
+            return defer.succeed(0)
+
+        object.__setattr__(step, '_dovccmd', fake_dovccmd)
+
+        self.assertTrue((yield step._updateSharedCache('/cache/repo.git')))
+        self.assertEqual(commands[0][0:3], ['fetch', '--prune', '--no-tags'])
+        self.assertEqual(
+            commands[1:],
+            [
+                [
+                    'config',
+                    '--local',
+                    'buildbot.sharedCacheIdentity',
+                    'http://github.com/buildbot/buildbot.git',
+                ],
+            ],
+        )
+
+    @defer.inlineCallbacks
+    def test_update_shared_cache_skips_fetch_when_revision_exists(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, 'revision', 'a' * 40)
+        commands: list[list[str]] = []
+
+        def fake_dovccmd(
+            command: list[str],
+            abandonOnFailure: bool = True,
+            collectStdout: bool = False,
+            initialStdin: str | None = None,
+            workdir: str | None = None,
+            config_overrides: dict[str, Any] | None = None,
+            sanitize_repository_environment: bool = False,
+            use_step_config: bool = True,
+        ) -> defer.Deferred[int | str]:
+            commands.append(command)
+            return defer.succeed(0)
+
+        object.__setattr__(step, '_dovccmd', fake_dovccmd)
+
+        self.assertTrue((yield step._updateSharedCache('/cache/repo.git')))
+        self.assertEqual(
+            commands,
+            [
+                ['cat-file', '-e', f'{step.revision}^0'],
+                [
+                    'config',
+                    '--local',
+                    'buildbot.sharedCacheIdentity',
+                    'http://github.com/buildbot/buildbot.git',
+                ],
+            ],
+        )
+
+    @defer.inlineCallbacks
+    def test_shared_cache_clone_failure_retries_without_cache(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/cache/repo.git')
+        lock = defer.DeferredLock()
+        yield lock.acquire()
+        object.__setattr__(step, '_shared_cache_lock', lock)
+        clone_results = iter([1, 0])
+        clone_cache_states: list[bool] = []
+        clobbers: list[None] = []
+
+        @defer.inlineCallbacks
+        def fake_full_clone(shallow_clone: bool | int) -> InlineCallbacksType[int]:
+            yield None
+            clone_cache_states.append(step._shared_cache_active)
+            return next(clone_results)
+
+        @defer.inlineCallbacks
+        def fake_clobber() -> InlineCallbacksType[int]:
+            yield None
+            clobbers.append(None)
+            return 0
+
+        object.__setattr__(step, '_fullClone', fake_full_clone)
+        object.__setattr__(step, '_doClobber', fake_clobber)
+
+        self.assertEqual((yield step._fullCloneOrFallback(False)), 0)
+        self.assertEqual(clone_cache_states, [True, False])
+        self.assertEqual(clobbers, [None])
+        self.assertIsNone(step._shared_cache_path)
+        self.assertIsNone(step._shared_cache_lock)
+
+    @defer.inlineCallbacks
+    def test_shared_cache_clone_raise_retries_without_cache(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/cache/repo.git')
+        lock = defer.DeferredLock()
+        yield lock.acquire()
+        object.__setattr__(step, '_shared_cache_lock', lock)
+        clone_cache_states: list[bool] = []
+        clobbers: list[None] = []
+
+        @defer.inlineCallbacks
+        def fake_full_clone(shallow_clone: bool | int) -> InlineCallbacksType[int]:
+            yield None
+            clone_cache_states.append(step._shared_cache_active)
+            if step._shared_cache_active:
+                raise buildstep.BuildStepFailed
+            return 0
+
+        @defer.inlineCallbacks
+        def fake_clobber() -> InlineCallbacksType[int]:
+            yield None
+            clobbers.append(None)
+            return 0
+
+        object.__setattr__(step, '_fullClone', fake_full_clone)
+        object.__setattr__(step, '_doClobber', fake_clobber)
+
+        self.assertEqual((yield step._fullCloneOrFallback(False)), 0)
+        self.assertEqual(clone_cache_states, [True, False])
+        self.assertEqual(clobbers, [None])
+        self.assertIsNone(step._shared_cache_path)
+
+    @defer.inlineCallbacks
+    def test_shared_cache_clone_failure_honors_retry_after_disabling_cache(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+                retry=(0, 1),
+            )
+        )
+        object.__setattr__(step, 'branch', 'main')
+        object.__setattr__(step, 'revision', None)
+        object.__setattr__(step, 'supportsBranch', True)
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/cache/repo.git')
+        clone_results = iter([1, 1, 0])
+        clone_cache_states: list[bool] = []
+        clobbers: list[None] = []
+
+        def fake_dovccmd(
+            command: list[str], abandonOnFailure: bool = True, **kwargs: Any
+        ) -> defer.Deferred[int]:
+            clone_cache_states.append(step._shared_cache_active)
+            return defer.succeed(next(clone_results))
+
+        def fake_clobber() -> defer.Deferred[int]:
+            clobbers.append(None)
+            return defer.succeed(0)
+
+        def fake_alternates() -> defer.Deferred[None]:
+            return defer.succeed(None)
+
+        object.__setattr__(step, '_dovccmd', fake_dovccmd)
+        object.__setattr__(step, '_doClobber', fake_clobber)
+        object.__setattr__(step, '_ensureAlternates', fake_alternates)
+
+        self.assertEqual((yield step._fullCloneOrFallback(False)), 0)
+        self.assertEqual(clone_cache_states, [True, False, False])
+        self.assertEqual(clobbers, [None, None])
+
+    @defer.inlineCallbacks
+    def test_shared_cache_clone_failure_skips_normal_retry(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.stepClass(
+            repourl='http://github.com/buildbot/buildbot.git',
+            shared_cache=True,
+            retry=(1, 1),
+        )
+        object.__setattr__(step, 'branch', 'main')
+        object.__setattr__(step, 'supportsBranch', True)
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/cache/repo.git')
+        clone_commands = 0
+        clobbers: list[None] = []
+
+        def fake_dovccmd(
+            command: list[str], abandonOnFailure: bool = True, **kwargs: Any
+        ) -> defer.Deferred[int]:
+            nonlocal clone_commands
+            clone_commands += 1
+            return defer.succeed(1)
+
+        def fake_clobber() -> defer.Deferred[int]:
+            clobbers.append(None)
+            return defer.succeed(0)
+
+        object.__setattr__(step, '_dovccmd', fake_dovccmd)
+        object.__setattr__(step, '_doClobber', fake_clobber)
+
+        self.assertEqual((yield step._clone(False)), 1)
+        self.assertEqual(clone_commands, 1)
+        self.assertEqual(clobbers, [])
+
+    @defer.inlineCallbacks
+    def test_shared_cache_clone_uses_cache_as_reference(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.stepClass(
+            repourl='http://github.com/buildbot/buildbot.git',
+            shared_cache=True,
+        )
+        object.__setattr__(step, 'branch', 'HEAD')
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/cache/repo.git')
+        commands: list[list[str]] = []
+
+        def fake_dovccmd(
+            command: list[str], abandonOnFailure: bool = True, **kwargs: Any
+        ) -> defer.Deferred[int]:
+            commands.append(command)
+            return defer.succeed(0)
+
+        object.__setattr__(step, '_dovccmd', fake_dovccmd)
+
+        self.assertEqual((yield step._clone(False)), 0)
+        self.assertEqual(len(commands), 1)
+        self.assertIn('--reference', commands[0])
+        self.assertEqual(commands[0][commands[0].index('--reference') + 1], '/cache/repo.git')
+
+    @defer.inlineCallbacks
+    def test_clone_without_shared_cache_has_no_reference(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.stepClass(
+            repourl='http://github.com/buildbot/buildbot.git',
+            shared_cache=True,
+        )
+        object.__setattr__(step, 'branch', 'HEAD')
+        commands: list[list[str]] = []
+
+        def fake_dovccmd(
+            command: list[str], abandonOnFailure: bool = True, **kwargs: Any
+        ) -> defer.Deferred[int]:
+            commands.append(command)
+            return defer.succeed(0)
+
+        object.__setattr__(step, '_dovccmd', fake_dovccmd)
+
+        self.assertEqual((yield step._clone(False)), 0)
+        self.assertNotIn('--reference', commands[0])
+
+    @defer.inlineCallbacks
+    def test_shared_cache_shallow_clone_failure_returns_for_fallback(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.stepClass(
+            repourl='http://github.com/buildbot/buildbot.git',
+            shared_cache=True,
+        )
+        object.__setattr__(step, 'branch', 'main')
+        object.__setattr__(step, 'supportsBranch', True)
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/cache/repo.git')
+        abandon_values: list[bool] = []
+
+        def fake_dovccmd(
+            command: list[str], abandonOnFailure: bool = True, **kwargs: Any
+        ) -> defer.Deferred[int]:
+            abandon_values.append(abandonOnFailure)
+            return defer.succeed(1)
+
+        object.__setattr__(step, '_dovccmd', fake_dovccmd)
+
+        self.assertEqual((yield step._clone(True)), 1)
+        self.assertEqual(abandon_values, [False])
+
+    @defer.inlineCallbacks
+    def test_shared_cache_alternates_path_change_requires_reclone(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/wrk/.git-cache/new.git')
+        files = {
+            '.git/objects/info/alternates': '/user/cache/objects\n/old/cache/objects\n',
+            '.git/objects/info/buildbot-shared-cache': '/old/cache/objects\n',
+        }
+        writes: dict[str, str] = {}
+        removed: list[str] = []
+
+        def fake_read(path: str) -> defer.Deferred[str | None]:
+            return defer.succeed(files.get(path))
+
+        def fake_write(path: str, content: str) -> defer.Deferred[bool]:
+            writes[path] = content
+            return defer.succeed(True)
+
+        def fake_remove(path: str, **kwargs: Any) -> defer.Deferred[int]:
+            removed.append(path)
+            return defer.succeed(0)
+
+        self.patch(
+            step,
+            '_dovccmd',
+            lambda *args, **kwargs: defer.succeed('.git/objects/info\n'),
+        )
+        self.patch(step, '_readWorkerFile', fake_read)
+        self.patch(step, '_writeWorkerFileAtomically', fake_write)
+        self.patch(step, 'runRmFile', fake_remove)
+
+        yield step._ensureAlternates()
+
+        self.assertEqual(writes, {})
+        self.assertEqual(removed, [])
+
+    @defer.inlineCallbacks
+    def test_shared_cache_alternates_adopts_checkout_with_foreign_entry(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/wrk/.git-cache/new.git')
+        files = {'.git/objects/info/alternates': '/user/cache/objects\n'}
+        writes: dict[str, str] = {}
+
+        def fake_read(path: str) -> defer.Deferred[str | None]:
+            return defer.succeed(files.get(path))
+
+        def fake_write(path: str, content: str) -> defer.Deferred[bool]:
+            writes[path] = content
+            return defer.succeed(True)
+
+        self.patch(
+            step,
+            '_dovccmd',
+            lambda *args, **kwargs: defer.succeed('.git/objects/info\n'),
+        )
+        self.patch(step, '_readWorkerFile', fake_read)
+        self.patch(step, '_writeWorkerFileAtomically', fake_write)
+
+        yield step._ensureAlternates()
+
+        self.assertEqual(
+            writes['.git/objects/info/alternates'],
+            '/user/cache/objects\n/wrk/.git-cache/new.git/objects\n',
+        )
+        self.assertEqual(
+            writes['.git/objects/info/buildbot-shared-cache'],
+            '/wrk/.git-cache/new.git/objects\n',
+        )
+
+    @defer.inlineCallbacks
+    def test_inactive_shared_cache_preserves_managed_alternate(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        files = {
+            '.git/objects/info/alternates': '/user/cache/objects\n/old/cache/objects\n',
+            '.git/objects/info/buildbot-shared-cache': '/old/cache/objects\n',
+        }
+        reads: list[str] = []
+        writes: dict[str, str] = {}
+        removed: list[str] = []
+
+        def fake_read(path: str) -> defer.Deferred[str | None]:
+            reads.append(path)
+            return defer.succeed(files.get(path))
+
+        def fake_write(path: str, content: str) -> defer.Deferred[bool]:
+            writes[path] = content
+            return defer.succeed(True)
+
+        def fake_remove(path: str, **kwargs: Any) -> defer.Deferred[int]:
+            removed.append(path)
+            return defer.succeed(0)
+
+        self.patch(step, '_readWorkerFile', fake_read)
+        self.patch(step, '_writeWorkerFileAtomically', fake_write)
+        self.patch(step, 'runRmFile', fake_remove)
+
+        yield step._ensureAlternates()
+
+        self.assertEqual(reads, [])
+        self.assertEqual(writes, {})
+        self.assertEqual(removed, [])
+
+    @defer.inlineCallbacks
+    def test_ensure_alternates_uses_git_object_info_path(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/cache/repo.git')
+        commands: list[list[str]] = []
+        reads: list[str] = []
+        writes: dict[str, str] = {}
+
+        def fake_dovccmd(command: list[str], **kwargs: Any) -> defer.Deferred[str]:
+            commands.append(command)
+            return defer.succeed('/main/.git/objects/info\n')
+
+        def fake_read(path: str) -> defer.Deferred[None]:
+            reads.append(path)
+            return defer.succeed(None)
+
+        def fake_write(path: str, content: str) -> defer.Deferred[bool]:
+            writes[path] = content
+            return defer.succeed(True)
+
+        self.patch(step, '_dovccmd', fake_dovccmd)
+        self.patch(step, '_readWorkerFile', fake_read)
+        self.patch(step, '_writeWorkerFileAtomically', fake_write)
+
+        yield step._ensureAlternates()
+
+        self.assertEqual(commands, [['rev-parse', '--git-path', 'objects/info']])
+        self.assertEqual(
+            reads,
+            [
+                '/main/.git/objects/info/buildbot-shared-cache',
+                '/main/.git/objects/info/alternates',
+            ],
+        )
+        self.assertEqual(
+            writes,
+            {
+                '/main/.git/objects/info/alternates': '/cache/repo.git/objects\n',
+                '/main/.git/objects/info/buildbot-shared-cache': '/cache/repo.git/objects\n',
+            },
+        )
+
+    @defer.inlineCallbacks
+    def test_read_worker_file_limits_transfer(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        maxsizes: list[int | None] = []
+
+        def fake_get_file(
+            path: str,
+            abandonOnFailure: bool = False,
+            *,
+            maxsize: int | None = None,
+        ) -> defer.Deferred[str]:
+            maxsizes.append(maxsize)
+            return defer.succeed('content\n')
+
+        self.patch(step, 'getFileContentFromWorker', fake_get_file)
+
+        self.assertEqual((yield step._readWorkerFile('metadata')), 'content\n')
+        self.assertEqual(maxsizes, [256 * 1024])
+
+    @parameterized.expand([
+        ('malformed_marker', 'marker', 'malformed'),
+        ('oversized_alternates', 'alternates', 'oversized'),
+    ])
+    @defer.inlineCallbacks
+    def test_ensure_alternates_preserves_unreadable_metadata(
+        self,
+        name: str,
+        target_name: str,
+        failure_kind: str,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        object.__setattr__(step, '_shared_cache_active', True)
+        object.__setattr__(step, '_shared_cache_path', '/cache/repo.git')
+        self.patch(
+            step,
+            '_dovccmd',
+            lambda *args, **kwargs: defer.succeed('.git/objects/info\n'),
+        )
+        alternates_paths = yield step._getAlternatesPaths()
+        assert alternates_paths is not None
+        alternates_path, marker_path = alternates_paths
+        target_path = marker_path if target_name == 'marker' else alternates_path
+        managed_path = '/cache/repo.git/objects\n'
+        writes: dict[str, str] = {}
+
+        def fake_get_file(
+            path: str,
+            abandonOnFailure: bool = False,
+            *,
+            maxsize: int | None = None,
+        ) -> defer.Deferred[str | None]:
+            if path == target_path:
+                if failure_kind == 'malformed':
+                    return defer.fail(
+                        UnicodeDecodeError('utf-8', b'\xff', 0, 1, 'invalid start byte')
+                    )
+                return defer.succeed(None)
+            return defer.succeed(managed_path)
+
+        def fake_exists(path: str) -> defer.Deferred[bool]:
+            return defer.succeed(path == step._getWorkerFilePath(target_path))
+
+        def fake_write(path: str, content: str) -> defer.Deferred[bool]:
+            writes[path] = content
+            return defer.succeed(True)
+
+        self.patch(step, 'getFileContentFromWorker', fake_get_file)
+        self.patch(step, 'pathExists', fake_exists)
+        self.patch(step, '_writeWorkerFileAtomically', fake_write)
+
+        yield step._ensureAlternates()
+
+        self.assertEqual(writes, {})
+
+    @defer.inlineCallbacks
+    def test_atomic_worker_file_write_removes_temp_file_on_rename_failure(
+        self,
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        removed: list[str] = []
+
+        class FakeLog:
+            def getName(self) -> str:
+                return 'stdio'
+
+        def fake_download(path: str, content: str, **kwargs: Any) -> defer.Deferred[bool]:
+            self.assertEqual(path, '.git/objects/info/alternates.buildbot-tmp')
+            return defer.succeed(True)
+
+        def fake_run_command(cmd: Any) -> defer.Deferred[None]:
+            cmd.rc = 1
+            return defer.succeed(None)
+
+        def fake_remove(path: str, **kwargs: Any) -> defer.Deferred[int]:
+            removed.append(path)
+            return defer.succeed(0)
+
+        object.__setattr__(step, 'stdio_log', FakeLog())
+        self.patch(step, 'downloadFileContentToWorker', fake_download)
+        self.patch(step, 'runCommand', fake_run_command)
+        self.patch(step, 'runRmFile', fake_remove)
+
+        self.assertFalse(
+            (
+                yield step._writeWorkerFileAtomically(
+                    '.git/objects/info/alternates',
+                    '/cache/repo.git/objects\n',
+                )
+            )
+        )
+        self.assertEqual(removed, ['wkdir/.git/objects/info/alternates.buildbot-tmp'])
+
+    @parameterized.expand([
+        ('posix', 'posix', ['mv', '-f']),
+        ('windows', 'nt', ['cmd.exe', '/c', 'move', '/Y']),
+    ])
+    @defer.inlineCallbacks
+    def test_atomic_worker_file_write_rename_command(
+        self, name: str, worker_system: str, expected_prefix: list[str]
+    ) -> InlineCallbacksType[None]:
+        step = self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                shared_cache=True,
+            )
+        )
+        self.change_worker_system(worker_system)
+        commands: list[list[str]] = []
+
+        class FakeLog:
+            def getName(self) -> str:
+                return 'stdio'
+
+        downloads: list[dict[str, Any]] = []
+
+        def fake_download(path: str, content: str, **kwargs: Any) -> defer.Deferred[bool]:
+            downloads.append(kwargs)
+            return defer.succeed(True)
+
+        def fake_run_command(cmd: Any) -> defer.Deferred[None]:
+            commands.append(cmd.command)
+            cmd.rc = 0
+            return defer.succeed(None)
+
+        object.__setattr__(step, 'stdio_log', FakeLog())
+        self.patch(step, 'downloadFileContentToWorker', fake_download)
+        self.patch(step, 'runCommand', fake_run_command)
+
+        self.assertTrue(
+            (
+                yield step._writeWorkerFileAtomically(
+                    '.git/objects/info/alternates',
+                    '/cache/repo.git/objects\n',
+                )
+            )
+        )
+        self.assertEqual(downloads[0]['workdir'], step.workdir)
+        self.assertEqual(commands[0][: len(expected_prefix)], expected_prefix)
+        self.assertEqual(
+            commands[0][-2:],
+            [
+                '.git/objects/info/alternates.buildbot-tmp',
+                '.git/objects/info/alternates',
+            ],
+        )

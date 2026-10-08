@@ -267,7 +267,7 @@ class CompositeStepMixin:
         if timeout:
             cmd_args['timeout'] = timeout
         if self.workerVersionIsOlderThan('rmfile', '3.1'):  # type: ignore[attr-defined]
-            cmd_args['dir'] = os.path.abspath(path)
+            cmd_args['dir'] = cmd_args.pop('path')
             return self.runRemoteCommand('rmdir', cmd_args, **kwargs)
         return self.runRemoteCommand('rmfile', cmd_args, **kwargs)
 
@@ -314,14 +314,20 @@ class CompositeStepMixin:
             **kwargs,
         )
 
-    def getFileContentFromWorker(self, filename: str, abandonOnFailure: bool = False) -> Any:
+    def getFileContentFromWorker(
+        self,
+        filename: str,
+        abandonOnFailure: bool = False,
+        *,
+        maxsize: int | None = None,
+    ) -> Any:
         self.checkWorkerHasCommand("uploadFile")  # type: ignore[attr-defined]
         fileWriter = remotetransfer.StringFileWriter()
         # default arguments
         args: dict[str, Any] = {
             'workdir': self.workdir,  # type: ignore[attr-defined]
             'writer': fileWriter,
-            'maxsize': None,
+            'maxsize': maxsize,
             'blocksize': 32 * 1024,
         }
 

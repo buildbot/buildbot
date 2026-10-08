@@ -18,6 +18,7 @@ from __future__ import annotations
 import os
 import re
 import stat
+import urllib.parse
 from pathlib import Path
 from pathlib import PurePath
 from typing import TYPE_CHECKING
@@ -52,6 +53,31 @@ if TYPE_CHECKING:
 
 
 RC_SUCCESS = 0
+OBFUSCATED_VALUE = 'XXXXXX'
+USERNAME_ONLY_URL_SCHEMES = frozenset({'ssh'})
+SHARED_CACHE_MINIMUM_GIT_VERSION = '2.12.0'
+GIT_REPOSITORY_ENVIRONMENT_VARIABLES = frozenset({
+    'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+    'GIT_COMMON_DIR',
+    'GIT_CONFIG',
+    'GIT_CONFIG_COUNT',
+    'GIT_CONFIG_GLOBAL',
+    'GIT_CONFIG_PARAMETERS',
+    'GIT_CONFIG_SYSTEM',
+    'GIT_DIR',
+    'GIT_GRAFT_FILE',
+    'GIT_IMPLICIT_WORK_TREE',
+    'GIT_INDEX_FILE',
+    'GIT_NAMESPACE',
+    'GIT_NO_LAZY_FETCH',
+    'GIT_NO_REPLACE_OBJECTS',
+    'GIT_OBJECT_DIRECTORY',
+    'GIT_PREFIX',
+    'GIT_QUARANTINE_PATH',
+    'GIT_REPLACE_REF_BASE',
+    'GIT_SHALLOW_FILE',
+    'GIT_WORK_TREE',
+})
 
 
 def getSshArgsForKeys(keyPath: str | None, knownHostsPath: str | None) -> list[str]:
@@ -83,6 +109,31 @@ def scp_style_to_url_syntax(address: str, port: int = 22, scheme: str = 'ssh') -
     return f'{scheme}://{host}:{port}/{path}'
 
 
+def obfuscate_url_userinfo(argument: str) -> str | tuple[str, str, str]:
+    try:
+        parsed = urllib.parse.urlsplit(argument)
+    except ValueError:
+        return argument
+    if not parsed.scheme or '@' not in parsed.netloc:
+        return argument
+
+    userinfo, hostinfo = parsed.netloc.rsplit('@', 1)
+    if (
+        ':' not in urllib.parse.unquote(userinfo)
+        and parsed.scheme.lower() in USERNAME_ONLY_URL_SCHEMES
+    ):
+        return argument
+
+    obfuscated_url = urllib.parse.urlunsplit((
+        parsed.scheme,
+        f'{OBFUSCATED_VALUE}@{hostinfo}',
+        parsed.path,
+        parsed.query,
+        parsed.fragment,
+    ))
+    return ('obfuscated', argument, obfuscated_url)
+
+
 def check_ssh_config(
     logname: str,
     ssh_private_key: IMaybeRenderableType[str] | None,
@@ -108,6 +159,7 @@ class GitMixin:
         self.supportsSubmoduleCheckout = False
         self.supportsSshPrivateKeyAsEnvOption = False
         self.supportsSshPrivateKeyAsConfigOption = False
+        self.supportsSharedCache = False
         self.supportsFilters = False
         self.supports_lsremote_symref = False
         self.supports_credential_store = False
@@ -130,6 +182,8 @@ class GitMixin:
             self.supportsSubmoduleCheckout = True
         if version >= parse_version("1.7.9"):
             self.supports_credential_store = True
+        if version >= parse_version(SHARED_CACHE_MINIMUM_GIT_VERSION):
+            self.supportsSharedCache = True
         if version >= parse_version("2.3.0"):
             self.supportsSshPrivateKeyAsEnvOption = True
         if version >= parse_version("2.8.0"):
@@ -234,18 +288,43 @@ class GitStepMixin(GitMixin):
         abandonOnFailure: str | bool = True,
         collectStdout: bool = False,
         initialStdin: str | None = None,
+        workdir: str | None = None,
+        config_overrides: dict[str, Any] | None = None,
+        sanitize_repository_environment: bool = False,
+        use_step_config: bool = True,
+        auth_command: str | None = None,
     ) -> InlineCallbacksType[str | int | None]:
         assert isinstance(self, buildstep.BuildStep)
 
         full_command = ['git']
         full_env = self.env.copy() if self.env else {}
+        if sanitize_repository_environment:
+            for name in list(full_env):
+                normalized_name = name.upper()
+                if (
+                    normalized_name in GIT_REPOSITORY_ENVIRONMENT_VARIABLES
+                    or normalized_name.startswith('GIT_CONFIG_KEY_')
+                    or normalized_name.startswith('GIT_CONFIG_VALUE_')
+                ):
+                    del full_env[name]
 
-        if self.config is not None:
+        if use_step_config and self.config is not None:
             for name, value in self.config.items():
                 full_command.append('-c')
                 full_command.append(f'{name}={value}')
+        if config_overrides is not None:
+            for name, value in config_overrides.items():
+                # multi-valued keys such as safe.directory need one -c per value
+                values = value if isinstance(value, (list, tuple)) else [value]
+                for item in values:
+                    full_command.append('-c')
+                    full_command.append(f'{name}={item}')
 
-        if command and self._git_auth.is_auth_needed_for_git_command(command[0]):
+        if auth_command is None:
+            auth_command = next(
+                (argument for argument in command if not argument.startswith('-')), None
+            )
+        if auth_command is not None and self._git_auth.is_auth_needed_for_git_command(auth_command):
             self._git_auth.adjust_git_command_params_for_auth(
                 full_command,
                 full_env,
@@ -253,7 +332,9 @@ class GitStepMixin(GitMixin):
                 self,
             )
 
-        full_command.extend(command)
+        # kept separate: the auth helpers above require a plain list[str]
+        final_command: list[str | tuple[str, str, str]] = list(full_command)
+        final_command.extend(obfuscate_url_userinfo(argument) for argument in command)
 
         # check for the interruptSignal flag
         sigtermTime = None
@@ -281,8 +362,8 @@ class GitStepMixin(GitMixin):
                 interruptSignal = 'TERM'
 
         cmd = remotecommand.RemoteShellCommand(
-            self.workdir,
-            full_command,
+            workdir if workdir is not None else self.workdir,
+            final_command,
             env=full_env,
             logEnviron=self.logEnviron,
             timeout=self.timeout,

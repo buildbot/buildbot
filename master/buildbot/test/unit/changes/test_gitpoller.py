@@ -2510,7 +2510,7 @@ class TestGitPollerBareRepository(
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         try:
             self.repo = TestGitRepository(
-                repository_path=tempfile.mkdtemp(  # type: ignore[arg-type]
+                repository_path=tempfile.mkdtemp(
                     prefix="TestRepository_",
                     dir=os.getcwd(),
                 )
@@ -2569,7 +2569,7 @@ class TestGitPollerBareRepository(
 
         initial_commit_hash = self.repo.commit(
             message="Initial",
-            files=['README.md'],  # type: ignore[list-item]
+            files=['README.md'],
         )
         self.assertEqual(initial_commit_hash, self.INITIAL_SHA)
 
@@ -2581,7 +2581,7 @@ class TestGitPollerBareRepository(
 
         fix_1_hash = self.repo.commit(
             message="Fix 1",
-            files=['README.md'],  # type: ignore[list-item]
+            files=['README.md'],
         )
         self.assertEqual(fix_1_hash, self.FIX_1_SHA)
 
@@ -2597,7 +2597,7 @@ class TestGitPollerBareRepository(
 
         feature_1_hash = self.repo.commit(
             message="Feature 1",
-            files=['README.md'],  # type: ignore[list-item]
+            files=['README.md'],
         )
         self.assertEqual(feature_1_hash, self.FEATURE_1_SHA)
 

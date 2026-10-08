@@ -424,6 +424,14 @@ class Connection(base.Connection):
                     self.path_expanduser(args['workerdest'], self.info['environ']),
                 )
             )
+        if isinstance(args.get('command'), list):
+            args['command'] = [
+                part[1]
+                if isinstance(part, tuple) and len(part) == 3 and part[0] == 'obfuscated'
+                else part
+                for part in args['command']
+            ]
+
         if "want_stdout" in args:
             if args["want_stdout"] == 1:
                 args["want_stdout"] = True
