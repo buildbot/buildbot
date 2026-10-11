@@ -13,7 +13,7 @@
     "@types/underscore": "^1.11.4",
     "axios": "~1.7.7",
     "bootstrap": "^5.3.8",
-    "browserslist": "^4.28.1",
+    "browserslist": "^4.29.3",
     "buildbot-data-js": "file:../data-module",
     "buildbot-plugin-support": "file:../plugin_support",
     "buildbot-ui": "file:../ui",
