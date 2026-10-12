@@ -24,7 +24,7 @@ import {observer} from 'mobx-react';
 import {Builder} from 'buildbot-data-js';
 import {BuildSummaryTooltip} from '../BuildSummaryTooltip/BuildSummaryTooltip';
 import {BadgeRound} from '../BadgeRound/BadgeRound';
-import {formatBuildLinkText} from './utils';
+import {defaultBuildLinkTemplate, formatBuildLinkText} from './utils';
 
 type BuildLinkWithSummaryTooltipProps = {
   build: Build;
@@ -79,7 +79,7 @@ buildbotSetupPlugin((reg) => {
         caption:
           'Format of data displayed in build badges. Use %(prop:build_property) to include ' +
           'build properties, %(build_number) to include build number',
-        defaultValue: '%(prop:branch) (%(build_number))',
+        defaultValue: defaultBuildLinkTemplate,
       },
     ],
   });
