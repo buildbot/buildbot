@@ -1,5 +1,6 @@
 [build-system]
 requires = [
+    "packaging",
     "setuptools>=80",
     "setuptools-scm>=9",
 ]

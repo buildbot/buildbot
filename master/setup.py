@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import os
 
+from packaging.version import Version
 from setuptools import setup
 from setuptools.command.egg_info import egg_info
 from setuptools.command.sdist import sdist
@@ -30,6 +31,12 @@ from setuptools.command.sdist import sdist
 
 class our_egg_info(egg_info):
     def run(self) -> None:
+        if not Version(self.distribution.get_version()).is_devrelease:
+            self._pin_bundle_version()
+
+        super().run()
+
+    def _pin_bundle_version(self) -> None:
         version = self.distribution.get_version()
 
         # Pin bundle version
@@ -42,7 +49,6 @@ class our_egg_info(egg_info):
         metadata.extras_require['bundle'] = [
             f"{package}=={bundle_version}" for package in metadata.extras_require['bundle']
         ]
-        super().run()
 
 
 class our_sdist(sdist):
