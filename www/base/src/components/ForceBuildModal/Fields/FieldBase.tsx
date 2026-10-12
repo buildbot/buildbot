@@ -18,6 +18,7 @@
 import {ForceSchedulerFieldBoolean} from 'buildbot-data-js';
 import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
 import {observer} from 'mobx-react';
+import {useEffect} from 'react';
 
 type FieldBaseProps = {
   field: ForceSchedulerFieldBoolean;
@@ -37,6 +38,27 @@ export const FieldBase = observer(({field, fieldsState, children}: FieldBaseProp
   for (const error of state.errors) {
     errors.push(<div className={'bb-force-build-modal-field-error'}>{error}</div>);
   }
+
+  useEffect(() => {
+    if (field.autopopulate === null) {
+      return;
+    }
+    const autopopulateFields = field.autopopulate[state.value];
+    if (autopopulateFields === undefined) {
+      return;
+    }
+
+    for (const targetFieldname in autopopulateFields) {
+      const targetFieldState = fieldsState.fields.get(targetFieldname);
+      if (targetFieldState === undefined) {
+        console.error(
+          `[${field.fullName}] bad autopopulate (for value: ${state.value}) configuration: ${targetFieldname} is not a field name`,
+        );
+        continue;
+      }
+      targetFieldState.setValue(autopopulateFields[targetFieldname]);
+    }
+  }, [state.value, field.autopopulate, field.fullName, fieldsState.fields]);
 
   return (
     <div>
