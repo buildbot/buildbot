@@ -1,3 +1,50 @@
+# Meta project for Buildbot development
+[tool.uv]
+required-version = ">=0.12"
+default-groups = ["test", "typing", "docs"]
+
+[tool.uv.workspace]
+members = [
+    "master",
+    # Don't add worker as it needs to support older Python
+    # "worker",
+]
+
+[tool.uv.sources]
+buildbot = { workspace = true }
+buildbot-worker = { path = "./worker", editable = true }
+
+[dependency-groups]
+test = [
+    "buildbot[test,tls,configurable,brotli,zstd]",
+    "buildbot-worker[test]",
+    # we install buildbot www from pypi to avoid the slow nodejs build at each test
+    "buildbot-www",
+    "coverage",
+    "docker",
+    "hvac",
+    "ldap3",
+    "psutil",
+]
+typing = [
+    "mypy",
+    "mypy-zope",
+]
+docs = [
+    "buildbot[docs]",
+]
+# not a default group: mysqlclient needs the MySQL client library to build
+db = [
+    "psycopg2-binary",
+    "mysqlclient",
+    "pg8000",
+]
+pyinstaller = [
+    "altgraph",
+    "pyinstaller",
+    "pyinstaller-hooks-contrib",
+]
+
 [tool.ruff]
 line-length = 100
 

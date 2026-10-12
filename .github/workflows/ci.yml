@@ -14,6 +14,18 @@ env:
 
 
 jobs:
+  ensure-requirements:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "astral-sh/setup-uv@v10.3.0"
+      - run: uv lock --check
+      - run: uv lock --check --project worker
+      - name: "Check that uv.lock and exported requirements are in sync"
+        run: |
+          common/export-requirements.sh
+          git diff --exit-code -- 'requirements-*.txt'
+
   lint:
     strategy:
       fail-fast: false
@@ -133,7 +145,6 @@ jobs:
           python-version: "3.9"
           requirements: |
             requirements-ci.txt
-            requirements-ciworker.txt
             requirements-cidocs.txt
 
       - name: "Run tests"
@@ -173,7 +184,7 @@ jobs:
         run: |
           "${{ steps.worker-python.outputs.python-path }}" -m venv /tmp/bbworkervenv
           /tmp/bbworkervenv/bin/pip install -r requirements-pip.txt
-          /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt
+          /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt -e worker/
 
       # Set up the master Python last so it becomes the default "python".
       - name: "Set up master Python 3.9"
@@ -209,7 +220,7 @@ jobs:
           requirements: "requirements-ciworker.txt"
 
       - name: "Install pinned dependency versions"
-        run: python -m pip install treq==22.2.0 Twisted==21.2.0 "setuptools<82.0.0"
+        run: python -m pip install treq==22.2.0 Twisted==21.2.0 "setuptools<82.0.0" -e worker/
 
       - name: "Run worker tests"
         run: "python -m twisted.trial --reporter=text --rterrors buildbot_worker.test"

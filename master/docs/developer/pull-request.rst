@@ -156,7 +156,7 @@ To run locally, execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ciworker.txt
+    pip install -r requirements-ciworker.txt -e worker/
     trial buildbot_worker
 
 Linter checks
