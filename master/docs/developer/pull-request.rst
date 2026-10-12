@@ -202,3 +202,16 @@ To run locally, install a Chrome-compatible browser and execute the following:
     pip install -r requirements-ci.txt
     make tarballs
     ./common/smokedist-react.sh whl
+
+Dependencies
+~~~~~~~~~~~~
+
+Buildbot uses the `uv <https://docs.astral.sh/uv/>`_ package manager.
+Python dependencies are locked in ``uv.lock`` and ``worker/uv.lock``.
+CI fails if they are out of date (checked in the ``ensure-requirements`` job in the Buildbot CI).
+After changing dependencies in a ``pyproject.toml`` file, execute the following:
+
+.. code-block:: bash
+
+    uv lock
+    uv lock --project worker

@@ -1,7 +1,29 @@
 version: 2
 updates:
+  - package-ecosystem: "uv"
+    directories:
+      - "/"
+      - "/worker"
+    # handled by the pip entry below
+    exclude-paths:
+      - "requirements*.txt"
+    groups:
+      uv-lock:
+        group-by: dependency-name
+    commit-message:
+      prefix: "uv.lock: "
+    open-pull-requests-limit: 15
+    schedule:
+      interval: "cron"
+      cronjob: "0 0 1,15 * *"  # every 1st and 15th of the month
+
+  # hand written requirements*.txt
   - package-ecosystem: "pip"
     directory: "/"
+    # handled by the uv entry above
+    exclude-paths:
+      - "pyproject.toml"
+      - "uv.lock"
     commit-message:
       prefix: "requirements: "
     open-pull-requests-limit: 15

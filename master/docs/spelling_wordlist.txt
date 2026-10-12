@@ -285,6 +285,7 @@ discoverable
 distro
 distros
 Distutils
+distutils
 divmod
 djmitche
 dn
@@ -991,6 +992,7 @@ UTF
 util
 utils
 utime
+uv
 validator
 Validator
 validators

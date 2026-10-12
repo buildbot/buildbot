@@ -27,6 +27,7 @@ matrix:
     - env: PYTHON=3.9 TESTS=mypy
     - env: PYTHON=3.13 TESTS=mypy
     - env: PYTHON=3.9 TESTS=prettier
+    - env: PYTHON=3.9 TESTS=check_lockfile
 
     # add js tests in separate job. Start it early because it is quite long
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=js_build NUM_CPU=2 MEMORY_SIZE=1G
@@ -82,10 +83,10 @@ install:
       rm -rf /tmp/bbvenv
       python$PYTHON -m venv /tmp/bbvenv
   - /tmp/bbvenv/bin/pip install -r requirements-pip.txt
-  - condition: TESTS not in ("dev_virtualenv", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
+  - condition: TESTS not in ("dev_virtualenv", "e2e_react_whl", "e2e_react_tgz", "trial_worker", "check_lockfile")
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt
   # On python 3.12 workaround done in dcbc28d1431e1aae892f7fdc0e266253365bc11e is no longer enough.
-  - condition: TESTS not in ("dev_virtualenv", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
+  - condition: TESTS not in ("dev_virtualenv", "e2e_react_whl", "e2e_react_tgz", "trial_worker", "check_lockfile")
     cmd: /tmp/bbvenv/bin/pip install -e master -e worker
   - condition: TESTS == "dev_virtualenv"
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
@@ -93,6 +94,8 @@ install:
     cmd: /tmp/bbvenv/bin/pip install -r requirements-ciworker.txt
   - condition: TESTS == "docs"
     cmd: /tmp/bbvenv/bin/pip install -r requirements-cidocs.txt
+  - condition: TESTS == "check_lockfile"
+    cmd: /tmp/bbvenv/bin/pip install uv
   - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
     cmd: /tmp/bbvenv/bin/pip install -r requirements-cidb.txt
   - condition: TESTS == "interop"
@@ -204,6 +207,14 @@ script:
       export PATH=/tmp/bbvenv/bin/:$PATH
       [ "$PYTHON" = "3.9" ] && export MYPY_EXTRA_FLAGS=--no-warn-unused-ignores || true
       make -j mypy
+
+  - title: check uv lockfile
+    condition: TESTS == "check_lockfile"
+    cmd: |
+      set -e
+      export PATH=/tmp/bbvenv/bin/:$PATH
+      uv lock --check
+      uv lock --check --project worker
 
   # Build documentation
   - title: docs
