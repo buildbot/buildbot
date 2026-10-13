@@ -631,6 +631,34 @@ class TestDataUtils(TestReactorMixin, logging.LoggingMixin, unittest.TestCase):
         res = yield utils.getPreviousBuild(self.master, build)
         self.assertEqual(res['buildid'], 18)
 
+    @defer.inlineCallbacks
+    def test_getPreviousBuildSkipsIncomplete(self) -> InlineCallbacksType[None]:
+        yield self.setupDb()
+        yield self.master.db.insert_test_data([
+            fakedb.BuildRequest(id=14, buildsetid=99, builderid=81),
+            fakedb.Build(
+                id=23,
+                number=2,
+                builderid=81,
+                buildrequestid=14,
+                workerid=13,
+                masterid=92,
+                results=None,
+            ),
+            fakedb.Build(
+                id=24,
+                number=3,
+                builderid=81,
+                buildrequestid=14,
+                workerid=13,
+                masterid=92,
+                results=SUCCESS,
+            ),
+        ])
+        build = yield self.master.data.get(("builds", 24))
+        res = yield utils.getPreviousBuild(self.master, build)
+        self.assertEqual(res['buildid'], 22)
+
 
 class TestURLUtils(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks

@@ -1,0 +1,1 @@
+Fixed an issue where incomplete builds were considered as previous builds in reporters (:issue:`9067`).

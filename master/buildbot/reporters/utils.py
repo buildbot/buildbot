@@ -46,7 +46,7 @@ def getPreviousBuild(
     while n >= 0:
         prev = yield master.data.get(("builders", build['builderid'], "builds", n))
 
-        if prev and prev['results'] != RETRY:
+        if prev and prev['results'] not in (None, RETRY):
             return prev
         n -= 1
     return None
