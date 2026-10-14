@@ -274,10 +274,9 @@ export function parseCssClassesForChunk(
         chunk.textLineBounds[chunkLineI],
         chunk.textLineBounds[chunkLineI + 1] - 1,
       );
-      const lineI = chunkLineI + chunk.firstLine;
 
       const [strippedLine, lineCssClasses] = parseEscapeCodesToClasses(chunkLine);
-      cssClasses[lineI] = [strippedLine, lineCssClasses!];
+      cssClasses[chunkLineI] = [strippedLine, lineCssClasses!];
     }
   } else {
     // large number of escape sequences
