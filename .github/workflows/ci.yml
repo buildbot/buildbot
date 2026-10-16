@@ -21,7 +21,7 @@ jobs:
         include:
           - python-version: "3.9"
             tests: ruff
-          - python-version: "3.9"
+          - python-version: "3.14"
             tests: docs
           - python-version: "3.9"
             tests: mypy
