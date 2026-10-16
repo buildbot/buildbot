@@ -1,0 +1,1 @@
+``process.BuildRequest`` is now a dataclass. Its ``brid`` attribute was removed (use ``id``) (:issue:`8460`, :issue:`8482`).

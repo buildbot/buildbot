@@ -1,1 +1,2 @@
-The priority of a build is now inherited through `Trigger` (:issue:`8804`)
+The priority of a build is now inherited through `Trigger` (:issue:`8804`).
+Builds triggered by a `Trigger` step now get the highest priority of the triggering build's requests, which override ``priority`` configured on the `Triggerable` scheduler.
