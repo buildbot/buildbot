@@ -96,7 +96,44 @@ def resolve_test_db_url(db_url: str | None, sqlite_memory: bool) -> str:
     return resolve_test_index_in_db_url(db_url)
 
 
+# FakeDBConnector TRUNCATE DB between tests instead of drop/recreate
+# the schema which is slow on PSQL/MySQL.
+_reusable_db_url: str | None = None
+
+
+def _conn_url(conn: Connection) -> str:
+    return conn.engine.url.render_as_string(hide_password=False)
+
+
+def thd_mark_reusable_database(conn: Connection) -> None:
+    global _reusable_db_url
+    if conn.engine.dialect.name != 'sqlite':
+        _reusable_db_url = _conn_url(conn)
+
+
+def thd_clear_reusable_database(conn: Connection) -> bool:
+    """Delete all data and reset auto-increment counters if the database was marked by
+    thd_mark_reusable_database(). Return whether it was."""
+    if _conn_url(conn) != _reusable_db_url:
+        return False
+
+    quote = conn.engine.dialect.identifier_preparer.quote
+    tables = [quote(name) for name in model.Model.metadata.tables]
+    if conn.engine.dialect.name == 'postgresql':
+        conn.execute(sa.text(f"TRUNCATE TABLE {', '.join(tables)} RESTART IDENTITY CASCADE"))
+    else:
+        conn.execute(sa.text('SET FOREIGN_KEY_CHECKS = 0'))
+        for table in tables:
+            conn.execute(sa.text(f'TRUNCATE TABLE {table}'))
+        conn.execute(sa.text('SET FOREIGN_KEY_CHECKS = 1'))
+    conn.commit()
+    return True
+
+
 def thd_clean_database(conn: Connection) -> None:
+    global _reusable_db_url
+    _reusable_db_url = None
+
     # In general it's nearly impossible to do "bullet proof" database cleanup with SQLAlchemy
     # that will work on a range of databases and they configurations.
     #
