@@ -186,6 +186,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             if repository is not None:
                 q = q.where(sstamps_tbl.c.repository == repository)
 
+            if resultSpec is None or not resultSpec.order:
+                q = q.order_by(reqs_tbl.c.id)
+
             if resultSpec is not None:
                 return deduplicateBrdict(resultSpec.thd_execute(conn, q, self._modelFromRow))  # type: ignore[arg-type]
 
