@@ -49,9 +49,25 @@ class FakeTriggerable:
     brids: dict[int, int] = {}
     exception = False
     never_finish = False
+    master: Any = None
 
     def __init__(self, name: str) -> None:
         self.name = name
+
+    @defer.inlineCallbacks
+    def _finish(self, resultsDeferred: defer.Deferred[Any]) -> InlineCallbacksType[None]:
+        # Like the real scheduler, mark the buildrequests complete (which is what
+        # Trigger._add_results waits for) before the buildset results fire.
+        if self.master is not None and self.brids:
+            brids = list(self.brids.values())
+            yield self.master.db.buildrequests.completeBuildRequests(brids, self.result)
+            self.master.mq.verifyMessages = False
+            for brid in brids:
+                self.master.mq.callConsumer(
+                    ('buildrequests', str(brid), 'complete'), {'buildrequestid': brid}
+                )
+            yield self.master.mq.wait_consumed()
+        resultsDeferred.callback((self.result, self.brids))
 
     def trigger(
         self,
@@ -69,6 +85,8 @@ class FakeTriggerable:
         if not self.never_finish:
             if self.exception:
                 reactor.callLater(0, resultsDeferred.errback, RuntimeError('oh noes'))  # type: ignore[attr-defined]
+            elif waited_for:
+                reactor.callLater(0, self._finish, resultsDeferred)  # type: ignore[attr-defined]
             else:
                 reactor.callLater(0, resultsDeferred.callback, (self.result, self.brids))  # type: ignore[attr-defined]
         return (idsDeferred, resultsDeferred)
@@ -137,6 +155,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.scheduler_b = b = FakeTriggerable(name='b')
         self.scheduler_c = c = FakeTriggerable(name='c')
         m.scheduler_manager.namedServices = {"a": a, "b": b, "c": c}
+        a.master = b.master = c.master = m
 
         a.brids = {77: 11}
         b.brids = {78: 22}
@@ -509,9 +528,33 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.run_step()
 
     @defer.inlineCallbacks
+    def test_waitForFinish_false_adds_build_urls_on_complete(self) -> InlineCallbacksType[None]:
+        # Regression for #8204: with waitForFinish=False the step finishes while the
+        # child is still pending. Once the buildrequest completes, build URLs must
+        # be attached so the web UI stops showing a stale "pending build" count.
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], waitForFinish=False))
+        self.expect_outcome(result=SUCCESS, state_string='triggered a')
+        self.expectTriggeredWith(a=(False, [], {}))
+        yield self.run_step()
+
+        yield self.master.db.builds.finishBuild(BRID_TO_BID(11), SUCCESS)
+        yield self.master.db.buildrequests.completeBuildRequests([11], SUCCESS)
+        # FakeMQ.produce does not deliver; callConsumer wakes waitUntilEvent.
+        self.master.mq.verifyMessages = False
+        self.master.mq.callConsumer(('buildrequests', '11', 'complete'), {'buildrequestid': 11})
+        yield self.master.mq.wait_consumed()
+
+        step_data = yield self.master.data.get(('steps', self.get_nth_step(0).stepid))
+        step_urls = [(url['name'], url['url']) for url in step_data['urls']]
+        self.assertIn(
+            ('success: A #4011', 'baseurl/#/builders/77/builds/4011'),
+            step_urls,
+        )
+
+    @defer.inlineCallbacks
     def test_waitForFinish(self) -> InlineCallbacksType[None]:
         yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
-        self.expect_outcome(result=SUCCESS, state_string='triggered a, b')
+        self.expect_outcome(result=SUCCESS, state_string='triggered a, b, 2 successes')
         self.expectTriggeredWith(a=(True, [], {}), b=(True, [], {}))
         self.expectTriggeredLinks('a', 'b')
         yield self.run_step()
@@ -530,7 +573,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
         self.scheduler_a.result = FAILURE
         self.scheduler_b.result = SUCCESS
-        self.expect_outcome(result=FAILURE, state_string='triggered a, b')
+        self.expect_outcome(result=FAILURE, state_string='triggered a, b, 1 success, 1 failure')
         self.expectTriggeredWith(a=(True, [], {}), b=(True, [], {}))
         self.expectTriggeredLinks('afailed', 'b')
         yield self.run_step(results_dict={11: FAILURE})
@@ -540,7 +583,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         yield self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
         self.get_nth_step(0).addCompleteLog = Mock()  # type: ignore[method-assign]
         self.scheduler_b.exception = True
-        self.expect_outcome(result=EXCEPTION, state_string='triggered a, b')
+        self.expect_outcome(result=EXCEPTION, state_string='triggered a, b, 1 success')
         self.expectTriggeredWith(a=(True, [], {}), b=(True, [], {}))
         self.expectTriggeredLinks('a')  # b doesn't return a brid
         yield self.run_step()
@@ -549,7 +592,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_virtual_builder(self) -> InlineCallbacksType[None]:
         yield self.setup_step(trigger.Trigger(schedulerNames=['c'], waitForFinish=True))
-        self.expect_outcome(result=SUCCESS, state_string='triggered c')
+        self.expect_outcome(result=SUCCESS, state_string='triggered c, 2 successes')
         self.expectTriggeredWith(c=(True, [], {}))
         self.expectTriggeredLinks('c')
         yield self.run_step()
@@ -591,6 +634,8 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
         self.expect_outcome(result=CANCELLED, state_string='interrupted')
         self.expectTriggeredWith(a=(True, [], {}))
+        # the triggered build still completes, so its URL is attached afterwards
+        self.expectTriggeredLinks('a')
         d = self.run_step()
 
         # interrupt before the callLater representing the Triggerable
