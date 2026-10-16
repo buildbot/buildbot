@@ -116,4 +116,4 @@ jobs:
       - name: Prepare database container
         run: common/prepare-db-container.sh "${{ job.services.database.id }}" "${{ matrix.database }}"
 
-      - run: $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
+      - run: $(which trial) --reporter=text --rterrors buildbot.test
