@@ -1,0 +1,1 @@
+The systemd unit templates for master and worker no longer start when the instance directory or its ``buildbot.tac`` is missing, and now use ``StateDirectory=`` to create ``/var/lib/buildbot`` (:issue:`8871`).

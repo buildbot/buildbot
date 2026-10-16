@@ -1,0 +1,1 @@
+Fixed ``BuildStep.getResultSummary`` crashing when neither ``descriptionDone`` nor ``description`` is set (:issue:`8802`).
