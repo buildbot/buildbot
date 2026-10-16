@@ -83,6 +83,7 @@ jobs:
           POSTGRES_USER: buildbot
           POSTGRES_PASSWORD: buildbot
           POSTGRES_DB: bbtest
+          PGDATA: /var/lib/postgres/data
         ports:
           - '3306:3306'
           - '5432:5432'
