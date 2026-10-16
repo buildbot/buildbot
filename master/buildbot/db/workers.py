@@ -228,6 +228,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 .select_from(j)
                 .order_by(
                     workers_tbl.c.id,
+                    bm_tbl.c.masterid,
+                    bm_tbl.c.builderid,
                 )
             )
 
