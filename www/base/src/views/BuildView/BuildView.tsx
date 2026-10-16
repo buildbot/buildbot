@@ -33,6 +33,7 @@ import {
   Worker,
   UNKNOWN,
   findOrNull,
+  getPropertyValueArrayOrEmpty,
   getPropertyValueOrDefault,
   getBuildOrStepResults,
   parseChangeAuthorNameAndEmail,
@@ -121,28 +122,32 @@ const buildTopbarActions = (
   return actions;
 };
 
-const getResponsibleUsers = (
-  propertiesQuery: DataPropertiesCollection,
+export const getResponsibleUsers = (
+  properties: {[key: string]: any},
   changesAuthors: Set<string>,
 ) => {
   const responsibleUsers: {[name: string]: string | null} = {};
-  if (getPropertyValueOrDefault(propertiesQuery.properties, 'scheduler', '') === 'force') {
-    const owner = getPropertyValueOrDefault(propertiesQuery.properties, 'owner', '');
-    if (owner.match(/^.+<.+@.+\..+>.*$/)) {
-      const splitResult = owner.split(new RegExp('<|>'));
-      if (splitResult.length === 2) {
-        const name = splitResult[0];
-        const email = splitResult[1];
-        responsibleUsers[name] = email;
-      }
-    }
-  }
 
-  for (const author of changesAuthors) {
+  const addResponsibleUser = (author: string) => {
     const [name, email] = parseChangeAuthorNameAndEmail(author);
     if (email !== null || !(name in responsibleUsers)) {
       responsibleUsers[name] = email;
     }
+  };
+
+  const owner = getPropertyValueOrDefault(properties, 'owner', null);
+  if (typeof owner === 'string') {
+    addResponsibleUser(owner);
+  }
+
+  for (const owner of getPropertyValueArrayOrEmpty(properties, 'owners')) {
+    if (typeof owner === 'string') {
+      addResponsibleUser(owner);
+    }
+  }
+
+  for (const author of changesAuthors) {
+    addResponsibleUser(author);
   }
 
   return responsibleUsers;
@@ -191,7 +196,10 @@ const ResponsibleUsersTabWidget = ({build, propertiesQuery}: ResponsibleUsersTab
   }
 
   const responsibleUsers = computed(() =>
-    getResponsibleUsers(propertiesQuery, new Set(changesQuery.array.map((c) => c.author))),
+    getResponsibleUsers(
+      propertiesQuery.properties,
+      new Set(changesQuery.array.map((c) => c.author)),
+    ),
   ).get();
 
   return (

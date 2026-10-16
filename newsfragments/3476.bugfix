@@ -1,0 +1,1 @@
+The build page responsible users tab now includes users from the ``owner`` and ``owners`` build properties, including forced builds that do not have associated changes. (:issue:`3476`)
