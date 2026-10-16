@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from docutils import nodes
-from docutils.parsers.rst import Directive
 from sphinx import addnodes
 from sphinx.domains import Domain
 from sphinx.domains import Index
@@ -25,12 +24,13 @@ from sphinx.util import ws_re
 from sphinx.util.docfields import DocFieldTransformer
 from sphinx.util.docfields import Field
 from sphinx.util.docfields import TypedField
+from sphinx.util.docutils import SphinxDirective
 from sphinx.util.nodes import make_refnode
 
 logger = logging.getLogger(__name__)
 
 
-class BBRefTargetDirective(Directive):
+class BBRefTargetDirective(SphinxDirective):
     """
     A directive that can be a target for references.  Attributes:
 
@@ -60,14 +60,13 @@ class BBRefTargetDirective(Directive):
         return typemap
 
     def run(self):
-        self.env = env = self.state.document.settings.env
         # normalize whitespace in fullname like XRefRole does
         fullname = ws_re.sub(' ', self.arguments[0].strip())
         targetname = f'{self.ref_type}-{fullname}'
 
         # keep the target; this may be used to generate a BBIndex later
-        targets = env.domaindata['bb']['targets'].setdefault(self.ref_type, {})
-        targets[fullname] = env.docname, targetname
+        targets = self.env.domaindata['bb']['targets'].setdefault(self.ref_type, {})
+        targets[fullname] = self.env.docname, targetname
 
         # make up the descriptor: a target and potentially an index descriptor
         node = nodes.target('', '', ids=[targetname])
@@ -95,6 +94,7 @@ class BBRefTargetDirective(Directive):
         # if the node has content, set up a signature and parse the content
         if self.has_content:
             descnode = addnodes.desc()
+            descnode.document = self.state.document
             descnode['domain'] = 'bb'
             descnode['objtype'] = self.ref_type
             descnode['noindex'] = True
@@ -106,10 +106,9 @@ class BBRefTargetDirective(Directive):
             signode += addnodes.desc_name(fullname, fullname)
             descnode += signode
 
-            contentnode = addnodes.desc_content()
-            self.state.nested_parse(self.content, 0, contentnode)
-            DocFieldTransformer(self).transform_all(contentnode)
+            contentnode = addnodes.desc_content('', *self.parse_content_to_nodes())
             descnode += contentnode
+            DocFieldTransformer(self).transform_all(contentnode)
 
             ret.append(descnode)
 
