@@ -1,15 +1,16 @@
 #!/bin/sh
-# Prepare a docker DB container for trial run
+# Prepare a docker DB container for parallel trial run
 
 set -e
 
-if [ $# -ne 2 ]; then
-    echo "usage: $0 <container> <image>" >&2
+if [ $# -ne 3 ]; then
+    echo "usage: $0 <container> <image> <count>" >&2
     exit 1
 fi
 
 container=$1
 image=$2
+count=$3
 
 psql_exec() {
     docker exec "$container" psql -v ON_ERROR_STOP=1 -U buildbot -d bbtest "$@"
@@ -41,3 +42,21 @@ case "$image" in
         exit 1
         ;;
 esac
+
+i=0
+while [ "$i" -lt "$count" ]; do
+    case "$image" in
+        mariadb:*|mysql:*)
+            case "$image" in
+                mariadb:*) client=mariadb ;;
+                *) client=mysql ;;
+            esac
+            docker exec "$container" "$client" -uroot \
+                -e "CREATE DATABASE bbtest$i; GRANT ALL PRIVILEGES ON bbtest$i.* TO 'buildbot'@'%';"
+            ;;
+        postgres:*)
+            psql_exec -c "CREATE DATABASE bbtest$i"
+            ;;
+    esac
+    i=$((i + 1))
+done
