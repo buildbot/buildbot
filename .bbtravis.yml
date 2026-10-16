@@ -88,9 +88,9 @@ install:
   - condition: TESTS not in ("dev_virtualenv", "e2e_react_whl", "e2e_react_tgz", "trial_worker")
     cmd: /tmp/bbvenv/bin/pip install -e master -e worker
   - condition: TESTS == "dev_virtualenv"
-    cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
+    cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt -r requirements-cidocs.txt
   - condition: TESTS == "trial_worker"
-    cmd: /tmp/bbvenv/bin/pip install -r requirements-ciworker.txt
+    cmd: /tmp/bbvenv/bin/pip install -r requirements-ciworker.txt -e worker/
   - condition: TESTS == "docs"
     cmd: /tmp/bbvenv/bin/pip install -r requirements-cidocs.txt
   - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
@@ -101,7 +101,7 @@ install:
       rm -rf /tmp/bbworkervenv
       python$WORKER_PYTHON -m venv /tmp/bbworkervenv
       /tmp/bbworkervenv/bin/pip install -r requirements-pip.txt
-      /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt
+      /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt -e worker/
   - title: pip installs for backward compat
     cmd: |
       # pip installs for backward compat

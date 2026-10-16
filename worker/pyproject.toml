@@ -49,6 +49,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
+    'parameterized',
     'psutil',
 ]
 
@@ -83,3 +84,7 @@ root = ".."
 local_scheme = "no-local-version"
 # Enable this when worker stop supporting Python 3.7
 # version_file = "buildbot_worker/_version.py"
+
+[tool.uv]
+# rebuild editable installs on new commits/tags for setuptools-scm
+cache-keys = [{ file = "pyproject.toml" }, { file = "setup.py" }, { git = { commit = true, tags = true } }]
