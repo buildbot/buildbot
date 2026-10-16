@@ -199,6 +199,8 @@ class FakeDBConnector(DBConnector):
                 self.model.builder_masters.insert(),
                 [{'id': row.id, 'builderid': row.builderid, 'masterid': row.masterid}],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.builder_masters)
         return non_matched_rows
 
     def _thd_maybe_insert_builder_tags(
