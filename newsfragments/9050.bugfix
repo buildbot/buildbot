@@ -1,0 +1,1 @@
+Fix ``make docs-release`` failure with Sphinx 9.1.0 (:issue:`9050`).
