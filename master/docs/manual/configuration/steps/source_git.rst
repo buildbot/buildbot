@@ -48,6 +48,132 @@ The Git step takes the following arguments:
 ``reference`` (optional)
    Use the specified string as a path to a reference repository on the local machine.
    Git will try to grab objects from this path first instead of the main repository, if they exist.
+   This option is mutually exclusive with ``shared_cache``, which maintains such a repository for you.
+
+``shared_cache`` (optional, default: ``False``)
+   When set to ``True``, Buildbot maintains one bare Git object cache per repository on each worker and lets every builder on that worker read objects from it through Git's alternates mechanism.
+   Builders that share a worker then stop keeping private copies of the same history, which saves disk space and makes new checkouts faster because most objects are already present locally.
+   The cache lives at ``<worker-basedir>/.git-cache/<hash>.git``, where the hash is the first 16 hex digits of the SHA-256 of the cache identity.
+
+   .. code-block:: python
+
+      from buildbot.plugins import steps
+
+      factory.addStep(steps.Git(repourl='https://example.org/repo.git',
+                                mode='full', method='fresh',
+                                shared_cache=True))
+
+   Enabling the option makes the first build on a worker slower, because Buildbot populates the cache with the repository's full history before the checkout runs.
+   The worker needs room for that cache in addition to its existing work directories, which keep the objects they already have.
+   A string value specifies a custom cache path instead of the default one.
+
+   This option requires Git 2.12.0 or later.
+   On older versions Buildbot does not create, update, or activate a shared cache, and new checkouts use the normal cache-free path.
+   If an existing checkout already has a Buildbot-managed alternate from an earlier build, Buildbot preserves it to avoid removing access to borrowed objects, so keep that cache available until the checkout is clobbered or recreated.
+   It needs no particular worker version, except that detecting a worker started with ``--delete-leftover-dirs`` requires worker 3.6.0 or later.
+   ``shared_cache`` and ``reference`` are mutually exclusive.
+   The cache applies only to the top-level repository: submodule object databases and Git LFS payloads are not shared.
+
+   Cache contents and refresh
+      New clones use ``--reference`` and existing repositories get a Buildbot-managed entry in ``.git/objects/info/alternates``, recorded alongside it in a ``buildbot-shared-cache`` marker file so Buildbot can tell its own entry from one you added.
+      In the cache itself Buildbot records ``buildbot.sharedCacheIdentity`` and the timestamps ``buildbot.sharedCacheLastFsck`` and ``buildbot.sharedCacheFsckFailed``; removing both forces the next build to re-check the cache.
+      For an existing linked working tree, Buildbot asks Git for the common object-info directory instead of assuming that ``.git`` is a directory.
+      Buildbot creates the cache with ``git init --bare`` and then populates it through its controlled fetch path instead of cloning the upstream repository into the cache.
+      This avoids temporarily storing URL userinfo as the cache's ``origin`` and avoids Git clone's local hard-link optimization.
+      The cache stores branch heads for the repository and fetches tags only when ``tags=True``.
+      The cache always stores full history, so combining it with ``shallow`` still downloads and keeps the complete repository on the worker even though the checkout stays shallow.
+      When the build has a revision that the cache already contains, Buildbot skips the cache fetch for that build, so cached branch heads can lag behind the origin; ``tags=True`` disables that skip, because a build may need tags the cache has not fetched yet.
+      The requested branch or ref is also fetched, but only through Git's temporary ``FETCH_HEAD`` state; Buildbot does not create a permanent cache ref for each request or checkout.
+      The cache itself is always unfiltered, even when the checkout uses ``filters``; a repository already configured as a partial clone is rejected as a cache, preserved, and the build continues without it.
+
+   Validation and failure handling
+      Buildbot runs a full ``git fsck --no-dangling`` when the cache has no valid check timestamp or its previous successful check is at least 24 hours old.
+      The check runs while the cache lock is held, so on a large cache other builds using the same cache wait for it; a build that waits longer than the step's ``timeout`` continues without the cache.
+      The full check is deliberately retained because weaker connectivity-only checks can miss pack corruption, but it is not run on every build.
+      A cache that fails the check is not re-checked for another 24 hours, so a corrupt cache costs one check rather than one per build; builds keep running without it in the meantime.
+      Whenever a cache cannot be prepared, updated or validated, Buildbot preserves it at its existing path, disables it for the current build, logs the reason, and continues without the cache; it never deletes or replaces an existing cache, and the next build retries, except for the integrity check, which waits for the interval above.
+      Only a cache created during the current preparation attempt may be removed, before it is exposed to any checkout.
+      An administrator must repair or retire a preserved cache only after migrating or recreating dependent work directories.
+      A failed cache-backed clone is retried once without the cache.
+      Using ``clobberOnFailure=True`` can recreate an existing checkout without the cache when its fetch fails, but it does not repair or remove an unusable shared cache.
+      Buildbot limits each worker-to-master read of its checkout marker and alternates file to 256 KiB.
+      If existing metadata exceeds that limit or is not valid UTF-8, Buildbot leaves it unchanged and skips shared-cache alternates management for that checkout.
+
+   Concurrency and maintenance
+      Cache preparation, update and validation are serialized per master; the cache lock is released before checkout work begins so builders can use the populated cache concurrently.
+      Automatic Git maintenance is disabled for the cache.
+      Buildbot does not automatically run Git garbage collection or prune cache objects because existing checkouts may still borrow objects that are otherwise unreachable in the cache.
+      Consequently, the cache can grow over time as branches are force-pushed or deleted and additional revisions are fetched.
+      Administrators must not prune a live cache while any work directory still references it; recreate those work directories or copy their borrowed objects locally before cleanup.
+      Buildbot does not automatically remove cache directories that are no longer selected.
+      A worker started with ``--delete-leftover-dirs`` deletes every directory in its base directory that no builder is using, which includes the default cache; Buildbot detects that flag and refuses a cache inside the base directory rather than have it deleted on every reconnect, so configure ``shared_cache`` with an absolute path outside the base directory on such workers.
+      Workers from 2.7.0 through 3.5.0 accept the flag but do not report it to the master, so this protection cannot engage for them; on those workers configure an absolute cache path outside the base directory.
+      A worker without that flag instead logs a "leftover directory" hint for the cache on every connect; that hint does not apply to the cache, which must not be deleted while any work directory still borrows from it.
+      Because the default path is derived from the rendered repository URL, configurations that select many changing URLs, such as source forks, can create multiple caches on one worker.
+      The :bb:step:`GitLab` step is the common case: it rewrites ``repourl`` to the source project of each merge request, so a busy project accumulates one cache per contributing fork.
+      Cross-fork cache sharing is not supported.
+      Remove an unused cache only after all work directories that reference it have been migrated or recreated.
+
+   Checkout alternates and migration
+      Existing repositories start using the cache but do not discard objects they already contain, so they do not shrink automatically.
+      Clobber or recreate existing work directories to realize the disk savings.
+      Buildbot does not replace an existing managed alternate when the configured cache path changes, because that alternate may contain the only copy of objects borrowed by the checkout.
+      Existing work directories continue using the old cache until they are clobbered or recreated, so the old cache must remain available during that migration.
+      Buildbot matches its managed alternate by literal path text, so configure the worker base directory and any custom cache path with one consistent spelling; an equivalent spelling through a symbolic link, a Windows 8.3 short name, or different letter case is treated as a different path and can require clobbering the checkout as if the cache path had changed.
+      Buildbot also preserves an existing managed alternate if cache preparation is temporarily unavailable.
+      If an old cache has been deleted or damaged, the checkout may require clobbering before it can continue without it.
+      Disabling the option does not remove an entry installed by an earlier build; clobber or recreate the work directory when disabling it.
+
+   Custom cache paths
+      Relative custom paths are resolved from the worker base directory; absolute paths are used directly.
+      On Windows, relative means a path with neither a drive nor a root.
+      Drive-relative paths such as ``C:cache``, current-drive-rooted paths such as ``\cache`` or ``/cache``, and incomplete UNC paths are rejected; use an ordinary relative path, a fully qualified drive path, or a complete UNC path.
+      The path identifies one exact bare repository dedicated to Buildbot; it is not a cache root or a general-purpose reference repository.
+      When Buildbot creates the repository, it records the cache identity in ``buildbot.sharedCacheOwner``.
+      An existing custom repository is accepted only when that ownership marker and its ``origin`` match the computed cache identity.
+      An unmarked or mismatched repository is preserved and rejected without modification.
+      Buildbot owns an accepted custom repository: it may rewrite its ``origin``, hooks directory and maintenance configuration, fetch and prune its branch heads and optional tags, and update ``FETCH_HEAD``.
+      Do not share a custom cache with another consumer.
+      Custom paths are trusted worker configuration.
+      Configure one consistent path spelling for each custom cache; do not configure paths that resolve through symbolic links to the same repository because the per-master lock is keyed by the normalized configured path rather than the worker's resolved file-system identity.
+
+      The cache must be self-contained.
+      Buildbot rejects a cache containing either ``objects/info/alternates`` or ``objects/info/http-alternates`` because checkouts using it would otherwise depend transitively on another object store.
+
+   Cache identity and credentials
+      The cache identity uses a lowercase scheme and drops a port that is the default for it, so ``git@host:repo``, ``ssh://git@host/repo`` and ``ssh://git@host:22/repo`` share one cache; other spelling differences, such as a non-default port or a trailing slash, select different caches.
+      For HTTP and HTTPS URLs, URL userinfo is removed from the cache identity and the cache's ``origin`` URL.
+      For other schemes the username is kept, so ``ssh://alice@host/repo`` and ``ssh://bob@host/repo`` use separate caches.
+      Credentials supplied through ``auth_credentials`` or ``git_credentials`` are also not part of the cache identity.
+      Consequently, ``shared_cache=True`` makes all credentials used with the same credential-free repository URL share one object store.
+      Enabling this mode asserts that those credentials expose the same repository object graph and are permitted to share objects.
+      If authentication can expose different objects for the same URL, configure a distinct string ``shared_cache`` path for each credential scope.
+      The configured ``repourl`` and credentials are still used for network fetches.
+      HTTP and HTTPS repository URLs containing a query or fragment are rejected when shared caching is enabled because Buildbot cannot safely distinguish repository identity parameters from credentials that must not be persisted.
+      This restriction does not apply when ``shared_cache`` is disabled.
+      Relative local file-system paths are not supported as ``repourl`` when ``shared_cache`` is enabled; use an absolute local path or a repository URL.
+      On Windows, a local ``repourl`` must likewise be fully qualified; drive-relative, current-drive-rooted, and incomplete UNC paths are rejected.
+      This does not affect relative string values for ``shared_cache`` itself, which are resolved from the worker base directory as described above.
+
+   Isolation
+      The cache is not a security boundary between mutually untrusted jobs running as the same worker user.
+      The worker's user must own the cache directory: on Unix-like systems Git refuses to operate on a repository owned by another user, in which case Buildbot preserves the cache, disables it for the build, and continues without it.
+      Cache Git commands do not inherit the step's ``config`` option and remove repository-scoped Git environment variables, such as ``GIT_DIR`` and the ``GIT_CONFIG`` family, from the step's ``env`` option.
+      Variables exported in the worker daemon's own environment are not removed, so do not set repository-scoped Git variables there.
+      Buildbot directs cache hooks to an empty cache-specific directory and does not activate the cache if that directory cannot be recreated.
+
+   Windows
+      Git commands from a shared-cache step use command-scoped ``core.longpaths=true`` unless the step's ``config`` option sets ``core.longpaths`` explicitly.
+      Cache commands run from the local worker base directory and select the cache with ``git -C``, so ``cmd.exe`` is never asked to use a UNC working directory.
+      Commands that operate directly on the cache use a command-scoped ``safe.directory`` entry for that cache path.
+      A fully qualified local or UNC ``repourl`` is trusted separately through command-scoped ``safe.directory`` entries for both the repository path and its ``.git`` subdirectory, so bare and non-bare source repositories work alike.
+      UNC values use Git for Windows' portable ``%(prefix)///server/share/path`` representation.
+      These settings do not modify system or global Git configuration.
+      ``core.longpaths`` applies to Git commands only; worker-side file transfers and other Python or ``cmd.exe`` operations remain subject to the worker's Windows path support.
+      It also does not allow Git to create or enter a repository whose own directory path exceeds the legacy Windows path limit, and the system long-path policy does not lift that either.
+      The default cache path adds 32 characters to the worker base directory, so keep the base directory well within that limit; when the cache path is unusable, Buildbot logs the failure and builds continue without the cache.
+      A UNC cache also remains subject to the reliability and performance characteristics of its network file system and Git for Windows version.
+      Validate a UNC cache against your own Git for Windows release and file server before deploying it.
 
 ``origin`` (optional)
    By default, any clone will use the name "origin" as the remote repository (eg, "origin/master").
@@ -56,6 +182,8 @@ The Git step takes the following arguments:
 ``filters`` (optional, type: ``list``)
    For each string in the passed in list, adds a ``--filter <filter>`` argument to :command:`git clone` and :command:`git fetch`.
    For existing repositories, Buildbot also configures the remote as a partial clone promisor remote before fetching.
+   If that configuration cannot be persisted, the source step fails before starting the filtered fetch.
+   Git ignores ``--filter`` for a plain local path and clones fully, printing only a warning; use a ``file://`` URL to keep the filter effective.
    This allows for adding filters like ``--filter "tree:0"`` to speed up clone and fetch operations.
    This requires git version 2.27 or higher.
 

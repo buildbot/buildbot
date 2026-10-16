@@ -1,0 +1,1 @@
+Added the ``shared_cache`` parameter to the :bb:step:`Git` step to maintain a worker-wide Git object cache and share repository objects across builders through Git alternates. This opt-in feature requires Git 2.12.0 or newer; workers with older Git continue without activating the cache (:issue:`9059`).

@@ -1,0 +1,1 @@
+The :bb:step:`Git` step now fails the step when it cannot write the ``remote.<name>.promisor`` or ``remote.<name>.partialclonefilter`` configuration required by ``filters``. Previously the write failure was ignored and the step continued with a partial clone whose promisor configuration for that remote was incomplete, so later lazy fetches of filtered-away objects could fail.

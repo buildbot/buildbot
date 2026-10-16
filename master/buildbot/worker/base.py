@@ -471,6 +471,9 @@ class AbstractWorker(service.BuildbotService):
         self.worker_environ = conn.info.get("environ", {})  # type: ignore[attr-defined]
         self.worker_basedir = conn.info.get("basedir", None)  # type: ignore[attr-defined]
         self.worker_system = conn.info.get("system", None)  # type: ignore[attr-defined]
+        self.worker_deletes_leftover_dirs = conn.info.get(  # type: ignore[attr-defined]
+            "delete_leftover_dirs", False
+        )
 
         # The _detach_sub member is only ever used from tests.
         self._detached_sub = self.conn.notifyOnDisconnect(self.detached)
