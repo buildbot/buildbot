@@ -231,6 +231,41 @@ jobs:
         run: "python -m twisted.trial --reporter=text --rterrors buildbot.test.integration.interop"
         timeout-minutes: 30
 
+  worker-older-python:
+    needs:
+      - lint
+    strategy:
+      matrix:
+        python-version:
+          - "3.7"
+          - "3.8"
+          - "3.9"
+
+    name: trial_worker / python ${{ matrix.python-version }} / twisted 21.2.0
+    # Older Python versions (3.7, 3.8) are not available on the newest runners.
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "actions/setup-python@v6"
+        with:
+          python-version: "${{ matrix.python-version }}"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ciworker.txt
+            worker/setup.py
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install -r requirements-pip.txt
+          python -m pip install -r requirements-ciworker.txt
+          python -m pip install treq==22.2.0 Twisted==21.2.0 "setuptools<82.0.0"
+
+      - name: "Run worker tests"
+        run: "python -m twisted.trial --reporter=text --rterrors buildbot_worker.test"
+        timeout-minutes: 30
+
   ci:
     needs:
       - lint
