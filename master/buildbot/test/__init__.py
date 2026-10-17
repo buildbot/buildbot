@@ -118,3 +118,11 @@ warnings.filterwarnings(
     r".* is deprecated\. Please use .* instead\.",
     category=DeprecationWarning,
 )
+
+# Ignore twisted faulty warning in editable install
+# see: https://github.com/twisted/twisted/issues/11840
+warnings.filterwarnings(
+    "ignore",
+    r".* not in path importer cache \(PEP 302 violation - check your local configuration\)",
+    category=UserWarning,
+)
