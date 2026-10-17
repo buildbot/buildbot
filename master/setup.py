@@ -221,7 +221,10 @@ setup_args = {
                     ('buildbot.steps.source.cvs', ['CVS']),
                     ('buildbot.steps.source.darcs', ['Darcs']),
                     ('buildbot.steps.source.gerrit', ['Gerrit']),
-                    ('buildbot.steps.source.git', ['Git', 'GitCommit', 'GitPush', 'GitTag']),
+                    (
+                        'buildbot.steps.source.git',
+                        ['Git', 'GitCommit', 'GitExport', 'GitPush', 'GitTag'],
+                    ),
                     ('buildbot.steps.source.github', ['GitHub']),
                     ('buildbot.steps.source.gitlab', ['GitLab']),
                     ('buildbot.steps.source.mercurial', ['Mercurial']),
