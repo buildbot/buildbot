@@ -94,6 +94,56 @@ jobs:
           make frontend_npm_install
           make prettier-check
 
+  ci-backward-compat:
+    needs:
+      - lint
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # older twisted/treq, for backward compatibility
+          - name: "py3.9 / twisted 24.7.0 / treq 22.2.0"
+            python-version: "3.9"
+            twisted: "24.7.0"
+            treq: "22.2.0"
+          # older SQLAlchemy 1.4.x
+          - name: "py3.9 / sqlalchemy 1.4.52"
+            python-version: "3.9"
+            sqlalchemy: "1.4.52"
+
+    name: trial / ${{ matrix.name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: "actions/checkout@v6"
+      - uses: "actions/setup-python@v6"
+        with:
+          python-version: "${{ matrix.python-version }}"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ci.txt
+            master/setup.py
+            worker/setup.py
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install -r requirements-pip.txt
+          python -m pip install -r requirements-ci.txt
+
+      - name: "Install pinned dependency versions"
+        if: ${{ matrix.twisted || matrix.treq || matrix.sqlalchemy }}
+        run: |
+          pkgs=""
+          if [ -n "${{ matrix.treq }}" ]; then pkgs="$pkgs treq==${{ matrix.treq }}"; fi
+          if [ -n "${{ matrix.twisted }}" ]; then pkgs="$pkgs Twisted==${{ matrix.twisted }}"; fi
+          if [ -n "${{ matrix.sqlalchemy }}" ]; then pkgs="$pkgs SQLAlchemy==${{ matrix.sqlalchemy }}"; fi
+          python -m pip install $pkgs
+
+      - name: "Run tests"
+        run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+        timeout-minutes: 30
+
   ci:
     needs:
       - lint
