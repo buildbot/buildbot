@@ -1,1 +1,0 @@
-Fix error message on control action (rebuild, stop, force) not being displayed (:issue:`8880`)

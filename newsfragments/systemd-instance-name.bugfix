@@ -1,1 +1,0 @@
-Fixed systemd unit templates for master and worker failing to start instances whose name contains a hyphen (``%I`` replaced by ``%i``) (:issue:`8871`).

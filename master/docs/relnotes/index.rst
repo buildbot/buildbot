@@ -8,6 +8,119 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``4.4.0a1`` ( ``2026-10-17`` )
+=======================================
+
+Bug fixes
+---------
+
+- Fixed ``StringFileWriter`` raising ``UnicodeDecodeError`` (and hanging the build step forever) on invalid or chunk-split UTF-8 data, by decoding incrementally with ``errors='replace'`` instead of decoding each transfer chunk independently (:issue:`3982`).
+- Deleted logs now display a message indicating they have been removed instead of showing empty content (:issue:`4274`).
+- Fixed ``UnicodeDecodeError`` when starting the master without ``LC_ALL``/``LANG`` set. The web UI ``index.html`` is now always read and served as UTF-8 instead of using the locale-dependent default encoding (:issue:`5502`).
+- Fixed build badges in Grid View, Console View, Masters View, and Build View debug tab not displaying build properties (e.g. branch name from ``Links.build_link_template`` setting) (:issue:`8142`).
+- Fixed ``ChoiceStringParameter`` with ``strict=False`` not supporting paste or edit of custom values in the force build modal (:issue:`8155`).
+- Fixed console view not displaying avatars and timestamps for changes (:issue:`8156`).
+- Fixed NestedParameter tabs layout not showing tab content (:issue:`8316`).
+- Fixed ``buildbot cleanupdb`` failing to run (:issue:`8370`).
+- Fixed page titles always showing "Buildbot" instead of reflecting the current view (:issue:`8703`).
+- Web frontend now correctly applies the ``default_page`` configuration to redirect users from the home page to the configured default page (:issue:`8758`).
+- Fixed potential ReDoS, OOM, and main thread blocking in `WarningCountingShellCommand` when processing suppression files. (:issue:`8819`)
+- Fixed the `Git` step to apply configured partial clone filters when fetching existing repositories (:issue:`9058`).
+- Fixed an issue where incomplete builds were considered as previous builds in reporters (:issue:`9067`).
+- GitLab OAuth now retrieves all groups when determining a user's roles (:issue:`9169`).
+- Encode the username and password for use as credentials in `UsersClient` (:issue:`5211`)
+- Fix deprecation warning from alembic >= 1.16.0.
+- Fixes TypeError that occurs in _run method of Poller after reconfigService method of GerritEventLogPoller creates an instance of Poller (:issue:`8711`)
+- :bb:step:`CopyDirectory` now provides the correct options when run on AIX (remove -v)
+- ``BuildRequest.mergeSourceStampsWith`` now correctly merge sourcestamps changes instead of only keeping changes from the latest request.
+  This in turn fixes various ``Build`` methods that were relying on this function. Such as (but not limited to) ``allChanges``, and ``allFiles``.
+- Fixed ``BuildStep.getResultSummary`` crashing when neither ``descriptionDone`` nor ``description`` is set (:issue:`8802`).
+- On asymmetric multimaster configurations `collapseRequests` will work now when a given builder is not defined on the master running the collapse request, defaulting in that case to run the globally configured `collapseRequests` setting.
+  In that case, a globally configured ``collapseRequests`` callable is called with ``builder=None``.
+- Fixed a deadlock in DB logs processing (both read / write scenario)
+- Fixed favicon missing on most pages due to double slash in URL path (:issue:`8722`).
+- Fixed Log copy on Chromium browser would not have line breaks (:issue:`8704`)
+- Work around bug in Twisted 24.7 or newer that causes failures for old (pre Buildbot 0.9) workers to connect to the master.
+- Fixed a regression in Grid View where arrow icons no longer expanded to reveal details of the change (:issue:`8268`)
+- Fixed a crash in ``MetricAlarmHandler`` when accessing an alarm that was never set (:issue:`8844`).
+- Fixed file uploads with ``keepstamp=True`` failing to set the file timestamps when using the MsgPack worker protocol (:issue:`8459`).
+- Fixes error on startup in NetUsageData when ``db_url`` config is a renderable (:issue:`8451`, introduced in v4.3.0)
+- Rest API JSON response no longer close before write finished (:issue:`9065`).
+- Fix a UI crash occurring when using the search inside long log with ANSI escape code (:issue:`8678`)
+- Fixed `Secret` failing to render when given an object providing properties (such as a build) instead of a ``Properties`` instance (:issue:`8844`).
+- Fixed a race condition when a worker attempts to connect during master shutdown
+- Fixed systemd unit templates for master and worker failing to start instances whose name contains a hyphen (``%I`` replaced by ``%i``) (:issue:`8871`).
+- Include systemd unit files in master and worker sdists.
+- Fix issue when using the `haproxy:` prefix in the master's worker protocol configuration (PB or MsgPack).
+- Fixed crash when WSGI dashboard uses non-existent icon. A default icon is now used instead (:issue:`7435`).
+- Fix error message on control action (rebuild, stop, force) not being displayed (:issue:`8880`)
+- Fixed a WebUI crash when loading an unknown settings :issue:`8369`
+- Fixed ``FileParameter`` fields being not present in ForceBuild Form.
+
+
+Changes
+-------
+
+- Builder name filter is now case insensitive
+- Buildbot Master Docker image now uses Debian 13 Trixie as base image.
+- Buildbot www packages are no longer built when installing via `pip install -e www/<package>` from Buildbot source code checkout.
+  Use `make frontend` which will build all packages, or `npm ci && npm run build` in the packages you need.
+  Only then `pip install -e www/<package>` will work.
+- `SetPropertyFromCommand` now stops on command failure before running `extract_fn` or recording property changes.
+- The systemd unit templates for master and worker no longer start when the instance directory or its ``buildbot.tac`` is missing, and now use ``StateDirectory=`` to create ``/var/lib/buildbot`` (:issue:`8871`).
+- The priority of a build is now inherited through `Trigger` (:issue:`8804`).
+  Builds triggered by a `Trigger` step now get the highest priority of the triggering build's requests, which override ``priority`` configured on the `Triggerable` scheduler.
+- The web UI now uses Bootstrap 5 and react-bootstrap 2 (previously Bootstrap 4 and react-bootstrap 1) (:issue:`8845`).
+
+
+Improved Documentation
+----------------------
+
+- Fix outdated links to the web frontend sources in the developer documentation of :py:class:`~buildbot.schedulers.forcesched.BaseParameter` (:issue:`8618`)
+- Add documentation about retrieving the value of `NestedParameter` with `Interpolate` (:issue:`3779`)
+- Updated developer documentation to reflect React web UI stack.
+- Improve systemd documentation and fix stale references to buildbot-contrib.
+
+
+Features
+--------
+
+- Added dark theme support to the web UI. A new "Appearance" setting allows switching between Light and Dark themes. All CSS hardcoded colors have been replaced with CSS custom properties for full theme support (:issue:`5007`).
+- Grid view now reads and writes the branch filter from the URL query parameter ``branch`` (:issue:`8324`).
+- ``:class:BuildbotService`` now has a ``_logger`` field, which is a ``twisted.logger.Logger`` instance using the service's name as it's namespace.
+- MsBuild steps now allow to define custom properties.
+- Buildbot source code is now fully typed.
+- An alert now appears at the top of the web UI when the WebSocket disconnects, indicating that live updates have stopped.
+- Added support for KeyCloak auth provider.
+- Added a button to copy the raw content of a log to the clipboard in the log viewer (:issue:`8781`).
+- Buildbot now supports access control with login into the web UI.
+  Previously access control was out of scope and handled by the HTTP server in many deployments.
+
+
+Misc
+----
+
+- Master that uses a WAMP MQ now log the authid of the session on join
+- Declare support of Python3.14
+- Declare support of Python3.15
+- Remove unnecessary run-time dependency on setuptools.
+- The worker now depends on ``importlib_metadata`` to retrieve its version from the installed package metadata (:issue:`8877`).
+- Logs entries in ``twisted.log`` related to a Worker interaction are enriched with the worker name and IP
+- Declare Python 3.7 as minimum version for Worker.
+- Buildbot now uses npm (v9+) for its frontend development (previously Yarn v1)
+
+
+Deprecations and Removals
+-------------------------
+
+- The environment variable ``NO_INSTALL_REQS`` (which if set, would remove all required dependencies from the Buildbot packages) was removed.
+  If your workflow used it, do report an issue to explore workaround or re-establishment.
+- The buildbot-pkg package was removed.
+  It was used for version definition from Git data (replaced with setuptools-scm) and JS build dependency, which was unavailable in sdist since Buildbot's JS projects have dependencies on each other locally.
+- ``process.BuildRequest`` is now a dataclass. Its ``brid`` attribute was removed (use ``id``) (:issue:`8460`, :issue:`8482`).
+- The ``submittedAt``, and ``waitedFor`` fields of ``process.BuildRequest`` have been deprecated in favor of their snake case equivalent (``submitted_at``, and ``waited_for``).
+- Minimum version of Twisted is now 24.7 for the Buildbot master.
+
 Buildbot ``4.3.0`` ( ``2025-05-12`` )
 =====================================
 

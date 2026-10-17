@@ -1,1 +1,0 @@
-Added dark theme support to the web UI. A new "Appearance" setting allows switching between Light and Dark themes. All CSS hardcoded colors have been replaced with CSS custom properties for full theme support (:issue:`5007`).

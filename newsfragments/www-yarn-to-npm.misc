@@ -1,1 +1,0 @@
-Buildbot now uses npm (v9+) for its frontend development (previously Yarn v1)
