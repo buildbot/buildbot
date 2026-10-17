@@ -676,6 +676,141 @@ class Git(Source, GitStepMixin):
             return "clone"
 
 
+class GitExport(Source, GitStepMixin):
+    name = 'git-export'
+    renderables = ['repourl', 'branch']
+
+    def __init__(
+        self,
+        repourl: IMaybeRenderableType[str] | None = None,
+        path: str | None = None,
+        *,
+        branch: str = 'HEAD',
+        port: int = 22,
+        config: dict[str, Any] | None = None,
+        sshPrivateKey: Any = None,
+        sshHostKey: Any = None,
+        sshKnownHosts: Any = None,
+        **kwargs: Any,
+    ) -> None:
+        if (
+            path is None
+            or not path
+            or path.startswith('/')
+            or '\\' in path
+            or ':' in path
+            or any(part in {'', '.', '..'} for part in path.split('/'))
+        ):
+            bbconfig.error("GitExport: path must be a repository-relative subtree.")
+        assert path is not None
+
+        self.repourl = repourl  # type: ignore[assignment]
+        self.path = path
+        self.branch = branch
+        self.port = port
+        self.config = config
+
+        kwargs.setdefault('description', ['exporting'])
+        kwargs.setdefault('descriptionDone', ['export'])
+        super().__init__(**kwargs)
+
+        self.setupGitStep()
+        self.setup_git_auth(sshPrivateKey, sshHostKey, sshKnownHosts)
+
+    def _get_auth_data_workdir(self) -> str:
+        return self.workdir
+
+    @defer.inlineCallbacks
+    def run_vc(
+        self, branch: str | None, revision: str | None, patch: Any
+    ) -> InlineCallbacksType[int]:
+        self.setup_repourl()
+        self.branch = branch or 'HEAD'
+        self.revision = revision
+        self.stdio_log = yield self.addLogForRemoteCommands("stdio")
+
+        auth_workdir = self._get_auth_data_workdir()
+        archive_file = '.buildbot-git-export.tar'
+        archive_path = self.build.path_module.join(self.workdir, archive_file)  # type: ignore[union-attr]
+
+        try:
+            gitInstalled = yield self.checkFeatureSupport()
+            if not gitInstalled:
+                raise WorkerSetupError("git is not installed on worker")
+
+            yield self._git_auth.download_auth_files_if_needed(auth_workdir)
+
+            revision = yield self._resolve_export_revision()
+            yield self._dovccmd([
+                'archive',
+                f'--remote={self.repourl}',
+                '--format=tar',
+                f'--output={archive_file}',
+                revision,
+                '--',
+                self.path,
+            ])
+
+            export_path = self.build.path_module.join(  # type: ignore[union-attr]
+                self.workdir, *self.path.split('/')
+            )
+            if (yield self.pathExists(export_path)):
+                yield self.runRmdir(export_path)
+
+            cmd = remotecommand.RemoteShellCommand(
+                self.workdir,
+                ['tar', '-xf', archive_file],
+                env=self.env,
+                logEnviron=self.logEnviron,
+                timeout=self.timeout,
+            )
+            cmd.useLog(self.stdio_log, False)
+            yield self.runCommand(cmd)
+            if cmd.didFail():
+                raise buildstep.BuildStepFailed()
+
+            if patch:
+                yield self.patch(patch)
+            self.updateSourceProperty('got_revision', revision)
+            return RC_SUCCESS
+        finally:
+            yield self.runRmdir(archive_path, abandonOnFailure=False)
+            yield self._git_auth.remove_auth_files_if_needed(auth_workdir)
+
+    @defer.inlineCallbacks
+    def applyPatch(self, patch: Any) -> InlineCallbacksType[int]:
+        return (yield Source.applyPatch(self, patch))
+
+    @defer.inlineCallbacks
+    def _resolve_export_revision(self) -> InlineCallbacksType[str]:
+        if self.revision is not None:
+            return self.revision
+
+        ref = self.branch or 'HEAD'
+        if ref == 'HEAD' or ref.startswith('refs/'):
+            refs = [ref]
+        else:
+            refs = [f'refs/heads/{ref}', f'refs/tags/{ref}']
+
+        stdout = yield self._dovccmd(
+            ['ls-remote', self.repourl, *refs],
+            collectStdout=True,
+        )
+        revisions = {}
+        for line in stdout.splitlines():
+            commit, remote_ref = line.split('\t', 1)
+            revisions[remote_ref] = commit
+
+        for ref in refs:
+            peeled_ref = f'{ref}^{{}}'
+            if peeled_ref in revisions:
+                return revisions[peeled_ref]
+            if ref in revisions:
+                return revisions[ref]
+
+        raise buildstep.BuildStepFailed()
+
+
 class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
     description = None
     descriptionDone = None

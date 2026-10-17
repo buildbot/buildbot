@@ -16,6 +16,7 @@ Build Steps
     source_github
     source_gitlab
     source_git
+    source_git_export
     source_mercurial
     source_monotone
     source_p4
@@ -107,6 +108,7 @@ The following build steps are available:
     * :ref:`Step-CVS`
     * :ref:`Step-Darcs`
     * :ref:`Step-Git`
+    * :ref:`Step-GitExport`
     * :ref:`Step-Gerrit`
     * :ref:`Step-GitHub`
     * :ref:`Step-GitLab`
