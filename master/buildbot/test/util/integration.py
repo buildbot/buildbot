@@ -127,7 +127,7 @@ def print_test_log(l: dict[str, Any], out: Any) -> None:
             if linetype == 'e':
                 # red
                 line = "\x1b[31m" + line + "\x1b[0m"
-            print(" " * 8 + line)
+            print(" " * 8 + line, file=out)
     else:
         print("" + l['contents']['content'], file=out)
     print(" " * 8 + "********************************", file=out)

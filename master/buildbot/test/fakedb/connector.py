@@ -24,6 +24,8 @@ from twisted.internet import defer
 
 from buildbot.db.connector import DBConnector
 from buildbot.test.util.db import thd_clean_database
+from buildbot.test.util.db import thd_clear_reusable_database
+from buildbot.test.util.db import thd_mark_reusable_database
 from buildbot.util.sautils import hash_columns
 from buildbot.util.twisted import async_to_deferred
 
@@ -108,8 +110,11 @@ class FakeDBConnector(DBConnector):
     def setup(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         if self.auto_upgrade:
             yield super().setup(check_version=False)
-            yield self.pool.do(thd_clean_database)
-            yield self.model.upgrade()
+            reused = yield self.pool.do(thd_clear_reusable_database)
+            if not reused:
+                yield self.pool.do(thd_clean_database)
+                yield self.model.upgrade()
+                yield self.pool.do(thd_mark_reusable_database)
         else:
             yield super().setup(check_version=self.check_version)
             if self.auto_clean:
@@ -199,6 +204,8 @@ class FakeDBConnector(DBConnector):
                 self.model.builder_masters.insert(),
                 [{'id': row.id, 'builderid': row.builderid, 'masterid': row.masterid}],
             )
+        if matched_rows:
+            self._thd_post_insert(conn, self.model.builder_masters)
         return non_matched_rows
 
     def _thd_maybe_insert_builder_tags(
