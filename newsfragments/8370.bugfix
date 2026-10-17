@@ -1,1 +1,0 @@
-Fixed ``buildbot cleanupdb`` failing to run (:issue:`8370`).

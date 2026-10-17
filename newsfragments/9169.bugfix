@@ -1,1 +1,0 @@
-GitLab OAuth now retrieves all groups when determining a user's roles (:issue:`9169`).

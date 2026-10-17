@@ -1,1 +1,0 @@
-Fixed a crash in ``MetricAlarmHandler`` when accessing an alarm that was never set (:issue:`8844`).

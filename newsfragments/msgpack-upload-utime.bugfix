@@ -1,1 +1,0 @@
-Fixed file uploads with ``keepstamp=True`` failing to set the file timestamps when using the MsgPack worker protocol (:issue:`8459`).

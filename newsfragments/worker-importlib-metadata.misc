@@ -1,1 +1,0 @@
-The worker now depends on ``importlib_metadata`` to retrieve its version from the installed package metadata (:issue:`8877`).
