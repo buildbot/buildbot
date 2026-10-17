@@ -173,6 +173,64 @@ jobs:
         run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
         timeout-minutes: 30
 
+  worker-interop:
+    needs:
+      - lint
+    strategy:
+      fail-fast: false
+      matrix:
+        worker-python:
+          - "3.9"
+          - "3.8"
+          - "3.7"
+
+    name: interop / master / worker py${{ matrix.worker-python }}
+    # Older Python versions (3.7, 3.8) are not available on the newest runners.
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: "actions/checkout@v6"
+
+      - name: "Set up worker Python ${{ matrix.worker-python }}"
+        uses: "actions/setup-python@v6"
+        id: worker-python
+        with:
+          python-version: "${{ matrix.worker-python }}"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ciworker.txt
+            worker/setup.py
+
+      - name: "Set up worker virtualenv"
+        run: |
+          "${{ steps.worker-python.outputs.python-path }}" -m venv /tmp/bbworkervenv
+          /tmp/bbworkervenv/bin/pip install -r requirements-pip.txt
+          /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt
+
+      # Set up the master Python last so it becomes the default "python".
+      - name: "Set up master Python 3.9"
+        uses: "actions/setup-python@v6"
+        with:
+          python-version: "3.9"
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-pip.txt
+            requirements-ci.txt
+            master/setup.py
+            worker/setup.py
+
+      - name: "Install master dependencies"
+        run: |
+          python -m pip install -r requirements-pip.txt
+          python -m pip install -r requirements-ci.txt
+
+      - name: "Run interop tests"
+        env:
+          SANDBOXED_WORKER_PATH: /tmp/bbworkervenv/bin/buildbot-worker
+        run: "python -m twisted.trial --reporter=text --rterrors buildbot.test.integration.interop"
+        timeout-minutes: 30
+
   ci:
     needs:
       - lint
