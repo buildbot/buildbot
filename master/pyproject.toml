@@ -50,6 +50,7 @@ dependencies = [
     'PyJWT',
     'pyyaml',
     'unidiff >= 0.7.5',
+    'typing_extensions >= 4.4',
     # buildbot_windows_service needs pywin32
     'pywin32; platform_system=="Windows"',
 ]

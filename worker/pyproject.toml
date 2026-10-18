@@ -45,6 +45,7 @@ dependencies = [
     # buildbot_worker_windows_service needs pywin32
     'pywin32; platform_system=="Windows"',
     'importlib_metadata',
+    'typing_extensions >= 4.4'
 ]
 
 [project.optional-dependencies]
