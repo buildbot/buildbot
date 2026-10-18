@@ -676,6 +676,7 @@ class NightlyTriggerable(NightlyBase):
         set_props: Any = None,
         parent_buildid: int | None = None,
         parent_relationship: str | None = None,
+        priority: int | None = None,
     ) -> tuple[defer.Deferred[Any], defer.Deferred[Any]]:
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
