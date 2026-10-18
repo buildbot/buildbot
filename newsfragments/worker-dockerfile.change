@@ -1,0 +1,1 @@
+The Worker docker image is now built from ``Dockerfile.worker`` with the repository root as build context so setuptools-scm can determine the correct version.

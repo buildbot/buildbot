@@ -7,6 +7,6 @@ include contrib/zsh/* contrib/bash/*
 
 exclude .git_archival.txt
 
-exclude ruff.toml tox.ini .mypy.ini Dockerfile
+exclude ruff.toml tox.ini .mypy.ini
 exclude docker/**
 exclude contrib/README.txt

@@ -138,7 +138,7 @@ mypy: mypy-master-linux mypy-master-win32 mypy-worker-linux mypy-worker-win32
 docker: docker-buildbot-worker docker-buildbot-master
 	echo done
 docker-buildbot-worker:
-	$(DOCKERBUILD) -t buildbot/buildbot-worker:master worker
+	$(DOCKERBUILD) -t buildbot/buildbot-worker:master -f Dockerfile.worker .
 docker-buildbot-worker-node:
 	$(DOCKERBUILD) -t buildbot/buildbot-worker-node:master master/contrib/docker/pythonnode_worker
 docker-buildbot-master:
