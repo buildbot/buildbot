@@ -498,7 +498,6 @@ class KeyCloakAuth(OAuth2Auth):
 
     def getUserInfoFromOAuthClient(self, c: requests.Session) -> dict[str, Any]:
         user = self.get(c, "/protocol/openid-connect/userinfo")
-        log.info('qqq {user}', user=user)
         return {
             "full_name": user.get("name", ""),
             "username": user.get("preferred_username", ""),
