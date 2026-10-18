@@ -79,11 +79,11 @@ def patch_config_for_unit_tests() -> None:
 @onlyOnce
 def patch_twisted_failure() -> None:
     try:
+        from packaging.version import Version  # noqa: PLC0415
         from twisted import __version__ as twisted_version  # noqa: PLC0415
-        from twisted.python.versions import Version  # noqa: PLC0415
 
-        current_version = Version('twisted', *map(int, twisted_version.split('.')[:3]))
-        if current_version <= Version('twisted', 24, 7, 0):
+        current_version = Version(twisted_version)
+        if current_version < Version("24.7.0"):
             return
 
         from twisted.spread.pb import CopiedFailure  # noqa: PLC0415
