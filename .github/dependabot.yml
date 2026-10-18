@@ -12,6 +12,9 @@ updates:
   - package-ecosystem: "npm"
     directories:
       - "www/**"
+    groups:
+      www:
+        group-by: dependency-name
     commit-message:
       prefix: "www: "
     # more PRs won't help due to merge conflicts in lock file
