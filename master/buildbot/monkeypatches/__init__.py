@@ -101,10 +101,18 @@ def patch_twisted_failure() -> None:
         pass
 
 
+@onlyOnce
+def patch_pb_decref() -> None:
+    from buildbot.monkeypatches import pb_decref  # noqa: PLC0415
+
+    pb_decref.patch()
+
+
 def patch_all(for_tests: bool = False) -> None:
     if for_tests:
         patch_testcase_timeout()
         patch_config_for_unit_tests()
+        patch_pb_decref()
     patch_servicechecks()
     patch_decorators()
     patch_twisted_failure()
