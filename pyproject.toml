@@ -12,9 +12,10 @@ line-length = 100
         "PLR0912", # too-many-branches
         "PLR0913", # too-many-arguments
         "PLR0915", # too-many-statements
-        "PLW0603", # global-statement
+        "PLR0917", # too-many-positional-arguments
         "PLR1711", # useless-return
         "PLR5501", # collapsible-else-if
+        "PLW0603", # global-statement
 
         # maybe we should fix these?
         "PLR2004", # magic-value-comparison
@@ -24,6 +25,7 @@ line-length = 100
 
         # Might be nice to have in future, but requires significant refactoring for now.
         "RUF012", # mutable-class-default
+        "RUF036", # none-not-at-end-of-union
 
         # See: https://github.com/buildbot/buildbot/pull/8418#issuecomment-2869007629
         # quoted types in cast should be considered on a case by case basis

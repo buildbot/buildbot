@@ -69,7 +69,7 @@ PyYAML==6.0.3
 requests==2.32.5; python_version == "3.9" # pyup: ignore
 requests==2.33.0; python_version >= "3.10"
 responses==0.26.0
-ruff==0.15.8
+ruff==0.17.1
 s3transfer==0.16.0
 service-identity==24.2.0
 six==1.17.0
