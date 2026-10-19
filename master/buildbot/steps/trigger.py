@@ -60,7 +60,7 @@ class Trigger(BuildStep):
         self,
         schedulerNames: list[str] | None = None,
         sourceStamp: dict[str, Any] | None = None,
-        sourceStamps: list[dict[str, Any]] | dict[str, Any] | None = None,
+        sourceStamps: list[dict[str, Any]] | None = None,
         updateSourceStamp: IMaybeRenderableType[bool] | None = None,
         alwaysUseLatest: IMaybeRenderableType[bool] = False,
         waitForFinish: bool = False,
@@ -96,7 +96,7 @@ class Trigger(BuildStep):
         self.schedulerNames = schedulerNames
         self.unimportantSchedulerNames = unimportantSchedulerNames
         self.sourceStamps: list[dict[str, Any]] = (
-            list(sourceStamps) if isinstance(sourceStamps, list) else []
+            list(sourceStamps) if sourceStamps is not None else []
         )
         if sourceStamp:
             self.sourceStamps.append(sourceStamp)
