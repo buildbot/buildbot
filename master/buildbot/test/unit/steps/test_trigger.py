@@ -303,7 +303,7 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_simple(self) -> InlineCallbacksType[None]:
-        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], sourceStamps={}))
+        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], sourceStamp={}))
         self.expect_outcome(result=SUCCESS, state_string='triggered a')
         self.expectTriggeredWith(a=(False, [], {}))
         yield self.run_step()
