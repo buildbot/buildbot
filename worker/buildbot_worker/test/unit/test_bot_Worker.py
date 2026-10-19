@@ -70,7 +70,7 @@ class MasterRealm:
     def __init__(
         self,
         perspective: MasterPerspective,
-        on_attachment: Callable[[object | None], None | defer.Deferred[None]] | None,
+        on_attachment: Callable[[object | None], defer.Deferred[None] | None] | None,
     ) -> None:
         self.perspective = perspective
         self.on_attachment = on_attachment
@@ -120,7 +120,7 @@ class TestWorker(unittest.TestCase):
     def start_master(
         self,
         perspective: MasterPerspective,
-        on_attachment: Callable[[object | None], None | defer.Deferred[None]] | None = None,
+        on_attachment: Callable[[object | None], defer.Deferred[None] | None] | None = None,
     ) -> int:
         self.realm = MasterRealm(perspective, on_attachment)
         p = portal.Portal(self.realm)

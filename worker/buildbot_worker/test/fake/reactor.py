@@ -196,7 +196,7 @@ class TestReactor(NonReactor, CoreReactor, Clock):
     @defer.inlineCallbacks
     def _catchPrintExceptions(
         self,
-        what: Callable[_P, None | defer.Deferred[None]],
+        what: Callable[_P, defer.Deferred[None] | None],
         *a: _P.args,
         **kw: _P.kwargs,
     ) -> InlineCallbacksType[None]:

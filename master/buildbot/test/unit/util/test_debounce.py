@@ -47,7 +47,7 @@ class DebouncedClass:
         self.callDeferred = defer.Deferred()
 
         @self.callDeferred.addBoth
-        def unset(x: None | failure.Failure) -> None | failure.Failure:
+        def unset(x: failure.Failure | None) -> failure.Failure | None:
             log.msg('debounced function complete')
             self.callDeferred = None
             return x

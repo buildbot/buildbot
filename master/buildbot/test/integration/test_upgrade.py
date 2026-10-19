@@ -49,7 +49,7 @@ class UpgradeTestMixin(TestReactorMixin):
     # class variables to set in subclasses
 
     # filename of the tarball (sibling to this file)
-    source_tarball: None | str = None
+    source_tarball: str | None = None
 
     # these tests take a long time on platforms where sqlite is slow
     # (e.g., lion, see #2256)

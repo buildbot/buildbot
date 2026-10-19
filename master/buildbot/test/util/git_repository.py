@@ -23,7 +23,7 @@ from pathlib import Path
 
 
 class TestGitRepository:
-    def __init__(self, repository_path: os.PathLike, git_bin: os.PathLike | None | str = None):
+    def __init__(self, repository_path: os.PathLike, git_bin: os.PathLike | str | None = None):
         if git_bin is None:
             git_bin = shutil.which('git')
             if git_bin is None:

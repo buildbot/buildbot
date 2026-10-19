@@ -60,7 +60,7 @@ if TYPE_CHECKING:
 charset.add_charset(ENCODING, charset.SHORTEST, None, ENCODING)
 
 
-ESMTPSenderFactory: None | type = None
+ESMTPSenderFactory: type | None = None
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
 except ImportError:

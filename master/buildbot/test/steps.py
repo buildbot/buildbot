@@ -302,7 +302,7 @@ class ExpectShell(Expect):
         self,
         workdir: str,
         command: str | list[str],
-        env: dict[str, str] | None | type[ExpectShell.NotSet] = NotSet,
+        env: dict[str, str] | type[ExpectShell.NotSet] | None = NotSet,
         want_stdout: int = 1,
         want_stderr: int = 1,
         initial_stdin: str | None = None,

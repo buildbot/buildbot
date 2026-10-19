@@ -201,7 +201,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
     # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
     trialArgs: list[str] = []
     jobs: IMaybeRenderableType[int] | None = None
-    testpath: str | None | tuple[()] = UNSPECIFIED  # required (but can be None)
+    testpath: str | tuple[()] | None = UNSPECIFIED  # required (but can be None)
     testChanges = False  # TODO: needs better name
     recurse = False
     reactor: ReactorBase | None = None
@@ -216,7 +216,7 @@ class Trial(buildstep.ShellMixin, buildstep.BuildStep):
         reactor: Any = UNSPECIFIED,
         python: list[str] | str | None = None,
         trial: str | None = None,
-        testpath: str | None | tuple[()] = UNSPECIFIED,
+        testpath: str | tuple[()] | None = UNSPECIFIED,
         tests: IMaybeRenderableType[list[str]] | IMaybeRenderableType[str] | None = None,
         testChanges: bool | None = None,
         recurse: bool | None = None,

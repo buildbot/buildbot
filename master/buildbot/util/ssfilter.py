@@ -180,8 +180,8 @@ class _FilterRegexInverse(_FilterMatchBase, ComparableMixin):
 
 
 def _create_branch_filters(
-    eq: list[str | None] | str | None | _NotABranch,
-    not_eq: list[str | None] | str | None | _NotABranch,
+    eq: list[str | None] | str | _NotABranch | None,
+    not_eq: list[str | None] | str | _NotABranch | None,
     regex: list[str | re.Pattern[str]] | str | re.Pattern[str] | None,
     not_regex: list[str | re.Pattern[str]] | str | re.Pattern[str] | None,
     prop: str,
@@ -290,7 +290,7 @@ class SourceStampFilter(ComparableMixin):
         repository_not_eq: str | None = None,
         repository_re: str | re.Pattern[str] | None = None,
         repository_not_re: str | re.Pattern[str] | None = None,
-        branch_eq: list[str | None] | str | None | _NotABranch = NotABranch,
+        branch_eq: list[str | None] | str | _NotABranch | None = NotABranch,
         branch_not_eq: str | _NotABranch = NotABranch,
         branch_re: str | re.Pattern[str] | None = None,
         branch_not_re: str | re.Pattern[str] | None = None,
