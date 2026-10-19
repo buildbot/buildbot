@@ -1,4 +1,4 @@
-from docker.io/library/pypy:3.11-7.3.23-bookworm
+from docker.io/library/pypy:3.11-8.0.1-bookworm
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
