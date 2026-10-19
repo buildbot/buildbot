@@ -513,7 +513,7 @@ def join_list(maybeList: str | bytes | list[str | bytes] | tuple[str | bytes]) -
 
 
 # TODO(tdesveaux): This should take an Iterable[str | bytes] and test with iter()
-def join_list(maybeList: str | bytes | None | list[str | bytes] | tuple[str | bytes]) -> str | None:
+def join_list(maybeList: str | bytes | list[str | bytes] | tuple[str | bytes] | None) -> str | None:
     if isinstance(maybeList, (list, tuple)):
         return ' '.join(bytes2unicode(s) for s in maybeList)
     return bytes2unicode(maybeList)

@@ -618,7 +618,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
 
         gotLocks = [False]
 
-        def acquireLocks(res: BaseLock | None = None) -> defer.Deferred[None | BaseLock]:
+        def acquireLocks(res: BaseLock | None = None) -> defer.Deferred[BaseLock | None]:
             gotLocks[0] = True
             retval = BuildStep.acquireLocks(step, res)  # type: ignore[arg-type]
             self.assertTrue(b.currentStep is step)

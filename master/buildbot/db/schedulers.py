@@ -111,10 +111,10 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def getChangeClassifications(
         self,
         schedulerid: int,
-        branch: str | None | Literal[-1] = -1,
-        repository: str | None | Literal[-1] = -1,
-        project: str | None | Literal[-1] = -1,
-        codebase: str | None | Literal[-1] = -1,
+        branch: str | Literal[-1] | None = -1,
+        repository: str | Literal[-1] | None = -1,
+        project: str | Literal[-1] | None = -1,
+        codebase: str | Literal[-1] | None = -1,
     ) -> defer.Deferred[dict[int, bool]]:
         # -1 here stands for "argument not given", since None has meaning
         # as a branch

@@ -248,7 +248,7 @@ class BuildStep(
         None  # alternate description when the step is complete
     )
     descriptionSuffix: str | list[str] | None = None  # extra information to append to suffix
-    updateBuildSummaryPolicy: list[int] | None | bool = None
+    updateBuildSummaryPolicy: list[int] | bool | None = None
     locks: list[str] | None = None
     _locks_to_acquire: list[tuple[BaseLock, Any]] = []
     progressMetrics: tuple[str, ...] = ()  # 'time' is implicit
@@ -310,7 +310,7 @@ class BuildStep(
         self.stopped = False
         self.timed_out = False
         self.max_lines_reached = False
-        self.master: None | BuildMaster = None
+        self.master: BuildMaster | None = None
         self.statistics: dict[str, int] = {}
         self.logs: dict[str, plog.Log] = {}
         self._running = False
@@ -721,7 +721,7 @@ class BuildStep(
             duration_ns=duration_ns,
         )
 
-    def acquireLocks(self, res: Any = None) -> defer.Deferred[None | BaseLock]:
+    def acquireLocks(self, res: Any = None) -> defer.Deferred[BaseLock | None]:
         if not self._locks_to_acquire:
             return defer.succeed(None)
         if self.stopped:

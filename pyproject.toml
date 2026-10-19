@@ -12,9 +12,10 @@ line-length = 100
         "PLR0912", # too-many-branches
         "PLR0913", # too-many-arguments
         "PLR0915", # too-many-statements
-        "PLW0603", # global-statement
+        "PLR0917", # too-many-positional-arguments
         "PLR1711", # useless-return
         "PLR5501", # collapsible-else-if
+        "PLW0603", # global-statement
 
         # maybe we should fix these?
         "PLR2004", # magic-value-comparison

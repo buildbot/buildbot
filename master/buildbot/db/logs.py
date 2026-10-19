@@ -959,5 +959,5 @@ class _AsyncIterOnPool(AbstractAsyncContextManager, AsyncIterator[_T]):
                 with self._condition:
                     self._condition.wait_for(lambda: len(self._queue.pending) <= 0)
 
-    def _put_close(self, res: None | Failure) -> None:
+    def _put_close(self, res: Failure | None) -> None:
         self._queue.put(_AsyncIterOnPool._CloseObj(res))

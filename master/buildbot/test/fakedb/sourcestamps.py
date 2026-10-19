@@ -68,7 +68,7 @@ class SourceStamp(Row):
         self,
         id: int | None = None,
         branch: str | None = 'master',
-        revision: str | None | type[NotSet] = NotSet,
+        revision: str | type[NotSet] | None = NotSet,
         patchid: int | None = None,
         repository: str = 'repo',
         codebase: str = '',

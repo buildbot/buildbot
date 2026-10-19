@@ -56,7 +56,7 @@ class TriggeringMaster(RunMasterBase):
     def setup_trigger_config(
         self,
         triggeredFactory: BuildFactory,
-        nextBuild: Callable[..., defer.Deferred[None | dict[str, Any]]] | None = None,
+        nextBuild: Callable[..., defer.Deferred[dict[str, Any] | None]] | None = None,
     ) -> InlineCallbacksType[None]:
         c = {}
 

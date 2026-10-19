@@ -381,7 +381,7 @@ class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
 
         message_handlers: dict[
             str,
-            Callable[[BuildbotWebSocketClientProtocol.MessageType], None | Deferred[None]],
+            Callable[[BuildbotWebSocketClientProtocol.MessageType], Deferred[None] | None],
         ] = {
             "print": self.call_print,
             "keepalive": self.call_keepalive,
