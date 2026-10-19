@@ -240,6 +240,17 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 Other Worker Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+``loginTimeout``
+    Maximum time in seconds for a PB connection to complete protocol negotiation and login
+    after the connection is established.
+    The default is 60 seconds.
+    If the deadline expires, the worker aborts the connection and retries using its existing
+    retry policy.
+    Set ``loginTimeout=None`` in the ``Worker`` constructor in :file:`buildbot.tac` to disable
+    the deadline, or supply a positive value to change it.
+    This option applies to the PB protocol only and is independent of the TCP connection
+    timeout and the keepalive interval used after login.
+
 ``unicode_encoding``
     This represents the encoding that Buildbot should use when converting unicode commandline
     arguments into byte strings in order to pass to the operating system when spawning new processes.

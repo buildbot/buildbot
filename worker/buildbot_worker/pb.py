@@ -605,8 +605,9 @@ class BotFactory(AutoLoginPBFactory):
         keepaliveInterval: float | None,  # None = do not use keepalives
         maxDelay: int | None,
         retryPolicy: Callable[[int], float] | None = None,
+        loginTimeout: float | None = 60,
     ) -> None:
-        AutoLoginPBFactory.__init__(self, retryPolicy=retryPolicy)
+        AutoLoginPBFactory.__init__(self, retryPolicy=retryPolicy, loginTimeout=loginTimeout)
         self.keepaliveInterval = keepaliveInterval
         self.keepalive_lock = defer.DeferredLock()
         self._shutting_down = False
@@ -728,6 +729,7 @@ class Worker(WorkerBase):
         path: str | None = None,
         delete_leftover_dirs: bool = False,
         proxy_connection_string: str | None = None,
+        loginTimeout: float | None = 60,
     ) -> None:
         assert connection_string is None or (buildmaster_host, port) == (
             None,
@@ -782,6 +784,7 @@ class Worker(WorkerBase):
                 keepalive,
                 maxdelay,
                 retryPolicy=policy,
+                loginTimeout=loginTimeout,
             )
             assert self.bot is None or isinstance(self.bot, (BotPb))
             bf.startLogin(

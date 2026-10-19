@@ -30,6 +30,7 @@ from twisted.trial import unittest
 from zope.interface import implementer
 
 from buildbot_worker import bot
+from buildbot_worker.pb import BotFactory
 
 try:
     from unittest.mock import Mock
@@ -138,6 +139,16 @@ class TestWorker(unittest.TestCase):
     def test_constructor_minimal(self) -> None:
         # only required arguments
         bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, protocol='pb')
+
+    def test_login_timeout(self) -> None:
+        worker = bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, loginTimeout=120)
+        assert isinstance(worker.bf, BotFactory)
+        self.assertEqual(worker.bf.loginTimeout, 120)
+
+    def test_login_timeout_disabled(self) -> None:
+        worker = bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, loginTimeout=None)
+        assert isinstance(worker.bf, BotFactory)
+        self.assertIsNone(worker.bf.loginTimeout)
 
     def test_constructor_083_tac(self) -> None:
         """invocation as made from default 0.8.3 tac files"""

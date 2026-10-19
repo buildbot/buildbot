@@ -29,6 +29,7 @@ from twisted.cred import error
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
+from twisted.internet.protocol import connectionDone
 from twisted.python import log
 from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
@@ -38,14 +39,47 @@ from buildbot_worker.compat import bytes2unicode
 if TYPE_CHECKING:
     from twisted.cred.credentials import UsernamePassword
     from twisted.internet.defer import Deferred
+    from twisted.internet.interfaces import IDelayedCall
     from twisted.internet.interfaces import IReactorCore
     from twisted.internet.interfaces import IReactorTime
+    from twisted.internet.interfaces import ITCPTransport
     from twisted.python.failure import Failure
     from twisted.spread.pb import Broker
     from twisted.spread.pb import RemoteReference
 
     from buildbot_worker.pb import BotPb
     from buildbot_worker.util.twisted import InlineCallbacksType
+
+
+class _LoginTimeoutBroker(pb.Broker):
+    """Bound the time from connection establishment through PB login."""
+
+    _loginTimeoutCall: IDelayedCall | None = None
+
+    def connectionMade(self) -> None:
+        # PBClientFactory.clientConnectionMade runs after protocol negotiation,
+        # which is too late to detect a master that never sends its greeting.
+        factory = cast("AutoLoginPBFactory", self.factory)
+        if factory.loginTimeout is not None:
+            self._loginTimeoutCall = factory._reactor.callLater(
+                factory.loginTimeout, self._loginTimedOut
+            )
+        super().connectionMade()
+
+    def _loginTimedOut(self) -> None:
+        self._loginTimeoutCall = None
+        log.msg("Timed out negotiating or logging in to buildmaster; reconnecting")
+        assert self.transport is not None
+        cast("ITCPTransport", self.transport).abortConnection()
+
+    def cancelLoginTimeout(self) -> None:
+        if self._loginTimeoutCall is not None:
+            self._loginTimeoutCall.cancel()
+            self._loginTimeoutCall = None
+
+    def connectionLost(self, reason: Failure = connectionDone) -> None:
+        self.cancelLoginTimeout()
+        super().connectionLost(reason)
 
 
 class AutoLoginPBFactory(PBClientFactory):
@@ -69,9 +103,13 @@ class AutoLoginPBFactory(PBClientFactory):
     invoked.
     """
 
+    protocol = _LoginTimeoutBroker
+    _reactor = cast("IReactorTime", reactor)
+
     def __init__(  # pylint: disable=wrong-spelling-in-docstring
         self,
         retryPolicy: Callable[[int], float] | None = None,
+        loginTimeout: float | None = 60,
         **kwargs: Any,
     ) -> None:
         """
@@ -80,8 +118,13 @@ class AutoLoginPBFactory(PBClientFactory):
         @type retryPolicy: callable taking (the number of failed connection
             attempts made in a row (L{int})) and returning the number of
             seconds to wait before making another attempt.
+        @param loginTimeout: Maximum seconds from connection establishment to
+            successful login, or None to disable the deadline.
         """
+        if loginTimeout is not None and loginTimeout <= 0:
+            raise ValueError("loginTimeout must be positive or None")
         PBClientFactory.__init__(self, **kwargs)
+        self.loginTimeout = loginTimeout
         self._timeoutForAttempt = backoffPolicy() if retryPolicy is None else retryPolicy
         self._failedAttempts = 0
         self._login_d: Deferred | None = None
@@ -102,8 +145,17 @@ class AutoLoginPBFactory(PBClientFactory):
         d = self._cbSendUsername(
             root, self._credentials.username, self._credentials.password, self._client
         )
-        d.addCallbacks(self.gotPerspective, self.failedToGetPerspective, errbackArgs=(broker,))
+        d.addCallbacks(
+            self._loginSucceeded,
+            self.failedToGetPerspective,
+            callbackArgs=(broker,),
+            errbackArgs=(broker,),
+        )
         return d
+
+    def _loginSucceeded(self, perspective: RemoteReference, broker: _LoginTimeoutBroker) -> None:
+        broker.cancelLoginTimeout()
+        self.gotPerspective(perspective)
 
     def stopFactory(self) -> None:
         if self._login_d:
