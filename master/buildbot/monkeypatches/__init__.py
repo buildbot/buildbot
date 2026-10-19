@@ -72,9 +72,17 @@ def patch_config_for_unit_tests():
     set_is_in_unit_tests(True)
 
 
-def patch_all(for_tests=False):
+@onlyOnce
+def patch_pb_decref() -> None:
+    from buildbot.monkeypatches import pb_decref
+
+    pb_decref.patch()
+
+
+def patch_all(for_tests: bool = False) -> None:
     if for_tests:
         patch_testcase_timeout()
         patch_config_for_unit_tests()
+        patch_pb_decref()
     patch_servicechecks()
     patch_decorators()
