@@ -1,6 +1,4 @@
-master/.git_archival.txt                export-subst
-worker/.git_archival.txt                export-subst
-www/*/.git_archival.txt                 export-subst
+/.git_archival.txt                      export-subst
 
 .gitattributes                          export-ignore
 .gitignore                              export-ignore

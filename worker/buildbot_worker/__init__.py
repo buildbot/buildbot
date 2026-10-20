@@ -19,4 +19,4 @@ try:
     __version__ = version = importlib_metadata.version("buildbot_worker")
 except importlib_metadata.PackageNotFoundError:
     # package is not installed
-    pass
+    __version__ = version = "0.0.0"

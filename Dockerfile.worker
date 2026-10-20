@@ -35,10 +35,11 @@ RUN apt-get update \
     && mkdir /buildbot \
     && useradd -ms /bin/bash buildbot
 
-COPY . /usr/src/buildbot-worker
-COPY docker/buildbot.tac /buildbot/buildbot.tac
+# the build context is the repository root, so that setuptools-scm can read the version from git
+COPY . /usr/src/buildbot
+COPY worker/docker/buildbot.tac /buildbot/buildbot.tac
 
-RUN /buildbot_venv/bin/pip3 install /usr/src/buildbot-worker && \
+RUN /buildbot_venv/bin/pip3 install /usr/src/buildbot/worker && \
     chown -R buildbot /buildbot
 
 USER buildbot

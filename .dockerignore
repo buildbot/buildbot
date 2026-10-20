@@ -10,6 +10,7 @@
 .dockerignore
 .venv*
 Dockerfile.master
+Dockerfile.worker
 master/_build
 master/docs/manual/mydashboard.html
 master/docs/manual/mydashboard.py
