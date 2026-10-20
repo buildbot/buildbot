@@ -1,0 +1,2 @@
+Buildbot now uses setuptools-scm to generate its version.
+``SETUPTOOLS_SCM_PRETEND_VERSION_FOR_<PACKAGE>`` can now be used to override the version, replacing ``BUILDBOT_VERSION`` environment variable, or the ``VERSION`` file.
