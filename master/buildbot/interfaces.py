@@ -346,6 +346,7 @@ class ITriggerableScheduler(Interface):
         set_props: Any = None,
         parent_buildid: Any = None,
         parent_relationship: Any = None,
+        priority: int | None = None,
     ) -> Any:
         """Trigger a build with the given source stamp and properties."""
 

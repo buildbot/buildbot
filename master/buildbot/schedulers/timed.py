@@ -614,7 +614,16 @@ class Nightly(NightlyBase):
 class NightlyTriggerable(NightlyBase):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._lastTrigger: tuple[Any, ...] | None = None
+        self._lastTrigger: (
+            tuple[
+                list[Any],
+                properties.Properties | None,
+                int | None,
+                str | None,
+                int | None,
+            ]
+            | None
+        ) = None
 
     def checkConfig(  # type: ignore[override]
         self,
@@ -650,12 +659,16 @@ class NightlyTriggerable(NightlyBase):
                         properties.Properties.fromDict(lastTrigger[1]),
                         lastTrigger[2],
                         lastTrigger[3],
+                        # Backward compatibility.
+                        # pre Buildbot-4.4, priority was not stored
+                        lastTrigger[4] if len(lastTrigger) > 4 else None,
                     )
                 # handle state from before Buildbot-0.9.0
                 elif isinstance(lastTrigger[0], dict):
                     self._lastTrigger = (
                         list(lastTrigger[0].values()),
                         properties.Properties.fromDict(lastTrigger[1]),
+                        None,
                         None,
                         None,
                     )
@@ -673,15 +686,16 @@ class NightlyTriggerable(NightlyBase):
         self,
         waited_for: bool,
         sourcestamps: list[Any] | None = None,
-        set_props: Any = None,
+        set_props: properties.Properties | None = None,
         parent_buildid: int | None = None,
         parent_relationship: str | None = None,
+        priority: int | None = None,
     ) -> tuple[defer.Deferred[Any], defer.Deferred[Any]]:
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
         assert isinstance(sourcestamps, list), "trigger requires a list of sourcestamps"
 
-        self._lastTrigger = (sourcestamps, set_props, parent_buildid, parent_relationship)
+        self._lastTrigger = (sourcestamps, set_props, parent_buildid, parent_relationship, priority)
 
         if set_props:
             propsDict = set_props.asDict()
@@ -690,7 +704,7 @@ class NightlyTriggerable(NightlyBase):
 
         # record the trigger in the db
         d = self.setState(
-            'lastTrigger', (sourcestamps, propsDict, parent_buildid, parent_relationship)
+            'lastTrigger', (sourcestamps, propsDict, parent_buildid, parent_relationship, priority)
         )
 
         # Trigger expects a callback with the success of the triggered
@@ -712,7 +726,7 @@ class NightlyTriggerable(NightlyBase):
         if self._lastTrigger is None:
             return
 
-        (sourcestamps, set_props, parent_buildid, parent_relationship) = self._lastTrigger
+        (sourcestamps, set_props, parent_buildid, parent_relationship, priority) = self._lastTrigger
         self._lastTrigger = None
         yield self.setState('lastTrigger', None)
 
@@ -729,5 +743,5 @@ class NightlyTriggerable(NightlyBase):
             properties=props,
             parent_buildid=parent_buildid,
             parent_relationship=parent_relationship,
-            priority=self.priority,  # type: ignore[arg-type]
+            priority=self.priority if priority is None else priority,  # type: ignore[arg-type]
         )

@@ -62,6 +62,7 @@ class NightlyTriggerable(
         self,
         sourcestamps: list[dict[str, Any]] | None = None,
         properties: dict[str, tuple[Any, str]] | None = None,
+        priority: int | None = None,
     ) -> None:
         if sourcestamps is None:
             sourcestamps = []
@@ -75,7 +76,7 @@ class NightlyTriggerable(
                     'addBuildsetForSourceStampsWithDefaults',
                     {
                         "builderNames": None,  # uses the default
-                        "priority": None,
+                        "priority": priority,
                         "properties": properties,
                         "reason": "The NightlyTriggerable scheduler named 'test' triggered this build",
                         "sourcestamps": sourcestamps,
@@ -441,6 +442,7 @@ class NightlyTriggerable(
                 {},
                 None,
                 None,
+                None,
             ],
         )
 
@@ -520,6 +522,7 @@ class NightlyTriggerable(
                 {'testprop': ['test', 'TEST']},
                 None,
                 None,
+                None,
             ],
         )
 
@@ -575,3 +578,126 @@ class NightlyTriggerable(
                 },
             ],
         )
+
+    async def test_trigger_priority(self) -> None:
+        sched = await self.makeScheduler(
+            name='test',
+            builderNames=['test'],
+            minute=[5],
+            codebases={'cb': {'repository': 'annoying'}},
+            priority=3,
+        )
+        await self.master.db.insert_test_data([
+            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+        ])
+
+        await self.master.startService()
+
+        sourcestamp = {
+            "codebase": 'cb',
+            "revision": 'myrev',
+            "branch": 'br',
+            "project": 'p',
+            "repository": 'r',
+        }
+        _, d = sched.trigger(False, [sourcestamp], set_props=None, priority=7)
+        await d
+
+        await self.assert_state(
+            self.SCHEDULERID,
+            lastTrigger=[[sourcestamp], {}, None, None, 7],
+        )
+
+        self.reactor.advance(60 * 60)  # Run for 1h
+
+        self.assertBuildsetAdded(sourcestamps=[sourcestamp], priority=7)
+
+    async def test_trigger_no_priority(self) -> None:
+        sched = await self.makeScheduler(
+            name='test',
+            builderNames=['test'],
+            minute=[5],
+            codebases={'cb': {'repository': 'annoying'}},
+            priority=3,
+        )
+        await self.master.startService()
+
+        sourcestamp = {
+            "codebase": 'cb',
+            "revision": 'myrev',
+            "branch": 'br',
+            "project": 'p',
+            "repository": 'r',
+        }
+        sched.trigger(False, [sourcestamp], set_props=None)
+
+        self.reactor.advance(60 * 60)  # Run for 1h
+
+        self.assertBuildsetAdded(sourcestamps=[sourcestamp], priority=3)
+
+    async def test_savedTrigger_priority(self) -> None:
+        await self.makeScheduler(
+            name='test',
+            builderNames=['test'],
+            minute=[5],
+            codebases={'cb': {'repository': 'annoying'}},
+            priority=3,
+        )
+
+        value_json = (
+            '[ [ {"codebase": "cb", "project": "p", "repository": "r", '
+            '"branch": "br", "revision": "myrev"} ], {}, null, null, 9 ]'
+        )
+        await self.master.db.insert_test_data([
+            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.ObjectState(
+                objectid=self.SCHEDULERID, name='lastTrigger', value_json=value_json
+            ),
+        ])
+
+        await self.master.startService()
+
+        self.reactor.advance(60 * 60)  # Run for 1h
+
+        self.assertBuildsetAdded(
+            sourcestamps=[
+                {
+                    "codebase": 'cb',
+                    "branch": 'br',
+                    "project": 'p',
+                    "repository": 'r',
+                    "revision": 'myrev',
+                },
+            ],
+            priority=9,
+        )
+
+    async def test_trigger_priority_function_overridden(self) -> None:
+        calls: list[tuple[list[str], dict[str, list[Any]]]] = []
+
+        def sched_priority(builderNames: list[str], changesByCodebase: dict[str, list[Any]]) -> int:
+            calls.append((builderNames, changesByCodebase))
+            return 42
+
+        sched = await self.makeScheduler(
+            name='test',
+            builderNames=['test'],
+            minute=[5],
+            codebases={'cb': {'repository': 'annoying'}},
+            priority=sched_priority,
+        )
+        await self.master.startService()
+
+        sourcestamp = {
+            "codebase": 'cb',
+            "revision": 'myrev',
+            "branch": 'br',
+            "project": 'p',
+            "repository": 'r',
+        }
+        sched.trigger(False, [sourcestamp], set_props=None, priority=7)
+
+        self.reactor.advance(60 * 60)  # Run for 1h
+
+        self.assertBuildsetAdded(sourcestamps=[sourcestamp], priority=7)
+        self.assertEqual(calls, [])
