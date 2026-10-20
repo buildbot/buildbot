@@ -3,6 +3,9 @@
 **/*.egg-info
 **/build
 **/node_modules
+**/_trial_temp
+.mypy_cache
+.ruff_cache
 
 # Note: not ignoring .git so that build scripts can figure out which version of Buildbot we're
 # building.
@@ -14,4 +17,3 @@ Dockerfile.worker
 master/_build
 master/docs/manual/mydashboard.html
 master/docs/manual/mydashboard.py
-_trial_temp

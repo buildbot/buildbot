@@ -7,7 +7,21 @@
 
 ARG DEBIAN_VERSION="trixie"
 
-FROM docker.io/library/debian:${DEBIAN_VERSION}
+FROM docker.io/library/debian:${DEBIAN_VERSION} AS buildbot-worker-build
+
+RUN apt-get update \
+    && apt-get -y install -q \
+        git \
+        virtualenv \
+    && rm -rf /var/lib/apt/lists/*
+
+# the build context is the repository root, so that setuptools-scm can read the version from git
+COPY . /usr/src/buildbot
+
+RUN virtualenv --python=python3 /build_venv \
+    && /build_venv/bin/pip3 wheel --no-deps --wheel-dir /wheels /usr/src/buildbot/worker
+
+FROM docker.io/library/debian:${DEBIAN_VERSION} AS buildbot-worker
 LABEL org.opencontainers.image.authors="Buildbot maintainers"
 
 # This will make apt-get install without question
@@ -35,11 +49,11 @@ RUN apt-get update \
     && mkdir /buildbot \
     && useradd -ms /bin/bash buildbot
 
-# the build context is the repository root, so that setuptools-scm can read the version from git
-COPY . /usr/src/buildbot
+COPY --from=buildbot-worker-build /wheels /wheels
 COPY worker/docker/buildbot.tac /buildbot/buildbot.tac
 
-RUN /buildbot_venv/bin/pip3 install /usr/src/buildbot/worker && \
+RUN /buildbot_venv/bin/pip3 install /wheels/*.whl && \
+    rm -rf /wheels && \
     chown -R buildbot /buildbot
 
 USER buildbot
