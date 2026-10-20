@@ -142,7 +142,7 @@ docker-buildbot-worker:
 docker-buildbot-worker-node:
 	$(DOCKERBUILD) -t buildbot/buildbot-worker-node:master master/contrib/docker/pythonnode_worker
 docker-buildbot-master:
-	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
+	$(DOCKERBUILD) -t buildbot/buildbot-master:master -f Dockerfile.master .
 
 $(VENV_NAME):
 	$(VENV_CREATE) $(VENV_NAME)
