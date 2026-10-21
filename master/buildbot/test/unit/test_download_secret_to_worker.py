@@ -48,6 +48,12 @@ class TestDownloadFileSecretToWorkerCommand(
         self.temp_path = tempdir.path
         return self.setup_test_build_step()
 
+    def test_name(self) -> None:
+        self.assertEqual(DownloadSecretsToWorker([]).name, 'download_secrets_to_worker')
+
+    def test_name_override(self) -> None:
+        self.assertEqual(DownloadSecretsToWorker([], name='my_secrets').name, 'my_secrets')
+
     def testBasic(self) -> defer.Deferred[None]:
         self.setup_step(
             DownloadSecretsToWorker([
@@ -123,6 +129,12 @@ class TestRemoveFileSecretToWorkerCommand(
         tempdir.createDirectory()
         self.temp_path = tempdir.path
         return self.setup_test_build_step()
+
+    def test_name(self) -> None:
+        self.assertEqual(RemoveWorkerFileSecret([]).name, 'remove_worker_file_secret')
+
+    def test_name_override(self) -> None:
+        self.assertEqual(RemoveWorkerFileSecret([], name='cleanup_secrets').name, 'cleanup_secrets')
 
     def testBasic(self) -> defer.Deferred[None]:
         self.setup_step(

@@ -32,6 +32,8 @@ if TYPE_CHECKING:
 
 
 class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
+    name = 'download_secrets_to_worker'
+
     renderables = ['secret_to_be_populated']
 
     def __init__(self, populated_secret_list: Any, **kwargs: Any) -> None:
@@ -58,6 +60,8 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
 
 
 class RemoveWorkerFileSecret(BuildStep, CompositeStepMixin):
+    name = 'remove_worker_file_secret'
+
     renderables = ['secret_to_be_populated']
 
     def __init__(self, populated_secret_list: Any, logEnviron: bool = False, **kwargs: Any) -> None:

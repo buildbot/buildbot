@@ -1,0 +1,1 @@
+The secret download and removal steps that ``BuildFactory(..., withSecrets=...)`` and ``util.withSecrets`` inject into builds are now named ``download_secrets_to_worker`` and ``remove_worker_file_secret`` instead of ``generic`` (:issue:`9127`). The names can be overridden by passing ``name`` to ``DownloadSecretsToWorker`` and ``RemoveWorkerFileSecret``.
