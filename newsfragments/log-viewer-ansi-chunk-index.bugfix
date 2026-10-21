@@ -1,0 +1,1 @@
+Fixed the log viewer showing raw ANSI escape sequences instead of colors in parts of a log downloaded separately from its first lines when they contain few colored lines (:issue:`7852`).
