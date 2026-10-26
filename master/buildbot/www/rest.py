@@ -422,15 +422,7 @@ class V2RootResource(resource.Resource):
             else:
                 encoder.indent = 2
 
-            _reactor = cast("IReactorThreads", self.master.reactor)
-            yield threads.deferToThreadPool(
-                _reactor,
-                _reactor.getThreadPool(),
-                self._write_json_data,
-                request,
-                encoder,
-                data,
-            )
+            yield self._write_json_data(request, encoder, data)
 
     def reconfigResource(self, new_config: Any) -> None:
         # buildbotURL may contain reverse proxy path, Origin header is just
@@ -507,33 +499,49 @@ class V2RootResource(resource.Resource):
 
         return res
 
-    def _write_json_data(
+    async def _write_json_data(
         self,
         request: server.Request,
         encoder: json.encoder.JSONEncoder,
         data: Any,
     ) -> None:
+        # Encode on the threadpool, but never hand data back with `blockingCallFromThread`:
+        # the reactor joins its threadpool on shutdown, which would deadlock.
         _reactor = cast("IReactorThreads", self.master.reactor)
 
-        content_length = 0
-        for chunk in encoder.iterencode(data):
-            if _is_request_finished(request):
-                return
-            content_length += len(unicode2bytes(chunk))
-        request.setHeader(b"content-length", unicode2bytes(str(content_length)))
+        def _defer_to_pool(f: Callable[..., Any], *args: Any) -> defer.Deferred[Any]:
+            return threads.deferToThreadPool(_reactor, _reactor.getThreadPool(), f, *args)
 
-        if request.method != b"HEAD":
-            buffer = bytearray()
+        def _thd_content_length() -> int | None:
+            content_length = 0
             for chunk in encoder.iterencode(data):
                 if _is_request_finished(request):
-                    return
+                    return None
+                content_length += len(unicode2bytes(chunk))
+            return content_length
+
+        content_length = await _defer_to_pool(_thd_content_length)
+        if content_length is None:
+            return
+        request.setHeader(b"content-length", unicode2bytes(str(content_length)))
+
+        if request.method == b"HEAD":
+            return
+
+        chunks = encoder.iterencode(data)
+
+        def _thd_next_batch() -> bytes:
+            buffer = bytearray()
+            for chunk in chunks:
                 buffer += unicode2bytes(chunk)
                 if len(buffer) >= _JSON_WRITE_BATCH_SIZE:
-                    threads.blockingCallFromThread(_reactor, request.write, bytes(buffer))
-                    buffer.clear()
+                    break
+            return bytes(buffer)
 
-            if buffer and not _is_request_finished(request):
-                threads.blockingCallFromThread(_reactor, request.write, bytes(buffer))
+        while batch := (await _defer_to_pool(_thd_next_batch)):
+            if _is_request_finished(request):
+                return
+            request.write(batch)
 
 
 RestRootResource.addApiVersion(2, V2RootResource)
