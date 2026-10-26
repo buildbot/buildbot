@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from buildbot.config.builder import BuilderConfig
     from buildbot.config.master import MasterConfig
     from buildbot.data.buildrequests import BuildRequestData
+    from buildbot.interfaces import ILatentWorker
     from buildbot.master import BuildMaster
     from buildbot.process.botmaster import BotMaster
     from buildbot.process.buildrequest import BuildRequest
@@ -257,10 +258,10 @@ class Builder(util_service.ReconfigurableServiceMixin, service.MultiService):
                 return b
         return None
 
-    def addLatentWorker(self, worker: AbstractWorkerType) -> None:
+    def addLatentWorker(self, worker: ILatentWorker) -> None:
         assert interfaces.ILatentWorker.providedBy(worker)
         for w in self.workers:
-            if w == worker:
+            if w.worker == worker:
                 break
         else:
             wfb = workerforbuilder.LatentWorkerForBuilder(worker, self)  # type: ignore[arg-type]
