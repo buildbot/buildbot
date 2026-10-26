@@ -10,10 +10,5 @@
 # Note: not ignoring .git so that build scripts can figure out which version of Buildbot we're
 # building.
 
-.dockerignore
 .venv*
-Dockerfile.master
-Dockerfile.worker
 master/_build
-master/docs/manual/mydashboard.html
-master/docs/manual/mydashboard.py
