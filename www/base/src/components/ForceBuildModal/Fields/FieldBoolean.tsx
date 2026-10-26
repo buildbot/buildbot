@@ -20,6 +20,7 @@ import {ForceBuildModalFieldsState} from '../ForceBuildModalFieldsState';
 import {FaRegQuestionCircle} from 'react-icons/fa';
 import {observer} from 'mobx-react';
 import {Tooltip} from 'react-tooltip';
+import {FieldBase} from './FieldBase';
 
 type FieldBooleanProps = {
   field: ForceSchedulerFieldBoolean;
@@ -30,7 +31,7 @@ export const FieldBoolean = observer(({field, fieldsState}: FieldBooleanProps) =
   const state = fieldsState.fields.get(field.fullName)!;
 
   return (
-    <div className="form-group">
+    <FieldBase field={field} fieldsState={fieldsState}>
       <div className="col-sm-10 col-sm-offset-2">
         <div className="checkbox">
           <label>
@@ -50,6 +51,6 @@ export const FieldBoolean = observer(({field, fieldsState}: FieldBooleanProps) =
           </label>
         </div>
       </div>
-    </div>
+    </FieldBase>
   );
 });
