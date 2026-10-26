@@ -34,9 +34,13 @@ export const FieldBase = observer(({field, fieldsState, children}: FieldBaseProp
   }
 
   const errors: JSX.Element[] = [];
-  for (const error of state.errors) {
-    errors.push(<div className={'bb-force-build-modal-field-error'}>{error}</div>);
-  }
+  state.errors.forEach((error, index) => {
+    errors.push(
+      <div key={index} className={'bb-force-build-modal-field-error'}>
+        {error}
+      </div>,
+    );
+  });
 
   return (
     <div>
