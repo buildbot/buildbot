@@ -1,0 +1,1 @@
+Fixed log chunks written by a single log append not being split at the 64KB chunk size limit, which could store very large log chunks in the database.
