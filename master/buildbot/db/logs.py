@@ -459,6 +459,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         yield compressed
                     else:
                         lines.append(line_bytes)
+                        lines_size += line_size
 
                 if lines:
                     yield _thd_compress_chunk(compress_obj, compressor_id, lines)

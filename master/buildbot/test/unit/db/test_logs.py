@@ -459,6 +459,21 @@ class Tests(TestReactorMixin, unittest.TestCase):
             rows,
         )
 
+    async def test_appendLog_splits_large_content_in_chunks(self) -> None:
+        content = ''.join(f'line {i:05d} {"x" * 88}\n' for i in range(2000))
+        assert len(content) > 3 * self.db.logs.MAX_CHUNK_SIZE
+        self.db.master.config.logCompressionMethod = "raw"
+        rows = await self._base_appendLog_truncate(content)
+
+        self.assertGreater(len(rows), 3)
+        expected_first_line = 0
+        for row in rows:
+            self.assertEqual(row['first_line'], expected_first_line)
+            self.assertLessEqual(len(row['content']), self.db.logs.MAX_CHUNK_SIZE)
+            expected_first_line = row['last_line'] + 1
+        self.assertEqual(expected_first_line, 2000)
+        self.assertEqual(await self.db.logs.getLogLines(201, 0, 1999), content)
+
     @defer.inlineCallbacks
     def test_no_compress_small_chunk(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.testLogLines)
