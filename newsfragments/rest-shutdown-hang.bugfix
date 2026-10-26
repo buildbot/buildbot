@@ -1,0 +1,1 @@
+Fixed master hanging on shutdown while a REST API response was being written.
