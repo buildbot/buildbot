@@ -318,6 +318,27 @@ class Tests(TestReactorMixin, unittest.TestCase):
             ),
         )
 
+    async def test_appendLog_more_chunks_than_a_batch(self) -> None:
+        await self.db.insert_test_data(self.backgroundData + self.testLogLines)
+        self.db.master.config.logCompressionMethod = "gz"
+        # each line over MAX_CHUNK_SIZE gets its own chunk
+        line = 'x' * self.db.logs.MAX_CHUNK_SIZE + '\n'
+        count = 2 * self.db.logs.COMPRESSION_BATCH_SIZE + 1
+        self.assertEqual(await self.db.logs.appendLog(201, line * count), (7, 6 + count))
+        self.assertEqual(await self.db.logs.getLogLines(201, 7, 6 + count), line * count)
+
+        def thd(conn: sa.Connection) -> list[tuple[int, int]]:
+            tbl = self.db.model.logchunks
+            q = sa.select(tbl.c.first_line, tbl.c.last_line).where(tbl.c.logid == 201)
+            return [tuple(r) for r in conn.execute(q.order_by(tbl.c.first_line))]
+
+        rows = await self.db.pool.do(thd)
+        self.assertGreater(len(rows), self.db.logs.COMPRESSION_BATCH_SIZE)
+        # chunks are contiguous, without overlap
+        for (_, prev_last), (first, _) in zip(rows, rows[1:]):
+            self.assertEqual(first, prev_last + 1)
+        self.assertEqual(rows[-1][1], 6 + count)
+
     @defer.inlineCallbacks
     def test_compressLog(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.testLogLines)
