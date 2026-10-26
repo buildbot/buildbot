@@ -649,8 +649,7 @@ class AbstractLatentWorker(AbstractWorker):
         @return: a Deferred that indicates when an attached worker has
         accepted the new builders and/or released the old ones."""
         for b in self.botmaster.getBuildersForWorker(self.name):  # type: ignore[union-attr]
-            if b.name not in self.workerforbuilders:
-                b.addLatentWorker(self)
+            b.addLatentWorker(self)
         return super().updateWorker()
 
 
