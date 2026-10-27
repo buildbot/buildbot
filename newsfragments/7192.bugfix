@@ -1,0 +1,2 @@
+Fixed the worker truncating log lines longer than 4096 characters, which could break steps that capture output, such as JSON read by `SetPropertyFromCommand` (:issue:`7192`).
+Long lines are still split into several lines in the log, with a newline added every 4095 characters.
