@@ -307,6 +307,23 @@ class BaseBasicScheduler(
         r = yield sched.deactivate()
         self.assertEqual(r, None)
 
+    @defer.inlineCallbacks
+    def test_disabled_reconfig(self) -> InlineCallbacksType[None]:
+        sched = yield self.makeScheduler(self.Subclass, treeStableTimer=None)
+        yield self.master.startService()
+        yield sched._enabledCallback(None, {'enabled': False})
+        self.consumingChanges = None
+
+        new_sched = self.Subclass(
+            name='tsched', builderNames=['tbuild'], treeStableTimer=None, onlyImportant=True
+        )
+        yield sched.reconfigServiceWithSibling(new_sched)
+        self.assertEqual(sched.enabled, False)
+        self.assertIsNone(self.consumingChanges)
+
+        yield sched._enabledCallback(None, {'enabled': True})
+        self.assertConsumingChanges(fileIsImportant=None, change_filter=None, onlyImportant=True)
+
 
 class SingleBranchScheduler(
     CommonStuffMixin, scheduler.SchedulerMixin, StateTestMixin, TestReactorMixin, unittest.TestCase

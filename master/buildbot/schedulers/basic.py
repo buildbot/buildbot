@@ -121,7 +121,7 @@ class BaseBasicScheduler(base.ReconfigurableBaseScheduler):
             reason % {'name': self.name, 'classname': self.__class__.__name__}
         )
 
-        if self.active:
+        if self.active and self.enabled:
             yield self._stopConsumingChanges()
             yield self.startConsumingChanges(
                 fileIsImportant=self.fileIsImportant,  # type: ignore[misc]
