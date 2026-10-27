@@ -877,7 +877,10 @@ class BuildStep(
         if not logEncoding:
             assert self.master is not None
             logEncoding = self.master.config.logEncoding
-        log = plog.Log.new(self.master, name, type, logid, logEncoding)
+        cleanup_text = (
+            self.build.properties.cleanupTextFromSecrets if self.build is not None else None
+        )
+        log = plog.Log.new(self.master, name, type, logid, logEncoding, cleanup_text)
         self.logs[name] = log
         self._connectPendingLogObservers()
         return log

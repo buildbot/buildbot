@@ -736,6 +736,18 @@ class TestBuildStep(
         self.expect_outcome(result=SUCCESS)
         yield self.run_step()
 
+    def test_new_log_cleans_secrets(self) -> None:
+        step = cast(buildstep.BuildStep, create_step_from_step_or_factory(buildstep.BuildStep()))
+        build = fakebuild.FakeBuild()
+        build.properties.useSecret('s3cr3t', 'name')
+        step.setBuild(build)  # type: ignore[arg-type]
+        step.master = mock.Mock()
+        step.logEncoding = 'utf-8'
+
+        _log = step._newLog('stdio', 's', 1)
+
+        self.assertEqual(_log.cleanup_text('a s3cr3t'), 'a <name>')
+
     @defer.inlineCallbacks
     def test_step_renders_flunkOnFailure(self) -> InlineCallbacksType[None]:
         self.setup_step(TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))
