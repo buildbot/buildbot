@@ -122,11 +122,11 @@ jobs:
           name: dist-py${{ matrix.python-version }}
           path: dist/
 
+      - name: "Install e2e deps"
+        run: cd e2e && npm ci
       - name: "Install Playwright browsers"
-        run: |
-          cd e2e
-          npm ci
-          npx playwright install --with-deps
+        timeout-minutes: 10
+        run: cd e2e && npx playwright install --with-deps
 
       - name: "e2e"
         run: ./common/smokedist-react.sh ${{ matrix.dist }}
