@@ -34,6 +34,11 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'plugins': {'waterfall_view': True}
         }
 
+``mcp``
+    If set to ``True``, enables the built-in Model Context Protocol (MCP) server
+    at the ``/mcp`` path, allowing AI assistants to query build status, search
+    logs and trigger builds. Disabled by default. See :ref:`Config-WWW-MCP`.
+
 ``default_page``
     Configure the default landing page of the web server, for example, to forward directly to another plugin. For example:
 

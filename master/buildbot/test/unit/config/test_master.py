@@ -1020,6 +1020,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertConfigError(errors, "unknown www configuration parameter(s) foo")
 
+    def test_load_www_mcp(self) -> None:
+        with capture_config_errors() as errors:
+            self.cfg.load_www(self.filename, {"www": {"mcp": True}})
+
+        self.assertEqual(errors.errors, [])
+
     def test_load_services_nominal(self) -> None:
         testcase = self
 

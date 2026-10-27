@@ -1,0 +1,1 @@
+Buildbot now ships a built-in :ref:`Model Context Protocol (MCP) server <Config-WWW-MCP>`, enabled with ``c['www']['mcp'] = True``. It lets AI assistants query build and worker status, inspect and search build logs, and force or cancel builds through the web server, reusing Buildbot's existing authentication and authorization (:issue:`9000`).
