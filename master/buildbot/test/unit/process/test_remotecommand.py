@@ -21,6 +21,7 @@ from unittest import mock
 
 from twisted.trial import unittest
 
+from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.test.fake import logfile
 from buildbot.test.util import interfaces
@@ -75,6 +76,20 @@ class TestRemoteShellCommand(unittest.TestCase):
         cmd = remotecommand.RemoteShellCommand("build", command)
         self.assertEqual(cmd.command, command)
         self.assertEqual(cmd.fake_command, command)
+
+    async def test_collected_output_cleans_secrets(self) -> None:
+        cmd = remotecommand.RemoteShellCommand(
+            "build", "echo", collectStdout=True, collectStderr=True
+        )
+        props = properties.Properties()
+        props.useSecret('s3cr3t', 'name')
+        cmd.step = mock.Mock(build=mock.Mock(properties=props))
+
+        await cmd.remoteUpdate('stdout', 'out s3cr3t\n', False)
+        await cmd.remoteUpdate('stderr', 'err s3cr3t\n', False)
+
+        self.assertEqual(cmd.stdout, 'out <name>\n')
+        self.assertEqual(cmd.stderr, 'err <name>\n')
 
 
 # NOTE:

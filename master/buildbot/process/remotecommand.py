@@ -370,7 +370,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         if self.collectStdout:
             if is_flushed:
                 data = data[:-1]
-            self.stdout += data
+            self.stdout += self._cleanup_text(data)
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
             await self.logs[self.stdioLogName].add_stdout_lines(data)
 
@@ -388,7 +388,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         if self.collectStderr:
             if is_flushed:
                 data = data[:-1]
-            self.stderr += data
+            self.stderr += self._cleanup_text(data)
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
             await self.logs[self.stdioLogName].add_stderr_lines(data)
 
@@ -419,25 +419,26 @@ class RemoteCommand(base.RemoteCommandImpl):
         else:
             self._logger.info(f"{self}.addToLog: no such log {logname}")
 
+    def _cleanup_text(self, data: str) -> str:
+        # logs redact secrets themselves, only the collected output needs it here
+        if self.step is None or self.step.build is None:
+            return data
+        return self.step.build.properties.cleanupTextFromSecrets(data)
+
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     @async_to_deferred
     async def remoteUpdate(self, key: str, value: Any, is_flushed: bool) -> None:
-        def cleanup(data: str) -> str:
-            if self.step is None or self.step.build is None:
-                return data
-            return self.step.build.properties.cleanupTextFromSecrets(data)
-
         if self.debug:
             self._logger.info(f"Update[{key}]: {value}")
         if key == "stdout":
-            await self.add_stdout_lines(cleanup(value), is_flushed)
+            await self.add_stdout_lines(value, is_flushed)
         if key == "stderr":
-            await self.add_stderr_lines(cleanup(value), is_flushed)
+            await self.add_stderr_lines(value, is_flushed)
         if key == "header":
-            await self.add_header_lines(cleanup(value))
+            await self.add_header_lines(value)
         if key == "log":
             logname, data = value
-            await self.addToLog(logname, cleanup(data))
+            await self.addToLog(logname, data)
         if key == "rc":
             rc = self.rc = value
             self._logger.info(f"{self} rc={rc}")
