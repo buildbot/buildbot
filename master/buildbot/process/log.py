@@ -40,6 +40,7 @@ class Log:
         type: str,
         logid: int,
         decoder: Callable[[bytes], str],
+        cleanup_text: Callable[[str], str] | None = None,
     ) -> None:
         self.type = type
         self.logid = logid
@@ -54,6 +55,21 @@ class Log:
         self.lock = defer.DeferredLock()
         self.decoder = decoder
 
+        # two limits to this:
+        # - a secret that was partly cut by the LineBoundaryFinder as the line
+        #   was too long won't be detected as it match on the whole secret
+        # - a multi-line secret that is added in multiple chunks will not be
+        #   detected
+        self._cleanup_text: Callable[[str], str] = cleanup_text or (lambda text: text)
+
+    def cleanup_text(self, lines: str) -> str:
+        cleaned = self._cleanup_text(lines)
+        # a secret ending with a newline would make cleanup remove the
+        # finishing new line addRawLines needs
+        if lines.endswith('\n') and not cleaned.endswith('\n'):
+            cleaned += '\n'
+        return cleaned
+
     @staticmethod
     def _decoderFromString(cfg: str | bytes | Callable[[bytes], str]) -> Callable[[bytes], str]:
         """
@@ -67,14 +83,22 @@ class Log:
         return cfg
 
     @classmethod
-    def new(cls, master: Any, name: str, type: str, logid: int, logEncoding: Any) -> Log:
+    def new(
+        cls,
+        master: Any,
+        name: str,
+        type: str,
+        logid: int,
+        logEncoding: Any,
+        cleanup_text: Callable[[str], str] | None = None,
+    ) -> Log:
         type = str(type)
         try:
             subcls = cls._byType[type]
         except KeyError as e:
             raise RuntimeError(f"Invalid log type {type!r}") from e
         decoder = Log._decoderFromString(logEncoding)
-        return subcls(master, name, type, logid, decoder)
+        return subcls(master, name, type, logid, decoder, cleanup_text)
 
     def getName(self) -> str:
         return self.name
@@ -136,8 +160,9 @@ class PlainLog(Log):
         type: str,
         logid: int,
         decoder: Callable[[bytes], str],
+        cleanup_text: Callable[[str], str] | None = None,
     ) -> None:
-        super().__init__(master, name, type, logid, decoder)
+        super().__init__(master, name, type, logid, decoder, cleanup_text)
 
         self.lbf = lineboundaries.LineBoundaryFinder()
 
@@ -148,6 +173,7 @@ class PlainLog(Log):
         lines = self.lbf.append(text)
         if lines is None:
             return defer.succeed(None)
+        lines = self.cleanup_text(lines)
         self.subPoint.deliver(None, lines)
         return self.addRawLines(lines)
 
@@ -155,6 +181,7 @@ class PlainLog(Log):
     def flush(self) -> InlineCallbacksType[None]:
         lines = self.lbf.flush()
         if lines is not None:
+            lines = self.cleanup_text(lines)
             self.subPoint.deliver(None, lines)
             yield self.addRawLines(lines)
 
@@ -188,8 +215,9 @@ class StreamLog(Log):
         type: str,
         logid: int,
         decoder: Callable[[bytes], str],
+        cleanup_text: Callable[[str], str] | None = None,
     ) -> None:
-        super().__init__(step, name, type, logid, decoder)
+        super().__init__(step, name, type, logid, decoder, cleanup_text)
         self.lbfs: dict[str, lineboundaries.LineBoundaryFinder] = {}
 
     def _getLbf(self, stream: str) -> lineboundaries.LineBoundaryFinder:
@@ -200,6 +228,7 @@ class StreamLog(Log):
             return lbf
 
     def _on_whole_lines(self, stream: str, lines: str) -> defer.Deferred[None]:
+        lines = self.cleanup_text(lines)
         # deliver the un-annotated version to subscribers
         self.subPoint.deliver(stream, lines)
         # strip the last character, as the regexp will add a

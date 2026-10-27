@@ -914,7 +914,11 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         def addLog(
             name: str, type: str = 's', logEncoding: str | None = None
         ) -> defer.Deferred[Any]:
-            _log = logfile.FakeLogFile(name)
+            assert step_obj.build is not None
+            _log = logfile.FakeLogFile(
+                name,
+                step_obj.build.properties.cleanupTextFromSecrets,
+            )
             step_obj.logs[name] = _log  # type: ignore[assignment]
             step_obj._connectPendingLogObservers()
             return defer.succeed(_log)
@@ -922,7 +926,11 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         step_obj.addLog = addLog  # type: ignore[method-assign]
 
         def addHTMLLog(name: str, html: str | bytes) -> defer.Deferred[None]:
-            _log = logfile.FakeLogFile(name)
+            assert step_obj.build is not None
+            _log = logfile.FakeLogFile(
+                name,
+                step_obj.build.properties.cleanupTextFromSecrets,
+            )
             html = bytes2unicode(html)
             _log.addStdout(html)
             return defer.succeed(None)
@@ -930,7 +938,11 @@ class TestBuildStepMixin(_TestBuildStepMixinBase):
         step_obj.addHTMLLog = addHTMLLog  # type: ignore[method-assign]
 
         def addCompleteLog(name: str, text: str) -> defer.Deferred[None]:
-            _log = logfile.FakeLogFile(name)
+            assert step_obj.build is not None
+            _log = logfile.FakeLogFile(
+                name,
+                step_obj.build.properties.cleanupTextFromSecrets,
+            )
             if name in step_obj.logs:
                 raise RuntimeError(f'Attempt to add log {name} twice to the logs')
             step_obj.logs[name] = _log  # type: ignore[assignment]

@@ -25,7 +25,7 @@ from buildbot.util.twisted import async_to_deferred
 
 
 class FakeLogFile:
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, cleanup_text: Callable[[str], str] | None = None) -> None:
         self.name = name
         self.header = ''
         self.stdout = ''
@@ -34,6 +34,8 @@ class FakeLogFile:
         self.finished = False
         self._had_errors = False
         self.subPoint = util.subscription.SubscriptionPoint(f"{name!r} log")
+        # like process.log.Log, but per write instead of per line
+        self.cleanup_text: Callable[[str], str] = cleanup_text or (lambda text: text)
 
     def getName(self) -> str:
         return self.name
@@ -62,6 +64,7 @@ class FakeLogFile:
     def addHeader(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = text.decode('utf-8')
+        text = self.cleanup_text(text)
         self.header += text
         self._split_lines('h', text)
         return defer.succeed(None)
@@ -69,6 +72,7 @@ class FakeLogFile:
     def addStdout(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = text.decode('utf-8')
+        text = self.cleanup_text(text)
         self.stdout += text
         self._split_lines('o', text)
         return defer.succeed(None)
@@ -76,6 +80,7 @@ class FakeLogFile:
     def addStderr(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = text.decode('utf-8')
+        text = self.cleanup_text(text)
         self.stderr += text
         self._split_lines('e', text)
         return defer.succeed(None)
@@ -83,6 +88,7 @@ class FakeLogFile:
     def add_header_lines(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = text.decode('utf-8')
+        text = self.cleanup_text(text)
         self.header += text
         self._on_whole_lines('h', text)
         return defer.succeed(None)
@@ -90,6 +96,7 @@ class FakeLogFile:
     def add_stdout_lines(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = text.decode('utf-8')
+        text = self.cleanup_text(text)
         self.stdout += text
         self._on_whole_lines('o', text)
         return defer.succeed(None)
@@ -97,6 +104,7 @@ class FakeLogFile:
     def add_stderr_lines(self, text: str | bytes) -> defer.Deferred[None]:
         if not isinstance(text, str):
             text = text.decode('utf-8')
+        text = self.cleanup_text(text)
         self.stderr += text
         self._on_whole_lines('e', text)
         return defer.succeed(None)

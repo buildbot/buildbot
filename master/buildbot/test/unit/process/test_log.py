@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import cast
 from unittest import mock
 
 from twisted.internet import defer
@@ -58,9 +59,14 @@ class Tests(TestReactorMixin, unittest.TestCase):
         ])
 
     @defer.inlineCallbacks
-    def makeLog(self, type: str, logEncoding: str = 'utf-8') -> InlineCallbacksType[log.Log]:
+    def makeLog(
+        self,
+        type: str,
+        logEncoding: str = 'utf-8',
+        cleanup_text: Callable[[str], str] | None = None,
+    ) -> InlineCallbacksType[log.Log]:
         logid = yield self.master.data.updates.addLog(stepid=27, name='testlog', type=str(type))
-        return log.Log.new(self.master, 'testlog', type, logid, logEncoding)
+        return log.Log.new(self.master, 'testlog', type, logid, logEncoding, cleanup_text)
 
     @defer.inlineCallbacks
     def test_creation(self) -> InlineCallbacksType[None]:
@@ -248,6 +254,60 @@ class Tests(TestReactorMixin, unittest.TestCase):
             },
         )
         self.assertEqual(log_content['content'], 'oout1\neerr2\noout2 out3\neerr3\n')
+
+    async def test_cleanup_text_stream_split_secret(self) -> None:
+        _log = cast(
+            "StreamLog",
+            await self.makeLog('s', cleanup_text=lambda text: text.replace('s3cr3t', '<name>')),
+        )
+        delivered: list[tuple[str, str]] = []
+        _log.subscribe(lambda stream, lines: delivered.append((stream, lines)))
+
+        await _log.addHeader('cmd s3')
+        await _log.addHeader('cr3t\n')
+        await _log.addStdout('out s3c')
+        await _log.addStdout('r3t\nmore s3')
+        await _log.addStderr('err s3cr')
+        await _log.addStdout('cr3t')  # unfinished
+        await _log.addStderr('3t\n')
+        await _log.finish()
+
+        log_content = await self.master.data.get(('logs', _log.logid, 'contents'))
+        self.assertEqual(
+            log_content['content'],
+            'hcmd <name>\noout <name>\neerr <name>\nomore <name>\n',
+        )
+        self.assertNotIn('s3cr3t', repr(delivered))
+
+    async def test_cleanup_text_plain_split_secret(self) -> None:
+        _log = cast(
+            "PlainLog",
+            await self.makeLog('t', cleanup_text=lambda text: text.replace('s3cr3t', '<name>')),
+        )
+
+        await _log.addContent('a s3c')
+        await _log.addContent('r3t\nb s3cr')
+        await _log.addContent('3t')  # unfinished
+        await _log.finish()
+
+        log_content = await self.master.data.get(('logs', _log.logid, 'contents'))
+        self.assertEqual(log_content['content'], 'a <name>\nb <name>\n')
+
+    async def test_cleanup_text_secret_ending_with_newline(self) -> None:
+        def cleanup(text: str) -> str:
+            return text.replace('s3cr3t\n', '<name>')
+
+        stream_log = cast("StreamLog", await self.makeLog('s', cleanup_text=cleanup))
+        await stream_log.addStdout('s3cr3t\n')
+        await stream_log.finish()
+        plain_log = cast("PlainLog", await self.makeLog('t', cleanup_text=cleanup))
+        await plain_log.addContent('s3cr3t\n')
+        await plain_log.finish()
+
+        stream_content = await self.master.data.get(('logs', stream_log.logid, 'contents'))
+        self.assertEqual(stream_content['content'], 'o<name>\n')
+        plain_content = await self.master.data.get(('logs', plain_log.logid, 'contents'))
+        self.assertEqual(plain_content['content'], '<name>\n')
 
     @defer.inlineCallbacks
     def test_unyielded_finish(self) -> InlineCallbacksType[None]:

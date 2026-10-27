@@ -106,7 +106,13 @@ class MasterShellCommand(BuildStep):
             yield self.stdio_log.addHeader(" ".join(command) + "\n\n")
         yield self.stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
         yield self.stdio_log.addHeader(f" in dir {os.getcwd()}\n")
-        yield self.stdio_log.addHeader(f" argv: {argv}\n")
+        # f-string of a list will use repr, which escapes some character
+        # which break expectation for the cleanup.
+        # clean each elements before formatting.
+        assert self.build is not None
+        clean = self.build.properties.cleanupTextFromSecrets
+        log_argv = [clean(a) if isinstance(a, str) else a for a in argv]
+        yield self.stdio_log.addHeader(f" argv: {log_argv}\n")
 
         os_env = os.environ
         env: dict[Any, Any] | os._Environ[str]
@@ -148,7 +154,8 @@ class MasterShellCommand(BuildStep):
             env = newenv
 
         if self.logEnviron:
-            yield self.stdio_log.addHeader(f" env: {env!r}\n")
+            log_env = {k: clean(v) for k, v in env.items()}
+            yield self.stdio_log.addHeader(f" env: {log_env!r}\n")
 
         if self.stopped:
             return CANCELLED
