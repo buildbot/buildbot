@@ -35,7 +35,7 @@ jobs:
     env:
       WORKER_BIN_NAME: buildbot-worker-${{ matrix.name }}-${{ github.event.release.tag_name || 'None' }}${{ matrix.dist-suffix }}${{ matrix.ext }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: 3.13
@@ -53,7 +53,7 @@ jobs:
   build-tarballs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: 3.13
