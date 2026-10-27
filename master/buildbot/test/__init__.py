@@ -16,8 +16,6 @@
 import warnings
 from unittest import mock
 
-import setuptools  # force import setuptools before any other distutils imports
-
 from buildbot import monkeypatches
 from buildbot.test.util.warnings import assertProducesWarning  # noqa: F401
 from buildbot.test.util.warnings import assertProducesWarnings  # noqa: F401
@@ -30,8 +28,6 @@ monkeypatches.patch_all(for_tests=True)
 
 # enable deprecation warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
-
-_ = setuptools  # force use for pylint
 
 # This is where we load deprecated module-level APIs to ignore warning produced by importing them.
 # After the deprecated API has been removed, leave at least one instance of the import in a

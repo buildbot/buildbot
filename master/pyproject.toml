@@ -74,8 +74,6 @@ test = [
     "Markdown>=3.0.0",
     'parameterized',
     'lz4',
-    # imported by buildbot.test
-    'setuptools >= 8.0',
 ]
 
 # NOTE: packages in the 'bundle' extra will be pinned to
