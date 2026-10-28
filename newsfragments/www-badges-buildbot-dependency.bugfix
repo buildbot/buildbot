@@ -1,0 +1,1 @@
+``buildbot-badges`` now declares its dependency on ``buildbot``, which it imports unconditionally.
