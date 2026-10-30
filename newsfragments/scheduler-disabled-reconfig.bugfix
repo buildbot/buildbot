@@ -1,0 +1,1 @@
+A disabled `SingleBranchScheduler` or `AnyBranchScheduler` no longer starts builds after a reconfiguration. Previously the reconfiguration made it consume changes again, while the web UI still showed it as disabled.
