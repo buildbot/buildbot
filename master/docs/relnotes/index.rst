@@ -107,7 +107,7 @@ Misc
 - The worker now depends on ``importlib_metadata`` to retrieve its version from the installed package metadata (:issue:`8877`).
 - Logs entries in ``twisted.log`` related to a Worker interaction are enriched with the worker name and IP
 - Declare Python 3.7 as minimum version for Worker.
-- Buildbot now uses npm (v9+) for its frontend development (previously Yarn v1)
+- Buildbot now uses npm (v12+) for its frontend development (previously Yarn v1)
 
 
 Deprecations and Removals

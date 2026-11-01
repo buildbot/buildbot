@@ -44,6 +44,6 @@
     "vite-plugin-dts": "^4.1.0",
     "vitest": "~5.0.0"
   },
-  "packageManager": "npm@11.10.1",
+  "packageManager": "npm@12.2.0",
   "license": "MPL-2.0"
 }
