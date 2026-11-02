@@ -429,12 +429,13 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
             # Create a temporary file to avoid reading everything into memory at once.
             fd, tmpname = tempfile.mkstemp(prefix='buildbot-suppressions-')
             os.close(fd)
+            # Use uploadFile directly with FileWriter to download to a temp file.
+            # This avoids loading the entire file into the master's memory.
+            writer = remotetransfer.FileWriter(tmpname, maxsize=None, mode=None)
             try:
-                # Use uploadFile directly with FileWriter to download to a temp file.
-                # This avoids loading the entire file into the master's memory.
                 upload_args = {
                     'workdir': self.workdir,
-                    'writer': remotetransfer.FileWriter(tmpname, maxsize=None, mode=None),
+                    'writer': writer,
                     'maxsize': None,
                     'blocksize': 32 * 1024,
                 }
@@ -454,6 +455,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
                 suppressions = yield threads.deferToThread(self._parse_suppression_file, tmpname)
                 self.addSuppression(suppressions)
             finally:
+                writer.cancel()
                 if os.path.exists(tmpname):
                     os.unlink(tmpname)
 
