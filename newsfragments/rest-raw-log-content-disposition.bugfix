@@ -1,0 +1,1 @@
+Fixed raw log download failing in Chrome/Brave/etc when the step name contains a comma, by quoting the filename in the ``Content-Disposition`` header.

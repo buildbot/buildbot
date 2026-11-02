@@ -366,7 +366,31 @@ class V2RootResource_REST(TestReactorMixin, www.WwwTestMixin, unittest.TestCase)
             content=b"value",
             contentType=b'text/test; charset=utf-8',
             responseCode=200,
-            headers={b"content-disposition": [b'attachment; filename=test.txt']},
+            headers={b"content-disposition": [b'attachment; filename="test.txt"']},
+        )
+
+    @defer.inlineCallbacks
+    def test_raw_filename_quoted(self) -> InlineCallbacksType[None]:
+        # step names may contain ',' or ';', which must not split the header value
+        self.patch(
+            endpoint.RawTestsEndpoint,
+            'get',
+            lambda self, resultSpec, kwargs: defer.succeed({
+                "filename": 'build_1_step_Test [a, b; "c"\\d]_log_stdio',
+                "mime-type": "text/test",
+                "raw": "value",
+            }),
+        )
+        yield self.render_resource(self.rsrc, b'/rawtest')
+        self.assertRequest(
+            content=b"value",
+            contentType=b'text/test; charset=utf-8',
+            responseCode=200,
+            headers={
+                b"content-disposition": [
+                    b'attachment; filename="build_1_step_Test [a, b; \\"c\\"\\\\d]_log_stdio"'
+                ]
+            },
         )
 
     @defer.inlineCallbacks

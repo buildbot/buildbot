@@ -338,8 +338,9 @@ class V2RootResource(resource.Resource):
 
         request.setHeader(b"content-type", unicode2bytes(data['mime-type']) + b'; charset=utf-8')
         if ep.kind != EndpointKind.RAW_INLINE:
+            filename = data['filename'].replace('\\', '\\\\').replace('"', '\\"')
             request.setHeader(
-                b"content-disposition", b'attachment; filename=' + unicode2bytes(data['filename'])
+                b"content-disposition", b'attachment; filename="' + unicode2bytes(filename) + b'"'
             )
 
         if not is_stream_data:
