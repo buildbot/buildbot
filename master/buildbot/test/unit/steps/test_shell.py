@@ -15,7 +15,9 @@
 
 from __future__ import annotations
 
+import os
 import re
+import tempfile
 import textwrap
 from typing import TYPE_CHECKING
 from typing import Any
@@ -684,6 +686,27 @@ class WarningCountingShellCommand(
             amar.c:164: warning: this should show up
         """)
         return self.do_test_suppressions(step, supps_file, stdout, 1, exp_warning_log)
+
+    async def test_suppressions_upload_failure_cleans_temp_files(self) -> None:
+        tmpdir = self.mktemp()
+        os.makedirs(tmpdir)
+        self.patch(tempfile, 'tempdir', tmpdir)
+
+        self.setup_step(
+            shell.WarningCountingShellCommand(command=['make'], suppressionFile='supps')
+        )
+        self.expect_commands(
+            ExpectUploadFile(
+                blocksize=32768,
+                maxsize=None,
+                workersrc='supps',
+                workdir='wkdir',
+                writer=ExpectRemoteRef(remotetransfer.FileWriter),
+            ).exit(1),
+        )
+        self.expect_outcome(result=FAILURE)
+        await self.run_step()
+        self.assertEqual(os.listdir(tmpdir), [])
 
     def test_suppressions_directories(self) -> defer.Deferred[None]:
         def warningExtractor(
