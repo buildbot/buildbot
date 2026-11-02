@@ -244,10 +244,7 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
     directoryLeavePattern: str | re.Pattern[str] = "make.*: Leaving directory"
     suppressionFile: str | None = None
 
-    commentEmptyLineRe = re.compile(r"^\s*(#.*)?$")
-    suppressionLineRe = re.compile(
-        r"^\s*([^:\s](?:[^:]*?[^:\s])?)\s*:\s*([^:\s].*?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$"
-    )
+    suppressionRangeRe = re.compile(r":\s*(?P<start>[0-9]+)(?:-(?P<end>[0-9]+))?\s*$")
 
     class Sentinel:
         pass
@@ -461,17 +458,19 @@ class WarningCountingShellCommand(buildstep.ShellMixin, CompositeStepMixin, buil
         suppressions = []
         with open(filename, encoding='utf-8', errors='replace') as f:
             for line in f:
-                if self.commentEmptyLineRe.match(line):
+                line = line.strip()
+                if not line or line.startswith('#'):
                     continue
-                match = self.suppressionLineRe.match(line)
+                file, _, test = line.partition(':')
+                file = file.strip()
+                start = end = None
+                match = self.suppressionRangeRe.search(test)
                 if match:
-                    file, test, start, end = match.groups()
-                    if end is not None:
-                        end = int(end)
-                    if start is not None:
-                        start = int(start)
-                        if end is None:
-                            end = start
+                    test = test[: match.start()]
+                    start = int(match.group('start'))
+                    end = int(match.group('end') or start)
+                test = test.strip()
+                if file and test and not test.startswith(':'):
                     suppressions.append((file, test, start, end))
         return suppressions
 
