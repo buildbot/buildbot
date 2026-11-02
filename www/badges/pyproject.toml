@@ -13,6 +13,7 @@ authors = [
 description = "Buildbot badges"
 license = {text = "GPL-2.0-or-later"}
 dependencies = [
+    "buildbot",
     "klein",
     "CairoSVG",
     "cairocffi",
