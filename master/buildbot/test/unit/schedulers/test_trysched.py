@@ -885,6 +885,29 @@ class Try_Jobdir(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
                 lambda f: self.makeSampleParsedJob(properties=['foo', 'bar'])
             )
 
+    @defer.inlineCallbacks
+    def test_disabled_reconfig(self) -> InlineCallbacksType[None]:
+        yield self.setup_test_startService('jobdir', os.path.abspath('jobdir'))
+        sched = self.sched
+        yield sched.startService()
+        self.assertTrue(sched.active)
+        self.assertEqual(1, sched.watcher.startService.call_count)
+
+        yield sched._enabledCallback(None, {'enabled': False})
+        self.assertEqual(1, sched.watcher.stopService.call_count)
+
+        assert self.jobdir is not None
+        yield sched.reconfigServiceWithSibling(
+            trysched.Try_Jobdir(name='tsched', builderNames=['b'], jobdir=self.jobdir)
+        )
+        self.assertEqual(sched.enabled, False)
+        self.assertEqual(1, sched.watcher.startService.call_count)
+
+        yield sched._enabledCallback(None, {'enabled': True})
+        self.assertEqual(2, sched.watcher.startService.call_count)
+
+        yield sched.stopService()
+
 
 class Try_Userpass_Perspective(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
     OBJECTID = 26
@@ -1120,3 +1143,63 @@ class Try_Userpass(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase
         yield sched.stopService()
 
         self.assertFalse(sched.master.pbmanager.register.called)
+
+    @defer.inlineCallbacks
+    def make_started_scheduler_with_pbmanager(self) -> InlineCallbacksType[trysched.Try_Userpass]:
+        sched = yield self.makeScheduler(
+            name='tsched', builderNames=['a'], port='tcp:9999', userpass=[('fred', 'derf')]
+        )
+        self.registered: list[tuple[str, str]] = []
+
+        # raises on a duplicate like the dispatcher of the real pbmanager
+        def register(portstr: str, user: str, passwd: str, factory: Any) -> defer.Deferred[Any]:
+            key = (portstr, user)
+            if key in self.registered:
+                raise KeyError(f"username '{user}' is already registered on port {portstr}")
+            self.registered.append(key)
+
+            def unregister() -> defer.Deferred[None]:
+                self.registered.remove(key)
+                return defer.succeed(None)
+
+            registration = mock.Mock()
+            registration.unregister = unregister
+            return defer.succeed(registration)
+
+        sched.master.pbmanager = mock.Mock()
+        sched.master.pbmanager.register = register
+
+        yield sched.startService()
+        self.assertTrue(sched.active)
+        self.assertEqual(self.registered, [('tcp:9999', 'fred')])
+        return sched
+
+    def make_reconfig_sibling(self) -> trysched.Try_Userpass:
+        return trysched.Try_Userpass(
+            name='tsched', builderNames=['b'], port='tcp:9999', userpass=[('fred', 'derf')]
+        )
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_does_not_register(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_started_scheduler_with_pbmanager()
+        yield sched._enabledCallback(None, {'enabled': False})
+        self.assertEqual(self.registered, [])
+
+        yield sched.reconfigServiceWithSibling(self.make_reconfig_sibling())
+        self.assertEqual(sched.enabled, False)
+        self.assertEqual(self.registered, [])
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_then_enable(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_started_scheduler_with_pbmanager()
+        yield sched._enabledCallback(None, {'enabled': False})
+        yield sched.reconfigServiceWithSibling(self.make_reconfig_sibling())
+
+        yield sched._enabledCallback(None, {'enabled': True})
+        self.assertEqual(self.registered, [('tcp:9999', 'fred')])
+
+    @defer.inlineCallbacks
+    def test_enabled_reconfig(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_started_scheduler_with_pbmanager()
+        yield sched.reconfigServiceWithSibling(self.make_reconfig_sibling())
+        self.assertEqual(self.registered, [('tcp:9999', 'fred')])

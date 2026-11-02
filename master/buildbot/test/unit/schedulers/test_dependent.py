@@ -270,3 +270,20 @@ class Dependent(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unit
         self.assertEqual(sched.enabled, False)
         r = yield sched.deactivate()
         self.assertEqual(r, None)
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig(self) -> InlineCallbacksType[None]:
+        sched = yield self.makeScheduler()
+        yield self.master.startService()
+        self.assertTrue(sched.active)
+        yield sched._enabledCallback(None, {'enabled': False})
+
+        yield sched.reconfigServiceWithSibling(
+            dependent.Dependent(
+                name='n', builderNames=['c'], upstream=sched._config_kwargs['upstream']
+            )
+        )
+        self.assertEqual(sched.enabled, False)
+        filters = [q.filter for q in sched.master.mq.qrefs]
+        self.assertNotIn(('buildsets', None, 'new'), filters)
+        self.assertNotIn(('buildsets', None, 'complete'), filters)
