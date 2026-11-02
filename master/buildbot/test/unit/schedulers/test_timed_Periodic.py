@@ -266,3 +266,45 @@ class Periodic(scheduler.SchedulerMixin, TestReactorMixin, unittest.TestCase):
         self.assertEqual(sched.enabled, False)
         r = yield sched.startBuild()
         self.assertEqual(r, None)
+
+    @defer.inlineCallbacks
+    def make_disabled_scheduler_and_reconfig(
+        self, onlyIfChanged: bool
+    ) -> InlineCallbacksType[timed.Periodic]:
+        sched = yield self.makeScheduler(
+            name='test', builderNames=['test'], periodicBuildTimer=13, onlyIfChanged=onlyIfChanged
+        )
+        yield self.master.startService()
+        self.assertTrue(sched.active)
+        yield sched._enabledCallback(None, {'enabled': False})
+        self.assertIsNone(sched._change_consumer)
+
+        yield sched.reconfigServiceWithSibling(
+            timed.Periodic(
+                name='test',
+                builderNames=['test'],
+                periodicBuildTimer=14,
+                onlyIfChanged=onlyIfChanged,
+            )
+        )
+        self.assertEqual(sched.enabled, False)
+        return sched
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_does_not_consume_changes(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_disabled_scheduler_and_reconfig(onlyIfChanged=True)
+        self.assertIsNone(sched._change_consumer)
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_does_not_build(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_disabled_scheduler_and_reconfig(onlyIfChanged=False)
+        self.reactor.advance(100)
+        self.assertEqual(self.events, [])
+        self.assertIsNone(sched.actuateAtTimer)
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_then_enable(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_disabled_scheduler_and_reconfig(onlyIfChanged=True)
+        yield sched._enabledCallback(None, {'enabled': True})
+        self.assertIsNotNone(sched._change_consumer)
+        yield sched.deactivate()
