@@ -159,7 +159,7 @@ class Timed(AbsoluteSourceStampsMixin, base.ReconfigurableBaseScheduler):
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
 
-        if self.active:
+        if self.active and self.enabled:
             # FIXME: there's a short time below where changes will not be picked up
             yield self._stopConsumingChanges()
 
