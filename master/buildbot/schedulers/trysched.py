@@ -534,7 +534,6 @@ class Try_Userpass(TryBase):
         yield super().reconfigService(builderNames=builderNames, **kwargs)
         self.port = port
         self.userpass = userpass
-        self.registrations = []
 
         if self.active and self.enabled:
             yield self._destroy_pb()
