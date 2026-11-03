@@ -8,6 +8,7 @@ Web server configuration
     :maxdepth: 2
 
     server
+    mcp
     ui/badges
     ui/console_view
     ui/grid_view
@@ -26,6 +27,7 @@ Web server configuration
 This section lists options to configure the web server.
 
 * :ref:`Config-WWW-Server` - describes the options that adjust how complete web server works.
+* :ref:`Config-WWW-MCP` - describes the built-in Model Context Protocol (MCP) server for AI assistants.
 
 .. _UI-Plugins:
 
