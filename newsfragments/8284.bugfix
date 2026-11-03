@@ -1,0 +1,1 @@
+``buildbot checkconfig`` now correctly reads ``basedir`` and ``configfile`` from the ``BuildMaster`` constructor in ``buildbot.tac``, instead of using the directory argument as basedir and only looking for a variable literally named ``configfile``.
