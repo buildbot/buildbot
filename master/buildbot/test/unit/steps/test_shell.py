@@ -19,6 +19,7 @@ import os
 import re
 import tempfile
 import textwrap
+import time
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -884,6 +885,40 @@ class WarningCountingShellCommand(
             """)
         return self.do_test_suppressions(
             step, None, stdout, 2, exp_warning_log, props={"suppressionsList": supps}
+        )
+
+    def test_parse_suppression_file(self) -> None:
+        step = shell.WarningCountingShellCommand(command=['make'])
+        filename = self.mktemp()
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(
+                textwrap.dedent("""\
+                    # comment
+                      mi_packrec.c : .*shift.* : 560-600
+                    kernel_types.h : .*friends.* : 51
+                    foo.c : a:b
+                    no-colon
+                    empty.c :
+                    bad.c :: 1
+                    """)
+            )
+            # quadratic with the former line regex
+            f.write("a:b" + " " * 8000 + ":1" + " " * 8000 + "x\n")
+            f.write("a:b" + " \t" * 4000 + ":\n")
+
+        start = time.monotonic()
+        suppressions = step._parse_suppression_file(filename)
+        self.assertLess(time.monotonic() - start, 0.1)
+
+        self.assertEqual(
+            suppressions,
+            [
+                ('mi_packrec.c', '.*shift.*', 560, 600),
+                ('kernel_types.h', '.*friends.*', 51, 51),
+                ('foo.c', 'a:b', None, None),
+                ('a', 'b' + " " * 8000 + ":1" + " " * 8000 + "x", None, None),
+                ('a', 'b' + " \t" * 4000 + ":", None, None),
+            ],
         )
 
     def test_warnExtractFromRegexpGroups(self) -> None:

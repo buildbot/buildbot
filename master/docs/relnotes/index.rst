@@ -24,7 +24,8 @@ Bug fixes
 - Fixed ``buildbot cleanupdb`` failing to run (:issue:`8370`).
 - Fixed page titles always showing "Buildbot" instead of reflecting the current view (:issue:`8703`).
 - Web frontend now correctly applies the ``default_page`` configuration to redirect users from the home page to the configured default page (:issue:`8758`).
-- Fixed potential ReDoS, OOM, and main thread blocking in `WarningCountingShellCommand` when processing suppression files. (:issue:`8819`)
+- Fixed potential OOM and main thread blocking in `WarningCountingShellCommand` when uploading and parsing suppression files.
+  The regular expressions in a suppression file are still run on the master and must be trusted (:issue:`8819`)
 - Fixed the `Git` step to apply configured partial clone filters when fetching existing repositories (:issue:`9058`).
 - Fixed an issue where incomplete builds were considered as previous builds in reporters (:issue:`9067`).
 - GitLab OAuth now retrieves all groups when determining a user's roles (:issue:`9169`).
