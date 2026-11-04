@@ -233,30 +233,6 @@ class Trigger(BuildStep):
         return overall_results
 
     @defer.inlineCallbacks
-    def addBuildUrls(self, rclist: list[Any]) -> InlineCallbacksType[None]:
-        brids: dict[Any, Any] = {}
-        for was_cb, results in rclist:
-            if isinstance(results, tuple):
-                results, brids = results
-            builderNames: dict[Any, Any] = {}
-            if was_cb:  # errors were already logged in worstStatus
-                for builderid, br in brids.items():
-                    builds = yield self.master.db.builds.getBuilds(buildrequestid=br)  # type: ignore[union-attr]
-                    for build in builds:
-                        builderid = build.builderid
-                        # When virtual builders are used, the builderid used for triggering
-                        # is not the same as the one that the build actually got
-                        if builderid not in builderNames:
-                            builderDict = yield self.master.data.get(("builders", builderid))  # type: ignore[union-attr]
-                            builderNames[builderid] = builderDict["name"]
-                        num = build.number
-                        url = getURLForBuild(self.master, builderid, num)  # type: ignore[arg-type]
-                        yield self.addURL(
-                            f'{statusToString(build.results)}: {builderNames[builderid]} #{num}',
-                            url,
-                        )
-
-    @defer.inlineCallbacks
     def _add_results(self, brid: int) -> InlineCallbacksType[None]:
         @defer.inlineCallbacks
         def _is_buildrequest_complete(brid: int) -> InlineCallbacksType[bool]:
@@ -266,8 +242,23 @@ class Trigger(BuildStep):
         event = ('buildrequests', str(brid), 'complete')
         yield self.master.mq.waitUntilEvent(event, lambda: _is_buildrequest_complete(brid))  # type: ignore[union-attr]
         builds = yield self.master.db.builds.getBuilds(buildrequestid=brid)  # type: ignore[union-attr]
+        builderNames: dict[Any, Any] = {}
         for build in builds:
             self._result_list.append(build.results)
+            # Attach the build URL once the buildrequest completes, regardless of
+            # waitForFinish, so the UI can drop its "pending build" count (#8204).
+            builderid = build.builderid
+            # When virtual builders are used, the builderid used for triggering
+            # is not the same as the one that the build actually got
+            if builderid not in builderNames:
+                builderDict = yield self.master.data.get(("builders", builderid))  # type: ignore[union-attr]
+                builderNames[builderid] = builderDict["name"]
+            num = build.number
+            url = getURLForBuild(self.master, builderid, num)  # type: ignore[arg-type]
+            yield self.addURL(
+                f'{statusToString(build.results)}: {builderNames[builderid]} #{num}',
+                url,
+            )
         self.updateSummary()
 
     @defer.inlineCallbacks
@@ -355,7 +346,6 @@ class Trigger(BuildStep):
             # we were interrupted, don't bother update status
             if self.ended:
                 return CANCELLED
-            yield self.addBuildUrls(rclist)
             results = yield self.worstStatus(results, rclist, unimportant_brids)
         else:
             # do something to handle errors
