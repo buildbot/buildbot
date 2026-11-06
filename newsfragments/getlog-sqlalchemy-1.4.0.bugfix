@@ -1,0 +1,1 @@
+Fixed fetching a log from the database crashing with ``AttributeError`` on early SQLAlchemy 1.4 releases.

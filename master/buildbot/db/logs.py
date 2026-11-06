@@ -190,8 +190,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             q = self.db.model.logs.select()
             if whereclause is not None:
                 q = q.where(whereclause)
-            res = conn.execute(q).mappings()
-            row = res.fetchone()
+            res = conn.execute(q)
+            row = res.mappings().fetchone()
 
             rv = None
             if row:
@@ -634,8 +634,6 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         "compressed": new_compressed_id,
                     },
                 ).close()
-
-                conn.commit()
 
         def _thd_recompress_chunks(
             compressed_chunks: list[tuple[int, bytes]],

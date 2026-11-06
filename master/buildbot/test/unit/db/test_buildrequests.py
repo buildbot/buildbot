@@ -631,6 +631,37 @@ class Tests(TestReactorMixin, unittest.TestCase):
             expfailure=buildrequests.NotClaimedError,
         )
 
+    async def insert_priority_test_requests(self) -> None:
+        await self.master.db.insert_test_data([
+            fakedb.BuildRequest(id=44, buildsetid=self.BSID, builderid=self.BLDRID1, priority=3),
+            fakedb.BuildRequest(id=45, buildsetid=self.BSID, builderid=self.BLDRID1, priority=3),
+            fakedb.BuildRequest(
+                id=46, buildsetid=self.BSID, builderid=self.BLDRID1, priority=3, complete=1
+            ),
+        ])
+
+    async def get_priorities(self) -> list[tuple[int, int]]:
+        results = await self.db.buildrequests.getBuildRequests()
+        return sorted((r.buildrequestid, r.priority) for r in results)
+
+    async def test_set_build_requests_priority(self) -> None:
+        await self.insert_priority_test_requests()
+
+        await self.db.buildrequests.set_build_requests_priority([44, 45], 10)
+
+        self.assertEqual(await self.get_priorities(), [(44, 10), (45, 10), (46, 3)])
+
+    async def test_set_build_requests_priority_complete(self) -> None:
+        await self.insert_priority_test_requests()
+
+        with self.assertRaises(buildrequests.NotClaimedError):
+            await self.db.buildrequests.set_build_requests_priority([44, 46], 10)
+        self.flushLoggedErrors(buildrequests.NotClaimedError)
+
+        # MySQL with MyISAM has no transaction, thus don't rollback
+        if self.db.pool.engine.dialect.name != 'mysql':
+            self.assertEqual(await self.get_priorities(), [(44, 3), (45, 3), (46, 3)])
+
     @defer.inlineCallbacks
     def do_test_unclaimMethod(
         self, method: Callable[[], Deferred[None]], expected: Iterable[int]

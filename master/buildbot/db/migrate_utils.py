@@ -25,7 +25,6 @@ def test_unicode(migrate_engine: Any) -> None:
     """Test that the database can handle inserting and selecting Unicode"""
     # set up a subsidiary MetaData object to hold this temporary table
     submeta = sa.MetaData()
-    submeta.bind = migrate_engine  # type: ignore[attr-defined]
 
     test_unicode = sautils.Table(
         'test_unicode',
