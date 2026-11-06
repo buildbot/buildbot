@@ -212,6 +212,12 @@ class IndexResource(resource.Resource):
         request.setHeader(b"content-type", b'text/html')
         request.setHeader(b"Cache-Control", b"public,max-age=0")
 
+        on_load_warning = None
+        try:
+            yield self.config['auth'].maybeAutoLogin(request)
+        except Error as e:
+            on_load_warning = e.message
+
         user_info = self.master.www.getUserInfos(request)
         config = _render_frontend_config(
             config=self.frontend_config,
@@ -223,11 +229,8 @@ class IndexResource(resource.Resource):
                 )
             ),
         )
-
-        try:
-            yield self.config['auth'].maybeAutoLogin(request)
-        except Error as e:
-            config["on_load_warning"] = e.message
+        if on_load_warning is not None:
+            config["on_load_warning"] = on_load_warning
 
         serialized_config = serialize_www_frontend_config_dict_to_json(config)
         serialized_css = serialize_www_frontend_theme_to_css(config, indent=8)
