@@ -241,6 +241,31 @@ class IndexResourceTest(TestReactorMixin, www.WwwTestMixin, unittest.TestCase):
         }
         self.assertEqual(config_json, exp)
 
+    async def test_render_remote_user_auto_login(self) -> None:
+        master = await self.make_master(url='h:/a/b/', auth=auth.RemoteUserAuth(), plugins={})
+
+        def assertUserAllowed(
+            ep: Any, action: Any, options: Any, user_info: dict[str, Any]
+        ) -> None:
+            if user_info.get('anonymous'):
+                raise Forbidden(b'forbidden')
+
+        master.www.authz = mock.Mock(spec=Authz, unsafe=True)
+        master.www.authz.assertUserAllowed = mock.Mock(side_effect=assertUserAllowed)
+
+        rsrc = config.IndexResource(master, self.get_react_base_path())  # type: ignore[arg-type]
+        rsrc.reconfigResource(master.config)
+
+        res = await self.render_resource(rsrc, b'/', extraHeaders={b'REMOTE_USER': b'alice@realm'})
+        config_json = self.extract_config_json(bytes2unicode(res))
+
+        self.assertEqual(
+            config_json['user'],
+            {'username': 'alice', 'realm': 'realm', 'email': 'alice'},
+        )
+        self.assertTrue(config_json['user_any_access_allowed'])
+        self.assertNotIn('on_load_warning', config_json)
+
     @defer.inlineCallbacks
     def test_render_non_ascii_index(self) -> InlineCallbacksType[None]:
         # index.html must be read and served as UTF-8 regardless of the system
