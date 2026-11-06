@@ -345,7 +345,7 @@ class Channel(service.AsyncService):
         log.msg(f"[Contact] Builder {builder['name']} started")
 
         # only notify about builders we are interested in
-        if self.bot.tags is not None and not self.builderMatchesAnyTag(builder.get('tags', [])):  # type: ignore[attr-defined]
+        if self.bot.tags is not None and not self.bot.builderMatchesAnyTag(builder.get('tags', [])):
             log.msg('Not notifying for a build that does not match any tags')
             return
 
@@ -353,7 +353,7 @@ class Channel(service.AsyncService):
             return
 
         if self.useRevisions:
-            revisions = yield self.getRevisionsForBuild(build)  # type: ignore[attr-defined]
+            revisions = yield self.bot.getRevisionsForBuild(build)
             r = f"Build containing revision(s) {','.join(revisions)} on {builderName} started"
         else:
             # Abbreviate long lists of changes to simply two
@@ -389,7 +389,7 @@ class Channel(service.AsyncService):
         url = utils.getURLForBuild(self.master, builder['builderid'], buildNumber)
 
         if self.useRevisions:
-            revisions = yield self.getRevisionsForBuild(build)  # type: ignore[attr-defined]
+            revisions = yield self.bot.getRevisionsForBuild(build)
             r = (
                 f"Build on `{builderName}` containing revision(s) {','.join(revisions)} "
                 f"{self.bot.format_build_status(build)}"
@@ -1382,11 +1382,10 @@ class StatusBot(service.AsyncMultiService):
             online_builderids.update(builderids)
         return list(online_builderids)
 
-    @defer.inlineCallbacks
-    def getRevisionsForBuild(self, bdict: Any) -> InlineCallbacksType[list[str]]:
+    def getRevisionsForBuild(self, bdict: Any) -> defer.Deferred[list[str]]:
         # FIXME: Need to get revision info! (build -> buildreq -> buildset ->
         # sourcestamps)
-        return ["TODO"]  # type: ignore[return-value]
+        return defer.succeed(["TODO"])
 
     results_descriptions = {
         SKIPPED: "was skipped",

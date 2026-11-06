@@ -1,0 +1,1 @@
+Fixed `IRC` and `TelegramBot` raising an error and dropping the build notification when ``tags`` or ``useRevisions`` is set.
