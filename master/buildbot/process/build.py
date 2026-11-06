@@ -936,18 +936,17 @@ class Build(properties.PropertiesMixin):
     def getSummaryStatistic(
         self,
         name: str,
-        summary_fn: Callable[[int, int], int],
-        initial_value: Sentinel | int = _sentinel,
-    ) -> int:
+        summary_fn: Callable[[Any, Any], Any],
+        initial_value: Any = _sentinel,
+    ) -> Any:
         assert all(isinstance(s, BuildStep) for s in self.executedSteps)
-        step_stats_list: list[int] = [
+        step_stats_list: list[Any] = [
             st.getStatistic(name)  # type: ignore[attr-defined]
             for st in self.executedSteps
             if st.hasStatistic(name)  # type: ignore[attr-defined]
         ]
         if initial_value is self._sentinel:
             return reduce(summary_fn, step_stats_list)
-        assert isinstance(initial_value, int)
         return reduce(summary_fn, step_stats_list, initial_value)
 
     @defer.inlineCallbacks
