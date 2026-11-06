@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.internet import defer
-from twisted.logger import Logger
 
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import asyncSleep
@@ -37,7 +36,6 @@ if TYPE_CHECKING:
     from buildbot.util.kubeclientservice import KubeConfigLoaderBase
     from buildbot.util.twisted import InlineCallbacksType
 
-log = Logger()
 
 # Waiting reason that need user action to resolve
 _FATAL_CONTAINER_WAITING_REASONS = frozenset({
@@ -156,7 +154,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         if callable(masterFQDN):
             masterFQDN = masterFQDN()
 
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = httpclientservice.HTTPSession(
             self.master.httpservice,
             kube_config.get_master_url(),  # type: ignore[union-attr]
         )
@@ -222,10 +220,10 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         try:
             res = await self._http.get(url, **await self._get_request_kwargs())
         except Exception as e:
-            log.warn("Could not get status of pod {name}, will retry: {e}", name=name, e=e)
+            self._logger.warn("Could not get status of pod {name}, will retry: {e}", name=name, e=e)
             return (True, "")
         if res.code == 429 or res.code >= 500:
-            log.warn(
+            self._logger.warn(
                 "Could not get status of pod {name}, will retry: HTTP {code}",
                 name=name,
                 code=res.code,
