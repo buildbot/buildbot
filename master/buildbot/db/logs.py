@@ -635,8 +635,6 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     },
                 ).close()
 
-                conn.commit()
-
         def _thd_recompress_chunks(
             compressed_chunks: list[tuple[int, bytes]],
             compress_obj: CompressObjInterface,
