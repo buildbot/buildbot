@@ -376,8 +376,8 @@ class Tests(TestReactorMixin, unittest.TestCase):
         def thd(conn: sa.Connection) -> dict[str, Any]:
             res = conn.execute(
                 self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
+            )
+            row = res.mappings().fetchone()
             res.close()
             return dict(row)  # type: ignore[arg-type]
 
@@ -411,10 +411,8 @@ class Tests(TestReactorMixin, unittest.TestCase):
 
         def _thd(conn: sa.Connection) -> list[dict[str, Any]]:
             tbl = self.db.model.logchunks
-            res = conn.execute(
-                tbl.select().where(tbl.c.logid == LOG_ID).order_by(tbl.c.first_line)
-            ).mappings()
-            rows = [dict(row) for row in res]
+            res = conn.execute(tbl.select().where(tbl.c.logid == LOG_ID).order_by(tbl.c.first_line))
+            rows = [dict(row) for row in res.mappings()]
             res.close()
             return rows
 
@@ -483,8 +481,8 @@ class Tests(TestReactorMixin, unittest.TestCase):
         def thd(conn: sa.Connection) -> dict[str, Any]:
             res = conn.execute(
                 self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
+            )
+            row = res.mappings().fetchone()
             res.close()
             return dict(row)  # type: ignore[arg-type]
 
@@ -506,8 +504,8 @@ class Tests(TestReactorMixin, unittest.TestCase):
         def thd(conn: sa.Connection) -> dict[str, Any]:
             res = conn.execute(
                 self.db.model.logchunks.select().where(self.db.model.logchunks.c.first_line > 6)
-            ).mappings()
-            row = res.fetchone()
+            )
+            row = res.mappings().fetchone()
             res.close()
             return dict(row)  # type: ignore[arg-type]
 

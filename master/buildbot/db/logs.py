@@ -190,8 +190,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             q = self.db.model.logs.select()
             if whereclause is not None:
                 q = q.where(whereclause)
-            res = conn.execute(q).mappings()
-            row = res.fetchone()
+            res = conn.execute(q)
+            row = res.mappings().fetchone()
 
             rv = None
             if row:
