@@ -347,6 +347,7 @@ class AbstractGitAuth(ComparableMixin):
             return False
 
         git_commands_that_need_auth = [
+            'archive',
             'clone',
             'credential',
             'checkout',
