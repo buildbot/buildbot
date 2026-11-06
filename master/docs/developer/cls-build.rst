@@ -14,17 +14,19 @@ Build
 
         The ID of this build in the database.
 
-    .. py:method:: getSummaryStatistic(name, summary_fn, initial_value=None)
+    .. py:method:: getSummaryStatistic(name, summary_fn[, initial_value])
 
         :param name: statistic name to summarize
         :param summary_fn: callable with two arguments that will combine two values
-        :param initial_value: first value to pass to ``summary_fn``
+        :param initial_value: optional first value to pass to ``summary_fn``
         :returns: summarized result
 
-        This method summarizes the named step statistic over all steps in which it exists, using ``combination_fn`` and ``initial_value`` to combine multiple results into a single result.
+        This method summarizes the named step statistic over all steps in which it exists, using ``summary_fn`` and ``initial_value`` to combine multiple results into a single result.
         This translates to a call to Python's ``reduce``::
 
             return reduce(summary_fn, step_stats_list, initial_value)
+
+        If ``initial_value`` is not given, it is omitted from the ``reduce`` call.
 
     .. py:method:: getUrl()
 

@@ -762,6 +762,18 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         add = operator.add
         self.assertEqual(b.getSummaryStatistic('casualties', add), 11)
         self.assertEqual(b.getSummaryStatistic('casualties', add, 10), 21)
+        self.assertEqual(
+            b.getSummaryStatistic('casualties', lambda acc, x: (acc or 0) + x, None), 11
+        )
+
+    def test_getSummaryStatistic_float(self) -> None:
+        b = self.build
+
+        b.executedSteps = [BuildStep(), BuildStep()]
+        b.executedSteps[0].setStatistic('cov', 0.5)  # type: ignore[attr-defined]
+        b.executedSteps[1].setStatistic('cov', 0.25)  # type: ignore[attr-defined]
+
+        self.assertEqual(b.getSummaryStatistic('cov', operator.add, 0.0), 0.75)
 
     def create_fake_steps(self, names: Iterable[str]) -> list[FakeBuildStep]:
         steps: list[FakeBuildStep] = []
