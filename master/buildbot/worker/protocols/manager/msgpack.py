@@ -142,7 +142,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
             else:
                 self.sendClose()
         except Exception as e:
-            self._logger.info(f"Connection opening failed: {e}")
+            self._logger.info("Connection opening failed: {e}", e=e)
             self.sendClose()
         finally:
             dispatcher.master.release_lock()
@@ -322,14 +322,14 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     def onMessage(self, payload: bytes, isBinary: bool) -> None:
         if not isBinary:
             name = self.worker_name if self.worker_name is not None else '<???>'
-            self._logger.info(f'Message type from worker {name} unsupported')
+            self._logger.info('Message type from worker {name} unsupported', name=name)
             return
 
         msg = msgpack.unpackb(payload, raw=False)
         self.maybe_log_worker_to_master_msg(msg)
 
         if 'seq_number' not in msg or 'op' not in msg:
-            self._logger.info(f'Invalid message from worker: {msg}')
+            self._logger.info('Invalid message from worker: {msg!r}', msg=msg)
             return
 
         if msg['op'] != "response" and self.connection is None:
@@ -386,7 +386,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
     @defer.inlineCallbacks
     def onConnect(self, request: ConnectionRequest) -> InlineCallbacksType[None]:  # type: ignore[override]
         if self.debug:
-            self._logger.info(f"Client connecting: {request.peer}")
+            self._logger.info("Client connecting: {peer}", peer=request.peer)
 
         value = request.headers.get('authorization')
         if value is None:
@@ -422,7 +422,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
 
     def onClose(self, wasClean: bool, code: int | None, reason: str) -> None:
         if self.debug:
-            self._logger.info(f"WebSocket connection closed: {reason}")
+            self._logger.info("WebSocket connection closed: {reason}", reason=reason)
         # stop waiting for the responses of all commands
         for d in self.seq_num_to_waiters_map.values():
             d.errback(ConnectioLostError("Connection lost"))

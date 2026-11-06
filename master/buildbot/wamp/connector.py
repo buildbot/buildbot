@@ -76,11 +76,11 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         # so for now, we just crash the master
         self._logger.info("Guru meditation! We have been disconnected from wamp server")
         self._logger.info("We don't know how to recover this without restarting the whole system")
-        self._logger.info(str(details))
+        self._logger.info("{details}", details=details)
         yield self.master.stopService()
 
     def onUserError(self, e: Failure, msg: str) -> None:
-        self._logger.failure(msg, e)
+        self._logger.failure("{msg}", e, msg=msg)
 
 
 def make(config: Any) -> MasterService | dict[str, str]:

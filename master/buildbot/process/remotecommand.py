@@ -153,7 +153,9 @@ class RemoteCommand(base.RemoteCommandImpl):
 
         self.commandID = RemoteCommand.generate_new_command_id()
 
-        self._logger.info(f"{self}: RemoteCommand.run [{self.commandID}]")
+        self._logger.info(
+            "{cmd}: RemoteCommand.run [{commandID}]", cmd=self, commandID=self.commandID
+        )
         self.deferred = defer.Deferred()
 
         d = defer.maybeDeferred(self._start)
@@ -242,7 +244,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     @async_to_deferred
     async def interrupt(self, why: Failure | str) -> None:
-        self._logger.info(f"RemoteCommand.interrupt {self}, {why}")
+        self._logger.info("RemoteCommand.interrupt {cmd}, {reason}", cmd=self, reason=why)
 
         if self.conn and isinstance(why, Failure) and why.check(error.ConnectionLost):
             # Note that we may be in the process of interruption and waiting for the worker to
@@ -269,7 +271,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             await self.conn.remoteInterruptCommand(self.builder_name, self.commandID, str(why))
             # the worker may not have remote_interruptCommand
         except Exception as e:
-            self._logger.info(f"RemoteCommand.interrupt failed {self} {e}")
+            self._logger.info("RemoteCommand.interrupt failed {cmd} {e}", cmd=self, e=e)
 
     def remote_update_msgpack(self, updates: list[tuple[str, Any]]) -> defer.Deferred[None]:
         assert self.worker is not None
@@ -417,7 +419,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         if logname in self.logs:
             await self.logs[logname].add_stdout_lines(data)
         else:
-            self._logger.info(f"{self}.addToLog: no such log {logname}")
+            self._logger.info("{cmd}.addToLog: no such log {logname}", cmd=self, logname=logname)
 
     def _cleanup_text(self, data: str) -> str:
         # logs redact secrets themselves, only the collected output needs it here
@@ -429,7 +431,7 @@ class RemoteCommand(base.RemoteCommandImpl):
     @async_to_deferred
     async def remoteUpdate(self, key: str, value: Any, is_flushed: bool) -> None:
         if self.debug:
-            self._logger.info(f"Update[{key}]: {value}")
+            self._logger.info("Update[{key}]: {value}", key=key, value=value)
         if key == "stdout":
             await self.add_stdout_lines(value, is_flushed)
         if key == "stderr":
@@ -441,7 +443,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             await self.addToLog(logname, data)
         if key == "rc":
             rc = self.rc = value
-            self._logger.info(f"{self} rc={rc}")
+            self._logger.info("{cmd} rc={rc}", cmd=self, rc=rc)
             await self.add_header_lines(f"program finished with exit code {rc}\n")
         if key == "elapsed":
             self._remoteElapsed = value
@@ -476,7 +478,7 @@ class RemoteCommand(base.RemoteCommandImpl):
                     if maybeFailure:
                         await loog.addHeader(f"\nremoteFailed: {maybeFailure}")
                     else:
-                        self._logger.info(f"closing log {loog}")
+                        self._logger.info("closing log {log}", log=loog)
                     await loog.finish()
 
         if maybeFailure:
@@ -597,7 +599,7 @@ class RemoteShellCommand(RemoteCommand):
             if self.step.workerVersionIsOlderThan("shell", "2.16"):  # type: ignore[union-attr]
                 self.args.pop('sigtermTime', None)
         what = f"command '{self.fake_command}' in dir '{self.args['workdir']}'"  # type: ignore[str-bytes-safe]
-        self._logger.info(what)
+        self._logger.info("{what}", what=what)
         return super()._start()
 
     def __repr__(self) -> str:
