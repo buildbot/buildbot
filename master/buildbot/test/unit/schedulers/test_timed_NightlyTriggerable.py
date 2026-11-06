@@ -701,3 +701,43 @@ class NightlyTriggerable(
 
         self.assertBuildsetAdded(sourcestamps=[sourcestamp], priority=7)
         self.assertEqual(calls, [])
+
+    @defer.inlineCallbacks
+    def make_disabled_scheduler_and_reconfig(
+        self,
+    ) -> InlineCallbacksType[timed.NightlyTriggerable]:
+        sched = yield self.makeScheduler(
+            name='test', builderNames=['test'], minute=[5], createAbsoluteSourceStamps=True
+        )
+        yield self.master.startService()
+        self.assertTrue(sched.active)
+        yield sched._enabledCallback(None, {'enabled': False})
+        self.assertIsNone(sched._change_consumer)
+
+        yield sched.reconfigServiceWithSibling(
+            timed.NightlyTriggerable(
+                name='test', builderNames=['test'], minute=[6], createAbsoluteSourceStamps=True
+            )
+        )
+        self.assertEqual(sched.enabled, False)
+        return sched
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_does_not_consume_changes(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_disabled_scheduler_and_reconfig()
+        self.assertIsNone(sched._change_consumer)
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_does_not_build(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_disabled_scheduler_and_reconfig()
+        sched.trigger(False, [{"codebase": '', "revision": 'myrev'}], set_props=None)
+        self.reactor.advance(60 * 60)
+        self.assertNoBuildsetAdded()
+        self.assertIsNone(sched.actuateAtTimer)
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_then_enable(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_disabled_scheduler_and_reconfig()
+        yield sched._enabledCallback(None, {'enabled': True})
+        self.assertIsNotNone(sched._change_consumer)
+        yield sched.deactivate()

@@ -1,0 +1,1 @@
+Reconfiguring an enabled `Try_Userpass` no longer raises a `KeyError` for a user that is already registered on the same port. Previously the reconfiguration did not unregister the old users before registering them again.
