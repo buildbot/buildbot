@@ -153,17 +153,21 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
 
     @defer.inlineCallbacks
     def _getPulls(self) -> InlineCallbacksType[list[dict[str, Any]]]:
-        log.debug(
-            "GitHubPullrequestPoller: polling "
-            f"GitHub repository {self.owner}/{self.repo}, branches: {self.branches}"
+        self._logger.debug(
+            "GitHubPullrequestPoller: polling GitHub repository {owner}/{repo}, branches: {branches}",
+            owner=self.owner,
+            repo=self.repo,
+            branches=self.branches,
         )
         result = yield self._http.get('/'.join(['/repos', self.owner, self.repo, 'pulls']))
         my_json = yield result.json()
         if result.code != 200:
             message = my_json.get('message', 'unknown')
-            log.error(
-                f"GitHubPullrequestPoller error {result.code} '{message}' "
-                f"while loading {result.url}"
+            self._logger.error(
+                "GitHubPullrequestPoller error {code} '{error_message}' while loading {url}",
+                code=result.code,
+                error_message=message,
+                url=result.url,
             )
             return []
         return my_json
@@ -268,9 +272,12 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource, StateMixin
                 failures = [r[1] for r in results if not r[0]]
                 if failures:
                     for failure in failures:
-                        log.error(
+                        self._logger.error(
                             "while processing changes for "
-                            f"Pullrequest {prnumber} revision {revision}: {failure}"
+                            "Pullrequest {prnumber} revision {revision}: {error}",
+                            prnumber=prnumber,
+                            revision=revision,
+                            error=failure,
                         )
                     # Fail on the first error!
                     failures[0].raiseException()

@@ -25,6 +25,7 @@ from autobahn.websocket.types import ConnectionDeny
 from parameterized import parameterized
 from twisted.internet import defer
 from twisted.logger import capturedLogs
+from twisted.logger import formatEvent
 from twisted.trial import unittest
 
 from buildbot.worker.protocols.base import FileReaderImpl
@@ -173,9 +174,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         self.assertEqual(captured[0]["log_format"], "WORKER -> MASTER message: {msg!r}")
         self.assertEqual(captured[0]["msg"], msg)
 
-        # for some reason, this happens in tests
-        self.assertEqual(captured[1]["log_format"], f'Invalid message from worker: {msg}')
-        self.assertTrue(str(captured[1]["log_legacy"]).startswith("Unable to format event "))
+        self.assertEqual(formatEvent(captured[1]), f'Invalid message from worker: {msg!r}')
 
         # if msg does not have 'sep_number' or 'op', response sendMessage should not be called
         self.protocol.sendMessage.assert_not_called()  # type: ignore[attr-defined]
