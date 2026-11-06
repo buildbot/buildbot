@@ -89,8 +89,7 @@ The following parameters are accepted by this class:
 
 ``tags``
     (optional)
-    When set, this bot will only communicate about builders containing those tags.
-    (tags functionality is not yet ported)
+    When set, this bot will only send build notifications for builders containing those tags.
 
 ``password``
     (optional)

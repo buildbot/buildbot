@@ -757,6 +757,32 @@ class TestContact(ContactMixin, unittest.TestCase):
             "Build [#3](http://localhost:8080/#/builders/23/builds/3) of `builder1` started.",
         )
 
+    async def test_buildStarted_tags_no_match(self) -> None:
+        await self.setupSomeBuilds()
+        self.patch_send()
+        build = await self.master.data.get(('builds', 13))
+
+        self.bot.tags = ['other']
+        self.contact.channel.notify_for = lambda _: True
+
+        await self.contact.channel.buildStarted(build)
+        self.assertEqual(self.sent, [])
+
+    async def test_buildFinished_useRevisions(self) -> None:
+        await self.setupSomeBuilds()
+        self.patch_send()
+        build = await self.master.data.get(('builds', 13))
+        build['results'] = SUCCESS
+
+        self.bot.tags = None
+        self.contact.channel.useRevisions = True
+
+        await self.contact.channel.buildFinished(build, watched=True)
+        self.assertEqual(
+            self.sent,
+            ["Build on `builder1` containing revision(s) TODO completed successfully."],
+        )
+
     def test_getCommandMethod_authz_default(self) -> None:
         self.bot.authz = words.StatusBot.expand_authz(None)
         meth = self.contact.getCommandMethod('shutdown')
