@@ -331,7 +331,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = reqs_tbl.update()
                 q = q.where(reqs_tbl.c.id.in_(batch))
                 q = q.where(reqs_tbl.c.complete != 1)
-                res = conn.execute(q, priority=priority)  # type: ignore[call-overload]
+                res = conn.execute(q.values(priority=priority))
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):

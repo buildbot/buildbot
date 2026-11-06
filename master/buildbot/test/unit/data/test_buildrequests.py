@@ -121,6 +121,12 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             buildrequest['properties'], {'prop1': ('one', 'fake1'), 'prop2': ('two', 'fake2')}
         )
 
+    async def test_control_set_priority(self) -> None:
+        await self.callControl("set_priority", {"priority": 3}, ('buildrequests', 44))
+
+        buildrequest = await self.callGet(('buildrequests', 44))
+        self.assertEqual(buildrequest['priority'], 3)
+
 
 class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     endpointClass = buildrequests.BuildRequestsEndpoint
