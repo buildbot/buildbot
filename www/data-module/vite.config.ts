@@ -8,13 +8,7 @@ const outDir = 'dist';
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties'],
-        },
-      },
-    }),
+    react(),
     dts(),
     checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
   ],

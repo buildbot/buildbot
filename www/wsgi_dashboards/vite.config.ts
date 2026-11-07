@@ -8,13 +8,7 @@ const outDir = 'buildbot_wsgi_dashboards/static';
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties'],
-        },
-      },
-    }),
+    react(),
     checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
   ],
   define: {
@@ -36,6 +30,7 @@ export default defineConfig({
         'mobx-react',
         'moment',
         'react',
+        'react/jsx-runtime',
         'react-dom',
         'react-router-dom',
         'buildbot-plugin-support',
@@ -51,6 +46,7 @@ export default defineConfig({
           mobx: 'mobx',
           'mobx-react': 'mobxReact',
           react: 'React',
+          'react/jsx-runtime': 'ReactJSXRuntime',
           moment: 'moment',
           'react-dom': 'ReactDOM',
           'react-router-dom': 'ReactRouterDOM',

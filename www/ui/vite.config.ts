@@ -9,17 +9,11 @@ const outDir = 'dist';
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties'],
-        },
-      },
-    }),
+    react(),
     checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
     dts(),
     viteStaticCopy({
-      targets: [{src: './src/styles/colors.scss', dest: '', rename: 'colors.scss'}],
+      targets: [{src: './src/styles/colors.scss', dest: '', rename: {stripBase: true}}],
     }),
   ],
   build: {
@@ -38,6 +32,7 @@ export default defineConfig({
         'mobx-react',
         'moment',
         'react',
+        'react/jsx-runtime',
         'react-dom',
         'react-router-dom',
       ],

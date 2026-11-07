@@ -66,24 +66,18 @@ function serveBuildbotPlugins(): PluginOption {
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties'],
-        },
-      },
-    }),
+    react(),
     viteStaticCopy({
       targets: [
         {
           src: './node_modules/outdated-browser-rework/dist/outdated-browser-rework.min.js',
           dest: '',
-          rename: 'browser-warning.js',
+          rename: {stripBase: true, name: 'browser-warning.js'},
         },
         {
           src: './node_modules/outdated-browser-rework/dist/style.css',
           dest: '',
-          rename: 'browser-warning.css',
+          rename: {stripBase: true, name: 'browser-warning.css'},
         },
       ],
     }),
