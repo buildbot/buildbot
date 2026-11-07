@@ -26,7 +26,7 @@ import {
   useDataApiDynamicQuery,
 } from 'buildbot-data-js';
 import {buildbotGetSettings} from 'buildbot-plugin-support';
-import {useLoadMoreItemsState} from '../../../../ui';
+import {useLoadMoreItemsState} from 'buildbot-ui';
 import {LoadingSpan} from '../LoadingSpan/LoadingSpan';
 import {PendingBuildRequestsTable} from '../PendingBuildRequestsTable/PendingBuildRequestsTable';
 
