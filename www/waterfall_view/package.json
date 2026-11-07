@@ -17,7 +17,7 @@
     ]
   },
   "peerDependencies": {
-    "axios": "~1.7.7",
+    "axios": "~1.21.0",
     "mobx": "^6.13.4",
     "mobx-react": "^9.1.1",
     "moment": "^2.29.4",
@@ -28,7 +28,7 @@
   "devDependencies": {
     "@types/d3": "^7.4.3",
     "@vitejs/plugin-react": "^6.2.1",
-    "axios": "~1.7.7",
+    "axios": "~1.21.0",
     "axios-mock-adapter": "~2.0.0",
     "build-config-buildbot": "file:../common-config",
     "buildbot-data-js": "file:../data-module",
