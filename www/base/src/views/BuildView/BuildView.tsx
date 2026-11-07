@@ -88,7 +88,7 @@ const buildTopbarActions = (
         caption: caption,
         icon: rebuiltBuildRequest.complete ? undefined : <FaSpinner />,
         action: () => {
-          navigate(`/buildrequests/${rebuiltBuildRequest.id}?redirect_to_build=true`);
+          void navigate(`/buildrequests/${rebuiltBuildRequest.id}?redirect_to_build=true`);
         },
       });
     } else if (isRebuilding) {
@@ -315,7 +315,7 @@ export const BuildView = observer(() => {
     buildersQuery.isResolved() && buildsQuery.isResolved() && build === null;
   useEffect(() => {
     if (shouldNavigateToBuilder) {
-      navigate(`/builders/${builderid}`);
+      void navigate(`/builders/${builderid}`);
     }
   }, [builderid, navigate, shouldNavigateToBuilder]);
 
@@ -335,7 +335,7 @@ export const BuildView = observer(() => {
     build!.control('rebuild').then(
       (res) => {
         const brid: any = Object.values(res.result[1])[0];
-        navigate(`/buildrequests/${brid}?redirect_to_build=true`);
+        void navigate(`/buildrequests/${brid}?redirect_to_build=true`);
       },
       (reason) => {
         setIsRebuilding(false);
