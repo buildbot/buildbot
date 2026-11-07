@@ -18,7 +18,7 @@
 import {observer} from 'mobx-react';
 import {Buildrequest, useDataAccessor, useDataApiQuery} from 'buildbot-data-js';
 import {buildbotGetSettings, buildbotSetupPlugin} from 'buildbot-plugin-support';
-import {useLoadMoreItemsState} from '../../../../ui';
+import {useLoadMoreItemsState} from 'buildbot-ui';
 import {LoadingSpan} from '../../components/LoadingSpan/LoadingSpan';
 import {PendingBuildRequestsTable} from '../../components/PendingBuildRequestsTable/PendingBuildRequestsTable';
 import {TableHeading} from '../../components/TableHeading/TableHeading';

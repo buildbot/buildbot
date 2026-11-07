@@ -4,9 +4,9 @@
   "module": "dist/buildbot-ui.js",
   "main": "src/main.ts",
   "exports": {
-    ".": "src/main.ts",
-    "./style.css": "dist/style.css",
-    "./colors.scss": "dist/colors.scss"
+    ".": "./src/main.ts",
+    "./style.css": "./dist/style.css",
+    "./colors.scss": "./dist/colors.scss"
   },
   "type": "module",
   "types": "dist/main.d.ts",
@@ -26,22 +26,22 @@
     ]
   },
   "peerDependencies": {
-    "axios": "~1.7.7",
+    "axios": "~1.21.0",
     "bootstrap": "~5.3.3",
     "mobx": "^6.13.4",
     "mobx-react": "^9.1.1",
     "moment": "^2.29.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0"
+    "react-router-dom": "^7.18.5"
   },
   "devDependencies": {
     "@types/jquery": "^3.5.16",
     "@types/node": "^22.8.6",
     "@types/react-dom": "^18.2.7",
     "@types/react-test-renderer": "^18.0.0",
-    "@vitejs/plugin-react": "~5.1.4",
-    "axios": "~1.7.7",
+    "@vitejs/plugin-react": "^6.2.1",
+    "axios": "~1.21.0",
     "axios-mock-adapter": "~2.0.0",
     "babel-preset-react-app": "^10.0.0",
     "bootstrap": "^5.3.8",
@@ -57,15 +57,15 @@
     "react-app-polyfill": "~3.0.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^7.18.5",
     "react-test-renderer": "^18.2.0",
     "sass": "^1.104.0",
     "typescript": "^5.9.3",
-    "vite": "~7.1.10",
-    "vite-plugin-checker": "^0.9.0",
-    "vite-plugin-dts": "^4.1.0",
-    "vite-plugin-static-copy": "~3.1.3",
-    "vitest": "~3.0.5"
+    "vite": "^8.3.6",
+    "vite-plugin-checker": "^0.14.5",
+    "vite-plugin-dts": "^5.1.2",
+    "vite-plugin-static-copy": "^4.1.1",
+    "vitest": "^5.1.0"
   },
   "packageManager": "npm@11.10.1",
   "license": "GPL-2.0",

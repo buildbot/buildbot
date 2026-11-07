@@ -9,22 +9,16 @@ const outDir = 'dist';
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties'],
-        },
-      },
-    }),
+    react(),
     checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
     dts(),
     viteStaticCopy({
-      targets: [{src: './src/styles/colors.scss', dest: '', rename: 'colors.scss'}],
+      targets: [{src: './src/styles/colors.scss', dest: '', rename: {stripBase: true}}],
     }),
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/main.ts'),
+      entry: resolve(import.meta.dirname, 'src/main.ts'),
       formats: ['es'],
       name: 'buildbotUi',
       fileName: 'buildbot-ui',
@@ -38,6 +32,7 @@ export default defineConfig({
         'mobx-react',
         'moment',
         'react',
+        'react/jsx-runtime',
         'react-dom',
         'react-router-dom',
       ],
@@ -70,11 +65,8 @@ export default defineConfig({
     environment: 'jsdom',
     // required to fake nextTick: https://vitest.dev/guide/migration.html#timer-mocks-3925
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
+    maxWorkers: 1,
+    isolate: false,
   },
   define: {
     'process.env.NODE_ENV': '"production"',

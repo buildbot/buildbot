@@ -1,6 +1,5 @@
 import {defineConfig, PluginOption, ViteDevServer} from 'vite';
 import react from '@vitejs/plugin-react';
-import {nodePolyfills} from 'vite-plugin-node-polyfills';
 import {viteStaticCopy} from 'vite-plugin-static-copy';
 import checker from 'vite-plugin-checker';
 import path from 'path';
@@ -15,7 +14,7 @@ const proxyTargetWs = proxy.protocol === 'https:' ? `wss://${proxy.host}` : `ws:
 const outDir = 'buildbot_www/static';
 
 const buildPluginsPathsMap = () => {
-  const root = path.resolve(__dirname, '..');
+  const root = path.resolve(import.meta.dirname, '..');
   const aliases: {[src: string]: [string, string]} = {};
 
   const addPlugin = (pluginName: string, pluginOutputRoot: string) => {
@@ -66,33 +65,23 @@ function serveBuildbotPlugins(): PluginOption {
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties'],
-        },
-      },
-    }),
+    react(),
     viteStaticCopy({
       targets: [
         {
           src: './node_modules/outdated-browser-rework/dist/outdated-browser-rework.min.js',
           dest: '',
-          rename: 'browser-warning.js',
+          rename: {stripBase: true, name: 'browser-warning.js'},
         },
         {
           src: './node_modules/outdated-browser-rework/dist/style.css',
           dest: '',
-          rename: 'browser-warning.css',
+          rename: {stripBase: true, name: 'browser-warning.css'},
         },
       ],
     }),
     checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
     serveBuildbotPlugins(),
-    nodePolyfills({
-      include: ['util'],
-      globals: {Buffer: false, global: false, process: 'build'},
-    }),
     visualizer(),
   ],
   // this makes all path references into relative paths, thus Buildbot can be hosted at a custom
@@ -115,11 +104,8 @@ export default defineConfig({
     environment: 'jsdom',
     // required to fake nextTick: https://vitest.dev/guide/migration.html#timer-mocks-3925
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
+    maxWorkers: 1,
+    isolate: false,
     setupFiles: './vitest.setup.tsx',
   },
   server: {

@@ -8,13 +8,7 @@ const outDir = 'buildbot_wsgi_dashboards/static';
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        parserOpts: {
-          plugins: ['decorators-legacy', 'classProperties'],
-        },
-      },
-    }),
+    react(),
     checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
   ],
   define: {
@@ -22,7 +16,7 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: resolve(import.meta.dirname, 'src/index.ts'),
       name: 'buildbotWSGIDashboardsPlugin',
       formats: ['umd'],
       fileName: 'scripts',
@@ -36,6 +30,7 @@ export default defineConfig({
         'mobx-react',
         'moment',
         'react',
+        'react/jsx-runtime',
         'react-dom',
         'react-router-dom',
         'buildbot-plugin-support',
@@ -51,6 +46,7 @@ export default defineConfig({
           mobx: 'mobx',
           'mobx-react': 'mobxReact',
           react: 'React',
+          'react/jsx-runtime': 'ReactJSXRuntime',
           moment: 'moment',
           'react-dom': 'ReactDOM',
           'react-router-dom': 'ReactRouterDOM',
@@ -65,10 +61,7 @@ export default defineConfig({
     environment: 'jsdom',
     // required to fake nextTick: https://vitest.dev/guide/migration.html#timer-mocks-3925
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
+    maxWorkers: 1,
+    isolate: false,
   },
 });

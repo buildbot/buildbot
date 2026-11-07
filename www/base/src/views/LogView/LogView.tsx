@@ -86,7 +86,7 @@ const LogView = observer(() => {
   const project = projectsQuery.getNthOrNull(0);
 
   if (buildersQuery.isResolved() && buildsQuery.isResolved() && build === null) {
-    navigate(`/builders/${builderUrlId}/builds/${buildnumber}`);
+    void navigate(`/builders/${builderUrlId}/builds/${buildnumber}`);
   }
 
   useTopbarItems(

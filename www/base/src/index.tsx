@@ -71,7 +71,7 @@ const doRender = (buildbotFrontendConfig: Config) => {
                 sidebar: sidebarStore,
               }}
             >
-              <HashRouter>
+              <HashRouter useTransitions={false}>
                 <App />
               </HashRouter>
             </StoresContext.Provider>

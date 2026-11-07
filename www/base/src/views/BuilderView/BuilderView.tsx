@@ -222,7 +222,7 @@ export const BuilderView = observer(() => {
     forceschedulers,
     isCancelling,
     cancelWholeQueue,
-    (sch) => navigate(`/builders/${builderid}/force/${sch.name}`),
+    (sch) => void navigate(`/builders/${builderid}/force/${sch.name}`),
   );
 
   useTopbarActions(actions);
@@ -235,7 +235,7 @@ export const BuilderView = observer(() => {
   }
 
   const onForceBuildModalClose = (buildRequestNumber: string | null) => {
-    navigate(
+    void navigate(
       buildRequestNumber === null
         ? `/builders/${builderid}`
         : `/buildrequests/${buildRequestNumber}?redirect_to_build=true`,
