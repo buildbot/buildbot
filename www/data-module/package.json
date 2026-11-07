@@ -41,7 +41,7 @@
     "typescript": "^5.9.3",
     "vite": "^8.3.6",
     "vite-plugin-checker": "^0.14.5",
-    "vite-plugin-dts": "^4.1.0",
+    "vite-plugin-dts": "^5.1.2",
     "vitest": "^5.1.0"
   },
   "packageManager": "npm@11.10.1",
