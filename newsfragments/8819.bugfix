@@ -1,1 +1,0 @@
-Fixed `WarningCountingShellCommand` taking quadratic time to parse crafted lines in a suppression file (:issue:`8819`).

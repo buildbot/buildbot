@@ -1,1 +1,0 @@
-Fixed `KubeLatentWorker` waiting for ``missing_timeout`` (which defaults to one hour) when its pod failed before the worker connected. The build now fails as soon as the pod status shows it.

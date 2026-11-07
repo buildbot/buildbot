@@ -1,3 +1,0 @@
-Fixed master hanging on shutdown while a log was being read or written.
-
-Reading logs from the database is faster as a side-effect.
