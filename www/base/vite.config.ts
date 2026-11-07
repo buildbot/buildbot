@@ -15,7 +15,7 @@ const proxyTargetWs = proxy.protocol === 'https:' ? `wss://${proxy.host}` : `ws:
 const outDir = 'buildbot_www/static';
 
 const buildPluginsPathsMap = () => {
-  const root = path.resolve(__dirname, '..');
+  const root = path.resolve(import.meta.dirname, '..');
   const aliases: {[src: string]: [string, string]} = {};
 
   const addPlugin = (pluginName: string, pluginOutputRoot: string) => {

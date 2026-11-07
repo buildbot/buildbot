@@ -18,7 +18,7 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/main.ts'),
+      entry: resolve(import.meta.dirname, 'src/main.ts'),
       formats: ['es'],
       name: 'buildbotUi',
       fileName: 'buildbot-ui',
