@@ -1,6 +1,5 @@
 import {defineConfig, PluginOption, ViteDevServer} from 'vite';
 import react from '@vitejs/plugin-react';
-import {nodePolyfills} from 'vite-plugin-node-polyfills';
 import {viteStaticCopy} from 'vite-plugin-static-copy';
 import checker from 'vite-plugin-checker';
 import path from 'path';
@@ -83,10 +82,6 @@ export default defineConfig({
     }),
     checker({typescript: true, eslint: {lintCommand: 'eslint', useFlatConfig: true}}),
     serveBuildbotPlugins(),
-    nodePolyfills({
-      include: ['util'],
-      globals: {Buffer: false, global: false, process: 'build'},
-    }),
     visualizer(),
   ],
   // this makes all path references into relative paths, thus Buildbot can be hosted at a custom

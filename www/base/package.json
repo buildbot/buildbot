@@ -85,7 +85,6 @@
     "sass": "^1.56.0",
     "vite": "^8.3.6",
     "vite-plugin-checker": "^0.14.5",
-    "vite-plugin-node-polyfills": "^0.28.0",
     "vite-plugin-static-copy": "^4.1.1",
     "vitest": "^5.1.0"
   }
