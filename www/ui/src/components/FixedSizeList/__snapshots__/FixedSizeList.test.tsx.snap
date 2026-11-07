@@ -328,7 +328,7 @@ exports[`FixedSizeList > scrollToItem method > should ignore indexes less than z
 `;
 
 exports[`FixedSizeList > scrollToItem method > should not set invalid offsets when the list contains few items 1`] = `
-[MockFunction spy] {
+[MockFunction] {
   "calls": [
     [
       {
