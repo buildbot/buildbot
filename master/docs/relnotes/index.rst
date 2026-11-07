@@ -8,6 +8,45 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``4.4.0rc1`` ( ``2026-11-07`` )
+========================================
+
+Bug fixes
+---------
+
+- Fixed the worker truncating log lines longer than 4096 characters, which could break steps that capture output, such as JSON read by `SetPropertyFromCommand` (:issue:`7192`).
+  Long lines are still split into several lines in the log, with a newline added every 4095 characters.
+- Fixed `WarningCountingShellCommand` taking quadratic time to parse crafted lines in a suppression file (:issue:`8819`).
+- The secret download and removal steps that ``BuildFactory(..., withSecrets=...)`` and ``util.withSecrets`` inject into builds are now named ``download_secrets_to_worker`` and ``remove_worker_file_secret`` instead of ``generic`` (:issue:`9127`). The names can be overridden by passing ``name`` to ``DownloadSecretsToWorker`` and ``RemoveWorkerFileSecret``.
+- Latent workers are now re-attached to a builder that was removed and re-added by a reconfiguration. Previously such a builder could never start any of its latent workers (:issue:`9135`)
+- Fixed a regression in the Force Scheduler UI where the ``autopopulate`` parameter option was ignored.
+- Fixed fetching a log from the database crashing with ``AttributeError`` on early SQLAlchemy 1.4 releases.
+- Fixed `KubeLatentWorker` waiting for ``missing_timeout`` (which defaults to one hour) when its pod failed before the worker connected. The build now fails as soon as the pod status shows it.
+- Fixed the log viewer showing raw ANSI escape sequences instead of colors in parts of a log downloaded separately from its first lines when they contain few colored lines (:issue:`7852`).
+- Fixed log chunks written by a single log append not being split at the 64KB chunk size limit, which could store very large log chunks in the database.
+- Fixed master hanging on shutdown while a log was being read or written.
+
+  Reading logs from the database is faster as a side-effect.
+- Fixed raw log download failing in Chrome/Brave/etc when the step name contains a comma, by quoting the filename in the ``Content-Disposition`` header.
+- Fixed master hanging on shutdown while a REST API response was being written.
+- Secrets are now removed from the logs of ``MasterShellCommand``, and from logs added with ``addCompleteLog`` and ``addHTMLLog``.
+- Fixed the ``set_priority`` control action of the ``/buildrequests/{id}`` REST endpoint.
+- Fixed `IRC` and `TelegramBot` raising an error and dropping the build notification when ``tags`` or ``useRevisions`` is set.
+- ``buildbot-badges`` now declares its dependency on ``buildbot``, which it imports unconditionally.
+
+
+Changes
+-------
+
+- The Worker docker image is now built from ``Dockerfile.worker`` with the repository root as build context so setuptools-scm can determine the correct version.
+
+
+Deprecations and Removals
+-------------------------
+
+- Buildbot now uses setuptools-scm to generate its version.
+  ``SETUPTOOLS_SCM_PRETEND_VERSION_FOR_<PACKAGE>`` can now be used to override the version, replacing ``BUILDBOT_VERSION`` environment variable, or the ``VERSION`` file.
+
 Buildbot ``4.4.0a1`` ( ``2026-10-17`` )
 =======================================
 

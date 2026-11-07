@@ -1,1 +1,0 @@
-Fixed the ``set_priority`` control action of the ``/buildrequests/{id}`` REST endpoint.
