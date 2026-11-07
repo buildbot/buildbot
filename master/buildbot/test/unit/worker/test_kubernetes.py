@@ -233,6 +233,135 @@ class TestKubernetesWorker(TestReactorMixin, unittest.TestCase):
         worker.attached(FakeBot())
         yield d
 
+    def expect_pod_status(self, status: dict[str, Any]) -> None:
+        self._http.expect(
+            "get",
+            "/api/v1/namespaces/default/pods/buildbot-worker-87de7e/status",
+            code=200,
+            content_json={
+                "kind": "Pod",
+                "metadata": self.get_expected_metadata(),
+                "spec": self.get_expected_spec("rendered:buildbot/buildbot-worker"),
+                "status": status,
+            },
+        )
+
+    async def assert_check_instance_fails(
+        self, worker: kubernetes.KubeLatentWorker, message: str
+    ) -> None:
+        d = worker.substantiate(None, FakeBuild())  # type: ignore[arg-type]
+        self.reactor.advance(10)
+        result = await d
+        self.assertIsInstance(result, LatentWorkerFailedToSubstantiate)
+        self.assertIn(message, str(result))
+
+    def expect_pod_startup_then_status(self, status: dict[str, Any]) -> None:
+        self.expect_pod_delete_nonexisting()
+        self.expect_pod_status_not_found()
+        self.expect_pod_startup("rendered:buildbot/buildbot-worker")
+        self.expect_pod_status(status)
+        self.expect_pod_delete_existing("rendered:buildbot/buildbot-worker")
+        self.expect_pod_status_not_found()
+
+    async def test_start_worker_pod_failed(self) -> None:
+        worker = await self.setupWorker('worker')
+        self.expect_pod_startup_then_status({
+            "phase": "Failed",
+            "reason": "Evicted",
+            "message": "low on memory",
+        })
+        await self.assert_check_instance_fails(
+            worker, "pod buildbot-worker-87de7e is Failed: Evicted low on memory"
+        )
+
+    async def test_start_worker_image_pull_backoff(self) -> None:
+        worker = await self.setupWorker('worker')
+        self.expect_pod_startup_then_status({
+            "phase": "Pending",
+            "containerStatuses": [
+                {
+                    "name": "buildbot-worker-87de7e",
+                    "state": {
+                        "waiting": {"reason": "ImagePullBackOff", "message": "no such image"}
+                    },
+                }
+            ],
+        })
+        await self.assert_check_instance_fails(
+            worker, "container buildbot-worker-87de7e is ImagePullBackOff: no such image"
+        )
+
+    async def test_start_worker_container_terminated_with_running_service(self) -> None:
+        worker = await self.setupWorker('worker')
+        self.expect_pod_startup_then_status({
+            "phase": "Running",
+            "containerStatuses": [
+                {"name": "db", "state": {"running": {}}},
+                {
+                    "name": "buildbot-worker-87de7e",
+                    "state": {"terminated": {"reason": "Error", "exitCode": 1}},
+                },
+            ],
+        })
+        await self.assert_check_instance_fails(
+            worker, "container buildbot-worker-87de7e terminated: Error (exit code 1)"
+        )
+
+    async def test_start_worker_pod_disappeared(self) -> None:
+        worker = await self.setupWorker('worker')
+        self.expect_pod_delete_nonexisting()
+        self.expect_pod_status_not_found()
+        self.expect_pod_startup("rendered:buildbot/buildbot-worker")
+        self.expect_pod_status_not_found()
+        self.expect_pod_delete_nonexisting()
+        self.expect_pod_status_not_found()
+        await self.assert_check_instance_fails(worker, "pod buildbot-worker-87de7e not found")
+
+    async def test_start_worker_pending_pod_then_attaches(self) -> None:
+        worker = await self.setupWorker('worker')
+        self.expect_pod_delete_nonexisting()
+        self.expect_pod_status_not_found()
+        self.expect_pod_startup("rendered:buildbot/buildbot-worker")
+        self.expect_pod_status({
+            "phase": "Pending",
+            "conditions": [{"type": "PodScheduled", "status": "False", "reason": "Unschedulable"}],
+        })
+        self.expect_pod_status({
+            "phase": "Pending",
+            "containerStatuses": [
+                {"name": "buildbot-worker-87de7e", "state": {"waiting": {"reason": "ErrImagePull"}}}
+            ],
+        })
+        self.expect_pod_delete_existing("rendered:buildbot/buildbot-worker")
+        self.expect_pod_status_not_found()
+
+        d = worker.substantiate(None, FakeBuild())  # type: ignore[arg-type]
+        self.reactor.advance(10)
+        self.reactor.advance(10)
+        self.assertFalse(d.called)
+        worker.attached(FakeBot())
+        self.assertTrue(await d)
+
+    async def test_start_worker_status_server_error_then_attaches(self) -> None:
+        worker = await self.setupWorker('worker')
+        self.expect_pod_delete_nonexisting()
+        self.expect_pod_status_not_found()
+        self.expect_pod_startup("rendered:buildbot/buildbot-worker")
+        self._http.expect(
+            "get",
+            "/api/v1/namespaces/default/pods/buildbot-worker-87de7e/status",
+            code=503,
+            content="Service Unavailable",
+        )
+        self.expect_pod_delete_existing("rendered:buildbot/buildbot-worker")
+        self.expect_pod_status_not_found()
+
+        d = worker.substantiate(None, FakeBuild())  # type: ignore[arg-type]
+        self.reactor.advance(10)
+        self.assertFalse(d.called)
+        worker.attached(FakeBot())
+        self.assertTrue(await d)
+
     @defer.inlineCallbacks
     def test_start_worker_but_error(self) -> InlineCallbacksType[None]:
         worker = yield self.setupWorker('worker')

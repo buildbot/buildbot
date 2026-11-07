@@ -19,13 +19,13 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 from twisted.internet import defer
-from twisted.logger import Logger
 
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import asyncSleep
 from buildbot.util import httpclientservice
 from buildbot.util import kubeclientservice
 from buildbot.util.latent import CompatibleLatentWorkerMixin
+from buildbot.util.twisted import async_to_deferred
 from buildbot.worker.docker import DockerBaseWorker
 
 if TYPE_CHECKING:
@@ -36,7 +36,14 @@ if TYPE_CHECKING:
     from buildbot.util.kubeclientservice import KubeConfigLoaderBase
     from buildbot.util.twisted import InlineCallbacksType
 
-log = Logger()
+
+# Waiting reason that need user action to resolve
+_FATAL_CONTAINER_WAITING_REASONS = frozenset({
+    'ImagePullBackOff',
+    'InvalidImageName',
+    'ErrImageNeverPull',
+    'CreateContainerConfigError',
+})
 
 
 class KubeError(RuntimeError):
@@ -147,7 +154,7 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
         if callable(masterFQDN):
             masterFQDN = masterFQDN()
 
-        self._http = yield httpclientservice.HTTPSession(
+        self._http = httpclientservice.HTTPSession(
             self.master.httpservice,
             kube_config.get_master_url(),  # type: ignore[union-attr]
         )
@@ -205,6 +212,61 @@ class KubeLatentWorker(CompatibleLatentWorkerMixin, DockerBaseWorker):
             self.getContainerName(),
             timeout=self.missing_timeout,  # type: ignore[arg-type]
         )
+
+    @async_to_deferred
+    async def check_instance(self) -> tuple[bool, str]:
+        name = self.getContainerName()
+        url = f'/api/v1/namespaces/{self._namespace}/pods/{name}/status'
+        try:
+            res = await self._http.get(url, **await self._get_request_kwargs())
+        except Exception as e:
+            self._logger.warn("Could not get status of pod {name}, will retry: {e}", name=name, e=e)
+            return (True, "")
+        if res.code == 429 or res.code >= 500:
+            self._logger.warn(
+                "Could not get status of pod {name}, will retry: HTTP {code}",
+                name=name,
+                code=res.code,
+            )
+            return (True, "")
+
+        try:
+            res_json = await res.json()
+        except Exception:
+            await self._raise_decode_failure_error(res)
+
+        if res.code == 404:
+            return (False, f"pod {name} not found")
+        if res.code != 200:
+            raise KubeJsonError(res.code, res_json)
+
+        status = res_json.get('status', {})
+        phase = status.get('phase')
+        if phase in ('Failed', 'Succeeded'):
+            return (
+                False,
+                f"pod {name} is {phase}: {status.get('reason', '')} {status.get('message', '')}",
+            )
+
+        for container in status.get('containerStatuses', []):
+            state = container.get('state', {})
+            waiting = state.get('waiting') or {}
+            if waiting.get('reason') in _FATAL_CONTAINER_WAITING_REASONS:
+                return (
+                    False,
+                    f"container {container.get('name')} is {waiting['reason']}: "
+                    f"{waiting.get('message', '')}",
+                )
+            # some other containers could keep the pod alive
+            terminated = state.get('terminated')
+            if container.get('name') == name and terminated:
+                return (
+                    False,
+                    f"container {name} terminated: {terminated.get('reason', '')} "
+                    f"(exit code {terminated.get('exitCode')}) {terminated.get('message', '')}",
+                )
+
+        return (True, "")
 
     @defer.inlineCallbacks
     def _get_request_kwargs(self) -> InlineCallbacksType[dict[str, Any]]:
