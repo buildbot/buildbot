@@ -917,6 +917,7 @@ Triggerable
 trixie
 trustRoots
 tryclient
+ts
 tuple
 tuples
 Tuples
