@@ -403,6 +403,35 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.assertEqual(b.results, EXCEPTION)
         self.flushLoggedErrors(TestException)
 
+    @defer.inlineCallbacks
+    def test_set_build_properties_throws_exception_after_step(
+        self,
+    ) -> InlineCallbacksType[None]:
+        b = self.build
+
+        step1 = self.create_fake_build_step()
+        b.setStepFactories([
+            FakeStepFactory(step1),
+        ])
+
+        def setBuildProperties(buildid: int, properties: IProperties) -> None:
+            # e.g. a property value that does not fit into the database column
+            raise TestException()
+
+        def startStep(remote: Connection) -> int:
+            self.patch(self.master.data.updates, 'setBuildProperties', setBuildProperties)
+            return SUCCESS
+
+        step1.startStep = startStep  # type: ignore[method-assign, assignment]
+
+        yield b.startBuild(self.workerforbuilder)
+
+        self.assertTrue(b.finished)
+        self.assertEqual(b.results, EXCEPTION)
+        self.workerforbuilder.buildFinished.assert_called_once_with()
+        # both the failure after the step and the failure in the exception handler are logged
+        self.assertEqual(len(self.flushLoggedErrors(TestException)), 2)
+
     def testBuilddirPropType(self) -> None:
         b = self.build
 
