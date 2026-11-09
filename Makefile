@@ -29,12 +29,10 @@ check_for_npm:
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample
 WWW_DEP_PKGS := www/plugin_support www/data-module www/ui
-WWW_PURE_DEP_PKGS := www/common-config
 ALL_PKGS := master worker $(WWW_PKGS)
 
 WWW_PKGS_FOR_UNIT_TESTS := $(filter-out www/badges www/plugin_support www/wsgi_dashboards, $(WWW_DEP_PKGS) $(WWW_PKGS))
 WWW_PKGS_FOR_PRETTIER := $(filter-out www/plugin_support www/badges, $(WWW_DEP_PKGS) $(WWW_PKGS))
-WWW_PKGS_FOR_NPM := $(filter-out www/badges, $(WWW_PURE_DEP_PKGS) $(WWW_DEP_PKGS) $(WWW_PKGS))
 WWW_PKGS_FOR_NPM_BUILD := $(filter-out www/badges, $(WWW_PKGS))
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
@@ -67,8 +65,7 @@ docs-release-spelling: docs-towncrier
 	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
 
 frontend_npm_install: check_for_npm
-	for i in $(WWW_PKGS_FOR_NPM); \
-		do (cd $$i; $(NPM) ci); done
+	cd www && $(NPM) ci
 
 frontend_deps: $(VENV_NAME) frontend_npm_install check_for_npm
 	$(PIP) install build wheel -r requirements-ci.txt
@@ -94,8 +91,7 @@ frontend_wheels: frontend_build
 
 # upgrade FE dependencies
 frontend_npm_upgrade: check_for_npm
-	for i in $(WWW_PKGS_FOR_NPM); \
-		do (cd $$i; echo $$i; rm -rf package-lock.json; $(NPM) install || echo $$i failed); done
+	cd www && rm -f package-lock.json && $(NPM) install
 
 # install git hooks for validating patches at commit time
 hooks:

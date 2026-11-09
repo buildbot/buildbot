@@ -69,12 +69,12 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: './node_modules/outdated-browser-rework/dist/outdated-browser-rework.min.js',
+          src: '../node_modules/outdated-browser-rework/dist/outdated-browser-rework.min.js',
           dest: '',
           rename: {stripBase: true, name: 'browser-warning.js'},
         },
         {
-          src: './node_modules/outdated-browser-rework/dist/style.css',
+          src: '../node_modules/outdated-browser-rework/dist/style.css',
           dest: '',
           rename: {stripBase: true, name: 'browser-warning.css'},
         },
