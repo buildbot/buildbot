@@ -3,25 +3,17 @@
 
 # developer utilities
 DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg https_proxy=$$https_proxy
-ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-.PHONY: docs ruff virtualenv check_for_npm
+.PHONY: docs ruff virtualenv check_for_npm pyinstaller
 
-ifeq ($(OS),Windows_NT)
-  VENV_BIN_DIR := Scripts
-  VENV_PY_VERSION ?= python
-  VENV_CREATE := python -m venv
-else
-  VENV_BIN_DIR := bin
-  VENV_PY_VERSION ?= python3
-  VENV_CREATE := virtualenv -p $(VENV_PY_VERSION)
+ifdef VENV_PY_VERSION
+export UV_PYTHON ?= $(VENV_PY_VERSION)
 endif
-
-VENV_NAME := .venv$(VENV_PY_VERSION)
-PIP ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/pip
-VENV_PYTHON ?= $(ROOT_DIR)/$(VENV_NAME)/$(VENV_BIN_DIR)/python
+UV := uv
+UV_SYNC := $(UV) sync --frozen
+UV_RUN := $(UV) run --no-sync
 NPM := $(shell which npm)
-MYPY := mypy --sqlite-cache
+MYPY := $(UV_RUN) mypy --sqlite-cache
 
 check_for_npm:
 	@if [ "$(NPM)" = "" ]; then echo "npm is not installed" ; exit 1; fi
@@ -39,30 +31,27 @@ ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 
 # build rst documentation
 docs:
-	$(MAKE) -C master/docs dev
+	$(UV_RUN) $(MAKE) -C master/docs dev
 	@echo "You can now open master/docs/_build/html/index.html"
 
 docs-towncrier:
 	# Check that master/docs/relnotes/index.rst is not already generated (so it's in the staging area).
 	# If docs-release and docs-release-spelling are called one after the other, then towncrier will report duplicate release notes.
 	if ! git diff --name-only --cached | grep -q "master/docs/relnotes/index.rst"; then \
-	if command -v towncrier >/dev/null 2>&1 ;\
-	then \
-	towncrier --draft | grep  'No significant changes.' || yes n | towncrier ;\
-	fi \
+	$(UV_RUN) towncrier --draft | grep  'No significant changes.' || yes n | $(UV_RUN) towncrier ;\
 	fi
 
 docs-spelling:
-	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
+	$(UV_RUN) $(MAKE) -C master/docs SPHINXOPTS=-W spelling
 
 docs-linkcheck:
-	$(MAKE) -C master/docs SPHINXOPTS=-q linkcheck
+	$(UV_RUN) $(MAKE) -C master/docs SPHINXOPTS=-q linkcheck
 
 docs-release: docs-towncrier
-	$(MAKE) -C master/docs
+	$(UV_RUN) $(MAKE) -C master/docs
 
 docs-release-spelling: docs-towncrier
-	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
+	$(UV_RUN) $(MAKE) -C master/docs SPHINXOPTS=-W spelling
 
 frontend_npm_install: check_for_npm
 	cd www && $(NPM) ci
@@ -80,13 +69,13 @@ frontend_build: frontend_deps
 		do (cd $$i; $(NPM) run build); done
 
 # rebuild front-end from source
-frontend: frontend_build
-	for i in $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
+frontend: virtualenv frontend_build
+	for i in $(WWW_PKGS); do $(UV) pip install -e $$i || exit 1; done
 
 # build frontend wheels for installation elsewhere
 frontend_wheels: frontend_build
 	for i in $(WWW_PKGS); \
-		do (cd $$i; uv build --wheel || exit 1) || exit 1; done
+		do (cd $$i; $(UV) build --wheel || exit 1) || exit 1; done
 
 # upgrade FE dependencies
 frontend_npm_upgrade: check_for_npm
@@ -139,28 +128,19 @@ docker-buildbot-worker-node:
 docker-buildbot-master:
 	$(DOCKERBUILD) -t buildbot/buildbot-master:master -f Dockerfile.master .
 
-$(VENV_NAME):
-	$(VENV_CREATE) $(VENV_NAME)
-	$(PIP) install -r requirements-pip.txt
-
 # helper for virtualenv creation
-virtualenv: $(VENV_NAME) check_for_npm   # usage: make virtualenv VENV_PY_VERSION=python3.8
-	$(PIP) install -r requirements-ci.txt \
-		-r requirements-ciworker.txt \
-		-r requirements-cidocs.txt \
-		packaging towncrier
-	@echo now you can type following command  to activate your virtualenv
-	@echo . $(VENV_NAME)/$(VENV_BIN_DIR)/activate
+virtualenv:   # usage: make virtualenv VENV_PY_VERSION=python3.10
+	$(UV_SYNC)
 
 TRIALOPTS?=buildbot
 
 .PHONY: trial
-trial: virtualenv
-	. $(VENV_NAME)/$(VENV_BIN_DIR)/activate && trial $(TRIALOPTS)
+trial:
+	$(UV_RUN) trial $(TRIALOPTS)
 
-release_notes: $(VENV_NAME)
+release_notes: virtualenv
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
-	towncrier build --yes  --version $(VERSION) --date `date -u  +%F`
+	$(UV_RUN) towncrier build --yes  --version $(VERSION) --date `date -u  +%F`
 	git commit -m "Release notes for $(VERSION)"
 
 $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_build
@@ -180,11 +160,10 @@ release: virtualenv
 	test -d "../bbdocs/.git"  #  make release should be done with bbdocs populated at the same level as buildbot dir
 	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"
 	git push buildbot "v$(VERSION)"  # tarballs are made by circleci.yml, and create a github release
-	export VERSION=$(VERSION) ; . $(VENV_NAME)/$(VENV_BIN_DIR)/activate && make docs-release
+	export VERSION=$(VERSION) ; $(UV_RUN) make docs-release
 	rm -rf ../bbdocs/docs/$(VERSION)  # in case of re-run
 	cp -r master/docs/_build/html ../bbdocs/docs/$(VERSION)
-	cd ../bbdocs && git pull
-	. $(VENV_NAME)/$(VENV_BIN_DIR)/activate && cd ../bbdocs && make && git add docs && git commit -m $(VERSION) && git push
+	cd ../bbdocs && git pull && make && git add docs && git commit -m $(VERSION) && git push
 	@echo When tarballs have been generated by github workflow 'release':
 	@echo make finishrelease
 
@@ -194,6 +173,9 @@ finishrelease:
 	rm -rf ./dist/v*
 	twine upload dist/*
 
-pyinstaller: virtualenv
-	$(PIP) install pyinstaller
-	$(VENV_NAME)/$(VENV_BIN_DIR)/pyinstaller pyinstaller/buildbot-worker.spec
+# own venv to not break dev venv with non-editable install
+pyinstaller: export UV_PROJECT_ENVIRONMENT := .venv-pyinstaller
+pyinstaller:
+#	PyInstaller can't follow the import hooks of editable installs
+	$(UV_SYNC) --group pyinstaller --no-editable
+	$(UV_RUN) pyinstaller pyinstaller/buildbot-worker.spec

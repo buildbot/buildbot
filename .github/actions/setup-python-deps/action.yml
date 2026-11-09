@@ -26,8 +26,11 @@ runs:
         python-version: "${{ steps.python.outputs.python-path }}"
         activate-environment: "true"
 
-    # setup-uv exports UV_PYTHON, which `uv pip` prefers over VIRTUAL_ENV
-    - run: echo "UV_PYTHON=$VIRTUAL_ENV" >> "$GITHUB_ENV"
+    # setup-uv exports UV_PYTHON, which `uv pip` prefers over VIRTUAL_ENV.
+    # UV_NO_SYNC: prevent `uv run` to re-install
+    - run: |
+        echo "UV_PYTHON=$VIRTUAL_ENV" >> "$GITHUB_ENV"
+        echo "UV_NO_SYNC=1" >> "$GITHUB_ENV"
       shell: bash
 
     - name: "Install Python dependencies"

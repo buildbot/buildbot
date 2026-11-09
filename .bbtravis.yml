@@ -18,6 +18,7 @@ env:
   # Needed to ignore specific warns, otherwise, it'll warn a generic message
   - SQLALCHEMY_WARN_20=1
   - UV_PROJECT_ENVIRONMENT=/tmp/bbvenv
+  - UV_NO_SYNC=1
   matrix: []
 matrix:
   fast_finish: true
@@ -205,7 +206,7 @@ script:
     condition: TESTS == "mypy"
     cmd:  |
       set -e
-      export PATH=/tmp/bbvenv/bin/:$PATH
+      export PATH=/tmp/uvvenv/bin/:/tmp/bbvenv/bin/:$PATH
       [ "$PYTHON" = "3.9" ] && export MYPY_EXTRA_FLAGS=--no-warn-unused-ignores || true
       make -j mypy
 
@@ -222,7 +223,7 @@ script:
     condition: TESTS == "docs"
     cmd:  |
       set -e
-      export PATH=/tmp/bbvenv/bin/:$PATH
+      export PATH=/tmp/uvvenv/bin/:/tmp/bbvenv/bin/:$PATH
       make docs-release
 
   # Run spell checker on documentation
@@ -230,7 +231,7 @@ script:
     condition: TESTS == "docs"
     cmd:  |
       set -e
-      export PATH=/tmp/bbvenv/bin/:$PATH
+      export PATH=/tmp/uvvenv/bin/:/tmp/bbvenv/bin/:$PATH
       make docs-release-spelling
 
   - title: maketarballs
