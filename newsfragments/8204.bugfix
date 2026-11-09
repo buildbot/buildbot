@@ -1,0 +1,1 @@
+Trigger steps with ``waitForFinish=False`` now attach build URLs when the triggered buildrequest completes, so the web UI no longer keeps showing a stale pending-build count (:issue:`8204`).
