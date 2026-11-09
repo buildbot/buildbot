@@ -29,10 +29,10 @@
     "@vitejs/plugin-react": "^6.2.1",
     "axios": "~1.21.0",
     "axios-mock-adapter": "~2.0.0",
-    "build-config-buildbot": "file:../common-config",
-    "buildbot-data-js": "file:../data-module",
-    "buildbot-plugin-support": "file:../plugin_support",
-    "buildbot-ui": "file:../ui",
+    "build-config-buildbot": "*",
+    "buildbot-data-js": "*",
+    "buildbot-plugin-support": "*",
+    "buildbot-ui": "*",
     "eslint": "^9.27.0",
     "mobx": "^6.13.4",
     "mobx-react": "^9.1.1",
@@ -48,7 +48,6 @@
     "vite-plugin-checker": "^0.14.5",
     "vitest": "^5.1.0"
   },
-  "packageManager": "npm@12.2.2+sha512.2a09606d9c9a71fee31fe147b8d46a56e0b3422f15848d9aec9f3b231e3716c3d3b99a065a62175c6759b4150e03bf6fc0bf8825112a511573ba903b3ec41370",
   "license": "GPL-2.0",
   "dependencies": {
     "react-icons": "^5.3.0",

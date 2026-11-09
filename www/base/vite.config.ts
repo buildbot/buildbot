@@ -1,7 +1,8 @@
-import {defineConfig, PluginOption, ViteDevServer} from 'vite';
+import {defineConfig, normalizePath, PluginOption, ViteDevServer} from 'vite';
 import react from '@vitejs/plugin-react';
 import {viteStaticCopy} from 'vite-plugin-static-copy';
 import checker from 'vite-plugin-checker';
+import {createRequire} from 'module';
 import path from 'path';
 import fs from 'fs';
 import {visualizer} from 'rollup-plugin-visualizer';
@@ -12,6 +13,13 @@ const proxyTargetHttp = proxy.href.replace(/\/*$/, ''); // trim trailing slashes
 const proxyTargetWs = proxy.protocol === 'https:' ? `wss://${proxy.host}` : `ws://${proxy.host}`;
 
 const outDir = 'buildbot_www/static';
+
+const outdatedBrowserDist = normalizePath(
+  path.join(
+    path.dirname(createRequire(import.meta.url).resolve('outdated-browser-rework/package.json')),
+    'dist',
+  ),
+);
 
 const buildPluginsPathsMap = () => {
   const root = path.resolve(import.meta.dirname, '..');
@@ -69,12 +77,12 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: './node_modules/outdated-browser-rework/dist/outdated-browser-rework.min.js',
+          src: `${outdatedBrowserDist}/outdated-browser-rework.min.js`,
           dest: '',
           rename: {stripBase: true, name: 'browser-warning.js'},
         },
         {
-          src: './node_modules/outdated-browser-rework/dist/style.css',
+          src: `${outdatedBrowserDist}/style.css`,
           dest: '',
           rename: {stripBase: true, name: 'browser-warning.css'},
         },
