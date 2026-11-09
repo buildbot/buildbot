@@ -43,6 +43,18 @@ pyinstaller = [
     "pyinstaller",
     "pyinstaller-hooks-contrib",
 ]
+# third-party packages of the master docker image, Buildbot is built from source
+docker = [
+    "buildbot",
+    # buildbot-badges dependencies
+    "cairocffi",
+    "CairoSVG",
+    "Jinja2",
+    "klein",
+    "psycopg2-binary",
+    "requests",
+    "txrequests",
+]
 
 [tool.ruff]
 line-length = 100
