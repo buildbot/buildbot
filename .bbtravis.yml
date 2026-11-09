@@ -152,14 +152,14 @@ script:
     condition: TESTS == "js_build"
     cmd: |
       set -e
-      export PATH=/tmp/bbvenv/bin/:$PATH
+      export PATH=/tmp/uvvenv/bin/:$PATH
       make frontend_build
 
   - title: frontend unit tests
     condition: TESTS == "js_unit"
     cmd: |
       set -e
-      export PATH=/tmp/bbvenv/bin/:$PATH
+      export PATH=/tmp/uvvenv/bin/:$PATH
       export VITEST_MIN_THREADS=1
       export VITEST_MAX_THREADS=8
       make frontend_tests
@@ -237,16 +237,16 @@ script:
     condition: TESTS in ("e2e_react_whl", "e2e_react_tgz")
     cmd:  |
       set -e
-      export PATH=/tmp/bbvenv/bin/:$PATH
+      export PATH=/tmp/uvvenv/bin/:$PATH
       make tarballs
 
   - title: end to end tests
     condition: TESTS == "e2e_react_whl"
-    cmd: ./common/smokedist-react.sh whl
+    cmd: PATH=/tmp/uvvenv/bin/:$PATH ./common/smokedist-react.sh whl
 
   - title: tarballs end to end tests
     condition: TESTS == "e2e_react_tgz"
-    cmd: ./common/smokedist-react.sh tar.gz
+    cmd: PATH=/tmp/uvvenv/bin/:$PATH ./common/smokedist-react.sh tar.gz
 
 notifications:
   email: false

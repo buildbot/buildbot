@@ -57,8 +57,6 @@ jobs:
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: 3.13
-      # needed by maketarballs
-      - run: pipx install virtualenv
       - run: make tarballs
       - name: upload tarballs
         if: ${{ github.event.release.tag_name && true || false }}

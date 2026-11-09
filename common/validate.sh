@@ -137,11 +137,11 @@ git log "$REVRANGE" --pretty=oneline || exit 1
 if ! $quick && ! $no_js; then
     for module in www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges;
     do
-        status "running 'pip install -e' for $module"
-        if ! (cd $module; pip install -e . >/dev/null ); then
-            warning "pip install -e for $module failed; retrying with cleared build/ dist/"
+        status "running 'uv pip install -e' for $module"
+        if ! (cd $module; uv pip install -e . >/dev/null ); then
+            warning "uv pip install -e for $module failed; retrying with cleared build/ dist/"
             rm -rf "$module/build" "$module/dist"
-            (cd $module; pip install -e . >/dev/null ) || not_ok "$module/setup.py failed"
+            (cd $module; uv pip install -e . >/dev/null ) || not_ok "$module/setup.py failed"
         fi
     done
 else

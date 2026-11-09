@@ -67,8 +67,7 @@ docs-release-spelling: docs-towncrier
 frontend_npm_install: check_for_npm
 	cd www && $(NPM) ci
 
-frontend_deps: $(VENV_NAME) frontend_npm_install check_for_npm
-	$(PIP) install build wheel -r requirements-ci.txt
+frontend_deps: frontend_npm_install check_for_npm
 	for i in $(WWW_DEP_PKGS); \
 		do (cd $$i; $(NPM) run build); done
 
@@ -87,7 +86,7 @@ frontend: frontend_build
 # build frontend wheels for installation elsewhere
 frontend_wheels: frontend_build
 	for i in $(WWW_PKGS); \
-		do (cd $$i; $(VENV_PYTHON) -m build --no-isolation --wheel || exit 1) || exit 1; done
+		do (cd $$i; uv build --wheel || exit 1) || exit 1; done
 
 # upgrade FE dependencies
 frontend_npm_upgrade: check_for_npm
@@ -165,7 +164,7 @@ release_notes: $(VENV_NAME)
 	git commit -m "Release notes for $(VERSION)"
 
 $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_build
-	. $(VENV_NAME)/$(VENV_BIN_DIR)/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
+	./common/maketarball.sh $(patsubst %_pkg,%,$@)
 
 cleanup_for_tarballs:
 	find master worker www -name VERSION -exec rm {} \;

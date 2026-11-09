@@ -48,6 +48,8 @@ RUN \
 
 RUN corepack enable npm
 
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /usr/local/bin/uv
+
 COPY . /usr/src/buildbot
 
 RUN cd /usr/src/buildbot && make tarballs

@@ -5,6 +5,6 @@ pkg=$1
     cd ${pkg}
     rm -rf MANIFEST dist
 
-    python -m build
+    uv build --out-dir dist
 )
 cp ${pkg}/dist/* dist/
