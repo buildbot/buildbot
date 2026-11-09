@@ -17,6 +17,7 @@ env:
   - CHROME_BIN=/usr/bin/google-chrome
   # Needed to ignore specific warns, otherwise, it'll warn a generic message
   - SQLALCHEMY_WARN_20=1
+  - UV_PROJECT_ENVIRONMENT=/tmp/bbvenv
   matrix: []
 matrix:
   fast_finish: true
@@ -80,34 +81,34 @@ install:
   - title: setup virtualenv
     cmd: |
       set -e
-      rm -rf /tmp/bbvenv
-      python$PYTHON -m venv /tmp/bbvenv
-  - /tmp/bbvenv/bin/pip install -r requirements-pip.txt
-  - condition: TESTS not in ("dev_virtualenv", "e2e_react_whl", "e2e_react_tgz", "trial_worker", "check_lockfile")
-    cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt
-  # On python 3.12 workaround done in dcbc28d1431e1aae892f7fdc0e266253365bc11e is no longer enough.
-  - condition: TESTS not in ("dev_virtualenv", "e2e_react_whl", "e2e_react_tgz", "trial_worker", "check_lockfile")
-    cmd: /tmp/bbvenv/bin/pip install -e master -e worker
-  - condition: TESTS == "dev_virtualenv"
-    cmd: /tmp/bbvenv/bin/pip install -r requirements-ci.txt -r requirements-ciworker.txt -r requirements-cidocs.txt
-  - condition: TESTS == "trial_worker"
-    cmd: /tmp/bbvenv/bin/pip install -r requirements-ciworker.txt
-  - condition: TESTS == "docs"
-    cmd: /tmp/bbvenv/bin/pip install -r requirements-cidocs.txt
-  - condition: TESTS == "check_lockfile"
-    cmd: /tmp/bbvenv/bin/pip install uv
-  - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
-    cmd: /tmp/bbvenv/bin/pip install -r requirements-cidb.txt
+      rm -rf /tmp/uvvenv /tmp/bbvenv
+      # uv itself needs Python >= 3.8, but can create virtualenvs for older versions
+      python3.9 -m venv /tmp/uvvenv
+      /tmp/uvvenv/bin/pip install uv
+      /tmp/uvvenv/bin/uv venv --no-project --python python$PYTHON /tmp/bbvenv
+  - title: install dependencies
+    condition: TESTS not in ("e2e_react_whl", "e2e_react_tgz", "check_lockfile")
+    cmd: |
+      set -e
+      args="--frozen"
+      if [ "$TESTS" = "trial_worker" ]; then
+        args="$args --project worker --all-extras"
+      elif [ "$TESTS" != "docs" ] && [ "$TESTS" != "dev_virtualenv" ]; then
+        args="$args --no-group docs"
+      fi
+      case "$BUILDBOT_TEST_DB_URL" in
+        sqlite*) ;;
+        *) args="$args --group db" ;;
+      esac
+      /tmp/uvvenv/bin/uv sync $args
   - condition: TESTS == "interop"
     cmd: |
       set -e
       rm -rf /tmp/bbworkervenv
-      python$WORKER_PYTHON -m venv /tmp/bbworkervenv
-      /tmp/bbworkervenv/bin/pip install -r requirements-pip.txt
-      /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt
-  - title: pip installs for backward compat
+      UV_PROJECT_ENVIRONMENT=/tmp/bbworkervenv /tmp/uvvenv/bin/uv sync --frozen --project worker --all-extras --python python$WORKER_PYTHON
+  - title: installs for backward compat
     cmd: |
-      # pip installs for backward compat
+      # installs for backward compat
       set -e
       pkg_ver=""
       if [ ! -z "$TREQ" ]; then
@@ -123,10 +124,10 @@ install:
       fi
 
       if [ ! -z "$pkg_ver" ]; then
-        /tmp/bbvenv/bin/python -m pip install ${pkg_ver}
+        /tmp/uvvenv/bin/uv pip install --python /tmp/bbvenv ${pkg_ver}
       fi
   - step: !ShellCommand
-        command: "/tmp/bbvenv/bin/pip check"
+        command: "/tmp/uvvenv/bin/uv pip check --python /tmp/bbvenv"
         warnOnFailure: True
         flunkOnFailure: False
         haltOnFailure: False
@@ -212,7 +213,7 @@ script:
     condition: TESTS == "check_lockfile"
     cmd: |
       set -e
-      export PATH=/tmp/bbvenv/bin/:$PATH
+      export PATH=/tmp/uvvenv/bin/:$PATH
       uv lock --check
       uv lock --check --project worker
 
@@ -260,7 +261,7 @@ after_script:
         CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" ./codecov
       fi
   # List installed packages along with their versions.
-  - "/tmp/bbvenv/bin/pip list"
+  - "/tmp/uvvenv/bin/uv pip list --python /tmp/bbvenv"
 
 sudo: false
 branches:
