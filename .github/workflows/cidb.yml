@@ -110,9 +110,7 @@ jobs:
         uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "3.9"
-          requirements: |
-            requirements-ci.txt
-            requirements-cidb.txt
+          sync-args: "--no-group docs --group db"
 
       - name: Prepare database container
         run: common/prepare-db-container.sh "${{ job.services.database.id }}" "${{ matrix.database }}" "$TRIAL_JOBS"

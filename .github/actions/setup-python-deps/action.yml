@@ -1,43 +1,37 @@
 name: "Set up Python with dependencies"
 description: >
-  Set up a Python version with pip caching, then install requirements-pip.txt
-  and the given requirement files.
+  Set up a Python version, then install the locked dependencies with uv
+  into an activated .venv.
 
 inputs:
   python-version:
     description: "Python version passed to actions/setup-python"
     required: false
     default: "3.9"
-  requirements:
-    description: >
-      Whitespace/newline separated list of requirement files to install,
-      in addition to requirements-pip.txt.
+  sync-args:
+    description: "Arguments passed to `uv sync`"
     required: false
-    default: "requirements-ci.txt"
+    default: "--no-group docs"
 
 runs:
   using: "composite"
   steps:
     - uses: "actions/setup-python@v7"
+      id: python
       with:
         python-version: "${{ inputs.python-version }}"
-        cache: "pip"
-        cache-dependency-path: |
-          requirements*.txt
-          */setup.py
-          */pyproject.toml
+
+    - uses: "astral-sh/setup-uv@v10.3.3"
+      with:
+        python-version: "${{ steps.python.outputs.python-path }}"
+        activate-environment: "true"
+
+    # setup-uv exports UV_PYTHON, which `uv pip` prefers over VIRTUAL_ENV
+    - run: echo "UV_PYTHON=$VIRTUAL_ENV" >> "$GITHUB_ENV"
+      shell: bash
 
     - name: "Install Python dependencies"
       shell: bash
       env:
-        REQUIREMENTS: ${{ inputs.requirements }}
-      run: |
-        set -e
-        python -m pip install -r requirements-pip.txt
-        args=""
-        for f in $REQUIREMENTS; do
-          args="$args -r $f"
-        done
-        if [ -n "$args" ]; then
-          python -m pip install $args
-        fi
+        SYNC_ARGS: ${{ inputs.sync-args }}
+      run: uv sync --frozen --active $SYNC_ARGS

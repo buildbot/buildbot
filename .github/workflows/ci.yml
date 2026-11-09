@@ -58,10 +58,7 @@ jobs:
       - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "${{ matrix.python-version }}"
-
-      - name: "Install docs dependencies"
-        if: ${{ matrix.tests == 'docs' }}
-        run: python -m pip install -r requirements-cidocs.txt
+          sync-args: "${{ matrix.tests == 'docs' && '--group docs' || '--no-group docs' }}"
 
       - name: "ruff"
         if: ${{ matrix.tests == 'ruff' }}
@@ -122,7 +119,7 @@ jobs:
           if [ -n "${{ matrix.treq }}" ]; then pkgs="$pkgs treq==${{ matrix.treq }}"; fi
           if [ -n "${{ matrix.twisted }}" ]; then pkgs="$pkgs Twisted==${{ matrix.twisted }}"; fi
           if [ -n "${{ matrix.sqlalchemy }}" ]; then pkgs="$pkgs SQLAlchemy==${{ matrix.sqlalchemy }}"; fi
-          python -m pip install $pkgs
+          uv pip install $pkgs
 
       - name: "Run tests"
         run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
@@ -139,10 +136,8 @@ jobs:
       - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "3.9"
-          requirements: |
-            requirements-ci.txt
-            requirements-ciworker.txt
-            requirements-cidocs.txt
+          # remove the default "no-docs"
+          sync-args: "--group docs"
 
       - name: "Run tests"
         run: "python -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
@@ -171,23 +166,17 @@ jobs:
         id: worker-python
         with:
           python-version: "${{ matrix.worker-python }}"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ciworker.txt
-            worker/setup.py
-
-      - name: "Set up worker virtualenv"
-        run: |
-          "${{ steps.worker-python.outputs.python-path }}" -m venv /tmp/bbworkervenv
-          /tmp/bbworkervenv/bin/pip install -r requirements-pip.txt
-          /tmp/bbworkervenv/bin/pip install -r requirements-ciworker.txt
 
       # Set up the master Python last so it becomes the default "python".
       - name: "Set up master Python 3.9"
         uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "3.9"
+
+      - name: "Set up worker virtualenv"
+        env:
+          UV_PROJECT_ENVIRONMENT: /tmp/bbworkervenv
+        run: uv sync --frozen --project worker --all-extras --python "${{ steps.worker-python.outputs.python-path }}"
 
       - name: "Run interop tests"
         env:
@@ -214,10 +203,10 @@ jobs:
       - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "${{ matrix.python-version }}"
-          requirements: "requirements-ciworker.txt"
+          sync-args: "--project worker --all-extras"
 
       - name: "Install pinned dependency versions"
-        run: python -m pip install treq==22.2.0 Twisted==21.2.0 "setuptools<82.0.0"
+        run: uv pip install treq==22.2.0 Twisted==21.2.0 "setuptools<82.0.0"
 
       - name: "Run worker tests"
         run: "python -m twisted.trial --reporter=text --rterrors buildbot_worker.test"
@@ -300,11 +289,11 @@ jobs:
       - uses: "./.github/actions/setup-python-deps"
         with:
           python-version: "=3.10"
-          requirements: "requirements-ci-pyinstaller.txt"
+          sync-args: "--no-group docs --group pyinstaller"
 
       - name: "Install worker"
         # do a true, non-editable install
-        run: python -m pip install ./worker
+        run: uv pip install ./worker
       - run: pyinstaller pyinstaller/buildbot-worker.spec
       - run: trial --reporter=text --rterrors buildbot.test.integration.interop
         env:
