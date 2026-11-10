@@ -50,12 +50,14 @@ Twisted Idioms
 Programming with Twisted Python can be daunting.  But sticking to a few
 well-defined patterns can help avoid surprises.
 
-Prefer to Return Deferreds
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Prefer Asynchronous Methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you're writing a method that doesn't currently block, but could conceivably
-block sometime in the future, return a Deferred and document that it does so.
+block sometime in the future, make it a coroutine (``async def``) and document that it is asynchronous.
 Just about anything might block - even getters and setters!
+
+Older code returns a Deferred instead; see :ref:`Style-Coroutines` for how the two interoperate.
 
 Helpful Twisted Classes
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,8 +85,8 @@ operations, many of which may block.
 In all cases where this occurs, there is a danger of pre-emption, so exercise
 the same caution you would if writing a threaded application.
 
-For simple cases, you can use nested callback functions. For more complex cases, inlineCallbacks is
-appropriate. In all cases, please prefer maintainability and readability over performance.
+For simple cases, you can use nested callback functions. For anything more complex, and in all new
+code, use coroutines (``async def``). In all cases, please prefer maintainability and readability over performance.
 
 Nested Callbacks
 ................
@@ -141,9 +143,9 @@ will then handle any exceptions as a failure in the outer Deferred. As a shortcu
 
     ``d.addCallback`` is not really a decorator as it does not return a modified function. As a
     result, in the previous code, ``rev_parse`` value is actually the Deferred. In general, the
-    :class:`inlineCallbacks` method is preferred inside new code as it keeps the code easier to
+    coroutines (``async def``) are preferred inside new code as they keep the code easier to
     read. As a general rule of thumb, when you need more than 2 callbacks in the same method, it's
-    time to switch to :class:`inlineCallbacks`. This would be for example the case for the
+    time to switch to a coroutine. This would be for example the case for the
     :py:func:`getRevInfo` example. See this `discussion <:pull:`2523`>`_ with Twisted experts for
     more information.
 
@@ -154,27 +156,26 @@ merely assigned ``rev = res.strip()``, then that variable would be local to
 
 .. note:: Do not try to build a loop in this style by chaining multiple
     Deferreds!  Unbounded chaining can result in stack overflows, at least on older
-    versions of Twisted. Use ``inlineCallbacks`` instead.
+    versions of Twisted. Use a coroutine instead.
 
 In most of the cases, if you need more than two callbacks in a method, it is more readable and
-maintainable to use inlineCallbacks.
+maintainable to use a coroutine.
 
-inlineCallbacks
-...............
+.. _Style-Coroutines:
 
-:class:`twisted.internet.defer.inlineCallbacks` is a great help to writing code that makes a lot of
-asynchronous calls, particularly if those calls are made in loop or conditionals. Refer to the
-Twisted documentation for the details, but the style within Buildbot is as follows:
+Coroutines
+..........
+
+New code is written as coroutines, with ``async def`` and ``await``.
+They allow you to use all of the usual Pythonic control structures in their natural form.
+In particular, it is easy to represent a loop or even nested loops in this style without losing any readability.
 
 .. code-block:: python
 
-    from twisted.internet import defer
+    async def mymethod(self, x, y):
+        xval = await getSomething(x)
 
-    @defer.inlineCallbacks
-    def mymethod(self, x, y):
-        xval = yield getSomething(x)
-
-        for z in (yield getZValues()):
+        for z in await getZValues():
             y += z
 
         if xval > 10:
@@ -182,32 +183,39 @@ Twisted documentation for the details, but the style within Buildbot is as follo
 
         self.someOtherMethod()
 
-The key points to notice here:
+A coroutine can ``await`` a Deferred directly.
+The other way round, Twisted and most of Buildbot expect a Deferred, not a coroutine, from the
+functions they call.
+When a coroutine is called from such a place (an overridden method, a callback, a service's
+``startService``...), convert it:
 
-* Always import ``defer`` as a module, not the names within it.
-* Use the decorator form of ``inlineCallbacks``.
-* In most cases, the result of a ``yield`` expression should be assigned to a variable.
-  It can be used in a larger expression, but remember that Python requires that you enclose the
-  expression in its own set of parentheses.
-
-The great advantage of ``inlineCallbacks`` is that it allows you to use all of the usual Pythonic control structures in their natural form.
-In particular, it is easy to represent a loop or even nested loops in this style without losing any readability.
-
-Note that code using ``deferredGenerator`` is no longer acceptable in Buildbot.
+* decorate the method with :py:func:`buildbot.util.twisted.async_to_deferred`, so that calling it
+  returns a Deferred;
+* or wrap a single call with ``defer.Deferred.fromCoroutine(coro())``.
 
 The previous :py:func:`getRevInfo` example implementation should rather be written as:
 
 .. code-block:: python
 
-    @defer.inlineCallbacks
-    def getRevInfo(revname):
+    async def getRevInfo(revname):
         results = {}
-        res = yield utils.getProcessOutput(git, [ 'rev-parse', revname ])
+        res = await utils.getProcessOutput(git, [ 'rev-parse', revname ])
         results['rev'] = res.strip()
-        res = yield utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b',
+        res = await utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b',
                                                  results['rev'] ])
         results['comments'] = res.strip()
         return results
+
+Always import ``defer`` as a module, not the names within it.
+
+inlineCallbacks
+...............
+
+Much of the existing code uses :class:`twisted.internet.defer.inlineCallbacks`, the generator-based
+predecessor of coroutines (``yield`` instead of ``await``).
+Do not use it in new code.
+
+Note that code using ``deferredGenerator`` is no longer acceptable in Buildbot.
 
 Locking
 .......

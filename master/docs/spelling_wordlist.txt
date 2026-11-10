@@ -214,6 +214,8 @@ contrib
 Contrib
 coolproject
 coredump
+coroutine
+coroutines
 cowbuilder
 cp
 cpdir
