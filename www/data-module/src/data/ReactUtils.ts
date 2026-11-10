@@ -5,6 +5,9 @@
   Copyright Buildbot Team Members
 */
 
+// FIXME: https://github.com/buildbot/buildbot/issues/9309
+/* eslint-disable react-hooks/refs */
+
 import {createContext, useContext, useEffect, useRef} from 'react';
 import {DataClient} from './DataClient';
 import {IDataAccessor} from './DataAccessor';
