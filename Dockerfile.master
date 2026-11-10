@@ -41,24 +41,24 @@ RUN \
     apt-get -y install --no-install-recommends --no-install-suggests -q \
         make \
         nodejs \
-        virtualenv \
+        python3 \
         git \
         && \
     rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable npm
 
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /usr/local/bin/uv
+
 COPY . /usr/src/buildbot
 
 RUN cd /usr/src/buildbot && make tarballs
-RUN virtualenv --python=python3 /buildbot_venv && \
-    /buildbot_venv/bin/pip3 install -r /usr/src/buildbot/requirements-master-docker-extras.txt && \
-    env CRYPTOGRAPHY_DONT_BUILD_RUST=1 /buildbot_venv/bin/pip3 install /usr/src/buildbot/dist/*.whl
 
-RUN mkdir -p /wheels && \
-    /buildbot_venv/bin/pip3 list --format freeze > /requirements.txt && \
+RUN cd /usr/src/buildbot && \
+    uv export --frozen --no-hashes --only-group docker --no-emit-workspace -o /requirements.txt && \
     cat /requirements.txt && \
-    cp /usr/src/buildbot/dist/*.whl /wheels
+    mkdir -p /wheels && \
+    cp dist/*.whl /wheels
 
 #==============================================================================================
 # Build the final image here.  Use build artifacts from the buildbot-build

@@ -21,25 +21,24 @@ Buildbot uses Twisted `trial <http://twistedmatrix.com/trac/wiki/TwistedTrial>`_
 Windows users also need GNU make on their machines.
 The easiest way is to install it via the choco package manager, ``choco install make``.
 But WSL or MSYS2 is an even better option because of the integrated bash.
-Note that on Windows you need to create virtualenv manually.
+Python dependencies are managed with `uv <https://docs.astral.sh/uv/>`_, which you need to install first.
 
 Following is a quick shell session to put you on the right track, including running the test suite.
 
 .. code-block:: bash
 
-    # the usual buildbot development bootstrap with git and virtualenv
+    # the usual buildbot development bootstrap with git and uv
     git clone https://github.com/buildbot/buildbot
     cd buildbot
 
-    # run a helper script which creates the virtualenv for development.
+    # create the virtualenv for development in .venv, with the locked dependencies.
     # Virtualenv allows to install python packages without affecting
     # other parts of the system.
-    # This script does not support Windows: you should create the virtualenv and install
-    # requirements-ci.txt manually.
+    # Without make (e.g. on Windows), run `uv sync` instead.
     make virtualenv
 
     # activate the virtualenv (you should now see (.venv) in your shell prompt)
-    . .venvpython3/bin/activate
+    . .venv/bin/activate
 
     # now run the test suite
     trial buildbot
@@ -68,7 +67,7 @@ Create a JavaScript Frontend Environment
 ----------------------------------------
 
 This section describes how to get set up quickly to hack on the JavaScript UI.
-It does not assume familiarity with Python, although a Python installation is required, as well as ``virtualenv``.
+It does not assume familiarity with Python, although a Python installation is required, as well as ``uv``.
 You will also need ``NodeJS`` installed, and ``corepack`` enabled for ``npm`` (``corepack enable npm``).
 
 Prerequisites

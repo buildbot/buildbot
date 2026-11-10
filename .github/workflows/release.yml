@@ -39,9 +39,9 @@ jobs:
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: 3.13
-          requirements: "requirements-ci-pyinstaller.txt"
+          sync-args: "--no-group docs --group pyinstaller"
       # do a true, non-editable install
-      - run: python -m pip install ./worker
+      - run: uv pip install ./worker
       - run: pyinstaller pyinstaller/buildbot-worker.spec
       - run: mv "dist/buildbot-worker${{ matrix.ext }}" "dist/${{ env.WORKER_BIN_NAME }}"
       - name: upload worker bin
@@ -57,8 +57,6 @@ jobs:
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: 3.13
-      # needed by maketarballs
-      - run: pipx install virtualenv
       - run: make tarballs
       - name: upload tarballs
         if: ${{ github.event.release.tag_name && true || false }}

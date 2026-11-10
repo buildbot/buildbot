@@ -20,22 +20,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
-      - uses: "actions/setup-python@v7"
-        with:
-          python-version: "3.9"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ci.txt
-            master/setup.py
-            worker/setup.py
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          # the Makefile frontend/tarball targets build their own virtualenv
-          python -m pip install virtualenv
-
       - name: "js_unit"
         run: make frontend_tests
 
@@ -60,18 +44,7 @@ jobs:
       - uses: "actions/setup-python@v7"
         with:
           python-version: "${{ matrix.python-version }}"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ci.txt
-            master/setup.py
-            worker/setup.py
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install -r requirements-pip.txt
-          # the Makefile frontend/tarball targets build their own virtualenv
-          python -m pip install virtualenv
+      - uses: "astral-sh/setup-uv@v10.3.3"
 
       - name: "maketarballs"
         run: make tarballs
@@ -110,12 +83,7 @@ jobs:
       - uses: "actions/setup-python@v7"
         with:
           python-version: "${{ matrix.python-version }}"
-          cache: 'pip'
-          cache-dependency-path: |
-            requirements-pip.txt
-            requirements-ci.txt
-            master/setup.py
-            worker/setup.py
+      - uses: "astral-sh/setup-uv@v10.3.3"
 
       - uses: "actions/download-artifact@v8"
         with:

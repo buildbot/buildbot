@@ -10,15 +10,10 @@ for suffix in $suffixes
 do
     VE=sandbox.$suffix
     rm -rf $VE
-    if [ -z "$python" ]; then
-        python3 -m venv $VE
-    else
-        python$python -m venv $VE
-    fi
+    uv venv --python "python${python:-3}" $VE
     . $VE/bin/activate
-    pip install -r requirements-pip.txt
-    pip install requests==2.32.3 flask==3.0.3
-    pip install dist/buildbot-[0-9]*.$suffix
-    pip install dist/*.$suffix
+    uv pip install requests==2.32.3 flask==3.0.3
+    uv pip install dist/buildbot-[0-9]*.$suffix
+    uv pip install dist/*.$suffix
     e2e/run.sh
 done

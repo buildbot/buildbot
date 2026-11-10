@@ -285,6 +285,7 @@ discoverable
 distro
 distros
 Distutils
+distutils
 divmod
 djmitche
 dn
@@ -917,6 +918,7 @@ Triggerable
 trixie
 trustRoots
 tryclient
+ts
 tuple
 tuples
 Tuples
@@ -990,6 +992,7 @@ UTF
 util
 utils
 utime
+uv
 validator
 Validator
 validators

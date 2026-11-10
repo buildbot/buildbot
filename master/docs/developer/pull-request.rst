@@ -132,8 +132,7 @@ Before each of the commands detailed below, a virtualenv must be setup as descri
     make virtualenv
     . .venv/bin/activate
 
-If you see weird test results after changing branches of the repository, remove the `.venv` directory and repeat the above again.
-Note that `pip install -r <file>.txt` only needs to be run once at the beginning of your testing session.
+If you see weird test results after changing branches of the repository, run ``make virtualenv`` again.
 
 Master unit tests
 ~~~~~~~~~~~~~~~~~
@@ -144,7 +143,6 @@ To run locally, execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ci.txt
     trial -j8 buildbot  # change -j parameter to fit the number of cores you have
 
 Worker unit tests
@@ -156,7 +154,6 @@ To run locally, execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ciworker.txt
     trial buildbot_worker
 
 Linter checks
@@ -168,7 +165,6 @@ To run locally, execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ci.txt
     make pylint
     make ruff
 
@@ -183,8 +179,6 @@ To run locally, execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ci.txt
-    pip install -r requirements-cidocs.txt
     make docs
 
 If you see spell check errors, but your words are perfectly correct, then you may need to add these words to a whitelist at `master/docs/spelling_wordlist.txt`.
@@ -199,6 +193,18 @@ To run locally, install a Chrome-compatible browser and execute the following:
 
 .. code-block:: bash
 
-    pip install -r requirements-ci.txt
     make tarballs
     ./common/smokedist-react.sh whl
+
+Dependencies
+~~~~~~~~~~~~
+
+Buildbot uses the `uv <https://docs.astral.sh/uv/>`_ package manager.
+Python dependencies are locked in ``uv.lock`` and ``worker/uv.lock``.
+CI fails if they are out of date (checked in the ``ensure-requirements`` job in the Buildbot CI).
+After changing dependencies in a ``pyproject.toml`` file, execute the following:
+
+.. code-block:: bash
+
+    uv lock
+    uv lock --project worker

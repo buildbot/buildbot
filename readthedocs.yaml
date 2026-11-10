@@ -6,8 +6,11 @@ build:
         python: "3.14"
 
 python:
-    install:
-        - requirements: requirements-readthedocs.txt
+  install:
+    - method: uv
+      command: sync
+      groups:
+        - docs
 
 sphinx:
     configuration: master/docs/conf.py

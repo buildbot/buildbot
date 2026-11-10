@@ -50,6 +50,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
+    'parameterized',
     'psutil',
 ]
 

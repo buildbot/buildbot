@@ -13,13 +13,13 @@ Following is a quick shell session to put you on the right track.
 
 .. code-block:: bash
 
-    # the usual buildbot development bootstrap with git and virtualenv
+    # the usual buildbot development bootstrap with git and uv
     git clone https://github.com/buildbot/buildbot
     cd buildbot
 
     # helper script which creates the virtualenv for development
     make virtualenv
-    . .venvpython3/bin/activate
+    . .venv/bin/activate
 
     # now run the test suite
     trial buildbot

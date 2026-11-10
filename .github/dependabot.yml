@@ -1,9 +1,14 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
+  - package-ecosystem: "uv"
+    directories:
+      - "/"
+      - "/worker"
+    groups:
+      uv-lock:
+        group-by: dependency-name
     commit-message:
-      prefix: "requirements: "
+      prefix: "uv.lock: "
     open-pull-requests-limit: 15
     schedule:
       interval: "cron"

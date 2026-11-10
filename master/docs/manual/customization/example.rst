@@ -68,7 +68,7 @@ defined before some other code tries to use it.
 
 This is easy, and it keeps the point of definition very close to the point of use, and whoever
 replaces you after that unfortunate hang-gliding accident will appreciate being able to easily
-figure out what the heck this stupid "Framboozle" step is doing anyways. The downside is that every
+figure out what the heck this stupid "Framboozle" step is doing anyway. The downside is that every
 time you reload the config file, the Framboozle class will get redefined, which means that the
 buildmaster will think that you've reconfigured all the Builders that use it, even though nothing
 changed. Bleh.
