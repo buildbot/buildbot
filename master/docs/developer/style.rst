@@ -262,6 +262,30 @@ Here, the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to fire
 them to fail. You may attach callbacks and errbacks to a ``DeferredList`` just as you would with a
 deferred.
 
+Logging
+~~~~~~~
+
+New code logs through the :py:mod:`twisted.logger` API, with one logger per module, not through the
+legacy ``twisted.python.log.msg`` and ``log.err``:
+
+.. code-block:: python
+
+    from twisted.logger import Logger
+
+    log = Logger()
+
+    def process(self, name):
+        log.info("processing {name}", name=name)
+        try:
+            ...
+        except Exception:
+            log.failure("failed to process {name}", name=name)
+
+Pass values as keyword arguments referenced in the format string, rather than pre-formatting the
+message (no f-strings or ``%``): the message is only rendered when needed and the values stay
+available to observers.
+Use ``log.failure`` inside an ``except`` block to log the current exception with its traceback.
+
 Functions running outside of the main thread
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
