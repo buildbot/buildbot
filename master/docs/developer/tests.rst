@@ -349,7 +349,7 @@ Tests that depend on wall time will fail. As a bonus, they run very slowly. Do
 not use :meth:`reactor.callLater` to wait "long enough" for something to happen.
 
 For testing things that themselves depend on time, consider using
-:class:`twisted.internet.tasks.Clock`.  This may mean passing a clock instance to
+:class:`twisted.internet.task.Clock`.  This may mean passing a clock instance to
 the code under test, and propagating that instance as necessary to ensure that
 all of the code using :meth:`callLater` uses it.  Refactoring code for
 testability is difficult, but worthwhile.
@@ -362,17 +362,14 @@ Clean Code
 
 Make your tests readable. This is no place to skimp on comments! Others will
 attempt to learn about the expected behavior of your class by reading the
-tests. As a side note, if you use a :class:`Deferred` chain in your test, write
-the callbacks as nested functions, rather than using methods with funny names::
+tests. As a side note, write asynchronous tests as coroutines rather than :class:`Deferred` chains
+with callbacks in methods with funny names::
 
-    def testSomething(self):
-        d = doThisFirst()
-        def andThisNext(res):
-            pass # ...
-        d.addCallback(andThisNext)
-        return d
+    async def test_something(self):
+        res = await doThisFirst()
+        await andThisNext(res)
 
-This isolates the entire test into one indented block. It is OK to add methods
+This keeps the entire test in one indented block. It is OK to add methods
 for common functionality, but give them real names and explain in detail what
 they do.
 
@@ -405,8 +402,7 @@ Where possible, use one of the pre-written fake objects (see
 themselves should be well-tested using interface tests.
 
 Where they are appropriate, Mock objects can be constructed easily using the
-aptly-named `mock <http://www.voidspace.org.uk/python/mock/>`_ module, which is
-a requirement for Buildbot's tests.
+standard library's :py:mod:`unittest.mock` module.
 
 Small Tests
 ~~~~~~~~~~~
@@ -450,37 +446,3 @@ the system on which the test fails. A test which fails sporadically with no
 more information than "AssertionFailed" is a prime candidate for deletion if
 the error isn't obvious. Making the error obvious also includes adding comments
 describing the ways a test might fail.
-
-Keeping State
-~~~~~~~~~~~~~
-
-Python does not allow assignment to anything but the innermost local scope or
-the global scope with the ``global`` keyword.  This presents a problem when
-creating nested functions::
-
-    def test_localVariable(self):
-        cb_called = False
-        def cb():
-            cb_called = True
-        cb()
-        self.assertTrue(cb_called) # will fail!
-
-The ``cb_called = True`` assigns to a *different variable* than
-``cb_called = False``.  In production code, it's usually best to work around
-such problems, but in tests this is often the clearest way to express the
-behavior under test.
-
-The solution is to change something in a common mutable object.  While a simple
-list can serve as such a mutable object, this leads to code that is hard to
-read.  Instead, use :class:`State`::
-
-    from buildbot.test.state import State
-
-    def test_localVariable(self):
-        state = State(cb_called=False)
-        def cb():
-            state.cb_called = True
-        cb()
-        self.assertTrue(state.cb_called) # passes
-
-This is almost as readable as the first example, but it actually works.
