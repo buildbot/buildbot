@@ -234,33 +234,25 @@ Joining Sequences
 ~~~~~~~~~~~~~~~~~
 
 It's often the case that you want to perform multiple operations in parallel and rejoin the results at the end.
-For this purpose, you may use a `DeferredList <http://twistedmatrix.com/documents/current/api/twisted.internet.defer.DeferredList.html>`_:
+For this purpose, you may use :py:func:`twisted.internet.defer.gatherResults`:
 
 .. code-block:: python
 
-    def getRevInfo(revname):
-        results = {}
-        finished = dict(rev_parse=False, log=False)
+    async def getRevInfo(revname):
+        rev, log = await defer.gatherResults(
+            [
+                utils.getProcessOutput(git, ['rev-parse', revname]),
+                utils.getProcessOutput(git, ['log', '-1', '--format=%s%n%b', revname]),
+            ],
+            consumeErrors=True,
+        )
+        return dict(rev=rev.strip(), log=log.strip())
 
-        rev_parse_d = utils.getProcessOutput(git, [ 'rev-parse', revname ])
-        def parse_rev_parse(res):
-            return res.strip()
-        rev_parse_d.addCallback(parse_rev_parse)
-
-        log_d = utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b', results['rev'] ])
-        def parse_log(res):
-            return res.strip()
-        log_d.addCallback(parse_log)
-
-        d = defer.DeferredList([rev_parse_d, log_d], consumeErrors=1, fireOnFirstErrback=1)
-        def handle_results(results):
-            return dict(rev=results[0][1], log=results[1][1])
-        d.addCallback(handle_results)
-        return d
-
-Here, the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to fire, or for one of
-them to fail. You may attach callbacks and errbacks to a ``DeferredList`` just as you would with a
-deferred.
+Here, ``gatherResults`` waits for both commands to finish and returns their results in order.
+If one of them fails, it fails at once with a :py:class:`twisted.internet.defer.FirstError` wrapping
+that failure.
+Use :py:class:`twisted.internet.defer.DeferredList` instead when you need the outcome of every
+operation, including the failed ones.
 
 Logging
 ~~~~~~~
