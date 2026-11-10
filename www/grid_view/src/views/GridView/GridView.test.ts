@@ -28,7 +28,7 @@ import {
   UNKNOWN,
   FAILURE,
 } from 'buildbot-data-js';
-import {resolveGridData, BRANCH_FILTER_ALL_TEXT} from './GridView';
+import {resolveGridData, BRANCH_FILTER_ALL_TEXT} from './Utils';
 
 type TestSourceStamp = {
   ssid: number;

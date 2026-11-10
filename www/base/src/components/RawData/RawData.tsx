@@ -16,7 +16,6 @@
 */
 
 import './RawData.scss';
-import moment from 'moment';
 import {useState} from 'react';
 import _ from 'underscore';
 import {isObservableArray, isObservableObject} from 'mobx';
@@ -31,29 +30,6 @@ const isObjectRaw = (v: any) => {
 
 const isArrayOfObjectsRaw = (v: any) => {
   return isArrayRaw(v) && v.length > 0 && isObjectRaw(v[0]);
-};
-
-export const displayBuildRequestEntry = (key: string, value: any): string => {
-  if (key === 'claimed_at' || key === 'complete_at' || key === 'submitted_at') {
-    try {
-      return `${value} (${moment(Number.parseInt(value.toString()) * 1000).format()})`;
-    } catch (_error) {
-      return value.toString();
-    }
-  }
-  return value.toString();
-};
-
-export const displayBuildsetEntry = (key: string, value: any): string => {
-  if (key === 'complete_at' || key === 'created_at' || key === 'submitted_at') {
-    // created_at is for dictionaries in sourcestamps list
-    try {
-      return `${value} (${moment(Number.parseInt(value.toString()) * 1000).format()})`;
-    } catch (_error) {
-      return value.toString();
-    }
-  }
-  return value.toString();
 };
 
 type RawDataProps = {
