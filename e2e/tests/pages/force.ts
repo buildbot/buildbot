@@ -50,9 +50,10 @@ export class ForcePage {
   }
 
   static async clickStartButtonAndWait(page: Page) {
-    await BasePage.waitUntilUrlChanged(page, async () => {
-      await page.locator('button:text("Start build")').click();
-    });
+    const url = page.url();
+    await page.locator('button:text("Start build")').click();
+    await page.waitForURL(u => u.href !== url, {timeout: 60_000});
+    await BasePage.waitUntilFinishedLoading(page);
   }
 
   static async clickStartButtonAndWaitRedirectToBuild(page: Page) {
