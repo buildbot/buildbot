@@ -77,6 +77,9 @@ the :class:`Periodic` class in :src:`master/buildbot/schedulers/timed.py`. Modul
 class, or a few trivial classes, can be tested in a single test module. For more complex
 situations, prefer to use multiple test modules.
 
+Write new test methods, and their helpers, as coroutines (``async def`` with ``await``) rather than
+``@defer.inlineCallbacks`` generators. Trial runs coroutine test methods directly.
+
 Unit tests using renderables require special handling. The following example shows how the same
 test would be written with the 'param' parameter as a plain argument and with the same parameter as
 a renderable::
@@ -90,12 +93,11 @@ When the parameter is renderable, you need to instantiate the class before you c
     def setUp(self):
         self.build = Properties(param='val')
 
-    @defer.inlineCallbacks
-    def test_param_renderable(self):
+    async def test_param_renderable(self):
         f = self.ConcreteClass(
             param=Interpolate('%(kw:rendered_val)s',
                               rendered_val=Property('param')))
-        yield f.start_instance(self.build)
+        await f.start_instance(self.build)
         self.assertEqual(f.param, 'val')
 
 Interface Tests
