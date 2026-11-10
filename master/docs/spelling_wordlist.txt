@@ -214,6 +214,8 @@ contrib
 Contrib
 coolproject
 coredump
+coroutine
+coroutines
 cowbuilder
 cp
 cpdir
@@ -723,6 +725,7 @@ refactored
 refactoring
 Refactoring
 refactorings
+reformats
 refspec
 regex
 regexes

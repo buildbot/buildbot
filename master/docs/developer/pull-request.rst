@@ -21,8 +21,8 @@ Guidelines
 * Pull requests must pass all tests that run against the GitHub pull requests.
   See :ref:`LocalTestingCheatSheet` for instructions of how to launch various tests locally.
 
-* Python code in Buildbot uses four-space indentations, with no tabs.
-  Lines should be wrapped before the 100th column.
+* Python code in Buildbot is formatted with ``ruff format`` (four-space indentation, lines of at most
+  100 characters).
 
 * Pull requests must reliably pass all tests.
   Buildbot does not tolerate "flaky" tests.
@@ -160,15 +160,26 @@ Linter checks
 ~~~~~~~~~~~~~
 
 Tests in this category run simple syntax and style checks on the Python code.
-These tests are represented by **bb/pylint/** and **bb/ruff/** test names in the Buildbot CI.
+These tests are represented by **bb/ruff/** test names in the Buildbot CI.
 To run locally, execute the following:
 
 .. code-block:: bash
 
-    make pylint
-    make ruff
+    ruff check .
+    ruff format --check .
 
-If you see spell check errors, but your words are perfectly correct, then you may need to add these words to a whitelist at `common/code_spelling_ignore_words.txt`.
+``make ruff`` reformats the whole tree.
+
+Type checks
+~~~~~~~~~~~
+
+Tests in this category run the ``mypy`` type checker on the master and worker code, for Linux and Windows.
+These tests are represented by **bb/mypy/** test names in the Buildbot CI.
+To run locally, execute the following:
+
+.. code-block:: bash
+
+    make -j mypy
 
 Documentation
 ~~~~~~~~~~~~~
@@ -187,7 +198,7 @@ End-to-end tests
 ~~~~~~~~~~~~~~~~
 
 Tests in this category run the end-to-end tests by launching a full Buildbot instance, clicking on buttons on the web UI and testing the results.
-It is represented by **bb/e2e**/** test names in the Buildbot CI.
+It is represented by **bb/e2e_react_whl/** and **bb/e2e_react_tgz/** test names in the Buildbot CI.
 The tests are sometimes unstable: if you didn't change the front end code and see a failure then it's most likely an instability.
 To run locally, install a Chrome-compatible browser and execute the following:
 
@@ -201,7 +212,7 @@ Dependencies
 
 Buildbot uses the `uv <https://docs.astral.sh/uv/>`_ package manager.
 Python dependencies are locked in ``uv.lock`` and ``worker/uv.lock``.
-CI fails if they are out of date (checked in the ``ensure-requirements`` job in the Buildbot CI).
+CI fails if they are out of date (checked by the **bb/check_lockfile/** test in the Buildbot CI).
 After changing dependencies in a ``pyproject.toml`` file, execute the following:
 
 .. code-block:: bash
