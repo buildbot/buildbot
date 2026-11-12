@@ -12,7 +12,7 @@ export const buildbotEslintConfig = tseslint.config(
     extends: [
       ...tseslint.configs.recommendedTypeChecked,
       reactPlugin.configs.flat['jsx-runtime'],
-      reactHooks.configs['recommended-latest'],
+      reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite({extraHOCs: ['observer']}),
       importPlugin.flatConfigs.react,
       importPlugin.flatConfigs.typescript,
