@@ -12,5 +12,9 @@
   "scripts": {},
   "author": "",
   "packageManager": "npm@12.2.2+sha512.2a09606d9c9a71fee31fe147b8d46a56e0b3422f15848d9aec9f3b231e3716c3d3b99a065a62175c6759b4150e03bf6fc0bf8825112a511573ba903b3ec41370",
-  "license": "GPL-2.0"
+  "license": "GPL-2.0",
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/request": "^2.48.13"
+  }
 }
