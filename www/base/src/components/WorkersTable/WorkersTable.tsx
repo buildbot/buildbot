@@ -23,7 +23,7 @@ import {Link} from 'react-router-dom';
 import {BadgeRound, BuildLinkWithSummaryTooltip} from 'buildbot-ui';
 import {observer} from 'mobx-react';
 
-export const getWorkerStatusIcon = (worker: Worker, onClick: () => void) => {
+const getWorkerStatusIcon = (worker: Worker, onClick: () => void) => {
   if (worker.paused) {
     return (
       <FaPause title="paused" onClick={onClick}>
@@ -49,7 +49,7 @@ const anyWorkerPaused = (workers: Worker[]) => {
   return false;
 };
 
-export const getWorkerInfoNamesToDisplay = (workers: Worker[]) => {
+const getWorkerInfoNamesToDisplay = (workers: Worker[]) => {
   const namesSet = new Set<string>();
   for (const worker of workers) {
     for (const name in worker.workerinfo) {

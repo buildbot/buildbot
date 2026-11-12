@@ -31,7 +31,7 @@ import {useTopbarItems} from 'buildbot-ui';
 import {LogViewer} from '../../components/LogViewer/LogViewer';
 import {buildTopbarItemsForBuilder} from '../../util/TopbarUtils';
 
-const LogView = observer(() => {
+export const LogView = observer(() => {
   const builderid = useParams<'builderid'>().builderid;
   const buildnumber = Number.parseInt(useParams<'buildnumber'>().buildnumber ?? '');
   const stepnumber = Number.parseInt(useParams<'stepnumber'>().stepnumber ?? '');

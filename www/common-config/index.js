@@ -1,7 +1,7 @@
 import globals from 'globals'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+import {reactRefresh} from 'eslint-plugin-react-refresh'
 import importPlugin from 'eslint-plugin-import';
 import jsxAlly from 'eslint-plugin-jsx-a11y'
 import tseslint from 'typescript-eslint'
@@ -13,7 +13,7 @@ export const buildbotEslintConfig = tseslint.config(
       ...tseslint.configs.recommendedTypeChecked,
       reactPlugin.configs.flat['jsx-runtime'],
       reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
+      reactRefresh.configs.vite({extraHOCs: ['observer']}),
       importPlugin.flatConfigs.react,
       importPlugin.flatConfigs.typescript,
       jsxAlly.flatConfigs.recommended,
@@ -43,7 +43,6 @@ export const buildbotEslintConfig = tseslint.config(
           "caughtErrorsIgnorePattern": "^_"
         }
       ],
-      'react-refresh/only-export-components': 'off',
     },
   },
 )

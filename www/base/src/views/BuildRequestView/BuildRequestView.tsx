@@ -33,11 +33,8 @@ import {
 import {useNavigate, useParams, useSearchParams} from 'react-router-dom';
 import {Tab, Tabs} from 'react-bootstrap';
 import {TopbarAction, useTopbarActions, useTopbarItems} from 'buildbot-ui';
-import {
-  displayBuildRequestEntry,
-  displayBuildsetEntry,
-  RawData,
-} from '../../components/RawData/RawData';
+import {RawData} from '../../components/RawData/RawData';
+import {displayBuildRequestEntry, displayBuildsetEntry} from '../../components/RawData/Utils';
 import {AlertNotification} from '../../components/AlertNotification/AlertNotification';
 import {BuildSummary} from '../../components/BuildSummary/BuildSummary';
 import {PropertiesTable} from '../../components/PropertiesTable/PropertiesTable';

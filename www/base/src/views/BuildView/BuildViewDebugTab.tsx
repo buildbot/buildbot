@@ -27,11 +27,8 @@ import {
 } from 'buildbot-data-js';
 import {getBuildLinkDisplayProperties, BuildLinkWithSummaryTooltip} from 'buildbot-ui';
 import {LoadingDiv} from '../../components/LoadingDiv/LoadingDiv';
-import {
-  RawData,
-  displayBuildRequestEntry,
-  displayBuildsetEntry,
-} from '../../components/RawData/RawData';
+import {RawData} from '../../components/RawData/RawData';
+import {displayBuildRequestEntry, displayBuildsetEntry} from '../../components/RawData/Utils';
 import {TableHeading} from '../../components/TableHeading/TableHeading';
 
 export type BuildViewDebugTabProps = {

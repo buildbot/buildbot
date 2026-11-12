@@ -17,7 +17,7 @@
 
 import {describe, expect, it} from 'vitest';
 import {Builder, IDataAccessor} from 'buildbot-data-js';
-import {sortBuildersByTags, TagLineConfig} from './ConsoleView';
+import {sortBuildersByTags, TagLineConfig} from './Utils';
 
 type TestBuilder = {
   builderid: number;
