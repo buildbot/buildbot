@@ -143,9 +143,10 @@ export class BuilderPage {
   }
 
   static async clickRebuildButton(page: Page) {
-    await BasePage.waitUntilUrlChanged(page, async () => {
-      await page.getByRole("button", {name: "Rebuild"}).click();
-    });
+    const url = page.url();
+    await page.getByRole("button", {name: "Rebuild"}).click();
+    await page.waitForURL(u => u.href !== url, {timeout: 60_000});
+    await BasePage.waitUntilFinishedLoading(page);
   }
 
   static async checkBuilderURL(page: Page, builder: string) {
