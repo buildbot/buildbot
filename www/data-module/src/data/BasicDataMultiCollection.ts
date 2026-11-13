@@ -6,9 +6,16 @@
 */
 
 import {BaseClass} from './classes/BaseClass';
-import {action, autorun, IObservableArray, makeObservable, observable, ObservableMap} from 'mobx';
+import {
+  action,
+  autorun,
+  IObservableArray,
+  IReactionDisposer,
+  makeObservable,
+  observable,
+  ObservableMap,
+} from 'mobx';
 import {DataCollection, IDataCollection} from './DataCollection';
-import {IReactionDisposer} from 'mobx';
 import {IDataAccessor} from './DataAccessor';
 
 /* This class wraps multiple DataCollections of the same thing.
