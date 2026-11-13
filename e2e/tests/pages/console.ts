@@ -15,7 +15,6 @@
   Copyright Buildbot Team Members
 */
 
-import './imports';
 import {Page} from "@playwright/test";
 import {BasePage} from "./base";
 
