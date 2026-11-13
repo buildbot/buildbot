@@ -25,7 +25,7 @@ matrix:
   include:
     # ruff, docs first as they're more likely to find issues
     - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=ruff
-    - env: PYTHON=3.9 TWISTED=latest SQLALCHEMY=latest TESTS=docs
+    - env: PYTHON=3.14 TWISTED=latest SQLALCHEMY=latest TESTS=docs
     - env: PYTHON=3.9 TESTS=mypy
     - env: PYTHON=3.13 TESTS=mypy
     - env: PYTHON=3.9 TESTS=prettier
