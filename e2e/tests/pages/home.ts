@@ -31,14 +31,6 @@ export class HomePage {
 
   static async waitAllBuildsFinished(page: Page) {
     await HomePage.goto(page);
-    await expect.poll(async () => {
-      const text = await page.locator("h4").first().textContent();
-      if (text === null) {
-        return false;
-      }
-      return text.toLowerCase().indexOf("0 builds running") >= 0;
-    }, {
-      message: "builds are no longer running"
-    }).toBeTruthy();
+    await expect(page.locator("h4").first()).toContainText(/^0 builds running/);
   }
 }

@@ -15,14 +15,12 @@
   Copyright Buildbot Team Members
 */
 
-import {expect, Page} from "@playwright/test";
+import {Page} from "@playwright/test";
 import {BasePage} from "./base";
 
 export class ForcePage {
   static async setInputText(page: Page, fieldName: string, value: string) {
-    const input = page.getByTestId(`force-field-${fieldName}`);
-    await expect.poll(() => input.count()).toEqual(1);
-    await input.fill(value);
+    await page.getByTestId(`force-field-${fieldName}`).fill(value);
   }
 
   static async setReason(page: Page, value: string) {

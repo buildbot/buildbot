@@ -27,11 +27,7 @@ test.describe('wsgi', function() {
       await page.locator('.bb-sidebar-item').locator('text=Test Dashboard').click();
     });
     await BasePage.waitUntilFinishedLoading(page);
-    await expect.poll(async () => {
-        return (await page.locator(".bb-wsgi-dashboard-view")
-          .locator('tr').locator('text=slowruntests').count()) !== 0;
-      }, {
-        message: "did not load builders to the dashboard"
-      }).toBeTruthy();
+    await expect(page.locator(".bb-wsgi-dashboard-view")
+      .locator('tr').locator('text=slowruntests')).not.toHaveCount(0);
   });
 });

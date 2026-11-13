@@ -34,18 +34,8 @@ test.describe('pending build requests', function() {
 
     await PendingBuildrequestsPage.goto(page);
 
-    await expect.poll(async () => {
-      return (await PendingBuildrequestsPage.getAllBuildrequestRows(page).count());
-    }, {
-      message: "found at least one buildrequest"
-    }).toBeGreaterThan(0);
-
     const br = PendingBuildrequestsPage.getAllBuildrequestRows(page).first();
-    await expect.poll(async () => {
-      return (await br.locator('td').nth(1).locator('a').textContent());
-    }, {
-      message: "found at least one buildrequest with correct name"
-    }).toMatch(testBuildername);
+    await expect(br.locator('td').nth(1).locator('a')).toContainText(testBuildername);
 
     // kill remaining builds
     let gotAlert = false;
