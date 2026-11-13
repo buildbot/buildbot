@@ -957,7 +957,7 @@ unorthodoxy
 unpause
 unpaused
 unpausing
-Unregister
+unregister
 unsubscribe
 unsubscribes
 unsubscription

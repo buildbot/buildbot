@@ -115,7 +115,7 @@ class Try_Jobdir(TryBase):
         self.jobdir = jobdir
         self._watcher_parent.set_master(self.master)
 
-        if self.active:
+        if self.active and self.enabled:
             self._watcher_parent.stopService()
             self._start_watcher()
 
@@ -534,9 +534,8 @@ class Try_Userpass(TryBase):
         yield super().reconfigService(builderNames=builderNames, **kwargs)
         self.port = port
         self.userpass = userpass
-        self.registrations = []
 
-        if self.active:
+        if self.active and self.enabled:
             yield self._destroy_pb()
             yield self._create_pb()
 

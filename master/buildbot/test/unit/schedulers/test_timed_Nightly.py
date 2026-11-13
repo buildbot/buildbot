@@ -234,6 +234,45 @@ class Nightly(scheduler.SchedulerMixin, TestReactorMixin, StateTestMixin, unitte
         r = yield sched.startBuild()
         self.assertEqual(r, None)
 
+    @defer.inlineCallbacks
+    def make_disabled_scheduler_and_reconfig(
+        self, onlyIfChanged: bool
+    ) -> InlineCallbacksType[timed.Nightly]:
+        sched = yield self.makeScheduler(
+            name='test', builderNames=['test'], onlyIfChanged=onlyIfChanged
+        )
+        # the fake from makeScheduler doesn't fail when consumption is started twice
+        del sched.startConsumingChanges
+        yield self.master.startService()
+        self.assertTrue(sched.active)
+        yield sched._enabledCallback(None, {'enabled': False})
+        self.assertIsNone(sched._change_consumer)
+
+        yield sched.reconfigServiceWithSibling(
+            timed.Nightly(name='test', builderNames=['test'], minute=5, onlyIfChanged=onlyIfChanged)
+        )
+        self.assertEqual(sched.enabled, False)
+        return sched
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_does_not_consume_changes(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_disabled_scheduler_and_reconfig(onlyIfChanged=True)
+        self.assertIsNone(sched._change_consumer)
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_does_not_build(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_disabled_scheduler_and_reconfig(onlyIfChanged=False)
+        self.reactor.advance(2 * 60 * 60)
+        self.assertEqual(self.addBuildsetCallTimes, [])
+        self.assertIsNone(sched.actuateAtTimer)
+
+    @defer.inlineCallbacks
+    def test_disabled_reconfig_then_enable(self) -> InlineCallbacksType[None]:
+        sched = yield self.make_disabled_scheduler_and_reconfig(onlyIfChanged=True)
+        yield sched._enabledCallback(None, {'enabled': True})
+        self.assertIsNotNone(sched._change_consumer)
+        yield sched.deactivate()
+
     # end-to-end tests: let's see the scheduler in action
 
     @defer.inlineCallbacks
