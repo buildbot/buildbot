@@ -17,8 +17,6 @@
 
 import {expect, Page} from "@playwright/test";
 
-export const testPageUrl = 'http://127.0.0.1:8011'
-
 export class BasePage {
   // accessors for elements that all pages have (menu, login, etc)
   static async logOut(page: Page) {
@@ -34,11 +32,7 @@ export class BasePage {
   }
 
   static async waitUntilFinishedLoading(page: Page) {
-    await expect.poll(async () => {
-      return (await page.getByTestId("loading").count());
-    }, {
-      message: "Waited until finished loading"
-    }).toEqual(0);
+    await expect(page.getByTestId("loading")).toHaveCount(0);
   }
 
   static async waitUntilUrlChanged(page: Page, urlChangeFunction: () => Promise<void>) {

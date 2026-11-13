@@ -42,9 +42,9 @@ test.describe('previousnextlink', function() {
     await BuilderPage.gotoBuild(page, "runtests", `${lastbuild + 2}`);
     const lastBuildURL = page.url();
     await BuilderPage.clickPreviousButtonAndWait(page);
-    await expect.poll(() => page.url()).not.toMatch(lastBuildURL);
+    await expect(page).not.toHaveURL(lastBuildURL);
     await BuilderPage.clickNextButtonAndWait(page);
-    await expect.poll(() => page.url()).toMatch(lastBuildURL);
+    await expect(page).toHaveURL(lastBuildURL);
   });
 });
 
@@ -55,11 +55,7 @@ test.describe('forceandstop', function() {
     await ForcePage.clickStartButtonAndWaitRedirectToBuild(page);
     await BuilderPage.clickStopButton(page);
 
-    await expect.poll(async () => {
-      return (await page.locator(".bb-build-summary-details")
-        .locator('.bb-badge-status.results_CANCELLED').count()) !== 0;
-    }, {
-      message: "canceled build"
-    }).toBeTruthy();
+    await expect(page.locator(".bb-build-summary-details")
+      .locator('.bb-badge-status.results_CANCELLED')).not.toHaveCount(0);
   });
 });

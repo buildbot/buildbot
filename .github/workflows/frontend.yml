@@ -94,7 +94,15 @@ jobs:
         run: cd e2e && npm ci
       - name: "Install Playwright browsers"
         timeout-minutes: 10
-        run: cd e2e && npx playwright install --with-deps
+        run: cd e2e && npx playwright install --with-deps chromium firefox
 
       - name: "e2e"
         run: ./common/smokedist-react.sh ${{ matrix.dist }}
+
+      - uses: "actions/upload-artifact@v7"
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-report-${{ matrix.dist }}-py${{ matrix.python-version }}
+          path: e2e/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7

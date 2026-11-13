@@ -101,27 +101,14 @@ export class BuilderPage {
   }
 
   static async waitBuildFinished(page: Page, reference: number) {
-    await expect.configure({ timeout: 30000 }).poll(async () => {
-      const currentBuildCount = await BuilderPage.getLastFinishedBuildNumber(page);
-      return currentBuildCount === reference;
-    }, {
-      message: "build count has been incremented",
-    }).toBeTruthy();
+    await expect.poll(() => BuilderPage.getLastFinishedBuildNumber(page), {
+      message: "last finished build number",
+      timeout: 30000,
+    }).toEqual(reference);
   }
 
   static async waitGoToBuild(page: Page, expectedBuildNumber: number) {
-    await expect.poll(async () => {
-      let buildUrl = page.url();
-      const split = buildUrl.split("/");
-      const buildsPart = split[split.length-2];
-      const number = Number.parseInt(split[split.length-1]);
-      if (buildsPart !== "builds") {
-        return false;
-      }
-      return (number === expectedBuildNumber);
-    }, {
-      message: "went into build"
-    }).toBeTruthy();
+    await expect(page).toHaveURL(new RegExp(`/builds/${expectedBuildNumber}$`));
   }
 
   static async clickStopButton(page: Page) {
@@ -143,9 +130,10 @@ export class BuilderPage {
   }
 
   static async clickRebuildButton(page: Page) {
-    await BasePage.waitUntilUrlChanged(page, async () => {
-      await page.getByRole("button", {name: "Rebuild"}).click();
-    });
+    const url = page.url();
+    await page.getByRole("button", {name: "Rebuild"}).click();
+    await page.waitForURL(u => u.href !== url, {timeout: 60_000});
+    await BasePage.waitUntilFinishedLoading(page);
   }
 
   static async checkBuilderURL(page: Page, builder: string) {

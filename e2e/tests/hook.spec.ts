@@ -16,28 +16,29 @@
 */
 
 import {expect, test} from "@playwright/test";
-import {post} from 'request';
 import {BuilderPage} from './pages/builder';
 import {HomePage} from './pages/home';
-import {testPageUrl} from './pages/base';
 
 test.describe('change hook', function() {
   test.afterEach(async ({page}) => {
     await HomePage.waitAllBuildsFinished(page);
   });
 
-  test('should create a build', async ({page}) => {
+  test('should create a build', async ({page, request}) => {
     await BuilderPage.goto(page, "runtests1");
     const lastbuild = await BuilderPage.getLastFinishedBuildNumber(page);
-    await post(`${testPageUrl}/change_hook/base`).form({
-      comments: 'sd',
-      project: 'pyflakes',
-      repository: 'https://github.com/buildbot/hello-world.git',
-      author: 'foo <foo@bar.com>',
-      committer: 'foo <foo@bar.com>',
-      revision: 'HEAD',
-      branch: 'master'
+    const response = await request.post('/change_hook/base', {
+      form: {
+        comments: 'sd',
+        project: 'pyflakes',
+        repository: 'https://github.com/buildbot/hello-world.git',
+        author: 'foo <foo@bar.com>',
+        committer: 'foo <foo@bar.com>',
+        revision: 'HEAD',
+        branch: 'master'
+      }
     });
+    expect(response.ok()).toBeTruthy();
     await BuilderPage.waitBuildFinished(page, lastbuild + 1);
     expect(await BuilderPage.getBuildResult(page, lastbuild + 1)).toEqual("SUCCESS");
   });

@@ -69,7 +69,7 @@ export class LogPage {
     const row = page.locator('.bb-logviewer-text-row:has(.bb-logviewer-result-current)').first();
     await expect(row).toBeVisible();
     const highlights = row.locator('.bb-logviewer-result-current');
-    await expect.poll(() => highlights.count()).toBeGreaterThan(0);
+    await expect(highlights).not.toHaveCount(0);
     const texts = await highlights.allTextContents();
     const highlightedText = texts.join('');
     expect(highlightedText).toBe(searchTerm);
