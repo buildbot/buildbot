@@ -33,7 +33,6 @@ import {
   Worker,
   UNKNOWN,
   findOrNull,
-  getPropertyValueOrDefault,
   getBuildOrStepResults,
   parseChangeAuthorNameAndEmail,
   results2class,
@@ -121,28 +120,45 @@ const buildTopbarActions = (
   return actions;
 };
 
-const getResponsibleUsers = (
+// Note that propertiesQuery.properties is a Map, not a plain object, so the
+// getPropertyValueOrDefault-style helpers cannot be used here.
+const getPropertyValue = (propertiesQuery: DataPropertiesCollection, key: string) => {
+  // each property is an array of two elements: property value and source
+  const property = propertiesQuery.get(key);
+  if (!Array.isArray(property) || property.length !== 2) {
+    return undefined;
+  }
+  return property[0];
+};
+
+export const getResponsibleUsers = (
   propertiesQuery: DataPropertiesCollection,
   changesAuthors: Set<string>,
 ) => {
   const responsibleUsers: {[name: string]: string | null} = {};
-  if (getPropertyValueOrDefault(propertiesQuery.properties, 'scheduler', '') === 'force') {
-    const owner = getPropertyValueOrDefault(propertiesQuery.properties, 'owner', '');
-    if (owner.match(/^.+<.+@.+\..+>.*$/)) {
-      const splitResult = owner.split(new RegExp('<|>'));
-      if (splitResult.length === 2) {
-        const name = splitResult[0];
-        const email = splitResult[1];
-        responsibleUsers[name] = email;
+  const addResponsibleUser = (user: string) => {
+    const [name, email] = parseChangeAuthorNameAndEmail(user);
+    if (email !== null || !(name in responsibleUsers)) {
+      responsibleUsers[name] = email;
+    }
+  };
+
+  const owner = getPropertyValue(propertiesQuery, 'owner');
+  if (typeof owner === 'string' && owner !== '') {
+    addResponsibleUser(owner);
+  }
+
+  const owners = getPropertyValue(propertiesQuery, 'owners');
+  if (Array.isArray(owners)) {
+    for (const owner of owners) {
+      if (typeof owner === 'string' && owner !== '') {
+        addResponsibleUser(owner);
       }
     }
   }
 
   for (const author of changesAuthors) {
-    const [name, email] = parseChangeAuthorNameAndEmail(author);
-    if (email !== null || !(name in responsibleUsers)) {
-      responsibleUsers[name] = email;
-    }
+    addResponsibleUser(author);
   }
 
   return responsibleUsers;
