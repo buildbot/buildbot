@@ -98,3 +98,11 @@ jobs:
 
       - name: "e2e"
         run: ./common/smokedist-react.sh ${{ matrix.dist }}
+
+      - uses: "actions/upload-artifact@v7"
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-report-${{ matrix.dist }}-py${{ matrix.python-version }}
+          path: e2e/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
