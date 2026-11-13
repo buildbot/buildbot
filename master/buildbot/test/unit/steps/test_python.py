@@ -22,6 +22,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
@@ -630,4 +631,158 @@ class TestSphinx(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
             .exit(0)
         )
         self.expect_outcome(result=SUCCESS, state_string="sphinx 0 warnings")
+        return self.run_step()
+
+
+pytest_output_success = """\
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-7.2.1, pluggy-1.0.0
+rootdir: /home/user/project
+collected 3 items
+
+test_foo.py ...                                                          [100%]
+
+============================== 3 passed in 0.12s ===============================
+"""
+
+pytest_output_failure = """\
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-7.2.1, pluggy-1.0.0
+rootdir: /home/user/project
+collected 5 items
+
+test_foo.py ..F.F                                                        [100%]
+
+=================================== FAILURES ===================================
+_________________________________ test_bar _____________________________________
+
+    def test_bar():
+>       assert False
+E       assert False
+
+test_foo.py:6: AssertionError
+=========================== short test summary info ============================
+FAILED test_foo.py::test_bar - assert False
+FAILED test_foo.py::test_baz - assert False
+========================= 2 failed, 3 passed in 0.23s ==========================
+"""
+
+pytest_output_mixed = """\
+============================= test session starts ==============================
+collected 12 items / 2 deselected / 10 selected
+
+=========== 1 failed, 5 passed, 2 skipped, 1 xfailed, 1 xpassed, 3 warnings, \
+1 error, 2 deselected in 12.34s (0:00:12) ===========
+"""
+
+pytest_output_no_tests = """\
+============================= test session starts ==============================
+collected 0 items
+
+============================ no tests ran in 0.01s =============================
+"""
+
+
+class Pytest(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
+    def setUp(self) -> defer.Deferred[None]:  # type: ignore[override]
+        self.setup_test_reactor()
+        return self.setup_test_build_step()
+
+    @defer.inlineCallbacks
+    def test_success(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(python.Pytest())
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['python', '-m', 'pytest'])
+            .stdout(pytest_output_success)
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS, state_string='pytest 3 tests 3 passed')
+        yield self.run_step()
+        self.assertEqual(step.statistics['tests-total'], 3)
+        self.assertEqual(step.statistics['tests-passed'], 3)
+        self.assertEqual(step.statistics['tests-failed'], 0)
+
+    @defer.inlineCallbacks
+    def test_failure(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(python.Pytest())
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['python', '-m', 'pytest'])
+            .stdout(pytest_output_failure)
+            .exit(1)
+        )
+        self.expect_outcome(
+            result=FAILURE, state_string='pytest 5 tests 3 passed 2 failed (failure)'
+        )
+        yield self.run_step()
+        self.assertEqual(step.statistics['tests-total'], 5)
+        self.assertEqual(step.statistics['tests-passed'], 3)
+        self.assertEqual(step.statistics['tests-failed'], 2)
+
+    @defer.inlineCallbacks
+    def test_all_categories(self) -> InlineCallbacksType[None]:
+        step = self.setup_step(python.Pytest())
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['python', '-m', 'pytest'])
+            .stdout(pytest_output_mixed)
+            .exit(1)
+        )
+        self.expect_outcome(
+            result=FAILURE,
+            state_string='pytest 11 tests 5 passed 1 failed 1 error 2 skipped '
+            '1 xfailed 1 xpassed 3 warnings 2 deselected (failure)',
+        )
+        yield self.run_step()
+        self.assertEqual(
+            step.statistics,
+            {
+                'tests-total': 11,
+                'tests-passed': 5,
+                'tests-failed': 1,
+                'tests-errors': 1,
+                'tests-skipped': 2,
+                'tests-xfailed': 1,
+                'tests-xpassed': 1,
+                'tests-warnings': 3,
+                'tests-deselected': 2,
+            },
+        )
+
+    def test_no_tests_ran(self) -> defer.Deferred[None]:
+        self.setup_step(python.Pytest())
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['python', '-m', 'pytest'])
+            .stdout(pytest_output_no_tests)
+            .exit(5)
+        )
+        self.expect_outcome(result=FAILURE, state_string='pytest (failure)')
+        return self.run_step()
+
+    def test_usage_error(self) -> defer.Deferred[None]:
+        self.setup_step(python.Pytest())
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['python', '-m', 'pytest'])
+            .stderr('ERROR: usage: pytest [options]\n')
+            .exit(4)
+        )
+        self.expect_outcome(result=EXCEPTION, state_string='pytest (exception)')
+        return self.run_step()
+
+    def test_custom_command(self) -> defer.Deferred[None]:
+        self.setup_step(python.Pytest(command=['pytest', '-v', 'tests/']))
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['pytest', '-v', 'tests/'])
+            .stdout(pytest_output_success)
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS, state_string='pytest 3 tests 3 passed')
+        return self.run_step()
+
+    def test_summary_in_header_not_parsed(self) -> defer.Deferred[None]:
+        self.setup_step(python.Pytest())
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['python', '-m', 'pytest'])
+            .log('stdio', header='====== 1 failed in 0.1s ======\n')
+            .exit(0)
+        )
+        self.expect_outcome(result=SUCCESS, state_string='pytest')
         return self.run_step()
