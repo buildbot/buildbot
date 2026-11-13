@@ -16,7 +16,7 @@
 */
 
 import './BuildSummaryTooltip.scss';
-import {useContext} from 'react';
+import React, {useContext} from 'react';
 import {observer} from 'mobx-react';
 import {
   Builder,
@@ -35,7 +35,6 @@ import {analyzeStepUrls, useStepUrlAnalyzer} from '../../util/StepUrls';
 import {BadgeRound} from '../BadgeRound/BadgeRound';
 import {BadgeStatus} from '../BadgeStatus/BadgeStatus';
 import Card from 'react-bootstrap/Card';
-import React from 'react';
 
 const isStepDisplayed = (step: Step) => {
   return !step.hidden;

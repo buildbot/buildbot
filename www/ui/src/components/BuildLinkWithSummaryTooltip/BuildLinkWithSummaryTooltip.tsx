@@ -18,10 +18,9 @@
 import './BuildLinkWithSummaryTooltip.scss';
 import {Link} from 'react-router-dom';
 import {OverlayTrigger, Tooltip} from 'react-bootstrap';
-import {Build, results2class} from 'buildbot-data-js';
+import {Build, Builder, results2class} from 'buildbot-data-js';
 import {buildbotSetupPlugin} from 'buildbot-plugin-support';
 import {observer} from 'mobx-react';
-import {Builder} from 'buildbot-data-js';
 import {BuildSummaryTooltip} from '../BuildSummaryTooltip/BuildSummaryTooltip';
 import {BadgeRound} from '../BadgeRound/BadgeRound';
 import {formatBuildLinkText} from './utils';

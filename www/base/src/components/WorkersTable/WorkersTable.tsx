@@ -16,8 +16,7 @@
 */
 
 import {Table} from 'react-bootstrap';
-import {FaPause, FaRegSmile, FaTimes} from 'react-icons/fa';
-import {FaStop} from 'react-icons/fa';
+import {FaPause, FaRegSmile, FaStop, FaTimes} from 'react-icons/fa';
 import {Build, Builder, DataCollection, Master, Worker} from 'buildbot-data-js';
 import {Link} from 'react-router-dom';
 import {BadgeRound, BuildLinkWithSummaryTooltip} from 'buildbot-ui';
