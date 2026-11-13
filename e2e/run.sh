@@ -55,5 +55,5 @@ if [ -z $NPM ]; then
 fi
 
 $NPM ci
-$NPM exec playwright install
+$NPM exec playwright install chromium firefox
 LIBGL_ALWAYS_SOFTWARE=1 $NPM exec playwright test

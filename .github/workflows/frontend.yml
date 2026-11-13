@@ -94,7 +94,7 @@ jobs:
         run: cd e2e && npm ci
       - name: "Install Playwright browsers"
         timeout-minutes: 10
-        run: cd e2e && npx playwright install --with-deps
+        run: cd e2e && npx playwright install --with-deps chromium firefox
 
       - name: "e2e"
         run: ./common/smokedist-react.sh ${{ matrix.dist }}
