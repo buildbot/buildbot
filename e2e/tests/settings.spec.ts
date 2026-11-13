@@ -15,86 +15,115 @@
   Copyright Buildbot Team Members
 */
 
-import {test} from "@playwright/test";
-import {BuilderPage} from './pages/builder';
-import {SettingsPage} from './pages/settings';
+import { expect, Locator, Page, test } from "@playwright/test";
+import { BuilderPage } from "./pages/builder";
+import {
+  SettingsPage,
+  BuildersSettings,
+  WaterfallSettings,
+  ConsoleSettings,
+} from "./pages/settings";
 
-test.describe('manage settings', function() {
-  test.describe('base', () => {
-    test('Builders.buildFetchLimit uses default value from config', async ({page}) => {
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.checkBuildersBuildFetchLimit(page, 201);
-    })
+async function goToSettings(page: Page) {
+  await BuilderPage.gotoBuildersList(page);
+  await SettingsPage.goto(page);
+}
+
+async function expectSetting(setting: Locator, value: string | RegExp) {
+  await expect(setting).toHaveValue(value);
+}
+
+async function setSetting(setting: Locator, value: string) {
+  await setting.fill(value);
+}
+
+async function setAndExpectSetting(
+  page: Page,
+  settingGetter: () => Locator,
+  value: string,
+) {
+  await goToSettings(page);
+  await setSetting(settingGetter(), value);
+  await goToSettings(page);
+  await expectSetting(settingGetter(), value);
+}
+
+test.describe("manage settings", function () {
+  test.describe("base", () => {
+    test("Builders.buildFetchLimit uses default value from config", async ({
+      page,
+    }) => {
+      await goToSettings(page);
+      await expectSetting(BuildersSettings.buildFetchLimit(page), "201");
+    });
   });
 
-  test.describe('waterfall', () => {
-    test('change the "scalling factor" and check it', async ({page}) => {
-      const scalingFactor = '10';
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.changeScallingFactor(page, scalingFactor);
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.checkScallingFactor(page, scalingFactor);
-    })
+  test.describe("waterfall", () => {
+    test('change the "scalling factor" and check it', async ({ page }) => {
+      const scalingFactor = "10";
+      await setAndExpectSetting(
+        page,
+        () => WaterfallSettings.scalingWaterfall(page),
+        scalingFactor,
+      );
+    });
 
-    test('change the "minimum column width" and check it', async ({page}) => {
-      const scalingWidth = '450';
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.changeColumnWidth(page, scalingWidth);
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.checkColumnWidth(page, scalingWidth);
-    })
+    test('change the "minimum column width" and check it', async ({ page }) => {
+      const scalingWidth = "450";
+      await setAndExpectSetting(
+        page,
+        () => WaterfallSettings.minColumnWidthWaterfall(page),
+        scalingWidth,
+      );
+    });
 
-    test('change the "lazy loading limit" and check it', async ({page}) => {
-      const lazyLoadingLimit = '30';
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.changeLazyLoadingLimit(page, lazyLoadingLimit);
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.checkLazyLoadingLimit(page, lazyLoadingLimit);
-    })
+    test('change the "lazy loading limit" and check it', async ({ page }) => {
+      const lazyLoadingLimit = "30";
+      await setAndExpectSetting(
+        page,
+        () => WaterfallSettings.lazyLimitWaterfall(page),
+        lazyLoadingLimit,
+      );
+    });
 
-    test('change the "idle time threshold" and check it', async ({page}) => {
-      const idleTimeThreshold = '15';
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.changeIdleTime(page, idleTimeThreshold);
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.checkIdleTime(page, idleTimeThreshold);
-    })
+    test('change the "idle time threshold" and check it', async ({ page }) => {
+      const idleTimeThreshold = "15";
+      await setAndExpectSetting(
+        page,
+        () => WaterfallSettings.idleThresholdWaterfall(page),
+        idleTimeThreshold,
+      );
+    });
 
-    test('check that custom ui_default_config from master.cfg is loaded', async ({page}) => {
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.checkScallingFactor(page, '1.234');
-    })
+    test("check that custom ui_default_config from master.cfg is loaded", async ({
+      page,
+    }) => {
+      await goToSettings(page);
+      await expectSetting(WaterfallSettings.scalingWaterfall(page), "1.234");
+    });
   });
 
-  test.describe('console', () => {
-    test('change the "number of builds to fetch" and check it', async ({page}) => {
-      const buildsToFetch = '130';
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.changeMaxBuild(page, buildsToFetch);
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.checkMaxBuild(page, buildsToFetch);
-    })
+  test.describe("console", () => {
+    test('change the "number of builds to fetch" and check it', async ({
+      page,
+    }) => {
+      const buildsToFetch = "130";
+      await setAndExpectSetting(
+        page,
+        () => ConsoleSettings.buildLimit(page),
+        buildsToFetch,
+      );
+    });
 
-    test('change the "number of changes to fetch" and check it', async ({page}) => {
-      const changesToFetch = '45';
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.changeMaxRecentsBuilders(page, changesToFetch);
-      await BuilderPage.gotoBuildersList(page);
-      await SettingsPage.goto(page);
-      await SettingsPage.checkMaxRecentsBuilders(page, changesToFetch);
-    })
+    test('change the "number of changes to fetch" and check it', async ({
+      page,
+    }) => {
+      const changesToFetch = "45";
+      await setAndExpectSetting(
+        page,
+        () => ConsoleSettings.changeLimit(page),
+        changesToFetch,
+      );
+    });
   });
 });

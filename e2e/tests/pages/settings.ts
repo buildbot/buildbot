@@ -15,76 +15,53 @@
   Copyright Buildbot Team Members
 */
 
-import {expect, Page} from "@playwright/test";
-import {BasePage} from "./base";
+import { Page } from "@playwright/test";
+import { BasePage } from "./base";
 
 export class SettingsPage {
-
   static async goto(page: Page) {
-    await page.goto('/#/settings');
+    await page.goto("/#/settings");
     await BasePage.waitUntilFinishedLoading(page);
   }
 
   static getItem(page: Page, group: string, name: string) {
-    return page.getByTestId(`settings-group-${group}`).getByTestId(`settings-field-${name}`);
+    return page
+      .getByTestId(`settings-group-${group}`)
+      .getByTestId(`settings-field-${name}`);
+  }
+}
+
+export class BuildersSettings {
+  static buildFetchLimit(page: Page) {
+    return SettingsPage.getItem(page, "Builders", "buildFetchLimit");
+  }
+}
+
+export class WaterfallSettings {
+  static scalingWaterfall(page: Page) {
+    return SettingsPage.getItem(page, "Waterfall", "scaling_waterfall");
   }
 
-  static async changeScallingFactor(page: Page, value: string) {
-    await SettingsPage.getItem(page, "Waterfall", "scaling_waterfall").fill(value);
+  static minColumnWidthWaterfall(page: Page) {
+    return SettingsPage.getItem(
+      page,
+      "Waterfall",
+      "min_column_width_waterfall",
+    );
   }
-
-  static async checkBuildersBuildFetchLimit(page: Page, value: number) {
-    expect(await SettingsPage.getItem(page, "Builders", "buildFetchLimit").getAttribute("value"))
-      .toEqual(value.toString());
+  static lazyLimitWaterfall(page: Page) {
+    return SettingsPage.getItem(page, "Waterfall", "lazy_limit_waterfall");
   }
-
-  static async checkScallingFactor(page: Page, value: string) {
-    expect(await SettingsPage.getItem(page, "Waterfall", "scaling_waterfall").getAttribute("value"))
-      .toEqual(value);
+  static idleThresholdWaterfall(page: Page) {
+    return SettingsPage.getItem(page, "Waterfall", "idle_threshold_waterfall");
   }
+}
 
-  static async changeColumnWidth(page: Page, value: string) {
-    await SettingsPage.getItem(page, "Waterfall", "min_column_width_waterfall").fill(value);
+export class ConsoleSettings {
+  static buildLimit(page: Page) {
+    return SettingsPage.getItem(page, "Console", "buildLimit");
   }
-
-  static async checkColumnWidth(page: Page, value: string) {
-    expect(await SettingsPage.getItem(page, "Waterfall", "min_column_width_waterfall")
-      .getAttribute("value")).toEqual(value);
-  }
-
-  static async changeLazyLoadingLimit(page: Page, value: string) {
-    await SettingsPage.getItem(page, "Waterfall", "lazy_limit_waterfall").fill(value);
-  }
-
-  static async checkLazyLoadingLimit(page: Page, value: string) {
-    expect(await SettingsPage.getItem(page, "Waterfall", "lazy_limit_waterfall")
-      .getAttribute("value")).toEqual(value);
-  }
-
-  static async changeIdleTime(page: Page, value: string) {
-    await SettingsPage.getItem(page, "Waterfall", "idle_threshold_waterfall").fill(value);
-  }
-
-  static async checkIdleTime(page: Page, value: string) {
-    expect(await SettingsPage.getItem(page, "Waterfall", "idle_threshold_waterfall")
-      .getAttribute("value")).toEqual(value);
-  }
-
-  static async changeMaxBuild(page: Page, value: string) {
-    await SettingsPage.getItem(page, "Console", "buildLimit").fill(value);
-  }
-
-  static async checkMaxBuild(page: Page, value: string) {
-    expect(await SettingsPage.getItem(page, "Console", "buildLimit")
-      .getAttribute("value")).toEqual(value);
-  }
-
-  static async changeMaxRecentsBuilders(page: Page, value: string) {
-    await SettingsPage.getItem(page, "Console", "changeLimit").fill(value);
-  }
-
-  static async checkMaxRecentsBuilders(page: Page, value: string) {
-    expect(await SettingsPage.getItem(page, "Console", "changeLimit")
-      .getAttribute("value")).toEqual(value);
+  static changeLimit(page: Page) {
+    return SettingsPage.getItem(page, "Console", "changeLimit");
   }
 }
