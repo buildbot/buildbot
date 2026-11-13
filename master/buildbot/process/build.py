@@ -719,7 +719,13 @@ class Build(properties.PropertiesMixin):
             log.msg(f"{self} build got exception when running step {step}")
             log.err(e)
 
-            yield self.master.data.updates.setBuildProperties(self.buildid, self)
+            # The exception may have come from setBuildProperties itself (e.g. a property value
+            # that does not fit into the database column). Make sure that the build is still
+            # finished in that case, otherwise it would hang forever.
+            try:
+                yield self.master.data.updates.setBuildProperties(self.buildid, self)
+            except Exception:
+                log.err(None, f"{self} could not update build properties")
 
             # Note that buildFinished can't throw exception
             yield self.buildFinished(["build", "exception"], EXCEPTION)

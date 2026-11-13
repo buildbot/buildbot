@@ -1,0 +1,1 @@
+Fixed builds hanging forever when storing the build properties fails after a step, e.g. because a property value is too long for the database column (:issue:`7130`).
