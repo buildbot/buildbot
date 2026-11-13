@@ -14,7 +14,7 @@ export const buildbotEslintConfig = tseslint.config(
       reactPlugin.configs.flat['jsx-runtime'],
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite({extraHOCs: ['observer']}),
-      importPlugin.flatConfigs.react,
+      importPlugin.flatConfigs.recommended,
       importPlugin.flatConfigs.typescript,
       jsxAlly.flatConfigs.recommended,
     ],
@@ -35,6 +35,10 @@ export const buildbotEslintConfig = tseslint.config(
       '@typescript-eslint/no-unsafe-function-type': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
+      // eslint-plugin-import: tsc already checks these
+      'import/no-unresolved': 'off',
+      'import/namespace': 'off',
+      'import/default': 'off',
       '@typescript-eslint/no-unused-vars': [
         "warn",
         {
