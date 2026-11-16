@@ -7,16 +7,20 @@ from unittest.mock import Mock
 
 from twisted.application.internet import ClientService
 from twisted.cred.credentials import UsernamePassword
+from twisted.cred.error import UnauthorizedLogin
 from twisted.internet import defer
 from twisted.internet.address import IPv4Address
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.error import ConnectionDone
+from twisted.internet.interfaces import ITCPTransport
 from twisted.internet.task import Clock
 from twisted.internet.testing import MemoryReactorClock
 from twisted.internet.testing import StringTransport
 from twisted.internet.testing import StringTransportWithDisconnection
 from twisted.python.failure import Failure
 from twisted.trial.unittest import TestCase
+from zope.interface import directlyProvides
+from zope.interface import noLongerProvides
 
 from buildbot_worker import pbutil
 from buildbot_worker.pbutil import AutoLoginPBFactory
@@ -40,6 +44,7 @@ class TestLoginTimeout(TestCase):
         factory._reactor = self.clock
         broker = factory.buildProtocol(IPv4Address('TCP', '127.0.0.1', 9990))
         transport = StringTransport()
+        directlyProvides(transport, ITCPTransport)
         broker.makeConnection(transport)
         self.addCleanup(self.disconnect_broker, broker)
         return broker, transport
@@ -61,6 +66,16 @@ class TestLoginTimeout(TestCase):
         self.broker.dataReceived(PB_GREETING[:1])
         self.clock.advance(60)
         self.assertTrue(self.transport.disconnected)
+
+    def test_non_tcp_transport(self) -> None:
+        """Non-TCP transports are closed without requiring abortConnection."""
+        noLongerProvides(self.transport, ITCPTransport)
+        abort = Mock(side_effect=AssertionError('Cannot abort a non-TCP transport'))
+        self.patch(self.transport, 'abortConnection', abort)
+        self.clock.advance(60)
+        self.assertTrue(self.transport.disconnecting)
+        abort.assert_not_called()
+        self.assertEqual(self.clock.getDelayedCalls(), [])
 
     def start_login(self) -> defer.Deferred:
         login: defer.Deferred = defer.Deferred()
@@ -88,6 +103,22 @@ class TestLoginTimeout(TestCase):
         self.assertEqual(self.clock.getDelayedCalls(), [])
         self.clock.advance(120)
         self.assertFalse(self.transport.disconnected)
+
+    def test_failed_login(self) -> None:
+        """A login failure cancels the deadline before waiting to retry."""
+        self.patch(pbutil, 'reactor', self.clock)
+        self.patch(self.factory, '_timeoutForAttempt', lambda attempt: 120)
+        login = self.start_login()
+        login.errback(Failure(UnauthorizedLogin()))
+        self.assertEqual(len(self.clock.getDelayedCalls()), 1)
+        self.assertEqual(self.clock.getDelayedCalls()[0].getTime(), 120)
+        self.clock.advance(60)
+        self.assertFalse(self.transport.disconnecting)
+        self.clock.advance(60)
+        self.assertTrue(self.transport.disconnecting)
+        self.assertFalse(self.transport.disconnected)
+        self.successResultOf(login)
+        self.assertEqual(self.clock.getDelayedCalls(), [])
 
     def test_disconnect(self) -> None:
         """Disconnecting before login cancels the deadline."""
@@ -154,6 +185,7 @@ class TestLoginTimeoutRetry(TestCase):
         self.assertEqual(len(self.clock.tcpClients), 1)
         protocol = self.clock.tcpClients[0][2].buildProtocol(IPv4Address('TCP', '127.0.0.1', 9990))
         self.transport = StringTransportWithDisconnection()
+        directlyProvides(self.transport, ITCPTransport)
         self.transport.protocol = protocol
         protocol.makeConnection(self.transport)
 

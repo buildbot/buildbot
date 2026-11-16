@@ -29,6 +29,7 @@ from twisted.cred import error
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
+from twisted.internet.interfaces import ITCPTransport
 from twisted.internet.protocol import connectionDone
 from twisted.python import log
 from twisted.spread import pb
@@ -42,7 +43,6 @@ if TYPE_CHECKING:
     from twisted.internet.interfaces import IDelayedCall
     from twisted.internet.interfaces import IReactorCore
     from twisted.internet.interfaces import IReactorTime
-    from twisted.internet.interfaces import ITCPTransport
     from twisted.python.failure import Failure
     from twisted.spread.pb import Broker
     from twisted.spread.pb import RemoteReference
@@ -59,7 +59,8 @@ class _LoginTimeoutBroker(pb.Broker):
     def connectionMade(self) -> None:
         # PBClientFactory.clientConnectionMade runs after protocol negotiation,
         # which is too late to detect a master that never sends its greeting.
-        factory = cast("AutoLoginPBFactory", self.factory)
+        factory = self.factory
+        assert isinstance(factory, AutoLoginPBFactory)
         if factory.loginTimeout is not None:
             self._loginTimeoutCall = factory._reactor.callLater(
                 factory.loginTimeout, self._loginTimedOut
@@ -70,7 +71,10 @@ class _LoginTimeoutBroker(pb.Broker):
         self._loginTimeoutCall = None
         log.msg("Timed out negotiating or logging in to buildmaster; reconnecting")
         assert self.transport is not None
-        cast("ITCPTransport", self.transport).abortConnection()
+        if ITCPTransport.providedBy(self.transport):
+            self.transport.abortConnection()
+        else:
+            self.transport.loseConnection()
 
     def cancelLoginTimeout(self) -> None:
         if self._loginTimeoutCall is not None:
@@ -145,17 +149,15 @@ class AutoLoginPBFactory(PBClientFactory):
         d = self._cbSendUsername(
             root, self._credentials.username, self._credentials.password, self._client
         )
-        d.addCallbacks(
-            self._loginSucceeded,
-            self.failedToGetPerspective,
-            callbackArgs=(broker,),
-            errbackArgs=(broker,),
-        )
+        d.addBoth(self._loginFinished, broker)
+        d.addCallbacks(self.gotPerspective, self.failedToGetPerspective, errbackArgs=(broker,))
         return d
 
-    def _loginSucceeded(self, perspective: RemoteReference, broker: _LoginTimeoutBroker) -> None:
+    def _loginFinished(
+        self, result: RemoteReference | Failure, broker: _LoginTimeoutBroker
+    ) -> RemoteReference | Failure:
         broker.cancelLoginTimeout()
-        self.gotPerspective(perspective)
+        return result
 
     def stopFactory(self) -> None:
         if self._login_d:
