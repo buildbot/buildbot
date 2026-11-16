@@ -29,17 +29,22 @@ jobs:
         include:
           - python-version: "3.9"
             tests: ruff
+            ubuntu-version: "ubuntu-24.04"
           - python-version: "3.14"
             tests: docs
+            ubuntu-version: "ubuntu-latest"
           - python-version: "3.9"
             tests: mypy
+            ubuntu-version: "ubuntu-24.04"
           - python-version: "3.13"
             tests: mypy
-          - python-version: "3.9"
+            ubuntu-version: "ubuntu-latest"
+          - python-version: "3.13"
             tests: prettier
+            ubuntu-version: "ubuntu-latest"
 
     name: ${{ matrix.tests }} / python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    runs-on: "${{ matrix.ubuntu-version }}"
 
     steps:
       - uses: "actions/checkout@v7"
@@ -104,7 +109,7 @@ jobs:
             sqlalchemy: "1.4.52"
 
     name: trial / ${{ matrix.name }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: "actions/checkout@v7"
@@ -129,7 +134,7 @@ jobs:
     needs:
       - lint
     name: dev_virtualenv / python 3.9
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: "actions/checkout@v7"
@@ -226,7 +231,7 @@ jobs:
       - uses: "actions/checkout@v7"
       - uses: "./.github/actions/setup-python-deps"
         with:
-          python-version: "3.9"
+          python-version: "3.13"
 
       - name: "Run tests"
         env:
@@ -250,7 +255,7 @@ jobs:
           - "3.15"
         os:
           - ubuntu-24.04-arm
-          - ubuntu-latest
+          - ubuntu-24.04
           - windows-2022
 
     name: ${{ matrix.os }} / python ${{ matrix.python-version }}
