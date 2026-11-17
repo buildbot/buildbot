@@ -1,0 +1,2 @@
+PB workers now retry connections that stall during protocol negotiation or login, instead of remaining disconnected indefinitely.
+The new ``loginTimeout`` worker option defaults to 60 seconds and can be changed or disabled in ``buildbot.tac``.
