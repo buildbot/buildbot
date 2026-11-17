@@ -93,6 +93,210 @@ class TestGit(
         self.expect_outcome(result=SUCCESS)
         return self.run_step()
 
+    def test_mode_full_sparse_checkout_2_34(self) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clean',
+                sparse_checkout=['src/component'],
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.34.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectListdir(dir='wkdir').files().exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'clone',
+                    'http://github.com/buildbot/buildbot.git',
+                    '.',
+                    '--progress',
+                ],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_mode_full_sparse_checkout_2_35(self) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clean',
+                sparse_checkout=['src/component'],
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.35.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectListdir(dir='wkdir').files().exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'clone',
+                    '--no-checkout',
+                    'http://github.com/buildbot/buildbot.git',
+                    '.',
+                    '--progress',
+                ],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'sparse-checkout', 'set', 'src/component'],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_mode_full_clobber_sparse_checkout_with_filters(self) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clobber',
+                shallow=1,
+                filters=['blob:none'],
+                sparse_checkout=['src/component'],
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.35.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectRmdir(dir='wkdir', log_environ=True, timeout=1200).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'clone',
+                    '--no-checkout',
+                    '--depth',
+                    '1',
+                    '--filter',
+                    'blob:none',
+                    'http://github.com/buildbot/buildbot.git',
+                    '.',
+                    '--progress',
+                ],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'sparse-checkout', 'set', 'src/component'],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_mode_full_clean_sparse_checkout_existing_repo(self) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clean',
+                sparse_checkout=['src/component', 'docs'],
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.35.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'clean', '-f', '-f', '-d']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'fetch',
+                    '-f',
+                    '--progress',
+                    'http://github.com/buildbot/buildbot.git',
+                    'HEAD',
+                ],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'sparse-checkout', 'set', 'src/component', 'docs'],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_mode_full_clean_disable_sparse_checkout_existing_repo(self) -> defer.Deferred[None]:
+        self.setup_step(
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                mode='full',
+                method='clean',
+            )
+        )
+        self.expect_commands(
+            ExpectShell(workdir='wkdir', command=['git', '--version'])
+            .stdout('git version 2.35.0')
+            .exit(0),
+            ExpectStat(file='wkdir/.buildbot-patched', log_environ=True).exit(1),
+            ExpectListdir(dir='wkdir').files(['.git']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'clean', '-f', '-f', '-d']).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=[
+                    'git',
+                    'fetch',
+                    '-f',
+                    '--progress',
+                    'http://github.com/buildbot/buildbot.git',
+                    'HEAD',
+                ],
+            ).exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'config', '--get', '--bool', 'core.sparseCheckout'],
+            )
+            .stdout('true')
+            .exit(0),
+            ExpectShell(
+                workdir='wkdir',
+                command=['git', 'sparse-checkout', 'disable'],
+            ).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'checkout', '-f', 'FETCH_HEAD']).exit(0),
+            ExpectShell(workdir='wkdir', command=['git', 'rev-parse', 'HEAD'])
+            .stdout('f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            .exit(0),
+        )
+        self.expect_outcome(result=SUCCESS)
+        return self.run_step()
+
+    def test_sparse_checkout_invalid(self) -> None:
+        with self.assertRaisesConfigError("Git: sparse_checkout must be a non-empty list of paths"):
+            self.stepClass(
+                repourl='http://github.com/buildbot/buildbot.git',
+                sparse_checkout=[],
+            )
+
     def test_mode_full_filters_2_27(self) -> defer.Deferred[None]:
         self.setup_step(
             self.stepClass(

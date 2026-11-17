@@ -109,6 +109,7 @@ class GitMixin:
         self.supportsSshPrivateKeyAsEnvOption = False
         self.supportsSshPrivateKeyAsConfigOption = False
         self.supportsFilters = False
+        self.supports_sparse_checkout = False
         self.supports_lsremote_symref = False
         self.supports_credential_store = False
 
@@ -139,6 +140,10 @@ class GitMixin:
             self.supportsSshPrivateKeyAsConfigOption = True
         if version >= parse_version("2.27.0"):
             self.supportsFilters = True
+        if version >= parse_version("2.35.0"):
+            # Require 2.35+ so we can rely on the modern sparse-checkout UX and
+            # avoid handling the incompatible sparse-checkout changes introduced then.
+            self.supports_sparse_checkout = True
 
     def adjustCommandParamsForSshPrivateKey(
         self,
