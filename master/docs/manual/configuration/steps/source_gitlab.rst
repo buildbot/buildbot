@@ -20,8 +20,8 @@ for a tutorial example of integrating Buildbot with GitLab.
     Your build worker will need access to the source project of the
     changeset, or it won't be able to check out the source.  This means
     authenticating the build worker via ssh credentials in the usual
-    way, then granting it access [via a GitLab deploy key
-    or GitLab project membership](https://docs.gitlab.com/ee/ssh/).
+    way, then granting it access `via a GitLab deploy key
+    or GitLab project membership <https://docs.gitlab.com/user/ssh/>`_.
     This needs to be done not only for the main git repo, but also for
     each fork that wants to be able to submit merge requests against
     the main repo.
