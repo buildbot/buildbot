@@ -1,0 +1,1 @@
+Fixed the link to the GitLab SSH documentation in the `GitLab` source step docs. It used Markdown link syntax, which does not render in reStructuredText, and pointed to a page that no longer exists.
