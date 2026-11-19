@@ -36,11 +36,11 @@ if TYPE_CHECKING:
 
 @defer.inlineCallbacks
 def getPreviousBuild(
-    master: BuildMaster, build: dict[str, Any]
+    master: BuildMaster, build: dict[str, Any], scheduler_filter: str | None = None
 ) -> InlineCallbacksType[dict[str, Any] | None]:
     builderid = build["builderid"]
     prev_build_number, prev_build_results = yield master.db.builds.getPrevBuild(
-        builderid, build["number"], master.config.reporters_scheduler_filter
+        builderid, build["number"], scheduler_filter
     )
     # If results is None it means that the previous build is incomplete yet.
     if prev_build_number is not None and prev_build_results is not None:
@@ -105,6 +105,7 @@ def getDetailsForBuild(
     want_logs: bool = False,
     add_logs: list[str] | bool | None = None,
     want_logs_content: bool | list[str] = False,
+    scheduler_filter: str | None = None,
 ) -> InlineCallbacksType[Any]:
     buildrequest = yield master.data.get(("buildrequests", build['buildrequestid']))
     buildset = yield master.data.get(("buildsets", buildrequest['buildsetid']))
@@ -129,12 +130,13 @@ def getDetailsForBuild(
         master,
         buildset,
         [build],
-        want_properties,
-        want_steps,
-        want_previous_build,
-        want_logs,
-        add_logs,
-        want_logs_content,
+        want_properties=want_properties,
+        want_steps=want_steps,
+        want_previous_build=want_previous_build,
+        want_logs=want_logs,
+        add_logs=add_logs,
+        want_logs_content=want_logs_content,
+        scheduler_filter=scheduler_filter,
     )
     return ret
 
@@ -180,6 +182,7 @@ def getDetailsForBuilds(
     want_logs: bool = False,
     add_logs: list[str] | bool | None = None,
     want_logs_content: bool | list[str] = False,
+    scheduler_filter: str | None = None,
 ) -> InlineCallbacksType[None]:
     # The master buildbot may have a lot of reporters.
     # Each reporter's generator calls getDetailsForBuilds().
@@ -225,7 +228,8 @@ def getDetailsForBuilds(
         if _builds:
             # Request missing prev_build.
             prev_builds = yield defer.gatherResults(
-                [getPreviousBuild(master, build) for build in _builds], consumeErrors=True
+                [getPreviousBuild(master, build, scheduler_filter) for build in _builds],
+                consumeErrors=True,
             )
             for build, prev_build in zip(_builds, prev_builds):
                 build['prev_build'] = prev_build

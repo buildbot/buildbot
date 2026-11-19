@@ -126,7 +126,7 @@ class ReporterBase(service.BuildbotService):
             assert self.generators is not None
             for g in self.generators:
                 if self._does_generator_want_key(g, key):
-                    if hasattr(g.__class__, "_want_previous_build") and g._want_previous_build():
+                    if hasattr(g, "_want_previous_build") and g._want_previous_build():
                         generators_want_previous_build.append(g)
                     try:
                         report = yield g.generate(self.master, self, key, msg)

@@ -18,12 +18,19 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING
 
+from parameterized import parameterized
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import resultspec
 from buildbot.db import builds
 from buildbot.db.builds import BuildModel
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.test import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
@@ -666,3 +673,84 @@ class Tests(TestReactorMixin, unittest.TestCase):
                 ),
             ],
         )
+
+    adjacent_builds = [
+        (101, 77, 1, SUCCESS, 20),
+        (102, 77, 2, FAILURE, 21),
+        (103, 77, 3, RETRY, 20),
+        (104, 77, 4, SKIPPED, 20),
+        (105, 77, 5, CANCELLED, 20),
+        (106, 77, 6, SUCCESS, 20),
+        (107, 77, 7, CANCELLED, 20),
+        (108, 77, 8, None, 21),
+        (109, 77, 9, WARNINGS, 20),
+        (201, 88, 5, SUCCESS, 20),
+        (202, 88, 7, SUCCESS, 20),
+    ]
+
+    def adjacent_builds_data(self) -> list[Row]:
+        return [
+            fakedb.Builder(id=77, name="b1"),
+            fakedb.Builder(id=88, name="b2"),
+            fakedb.Master(id=88),
+            fakedb.Worker(id=13, name="wrk"),
+            fakedb.Buildset(id=20),
+            fakedb.Buildset(id=21),
+            fakedb.BuildsetProperty(
+                buildsetid=20, property_name="scheduler", property_value='["nightly", "Scheduler"]'
+            ),
+            fakedb.BuildsetProperty(
+                buildsetid=21, property_name="scheduler", property_value='["force", "Scheduler"]'
+            ),
+            *(
+                row
+                for buildid, builderid, number, results, buildsetid in self.adjacent_builds
+                for row in (
+                    fakedb.BuildRequest(id=buildid, buildsetid=buildsetid, builderid=builderid),
+                    fakedb.Build(
+                        id=buildid,
+                        buildrequestid=buildid,
+                        number=number,
+                        masterid=88,
+                        builderid=builderid,
+                        workerid=13,
+                        results=results,
+                    ),
+                )
+            ),
+        ]
+
+    @parameterized.expand([
+        ("skips_retry_skipped_cancelled", 6, None, (2, FAILURE)),
+        ("scheduler_filter", 6, "nightly", (1, SUCCESS)),
+        ("scheduler_filter_prefix", 6, "night", (1, SUCCESS)),
+        ("none", 1, None, (None, None)),
+        ("none_with_scheduler_filter", 2, "force", (None, None)),
+    ])
+    async def test_getPrevBuild(
+        self,
+        name: str,
+        number: int,
+        scheduler_filter: str | None,
+        expected: tuple[int | None, int | None],
+    ) -> None:
+        await self.db.insert_test_data(self.adjacent_builds_data())
+        prev_build = await self.db.builds.getPrevBuild(77, number, scheduler_filter)
+        self.assertEqual(prev_build, expected)
+
+    @parameterized.expand([
+        ("includes_incomplete", 6, None, (108, None)),
+        ("scheduler_filter", 6, "nightly", (109, WARNINGS)),
+        ("none", 9, None, (None, None)),
+        ("none_with_scheduler_filter", 8, "force", (None, None)),
+    ])
+    async def test_getNextBuild(
+        self,
+        name: str,
+        number: int,
+        scheduler_filter: str | None,
+        expected: tuple[int | None, int | None],
+    ) -> None:
+        await self.db.insert_test_data(self.adjacent_builds_data())
+        next_build = await self.db.builds.getNextBuild(77, number, scheduler_filter)
+        self.assertEqual(next_build, expected)

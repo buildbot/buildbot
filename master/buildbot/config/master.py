@@ -237,7 +237,6 @@ class MasterConfig(util.ComparableMixin):
             "logfileName": 'http.log',
         }
         self.services = {}
-        self.reporters_scheduler_filter = None
 
     _known_config_keys = set([
         "buildbotNetUsageData",
@@ -279,7 +278,6 @@ class MasterConfig(util.ComparableMixin):
         "validation",
         "www",
         "workers",
-        "reporters_scheduler_filter",
     ])
     compare_attrs: ClassVar[Sequence[str]] = list(_known_config_keys)
 
@@ -534,8 +532,6 @@ class MasterConfig(util.ComparableMixin):
                 error("revlink must be a callable")
             else:
                 self.revlink = revlink
-
-        copy_str_param('reporters_scheduler_filter')
 
     def load_validation(self, filename: str, config_dict: dict[str, Any]) -> None:
         validation = config_dict.get("validation", {})

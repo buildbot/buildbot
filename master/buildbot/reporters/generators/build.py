@@ -55,12 +55,15 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         add_patch: bool = False,
         report_new: bool = False,
         message_formatter: MessageFormatter | None = None,
+        scheduler_filter: str | None = None,
     ) -> None:
         subject = "Buildbot %(result)s in %(title)s on %(builder)s"
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch)
         self.formatter: MessageFormatter = message_formatter  # type: ignore[assignment]
         if self.formatter is None:
             self.formatter = MessageFormatter()
+
+        self.scheduler_filter = scheduler_filter
 
         if report_new:
             self.wanted_event_keys = [
@@ -85,6 +88,7 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
             want_logs=self.formatter.want_logs,
             add_logs=self.add_logs,
             want_logs_content=self.formatter.want_logs_content,
+            scheduler_filter=self.scheduler_filter,
         )
 
         if not self.is_message_needed_by_props(build):
