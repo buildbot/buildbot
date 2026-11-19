@@ -59,6 +59,24 @@ The Git step takes the following arguments:
    This allows for adding filters like ``--filter "tree:0"`` to speed up clone and fetch operations.
    This requires git version 2.27 or higher.
 
+``sparse_checkout`` (optional, type: ``list``)
+   A list of repository-relative directories to check out with :command:`git sparse-checkout set` in cone mode.
+   When set, Buildbot clones with ``--no-checkout``, configures the sparse directories, then checks out the working tree.
+   Combined with ``filters`` (for example ``['blob:none']``), this can download only the selected directory tree.
+   If the option is later removed, Buildbot disables the sparse checkout it configured.
+   If sparse checkout was set up outside of Buildbot, it is left untouched.
+   This requires git version 2.35 or higher.
+   See `Git's sparse-checkout documentation <https://git-scm.com/docs/git-sparse-checkout/2.37.0>`_
+
+   .. code-block:: python
+
+      steps.Git(
+          repourl='https://example.com/project.git',
+          mode='full', method='clobber', shallow=1,
+          filters=['blob:none'],
+          sparse_checkout=['src/component'],
+      )
+
 ``progress`` (optional)
    Passes the (``--progress``) flag to (:command:`git fetch`).
    This solves issues of long fetches being killed due to lack of output, but requires Git 1.7.2 or later.

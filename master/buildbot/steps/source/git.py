@@ -21,6 +21,7 @@ from typing import cast
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.logger import Logger
 from twisted.python import log
 
 from buildbot import config as bbconfig
@@ -40,9 +41,12 @@ if TYPE_CHECKING:
     from buildbot.process.buildrequest import TempChange
     from buildbot.util.twisted import InlineCallbacksType
 
+twlog = Logger()
+
 
 GIT_HASH_LENGTH = 40
 COMBINE_FILTER_RESERVED_CHARS = frozenset('~!@#$^&*()[]{}\\;",<>?\'+%')
+SPARSE_CHECKOUT_MARKER = 'buildbot.sparseCheckout'
 
 
 def isTrueOrIsExactlyZero(v: Any) -> bool:
@@ -99,6 +103,7 @@ class Git(Source, GitStepMixin):
         tags: bool = False,
         shallow: bool | int = False,
         filters: list[str] | None = None,
+        sparse_checkout: list[str] | None = None,
         progress: bool = True,
         retryFetch: bool = False,
         clobberOnFailure: bool = False,
@@ -126,6 +131,7 @@ class Git(Source, GitStepMixin):
         self.tags = tags
         self.shallow = shallow
         self.filters = filters
+        self.sparse_checkout = sparse_checkout
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
         self.prog = progress
@@ -169,6 +175,12 @@ class Git(Source, GitStepMixin):
                     bbconfig.error(
                         "Git: in mode 'full' shallow only possible with method 'clobber'."
                     )
+        if self.sparse_checkout is not None and (
+            not isinstance(self.sparse_checkout, (list, tuple))
+            or not self.sparse_checkout
+            or any(not isinstance(path, str) or not path for path in self.sparse_checkout)
+        ):
+            bbconfig.error("Git: sparse_checkout must be a non-empty list of paths.")
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
@@ -190,6 +202,13 @@ class Git(Source, GitStepMixin):
 
             if not gitInstalled:
                 raise WorkerSetupError("git is not installed on worker")
+
+            if self.sparse_checkout and not self.supports_sparse_checkout:
+                msg = (
+                    "Git versions < 2.35.0 don't support sparse-checkout; ignoring sparse_checkout"
+                )
+                twlog.warn(msg)
+                yield self.stdio_log.addHeader(msg + "\n")  # type: ignore[attr-defined]
 
             patched = yield self.sourcedirIsPatched()
 
@@ -418,6 +437,35 @@ class Git(Source, GitStepMixin):
             abandonOnFailure=False,
         )
 
+    def _should_sparse_checkout(self) -> bool:
+        return bool(self.sparse_checkout) and self.supports_sparse_checkout
+
+    async def _sparse_checkout(self) -> None:
+        if not self.supports_sparse_checkout:
+            return
+
+        if self.sparse_checkout:
+            await self._dovccmd(['sparse-checkout', 'set', '--cone', *self.sparse_checkout])
+            await self._dovccmd(['config', SPARSE_CHECKOUT_MARKER, 'true'])
+            return
+
+        # Check if we set the sparse-checkout, in which case, disable it.
+        # Else it could have been setup by user.
+        sparse_owned = cast(
+            str,
+            await self._dovccmd(
+                ['config', '--local', '--get', '--bool', SPARSE_CHECKOUT_MARKER],
+                abandonOnFailure=False,
+                collectStdout=True,
+            ),
+        )
+        if sparse_owned.strip() == 'true':
+            await self._dovccmd(['sparse-checkout', 'disable'])
+            await self._dovccmd(
+                ['config', '--local', '--unset', SPARSE_CHECKOUT_MARKER],
+                abandonOnFailure=False,
+            )
+
     @defer.inlineCallbacks
     def _fetch(
         self, _: Any, shallowClone: bool | int, abandonOnFailure: bool = True
@@ -457,6 +505,8 @@ class Git(Source, GitStepMixin):
             res = yield self._dovccmd(command, abandonOnFailure=abandonOnFailure)
             if res != RC_SUCCESS:
                 return res
+
+        yield self._sparse_checkout()
 
         if self.revision:
             rev = self.revision
@@ -498,14 +548,18 @@ class Git(Source, GitStepMixin):
 
         command = ['clone']
         switchToBranch = self.branch != 'HEAD'
+        use_sparse = self._should_sparse_checkout()
+        no_checkout = use_sparse
         if self.supportsBranch and self.branch != 'HEAD':
             if self.branch.startswith('refs/'):  # type: ignore[union-attr]
                 # we can't choose this branch from 'git clone' directly; we
                 # must do so after the clone
-                command += ['--no-checkout']
+                no_checkout = True
             else:
                 switchToBranch = False
                 command += ['--branch', self.branch]  # type: ignore[list-item]
+        if no_checkout:
+            command += ['--no-checkout']
         if shallowClone:
             command += ['--depth', str(int(shallowClone))]
         if self.reference:
@@ -534,6 +588,16 @@ class Git(Source, GitStepMixin):
 
         if switchToBranch:
             res = yield self._fetch(None, shallowClone=shallowClone)
+        elif use_sparse and res == RC_SUCCESS:
+            # Clone used --no-checkout; configure sparse paths then materialize HEAD.
+            yield self._sparse_checkout()
+            rev = self.revision or 'HEAD'
+            res = yield self._dovccmd(['checkout', '-f', rev])
+            if res == RC_SUCCESS and self.branch != 'HEAD':
+                yield self._dovccmd(
+                    ['checkout', '-B', self.branch],  # type: ignore[list-item]
+                    abandonOnFailure=False,
+                )
 
         done = self.stopped or res == RC_SUCCESS  # or shallow clone??
         if self.retry and not done:
@@ -559,8 +623,9 @@ class Git(Source, GitStepMixin):
         if res != RC_SUCCESS:
             return res
 
-        # If revision specified checkout that revision
-        if self.revision:
+        # If revision specified checkout that revision.
+        # Skip when sparse checkout already checked out the revision in _clone.
+        if self.revision and not self._should_sparse_checkout():
             res = yield self._dovccmd(['checkout', '-f', self.revision], shallowClone)  # type: ignore[arg-type]
 
         # init and update submodules, recursively. If there's not recursion
