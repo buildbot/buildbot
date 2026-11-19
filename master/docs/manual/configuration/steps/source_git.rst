@@ -60,10 +60,13 @@ The Git step takes the following arguments:
    This requires git version 2.27 or higher.
 
 ``sparse_checkout`` (optional, type: ``list``)
-   A list of repository-relative paths to check out with :command:`git sparse-checkout set`.
-   When set, Buildbot clones with ``--no-checkout``, configures the sparse paths, then checks out only those paths.
+   A list of repository-relative directories to check out with :command:`git sparse-checkout set` in cone mode.
+   When set, Buildbot clones with ``--no-checkout``, configures the sparse directories, then checks out the working tree.
    Combined with ``filters`` (for example ``['blob:none']``), this can download only the selected directory tree.
+   If the option is later removed, Buildbot disables the sparse checkout it configured.
+   If sparse checkout was set up outside of Buildbot, it is left untouched.
    This requires git version 2.35 or higher.
+   See `Git's sparse-checkout documentation <https://git-scm.com/docs/git-sparse-checkout/2.37.0>`_
 
    .. code-block:: python
 
