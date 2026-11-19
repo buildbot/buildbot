@@ -153,7 +153,7 @@ class TestGit(
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',
-                command=['git', 'sparse-checkout', 'set', 'src/component'],
+                command=['git', 'sparse-checkout', 'set', '--cone', 'src/component'],
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -201,7 +201,7 @@ class TestGit(
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',
-                command=['git', 'sparse-checkout', 'set', 'src/component'],
+                command=['git', 'sparse-checkout', 'set', '--cone', 'src/component'],
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',
@@ -244,7 +244,7 @@ class TestGit(
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',
-                command=['git', 'sparse-checkout', 'set', 'src/component', 'docs'],
+                command=['git', 'sparse-checkout', 'set', '--cone', 'src/component', 'docs'],
             ).exit(0),
             ExpectShell(
                 workdir='wkdir',

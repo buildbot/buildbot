@@ -142,7 +142,8 @@ class GitMixin:
             self.supportsFilters = True
         if version >= parse_version("2.35.0"):
             # Require 2.35+ so we can rely on the modern sparse-checkout UX and
-            # avoid handling the incompatible sparse-checkout changes introduced then.
+            # avoid handling the incompatible sparse-checkout changes introduced then
+            # (no more need for `init`, `--cone` option which is the default for 2.37+).
             self.supports_sparse_checkout = True
 
     def adjustCommandParamsForSshPrivateKey(

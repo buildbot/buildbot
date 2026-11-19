@@ -445,7 +445,7 @@ class Git(Source, GitStepMixin):
             return
 
         if self.sparse_checkout:
-            await self._dovccmd(['sparse-checkout', 'set', *self.sparse_checkout])
+            await self._dovccmd(['sparse-checkout', 'set', '--cone', *self.sparse_checkout])
             await self._dovccmd(['config', SPARSE_CHECKOUT_MARKER, 'true'])
             return
 
