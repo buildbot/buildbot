@@ -46,6 +46,7 @@ twlog = Logger()
 
 GIT_HASH_LENGTH = 40
 COMBINE_FILTER_RESERVED_CHARS = frozenset('~!@#$^&*()[]{}\\;",<>?\'+%')
+SPARSE_CHECKOUT_MARKER = 'buildbot.sparseCheckout'
 
 
 def isTrueOrIsExactlyZero(v: Any) -> bool:
@@ -445,17 +446,25 @@ class Git(Source, GitStepMixin):
 
         if self.sparse_checkout:
             await self._dovccmd(['sparse-checkout', 'set', *self.sparse_checkout])
+            await self._dovccmd(['config', SPARSE_CHECKOUT_MARKER, 'true'])
             return
 
-        # If a previous build enabled sparse-checkout and the option was later
-        # removed, clear it so the full tree is checked out again.
-        sparse_enabled = await self._dovccmd(
-            ['config', '--get', '--bool', 'core.sparseCheckout'],
-            abandonOnFailure=False,
-            collectStdout=True,
+        # Check if we set the sparse-checkout, in which case, disable it.
+        # Else it could have been setup by user.
+        sparse_owned = cast(
+            str,
+            await self._dovccmd(
+                ['config', '--local', '--get', '--bool', SPARSE_CHECKOUT_MARKER],
+                abandonOnFailure=False,
+                collectStdout=True,
+            ),
         )
-        if isinstance(sparse_enabled, str) and sparse_enabled.strip().lower() == 'true':
-            await self._dovccmd(['sparse-checkout', 'disable'], abandonOnFailure=False)
+        if sparse_owned.strip() == 'true':
+            await self._dovccmd(['sparse-checkout', 'disable'])
+            await self._dovccmd(
+                ['config', '--local', '--unset', SPARSE_CHECKOUT_MARKER],
+                abandonOnFailure=False,
+            )
 
     @defer.inlineCallbacks
     def _fetch(
