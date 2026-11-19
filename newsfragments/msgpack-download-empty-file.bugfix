@@ -1,0 +1,1 @@
+Files downloaded to a worker connected with MessagePack are now correctly sent.
