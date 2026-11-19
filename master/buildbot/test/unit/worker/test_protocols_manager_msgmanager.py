@@ -167,6 +167,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('update_upload_directory_write_seq_number', {'op': 'update_upload_directory_write'}),
     ])
     def test_msg_missing_arg(self, name: str, msg: dict[str, Any]) -> None:
+        self.protocol.debug = True
         with capturedLogs() as captured:
             self.protocol.onMessage(msgpack.packb(msg), True)
 
