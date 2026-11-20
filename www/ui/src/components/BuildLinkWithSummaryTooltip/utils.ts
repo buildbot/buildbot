@@ -19,6 +19,8 @@ import {buildbotGetSettings} from 'buildbot-plugin-support';
 import {Build} from 'buildbot-data-js';
 import {fillTemplate, parseTemplate} from '../../util/TemplateFormat';
 
+export const defaultBuildLinkTemplate = '%(prop:branch) (%(build_number))';
+
 export const getBuildLinkDisplayProperties = () => {
   const template = buildbotGetSettings().getStringSetting('Links.build_link_template');
   if (template === '') return [];
@@ -27,22 +29,49 @@ export const getBuildLinkDisplayProperties = () => {
     .map((x) => x.substring(5));
 };
 
-export const formatBuildLinkText = (build: Build): string => {
-  const template = buildbotGetSettings().getStringSetting('Links.build_link_template');
+const getBuildPropertyValue = (build: Build, prop: string): string | null => {
+  const value = build.properties[prop];
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+  const propValue = Array.isArray(value) ? value[0] : value;
+  if (propValue === undefined || propValue === null || propValue === '') {
+    return null;
+  }
+  return `${propValue}`;
+};
+
+export const formatBuildLinkTextWithTemplate = (build: Build, template: string): string => {
   if (template === '') {
     return `${build.number}`;
   }
+
+  if (template === defaultBuildLinkTemplate) {
+    const branch = getBuildPropertyValue(build, 'branch');
+    if (branch === null) {
+      return `${build.number}`;
+    }
+    return `${branch} (${build.number})`;
+  }
+
   const replacements = new Map<string, string>([['build_number', `${build.number}`]]);
   for (const repl of parseTemplate(template).replacements.values()) {
     if (repl.startsWith('prop:')) {
       const prop = repl.substring(5);
-      const value = build.properties[prop];
-      if (value === undefined || value === null || value === '') {
+      const value = getBuildPropertyValue(build, prop);
+      if (value === null) {
         continue;
       }
-      replacements.set(repl, value[0]);
+      replacements.set(repl, value);
     }
   }
 
   return fillTemplate(template, replacements);
+};
+
+export const formatBuildLinkText = (build: Build): string => {
+  return formatBuildLinkTextWithTemplate(
+    build,
+    buildbotGetSettings().getStringSetting('Links.build_link_template'),
+  );
 };
