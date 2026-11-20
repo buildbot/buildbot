@@ -1,0 +1,1 @@
+The grid view now shows both the original build and rebuilds for the same builder and change (:issue:`9307`).
