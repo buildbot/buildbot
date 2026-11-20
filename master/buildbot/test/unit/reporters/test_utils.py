@@ -657,6 +657,9 @@ class TestDataUtils(TestReactorMixin, logging.LoggingMixin, unittest.TestCase):
         ])
         build = yield self.master.data.get(("builds", 24))
         res = yield utils.getPreviousBuild(self.master, build)
+        self.assertIsNone(res)
+        build = yield self.master.data.get(("builds", 23))
+        res = yield utils.getPreviousBuild(self.master, build)
         self.assertEqual(res['buildid'], 22)
 
 
