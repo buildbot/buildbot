@@ -44,6 +44,7 @@ Build Steps
     pyflakes
     sphinx
     pylint
+    pytest
     trial
     remove_pycs
     http_step
