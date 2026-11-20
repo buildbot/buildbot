@@ -49,24 +49,32 @@ class FakeTriggerable:
     brids: dict[int, int] = {}
     exception = False
     never_finish = False
+    complete_events_after_results = False
     master: Any = None
 
     def __init__(self, name: str) -> None:
         self.name = name
 
-    @defer.inlineCallbacks
-    def _finish(self, resultsDeferred: defer.Deferred[Any]) -> InlineCallbacksType[None]:
+    async def _send_complete_events(self, brids: list[int]) -> None:
+        self.master.mq.verifyMessages = False
+        for brid in brids:
+            self.master.mq.callConsumer(
+                ('buildrequests', str(brid), 'complete'), {'buildrequestid': brid}
+            )
+        await self.master.mq.wait_consumed()
+
+    async def _finish(self, resultsDeferred: defer.Deferred[Any]) -> None:
         # Like the real scheduler, mark the buildrequests complete (which is what
         # Trigger._add_results waits for) before the buildset results fire.
         if self.master is not None and self.brids:
             brids = list(self.brids.values())
-            yield self.master.db.buildrequests.completeBuildRequests(brids, self.result)
-            self.master.mq.verifyMessages = False
-            for brid in brids:
-                self.master.mq.callConsumer(
-                    ('buildrequests', str(brid), 'complete'), {'buildrequestid': brid}
-                )
-            yield self.master.mq.wait_consumed()
+            await self.master.db.buildrequests.completeBuildRequests(brids, self.result)
+            if self.complete_events_after_results:
+                # the buildset results fire before the 'complete' events are consumed
+                resultsDeferred.callback((self.result, self.brids))
+                await self._send_complete_events(brids)
+                return
+            await self._send_complete_events(brids)
         resultsDeferred.callback((self.result, self.brids))
 
     def trigger(
@@ -86,7 +94,9 @@ class FakeTriggerable:
             if self.exception:
                 reactor.callLater(0, resultsDeferred.errback, RuntimeError('oh noes'))  # type: ignore[attr-defined]
             elif waited_for:
-                reactor.callLater(0, self._finish, resultsDeferred)  # type: ignore[attr-defined]
+                reactor.callLater(  # type: ignore[attr-defined]
+                    0, lambda: defer.ensureDeferred(self._finish(resultsDeferred))
+                )
             else:
                 reactor.callLater(0, resultsDeferred.callback, (self.result, self.brids))  # type: ignore[attr-defined]
         return (idsDeferred, resultsDeferred)
@@ -527,24 +537,23 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectTriggeredWith(b=(False, [expected_ss], {}))
         yield self.run_step()
 
-    @defer.inlineCallbacks
-    def test_waitForFinish_false_adds_build_urls_on_complete(self) -> InlineCallbacksType[None]:
+    async def test_waitForFinish_false_adds_build_urls_on_complete(self) -> None:
         # Regression for #8204: with waitForFinish=False the step finishes while the
         # child is still pending. Once the buildrequest completes, build URLs must
         # be attached so the web UI stops showing a stale "pending build" count.
-        yield self.setup_step(trigger.Trigger(schedulerNames=['a'], waitForFinish=False))
+        await self.setup_step(trigger.Trigger(schedulerNames=['a'], waitForFinish=False))
         self.expect_outcome(result=SUCCESS, state_string='triggered a')
         self.expectTriggeredWith(a=(False, [], {}))
-        yield self.run_step()
+        await self.run_step()
 
-        yield self.master.db.builds.finishBuild(BRID_TO_BID(11), SUCCESS)
-        yield self.master.db.buildrequests.completeBuildRequests([11], SUCCESS)
+        await self.master.db.builds.finishBuild(BRID_TO_BID(11), SUCCESS)
+        await self.master.db.buildrequests.completeBuildRequests([11], SUCCESS)
         # FakeMQ.produce does not deliver; callConsumer wakes waitUntilEvent.
         self.master.mq.verifyMessages = False
         self.master.mq.callConsumer(('buildrequests', '11', 'complete'), {'buildrequestid': 11})
-        yield self.master.mq.wait_consumed()
+        await self.master.mq.wait_consumed()
 
-        step_data = yield self.master.data.get(('steps', self.get_nth_step(0).stepid))
+        step_data = await self.master.data.get(('steps', self.get_nth_step(0).stepid))
         step_urls = [(url['name'], url['url']) for url in step_data['urls']]
         self.assertIn(
             ('success: A #4011', 'baseurl/#/builders/77/builds/4011'),
@@ -558,6 +567,17 @@ class TestTrigger(TestBuildStepMixin, TestReactorMixin, unittest.TestCase):
         self.expectTriggeredWith(a=(True, [], {}), b=(True, [], {}))
         self.expectTriggeredLinks('a', 'b')
         yield self.run_step()
+
+    async def test_waitForFinish_waits_for_build_urls(self) -> None:
+        # the buildset results may fire before the buildrequest 'complete' events are
+        # consumed; the step must still wait for the build URLs before finishing
+        await self.setup_step(trigger.Trigger(schedulerNames=['a', 'b'], waitForFinish=True))
+        self.scheduler_a.complete_events_after_results = True
+        self.scheduler_b.complete_events_after_results = True
+        self.expect_outcome(result=SUCCESS, state_string='triggered a, b, 2 successes')
+        self.expectTriggeredWith(a=(True, [], {}), b=(True, [], {}))
+        self.expectTriggeredLinks('a', 'b')
+        await self.run_step()
 
     @defer.inlineCallbacks
     def test_waitForFinish_failure(self) -> InlineCallbacksType[None]:
