@@ -243,6 +243,34 @@ describe('GridView', function () {
       testDataResolving([], [], [], [], [], null, null, ['(all)'], [], []);
     });
 
+    it('keeps the original build and rebuilds for the same change and builder', () => {
+      const change = {changeid: 101, ssid: 11, branch: 'master'};
+      const sourcestamps = [{ssid: 11, branch: 'master'}];
+      const buildsets = [
+        {bsid: 2, results: SUCCESS, sourcestamps},
+        {bsid: 1, results: FAILURE, sourcestamps},
+      ];
+      const builder = {builderid: 201};
+      const original = {buildid: 401, buildrequestid: 301, builderid: 201, results: FAILURE};
+      const rebuild = {buildid: 402, buildrequestid: 302, builderid: 201, results: SUCCESS};
+
+      testDataResolving(
+        buildsets,
+        [change],
+        [builder],
+        [
+          {buildrequestid: 302, builderid: 201, buildsetid: 2, results: SUCCESS},
+          {buildrequestid: 301, builderid: 201, buildsetid: 1, results: FAILURE},
+        ],
+        [rebuild, original],
+        null,
+        null,
+        ['(all)', 'master'],
+        [{change, buildsets}],
+        [{builder, builds: [[change.changeid, [rebuild, original]]]}],
+      );
+    });
+
     it('simple builds', () => {
       const buildsets: TestBuildset[] = [
         {
