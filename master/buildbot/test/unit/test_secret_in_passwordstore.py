@@ -109,7 +109,7 @@ class TestSecretInPass(
         )
 
         value = yield self.srvpass.get("secret")
-        self.assertEqual(value, "value1\nvalue2\nvalue3")
+        self.assertEqual(value, "value1\rvalue2\rvalue3")
 
         self.assert_all_commands_ran()
 
@@ -120,13 +120,47 @@ class TestSecretInPass(
         )
 
         value = yield self.srvpass.get("secret")
-        self.assertEqual(value, "value1\nvalue2\nvalue3")
+        self.assertEqual(value, "value1\r\nvalue2\r\nvalue3")
 
         self.assert_all_commands_ran()
 
     @defer.inlineCallbacks
     def test_get_secret_in_pass_not_found(self) -> InlineCallbacksType[None]:
-        self.expect_commands(ExpectMasterShell(['pass', 'secret']).stderr(b"Not found"))
+        self.expect_commands(
+            ExpectMasterShell(['pass', 'secret'])
+            .stderr(b"Error: secret is not in the password store.\n")
+            .exit(1)
+        )
 
         value = yield self.srvpass.get("secret")
         self.assertEqual(value, None)
+
+        self.assert_all_commands_ran()
+
+    async def test_get_secret_in_pass_stderr_on_success(self) -> None:
+        self.expect_commands(
+            ExpectMasterShell(['pass', 'secret'])
+            .stdout(b"value\n")
+            .stderr(b"gpg: WARNING: unsafe permissions on homedir\n")
+        )
+
+        value = await self.srvpass.get("secret")
+        self.assertEqual(value, "value")
+
+        self.assert_all_commands_ran()
+
+    async def test_get_secret_in_pass_strips_trailing_newlines(self) -> None:
+        self.expect_commands(ExpectMasterShell(['pass', 'secret']).stdout(b"value1\nvalue2\r\n\n"))
+
+        value = await self.srvpass.get("secret")
+        self.assertEqual(value, "value1\nvalue2")
+
+        self.assert_all_commands_ran()
+
+    async def test_get_secret_in_pass_empty(self) -> None:
+        self.expect_commands(ExpectMasterShell(['pass', 'secret']).stdout(b"\n"))
+
+        value = await self.srvpass.get("secret")
+        self.assertEqual(value, None)
+
+        self.assert_all_commands_ran()

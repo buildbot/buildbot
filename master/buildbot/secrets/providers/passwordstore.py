@@ -75,24 +75,23 @@ class SecretInPass(SecretProviderBase):
                 collect_stderr=True,
                 stderr_is_error=False,
             )
-            if stderr:
-                log.warn(
-                    "Got stderr while accessing 'pass {entry}': {stderr}",
-                    entry=entry,
-                    stderr=stderr,
-                )
+            stderr_text = stderr.decode("utf-8", "replace").strip()
             if rc != 0:
-                log.error("Got RC != 0 accessing 'pass {entry}' RC = {rc}", entry=entry, rc=rc)
+                # a miss is expected when several secret providers are configured
+                log.info(
+                    "'pass {entry}' exited with code {rc}: {stderr}",
+                    entry=entry,
+                    rc=rc,
+                    stderr=stderr_text,
+                )
                 return None
-
-            secret = "\n".join(output.decode("utf-8", "ignore").rstrip('\r\n').splitlines())
-            if not secret:
-                return None
-            else:
-                return secret
-
+            if stderr_text:
+                log.warn(
+                    "'pass {entry}' succeeded with output on stderr: {stderr}",
+                    entry=entry,
+                    stderr=stderr_text,
+                )
+            return output.decode("utf-8", "ignore").rstrip("\r\n") or None
         except OSError as exception:
-            log.error(
-                "OSError accessing `pass {entry}`: {exception}", entry=entry, exception=exception
-            )
+            log.error("Could not run 'pass {entry}': {exception}", entry=entry, exception=exception)
             return None
