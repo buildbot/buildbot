@@ -23,10 +23,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from twisted.internet import defer
+from twisted.logger import Logger
 
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.util import runprocess
+
+log = Logger()
 
 if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
@@ -65,15 +68,30 @@ class SecretInPass(SecretProviderBase):
         get the value from pass identified by 'entry'
         """
         try:
-            rc, output = yield runprocess.run_process(
+            rc, output, stderr = yield runprocess.run_process(
                 self.master.reactor,
                 ['pass', entry],
                 env=self._env,
-                collect_stderr=False,
-                stderr_is_error=True,
+                collect_stderr=True,
+                stderr_is_error=False,
             )
+            stderr_text = stderr.decode("utf-8", "replace").strip()
             if rc != 0:
+                # a miss is expected when several secret providers are configured
+                log.info(
+                    "'pass {entry}' exited with code {rc}: {stderr}",
+                    entry=entry,
+                    rc=rc,
+                    stderr=stderr_text,
+                )
                 return None
-            return output.decode("utf-8", "ignore").splitlines()[0]
-        except OSError:
+            if stderr_text:
+                log.warn(
+                    "'pass {entry}' succeeded with output on stderr: {stderr}",
+                    entry=entry,
+                    stderr=stderr_text,
+                )
+            return output.decode("utf-8", "ignore").rstrip("\r\n") or None
+        except OSError as exception:
+            log.error("Could not run 'pass {entry}': {exception}", entry=entry, exception=exception)
             return None
