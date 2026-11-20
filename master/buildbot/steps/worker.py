@@ -342,7 +342,7 @@ class CompositeStepMixin:
     def downloadFileContentToWorker(
         self,
         workerdest: str,
-        strfile: str,
+        strfile: str | bytes,
         abandonOnFailure: bool = False,
         mode: int | None = None,
         workdir: str | None = None,
