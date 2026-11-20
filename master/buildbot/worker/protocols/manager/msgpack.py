@@ -72,7 +72,7 @@ def encode_http_authorization_header(name: bytes, password: bytes) -> str:
 
 
 class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
-    debug = True
+    debug = False
 
     def __init__(self) -> None:
         super().__init__()
@@ -250,7 +250,7 @@ class BuildbotWebSocketServerProtocol(WebSocketServerProtocol):
                 raise KeyError('unknown "command_id"')
 
             file_reader = self.command_id_to_reader_map[msg['command_id']]
-            yield file_reader.remote_read(msg['length'])
+            result = yield file_reader.remote_read(msg['length'])
         except Exception as e:
             is_exception = True
             result = str(e)

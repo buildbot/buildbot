@@ -204,7 +204,7 @@ class ConnectionLostError(Exception):
 
 
 class BuildbotWebSocketClientProtocol(WebSocketClientProtocol):
-    debug = True
+    debug = False
     factory: BuildbotWebSocketClientFactory
 
     MessageType = MutableMapping[str, Any]

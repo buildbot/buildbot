@@ -294,6 +294,7 @@ class TestBuildbotWebSocketClientProtocol(command.CommandTestMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_call_keepalive(self) -> InlineCallbacksType[None]:
+        self.protocol.debug = True
         with mock.patch('twisted.python.log.msg') as mock_log:
             yield self.send_message({'op': 'keepalive', 'seq_number': 0})
             mock_log.assert_any_call("Connection keepalive confirmed.")

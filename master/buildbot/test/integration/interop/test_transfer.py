@@ -204,3 +204,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
 class TransferStepsMasterNull(TransferStepsMasterPb):
     proto = "null"
+
+
+class TransferStepsMasterMsgPack(TransferStepsMasterPb):
+    proto = "msgpack"

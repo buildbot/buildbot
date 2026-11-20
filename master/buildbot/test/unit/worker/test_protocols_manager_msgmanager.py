@@ -167,6 +167,7 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         ('update_upload_directory_write_seq_number', {'op': 'update_upload_directory_write'}),
     ])
     def test_msg_missing_arg(self, name: str, msg: dict[str, Any]) -> None:
+        self.protocol.debug = True
         with capturedLogs() as captured:
             self.protocol.onMessage(msgpack.packb(msg), True)
 
@@ -491,10 +492,11 @@ class TestBuildbotWebSocketServerProtocol(unittest.TestCase):
         command_id = "1"
 
         command = mock.Mock(spec=FileReaderImpl)
+        command.remote_read.return_value = b'x'
         self.protocol.command_id_to_reader_map = {command_id: command}
 
         msg: dict[str, Any] = {'op': 'update_read_file', 'length': 1, 'command_id': command_id}
-        expected: dict[str, Any] = {'op': 'response', 'result': None}
+        expected: dict[str, Any] = {'op': 'response', 'result': b'x'}
         yield self.send_msg_check_response(self.protocol, msg, expected)
         command.remote_read.assert_called_once_with(msg['length'])
 
