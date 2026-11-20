@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import os
 
+from packaging.version import Version
 from setuptools import setup
 from setuptools.command.egg_info import egg_info
 from setuptools.command.sdist import sdist
@@ -32,16 +33,16 @@ class our_egg_info(egg_info):
     def run(self) -> None:
         version = self.distribution.get_version()
 
-        # Pin bundle version
+        # Pin bundle version, except for dev builds whose version is not published
 
-        # has to recreate the dict as it's immutable
-        metadata = self.distribution.metadata
-        metadata.extras_require = dict(metadata.extras_require)
+        if not Version(version).is_devrelease:
+            # has to recreate the dict as it's immutable
+            metadata = self.distribution.metadata
+            metadata.extras_require = dict(metadata.extras_require)
 
-        bundle_version = version.split("-", 1)[0]
-        metadata.extras_require['bundle'] = [
-            f"{package}=={bundle_version}" for package in metadata.extras_require['bundle']
-        ]
+            metadata.extras_require['bundle'] = [
+                f"{package}=={version}" for package in metadata.extras_require['bundle']
+            ]
         super().run()
 
 
