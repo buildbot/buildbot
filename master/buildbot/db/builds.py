@@ -25,6 +25,9 @@ from twisted.internet import defer
 
 from buildbot.db import NULL
 from buildbot.db import base
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
 from buildbot.util import epoch2datetime
 from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
@@ -162,6 +165,79 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             offset += increment
 
         return rv
+
+    def _adjacent_build_query_base(
+        self,
+        builderid: int,
+        scheduler_filter: str | None,
+    ) -> sa.Select[Any]:
+        builds_tbl = self.db.model.builds
+        from_clause: sa.sql.expression.FromClause = builds_tbl
+        whereclause = (builds_tbl.c.builderid == builderid) & sa.or_(
+            builds_tbl.c.results.is_(None),
+            (builds_tbl.c.results != RETRY)
+            & (builds_tbl.c.results != SKIPPED)
+            & (builds_tbl.c.results != CANCELLED),
+        )
+        if scheduler_filter:
+            buildrequests_tbl = self.db.model.buildrequests
+            buildset_properties_tbl = self.db.model.buildset_properties
+            from_clause = builds_tbl.join(
+                buildrequests_tbl,
+                buildrequests_tbl.c.id == builds_tbl.c.buildrequestid,
+            ).join(
+                buildset_properties_tbl,
+                buildset_properties_tbl.c.buildsetid == buildrequests_tbl.c.buildsetid,
+            )
+            whereclause = (
+                whereclause
+                & (buildset_properties_tbl.c.property_name == "scheduler")
+                # buildset_properties_tbl.c.property_value is a tuple '["name...", "Scheduler"]'
+                & buildset_properties_tbl.c.property_value.startswith(f'["{scheduler_filter}')
+            )
+        return builds_tbl.select().select_from(from_clause).where(whereclause)
+
+    def getPrevBuild(
+        self, builderid: int, number: int, scheduler_filter: str | None = None
+    ) -> defer.Deferred[tuple[int | None, int | None]]:
+        def thd(conn: sa.engine.Connection) -> tuple[int | None, int | None]:
+            builds_tbl = self.db.model.builds
+            q = (
+                self
+                ._adjacent_build_query_base(
+                    builderid,
+                    scheduler_filter,
+                )
+                .where(builds_tbl.c.number < number)
+                .order_by(sa.desc(builds_tbl.c.number))
+                .limit(1)
+            )
+
+            row = conn.execute(q).first()
+            return (row.number, row.results) if row is not None else (None, None)
+
+        return self.db.pool.do(thd)
+
+    def getNextBuild(
+        self, builderid: int, number: int, scheduler_filter: str | None = None
+    ) -> defer.Deferred[tuple[int | None, int | None]]:
+        def thd(conn: sa.engine.Connection) -> tuple[int | None, int | None]:
+            builds_tbl = self.db.model.builds
+            q = (
+                self
+                ._adjacent_build_query_base(
+                    builderid,
+                    scheduler_filter,
+                )
+                .where(builds_tbl.c.number > number)
+                .order_by(builds_tbl.c.number)
+                .limit(1)
+            )
+
+            row = conn.execute(q).first()
+            return (row.id, row.results) if row is not None else (None, None)
+
+        return self.db.pool.do(thd)
 
     def getBuildsForChange(self, changeid: int) -> defer.Deferred[list[BuildModel]]:
         assert changeid > 0
