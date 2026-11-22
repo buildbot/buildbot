@@ -22,7 +22,7 @@ from typing import Any
 
 from buildbot.config.errors import ConfigErrors
 from buildbot.config.master import FileLoader
-from buildbot.scripts.base import getConfigFileFromTac
+from buildbot.scripts.base import getConfigFromTacForCheckConfig
 from buildbot.util import in_reactor
 
 
@@ -47,13 +47,13 @@ def checkconfig(config: dict[str, Any]) -> int:
     configFile = config.get('configFile', os.getcwd())
 
     if os.path.isdir(configFile):
-        basedir = configFile
+        tacdir = configFile
         try:
-            configFile = getConfigFileFromTac(basedir, quiet=quiet)
+            basedir, configFile = getConfigFromTacForCheckConfig(tacdir, quiet=quiet)
         except Exception:
             if not quiet:
                 # the exception is already printed in base.py
-                print(f"Unable to load 'buildbot.tac' from '{basedir}':")
+                print(f"Unable to load 'buildbot.tac' from '{tacdir}':")
             return 1
     else:
         basedir = os.getcwd()
