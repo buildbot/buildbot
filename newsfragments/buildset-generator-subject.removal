@@ -1,0 +1,1 @@
+`BuildSetStatusGenerator` no longer accepts the ``subject`` argument, which was silently ignored. Configure the subject in the message formatter instead.

@@ -51,7 +51,6 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         builders: list[str] | None = None,
         schedulers: list[str] | None = None,
         branches: list[str] | None = None,
-        subject: str | None = None,
         add_logs: Any = None,
         add_patch: bool = False,
         message_formatter: MessageFormatter | None = None,
