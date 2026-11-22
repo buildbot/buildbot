@@ -1,0 +1,1 @@
+`BuildSetCombinedStatusGenerator` no longer fails with a ``KeyError`` when used with `MessageFormatterEmpty`.
