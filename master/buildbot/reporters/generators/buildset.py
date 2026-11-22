@@ -57,8 +57,9 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
     ) -> None:
         subject = "Buildbot %(result)s in %(title)s on %(builder)s"
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch)
-        self.formatter: MessageFormatter = message_formatter  # type: ignore[assignment]
-        if self.formatter is None:
+        if message_formatter is not None:
+            self.formatter = message_formatter
+        else:
             self.formatter = MessageFormatter()
 
     @defer.inlineCallbacks
