@@ -31,6 +31,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.warnings import DeprecatedApiWarning
 
 if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
@@ -228,6 +230,19 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
                 'logs': [],
             },
         )
+
+    async def test_generate_complete_add_logs(self) -> None:
+        with assertProducesWarnings(
+            DeprecatedApiWarning,
+            message_pattern=".*argument add_logs have been deprecated.*",
+        ):
+            g, _, buildset = await self.setup_generator(add_logs=True)
+
+        report = await self.generate(g, ('buildsets', 98, 'complete'), buildset)
+
+        assert report is not None
+        self.assertEqual(report['logs'][0]['logid'], 60)
+        self.assertIn("log with", report['logs'][0]['content']['content'])
 
     async def test_generate_complete_formatter_without_properties_scheduler_filter(
         self,

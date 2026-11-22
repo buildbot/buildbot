@@ -73,6 +73,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
             want_steps=self.formatter.want_steps,
             want_previous_build=self._want_previous_build(),
             want_logs=self.formatter.want_logs,
+            add_logs=self.add_logs,
             want_logs_content=self.formatter.want_logs_content,
         )
 
