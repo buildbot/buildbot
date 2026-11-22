@@ -1,0 +1,1 @@
+`SecretInPass` no longer fails to read a secret when ``pass`` writes to stderr (eg. when its lock file disappears during the call) (:issue:`9034`).

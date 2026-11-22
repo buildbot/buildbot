@@ -1,0 +1,1 @@
+`SecretInPass` now supports multiline secrets by returning the whole password store entry, with trailing newlines removed, instead of only its first line (:issue:`9034`).
