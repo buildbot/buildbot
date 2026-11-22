@@ -23,6 +23,7 @@ from unittest import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.config.errors import capture_config_errors
 from buildbot.process.results import FAILURE
 from buildbot.reporters.base import ReporterBase
 from buildbot.reporters.generators.build import BuildStatusGenerator
@@ -92,8 +93,13 @@ class TestReporterBase(
         return gen
 
     def test_check_config_raises_error_when_generators_not_list(self) -> None:
-        with self.assertRaisesConfigError('generators argument must be a list'):
+        with self.assertRaisesConfigError('ReporterBase: generators argument must be a list'):
             ReporterBase(generators='abc')  # type: ignore[abstract]
+
+    def test_check_config_collects_error_when_generators_not_list(self) -> None:
+        with capture_config_errors() as errors:
+            ReporterBase(generators='abc')  # type: ignore[abstract]
+        self.assertConfigError(errors, 'ReporterBase: generators argument must be a list')
 
     @defer.inlineCallbacks
     def test_buildMessage_nominal(self) -> InlineCallbacksType[None]:

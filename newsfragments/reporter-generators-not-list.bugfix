@@ -1,0 +1,1 @@
+Reporters no longer crash when ``generators`` is not a list.
