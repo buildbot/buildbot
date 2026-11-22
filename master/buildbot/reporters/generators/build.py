@@ -58,8 +58,9 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
     ) -> None:
         subject = "Buildbot %(result)s in %(title)s on %(builder)s"
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch)
-        self.formatter: MessageFormatter = message_formatter  # type: ignore[assignment]
-        if self.formatter is None:
+        if message_formatter is not None:
+            self.formatter = message_formatter
+        else:
             self.formatter = MessageFormatter()
 
         if report_new:
@@ -79,7 +80,7 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         yield utils.getDetailsForBuild(
             master,
             build,
-            want_properties=self.formatter.want_properties,
+            want_properties=self._want_properties(self.formatter),
             want_steps=self.formatter.want_steps,
             want_previous_build=want_previous_build,
             want_logs=self.formatter.want_logs,
@@ -120,11 +121,13 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         end_formatter: MessageFormatterBase | None = None,
     ) -> None:
         super().__init__('all', tags, builders, schedulers, branches, None, add_logs, add_patch)
-        self.start_formatter: MessageFormatterBase = start_formatter  # type: ignore[assignment]
-        if self.start_formatter is None:
+        if start_formatter is not None:
+            self.start_formatter = start_formatter
+        else:
             self.start_formatter = MessageFormatterRenderable('Build started.')
-        self.end_formatter: MessageFormatterBase = end_formatter  # type: ignore[assignment]
-        if self.end_formatter is None:
+        if end_formatter is not None:
+            self.end_formatter = end_formatter
+        else:
             self.end_formatter = MessageFormatterRenderable('Build done.')
 
     @defer.inlineCallbacks
@@ -139,7 +142,7 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         yield utils.getDetailsForBuild(
             master,
             build,
-            want_properties=formatter.want_properties,
+            want_properties=self._want_properties(formatter),
             want_steps=formatter.want_steps,
             want_logs=formatter.want_logs,
             add_logs=self.add_logs,

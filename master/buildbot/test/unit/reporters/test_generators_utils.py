@@ -80,7 +80,7 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
         self.assertEqual(
             g.generate_name(),
             'BuildStatusGeneratorMixin_tags_tag1+tag2_builders_b1+b2_'
-            + 'schedulers_s1+s2_branches_b1+b2failing_passing_warnings',
+            + 'schedulers_s1+s2_branches_b1+b2_failing_passing_warnings',
         )
 
     @parameterized.expand([

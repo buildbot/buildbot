@@ -292,7 +292,7 @@ class MessageFormatterEmpty(MessageFormatterBase):
     def format_message_for_buildset(
         self, master: Any, buildset: Any, builds: Any, **kwargs: Any
     ) -> dict[str, Any]:
-        return {"body": None, "type": "plain", "subject": None}
+        return {"body": None, "type": "plain", "subject": None, "extra_info": None}
 
 
 class MessageFormatterFunctionRaw(MessageFormatterBase):

@@ -54,8 +54,9 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
         formatter: MessageFormatterRenderable | None = None,
     ) -> None:
         super().__init__('all', tags, builders, schedulers, branches, None, None, add_patch)
-        self.formatter: MessageFormatterRenderable = formatter  # type: ignore[assignment]
-        if self.formatter is None:
+        if formatter is not None:
+            self.formatter = formatter
+        else:
             self.formatter = MessageFormatterRenderable('Build pending.')
 
     @defer.inlineCallbacks

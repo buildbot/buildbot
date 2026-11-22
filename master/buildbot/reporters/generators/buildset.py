@@ -51,15 +51,15 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         builders: list[str] | None = None,
         schedulers: list[str] | None = None,
         branches: list[str] | None = None,
-        subject: str | None = None,
         add_logs: Any = None,
         add_patch: bool = False,
         message_formatter: MessageFormatter | None = None,
     ) -> None:
         subject = "Buildbot %(result)s in %(title)s on %(builder)s"
         super().__init__(mode, tags, builders, schedulers, branches, subject, add_logs, add_patch)
-        self.formatter: MessageFormatter = message_formatter  # type: ignore[assignment]
-        if self.formatter is None:
+        if message_formatter is not None:
+            self.formatter = message_formatter
+        else:
             self.formatter = MessageFormatter()
 
     @defer.inlineCallbacks
@@ -70,10 +70,11 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         res = yield utils.getDetailsForBuildset(
             master,
             bsid,
-            want_properties=self.formatter.want_properties,
+            want_properties=self._want_properties(self.formatter),
             want_steps=self.formatter.want_steps,
             want_previous_build=self._want_previous_build(),
             want_logs=self.formatter.want_logs,
+            add_logs=self.add_logs,
             want_logs_content=self.formatter.want_logs_content,
         )
 

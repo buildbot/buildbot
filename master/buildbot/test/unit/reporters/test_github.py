@@ -422,6 +422,25 @@ class TestGitHubStatusPushURL(TestReactorMixin, unittest.TestCase, ReporterTestM
         build['results'] = FAILURE
         yield self.sp._got_event(('builds', 20, 'finished'), build)  # type: ignore[arg-type]
 
+    async def test_project_is_url(self) -> None:
+        self.reporter_test_project = 'https://github.com/buildbot3/buildbot3.git'
+        self.reporter_test_repo = 'https://github.com/buildbot3/buildbot3.git'
+
+        build = await self.insert_build_new()
+        self._http.expect(
+            'post',
+            '/repos/buildbot3/buildbot3/statuses/d34db33fd43db33f',
+            json={
+                'state': 'pending',
+                'target_url': 'http://localhost:8080/#/builders/79/builds/0',
+                'description': 'Build started.',
+                'context': 'buildbot/Builder0',
+            },
+            headers={'Authorization': 'token XXYYZZ'},
+        )
+
+        await self.sp._got_event(('builds', 20, 'new'), build)  # type: ignore[arg-type]
+
 
 class TestGitHubCommentPush(TestGitHubStatusPush):
     def createService(self) -> GitHubCommentPush:

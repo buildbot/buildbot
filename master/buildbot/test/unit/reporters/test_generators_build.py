@@ -267,6 +267,18 @@ class TestBuildGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase,
             },
         )
 
+    async def test_generate_finished_formatter_without_properties_scheduler_filter(
+        self,
+    ) -> None:
+        g, build, _ = await self.setup_generator(schedulers=['checkin'])
+        g.formatter.want_properties = False
+        build['properties'] = {}
+
+        report = await self.generate(g, ('builds', 123, 'finished'), build)
+
+        self.assertIsNotNone(report)
+        self.assertEqual(build['properties']['scheduler'][0], 'checkin')
+
     @defer.inlineCallbacks
     def test_generate_finished_non_matching_builder(self) -> InlineCallbacksType[None]:
         g, build, _ = yield self.setup_generator(builders=['non-matched'])

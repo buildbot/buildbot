@@ -1,0 +1,1 @@
+`BuildSetStatusGenerator` no longer ignores its deprecated ``add_logs`` argument.

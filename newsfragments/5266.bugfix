@@ -1,0 +1,1 @@
+`GitHubStatusPush` and `GitHubCommentPush` no longer fail when the change source project contains several ``/`` (:issue:`5266`).

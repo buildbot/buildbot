@@ -13,17 +13,6 @@ a live status notification for both build start and completion,
 
 The following parameters are supported:
 
-``subject``
-    (string, optional).
-
-    Deprecated since Buildbot 3.5.
-    Please use the ``subject`` argument of the ``message_formatter`` passed to the generator.
-
-    A string to be used as the subject line of the message.
-    ``%(builder)s`` will be replaced with the name of the builder which provoked the message.
-    ``%(result)s`` will be replaced with the name of the result of the build.
-    ``%(title)s`` and ``%(projectName)s`` will be replaced with the title of the Buildbot instance.
-
 ``mode``
     (list of strings or a string, optional).
     Defines the cases when a message should be sent.

@@ -189,7 +189,7 @@ class GitHubStatusPush(ReporterBase):
         repo_name = None
         project = sourcestamp['project']
         repository = sourcestamp['repository']
-        if project and "/" in project:
+        if project and project.count("/") == 1:
             repo_owner, repo_name = project.split('/')
         elif repository:
             giturl = giturlparse(repository)

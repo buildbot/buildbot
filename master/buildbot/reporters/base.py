@@ -52,7 +52,8 @@ class ReporterBase(service.BuildbotService):
 
     def checkConfig(self, generators: list[Any]) -> None:  # type: ignore[override]
         if not isinstance(generators, list):
-            config.error('{}: generators argument must be a list')
+            config.error(f'{self.__class__.__name__}: generators argument must be a list')
+            generators = []
 
         for g in generators:
             g.check()
