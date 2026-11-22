@@ -69,7 +69,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         res = yield utils.getDetailsForBuildset(
             master,
             bsid,
-            want_properties=self.formatter.want_properties,
+            want_properties=self._want_properties(self.formatter),
             want_steps=self.formatter.want_steps,
             want_previous_build=self._want_previous_build(),
             want_logs=self.formatter.want_logs,

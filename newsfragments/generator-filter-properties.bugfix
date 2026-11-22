@@ -1,0 +1,1 @@
+`BuildStatusGenerator`, `BuildStartEndStatusGenerator` and `BuildSetStatusGenerator` now fetch build properties when ``schedulers`` or ``branches`` filters are set, even if the message formatter has ``want_properties=False`` (otherwise, reports were not generated).

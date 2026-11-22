@@ -229,6 +229,17 @@ class TestBuildSetGenerator(TestBuildSetGeneratorBase):
             },
         )
 
+    async def test_generate_complete_formatter_without_properties_scheduler_filter(
+        self,
+    ) -> None:
+        g, _, buildset = await self.setup_generator(schedulers=['checkin'])
+        g.formatter.want_properties = False
+
+        report = await self.generate(g, ('buildsets', 98, 'complete'), buildset)
+
+        assert report is not None
+        self.assertEqual(report['builds'][0]['properties']['scheduler'][0], 'checkin')
+
     @defer.inlineCallbacks
     def test_generate_complete_no_builds(self) -> InlineCallbacksType[None]:
         g, _, buildset = yield self.setup_generator(insert_build=False)

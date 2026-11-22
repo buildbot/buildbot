@@ -79,7 +79,7 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         yield utils.getDetailsForBuild(
             master,
             build,
-            want_properties=self.formatter.want_properties,
+            want_properties=self._want_properties(self.formatter),
             want_steps=self.formatter.want_steps,
             want_previous_build=want_previous_build,
             want_logs=self.formatter.want_logs,
@@ -139,7 +139,7 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         yield utils.getDetailsForBuild(
             master,
             build,
-            want_properties=formatter.want_properties,
+            want_properties=self._want_properties(formatter),
             want_steps=formatter.want_steps,
             want_logs=formatter.want_logs,
             add_logs=self.add_logs,

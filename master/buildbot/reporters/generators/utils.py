@@ -35,6 +35,7 @@ from buildbot.warnings import warn_deprecated
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.reporters.message import MessageFormatterBase
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -121,6 +122,9 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             name += "_branches_" + "+".join(self.branches)
         name += "_".join(self.mode)
         return name
+
+    def _want_properties(self, formatter: MessageFormatterBase) -> bool:
+        return formatter.want_properties or self.schedulers is not None or self.branches is not None
 
     def is_message_needed_by_props(self, build: Any) -> bool:
         builder = build['builder']
