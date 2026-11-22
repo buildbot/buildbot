@@ -120,7 +120,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             name += "_schedulers_" + "+".join(self.schedulers)
         if self.branches is not None:
             name += "_branches_" + "+".join(self.branches)
-        name += "_".join(self.mode)
+        name += "_" + "_".join(self.mode)
         return name
 
     def _want_properties(self, formatter: MessageFormatterBase) -> bool:
