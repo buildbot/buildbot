@@ -148,14 +148,23 @@ export function resolveGridData(
           continue;
         }
 
+        const changeId = change.change.changeid;
         const builderInfo = buildersById.get(builder.builderid);
         if (builderInfo === undefined) {
           buildersById.set(builder.builderid, {
             builder: builder,
-            buildsByChangeId: new Map<number, Build[]>([[change.change.changeid, builds]]),
+            buildsByChangeId: new Map<number, Build[]>([[changeId, builds]]),
           });
+          continue;
+        }
+
+        const buildsForChange = builderInfo.buildsByChangeId.get(changeId);
+        if (buildsForChange === undefined) {
+          builderInfo.buildsByChangeId.set(changeId, builds);
         } else {
-          builderInfo.buildsByChangeId.set(change.change.changeid, builds);
+          for (const build of builds) {
+            buildsForChange.push(build);
+          }
         }
       }
     }
