@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -33,6 +32,13 @@ from .utils import BuildStatusGeneratorMixin
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.data.buildsets import BuildSetData
+    from buildbot.master import BuildMaster
+    from buildbot.reporters.base import ReporterBase
+    from buildbot.reporters.message import ExtraInfo
+    from buildbot.reporters.message import MessageBody
+    from buildbot.reporters.utils import Report
+    from buildbot.reporters.utils import ReportBuild
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -51,7 +57,7 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
         builders: list[str] | None = None,
         schedulers: list[str] | None = None,
         branches: list[str] | None = None,
-        add_logs: Any = None,
+        add_logs: list[str] | bool | None = None,
         add_patch: bool = False,
         message_formatter: MessageFormatter | None = None,
     ) -> None:
@@ -64,8 +70,12 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
 
     @defer.inlineCallbacks
     def generate(
-        self, master: Any, reporter: Any, key: Any, message: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        key: tuple[str, ...],
+        message: BuildSetData,
+    ) -> InlineCallbacksType[Report | None]:
         bsid = message['bsid']
         res = yield utils.getDetailsForBuildset(
             master,
@@ -97,19 +107,19 @@ class BuildSetStatusGenerator(BuildStatusGeneratorMixin):
     def buildset_message(
         self,
         formatter: MessageFormatter,
-        master: Any,
-        reporter: Any,
-        builds: Any,
-        buildset: Any,
-    ) -> InlineCallbacksType[Any]:
+        master: BuildMaster,
+        reporter: ReporterBase,
+        builds: list[ReportBuild],
+        buildset: BuildSetData,
+    ) -> InlineCallbacksType[Report]:
         # The given builds must refer to builds from a single buildset
         patches = []
         logs = []
-        body = None
+        body: MessageBody = None
         subject = None
         msgtype = None
-        extra_info = None
-        users = set()
+        extra_info: ExtraInfo | None = None
+        users: set[str] = set()
         results = buildset["results"]
         for build in builds:
             patches.extend(self._get_patches_for_build(build))
@@ -176,8 +186,12 @@ class BuildSetCombinedStatusGenerator:
 
     @defer.inlineCallbacks
     def generate(
-        self, master: Any, reporter: Any, key: Any, message: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        key: tuple[str, ...],
+        message: BuildSetData,
+    ) -> InlineCallbacksType[Report | None]:
         bsid = message["bsid"]
 
         res = yield utils.getDetailsForBuildset(
@@ -206,11 +220,11 @@ class BuildSetCombinedStatusGenerator:
     def buildset_message(
         self,
         formatter: MessageFormatterBase,
-        master: Any,
-        reporter: Any,
-        buildset: Any,
-        builds: Any,
-    ) -> InlineCallbacksType[Any]:
+        master: BuildMaster,
+        reporter: ReporterBase,
+        buildset: BuildSetData,
+        builds: list[ReportBuild],
+    ) -> InlineCallbacksType[Report]:
         buildmsg = yield formatter.format_message_for_buildset(
             master, buildset, builds, is_buildset=True, mode=("passing",), users=[]
         )

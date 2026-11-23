@@ -41,8 +41,11 @@ if TYPE_CHECKING:
     from buildbot.data.builders import BuilderData
     from buildbot.data.buildsets import BuildSetData
     from buildbot.data.logchunks import LogChunkData
+    from buildbot.data.sourcestamps import PatchData
     from buildbot.db.buildrequests import BuildRequestModel
     from buildbot.master import BuildMaster
+    from buildbot.reporters.message import ExtraInfo
+    from buildbot.reporters.message import MessageBody
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -88,6 +91,21 @@ class PendingBuild(TypedDict):
 class BuildsetDetails(TypedDict):
     buildset: BuildSetData
     builds: list[ReportBuild]
+
+
+class Report(TypedDict):
+    body: MessageBody | bytes
+    subject: str | None
+    type: str | None
+    results: int | None
+    builds: list[ReportBuild] | list[PendingBuild] | None
+    buildset: BuildSetData | None
+    users: list[str]
+    patches: list[PatchData] | None
+    logs: list[ReportLog] | None
+    extra_info: NotRequired[ExtraInfo | None]
+    # only set by WorkerMissingGenerator
+    worker: NotRequired[str]
 
 
 @defer.inlineCallbacks

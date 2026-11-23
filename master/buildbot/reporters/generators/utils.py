@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -35,7 +34,16 @@ from buildbot.warnings import warn_deprecated
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.data.sourcestamps import PatchData
+    from buildbot.master import BuildMaster
+    from buildbot.reporters.base import ReporterBase
+    from buildbot.reporters.message import ExtraInfo
+    from buildbot.reporters.message import MessageBody
     from buildbot.reporters.message import MessageFormatterBase
+    from buildbot.reporters.utils import PendingBuild
+    from buildbot.reporters.utils import Report
+    from buildbot.reporters.utils import ReportBuild
+    from buildbot.reporters.utils import ReportLog
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -69,7 +77,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         schedulers: list[str] | None,
         branches: list[str] | None,
         subject: str | None,
-        add_logs: Any,
+        add_logs: list[str] | bool | None,
         add_patch: bool,
     ) -> None:
         self.mode = self._compute_shortcut_modes(mode)
@@ -126,7 +134,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
     def _want_properties(self, formatter: MessageFormatterBase) -> bool:
         return formatter.want_properties or self.schedulers is not None or self.branches is not None
 
-    def is_message_needed_by_props(self, build: Any) -> bool:
+    def is_message_needed_by_props(self, build: ReportBuild | PendingBuild) -> bool:
         builder = build['builder']
         scheduler = build['properties'].get('scheduler', [None])[0]
         branch = build['properties'].get('branch', [None])[0]
@@ -141,7 +149,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             return False
         return True
 
-    def is_message_needed_by_results(self, build: Any) -> bool:
+    def is_message_needed_by_results(self, build: ReportBuild) -> bool:
         results = build['results']
         prev = build.get('prev_build')
         prev_result = prev.get('results') if prev else None
@@ -185,7 +193,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             return new_subject
         return subject
 
-    def _merge_body(self, body: Any, new_body: Any) -> tuple[Any, bool]:
+    def _merge_body(self, body: MessageBody, new_body: MessageBody) -> tuple[MessageBody, bool]:
         if body is None:
             return new_body, True
         if new_body is None:
@@ -203,7 +211,9 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
         )
         return body, False
 
-    def _merge_extra_info(self, info: Any, new_info: Any) -> tuple[Any, bool]:
+    def _merge_extra_info(
+        self, info: ExtraInfo | None, new_info: ExtraInfo | None
+    ) -> tuple[ExtraInfo | None, bool]:
         if info is None:
             return new_info, True
         if new_info is None:
@@ -221,7 +231,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
         return info, True
 
-    def _get_patches_for_build(self, build: Any) -> list[Any]:
+    def _get_patches_for_build(self, build: ReportBuild | PendingBuild) -> list[PatchData]:
         if not self.add_patch:
             return []
 
@@ -231,8 +241,12 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
 
     @defer.inlineCallbacks
     def build_message(
-        self, formatter: Any, master: Any, reporter: Any, build: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        formatter: MessageFormatterBase,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        build: ReportBuild,
+    ) -> InlineCallbacksType[Report]:
         patches = self._get_patches_for_build(build)
 
         logs = self._get_logs_for_build(build)
@@ -267,7 +281,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
             "extra_info": buildmsg["extra_info"],
         }
 
-    def _get_logs_for_build(self, build: Any) -> list[Any]:
+    def _get_logs_for_build(self, build: ReportBuild) -> list[ReportLog]:
         if 'steps' not in build:
             return []
 
@@ -291,7 +305,7 @@ class BuildStatusGeneratorMixin(util.ComparableMixin):
                 else:
                     config.error(f"mode {m} is not a valid mode")
 
-    def _verify_list_or_none_param(self, name: str, param: Any) -> None:
+    def _verify_list_or_none_param(self, name: str, param: object) -> None:
         if param is not None and not isinstance(param, list):
             config.error(f"{name} must be a list or None")
 

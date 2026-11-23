@@ -202,6 +202,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.reporters.utils.BuildsetDetails',
             'buildbot.reporters.utils.PendingBuild',
             'buildbot.reporters.utils.PendingBuildRequest',
+            'buildbot.reporters.utils.Report',
             'buildbot.reporters.utils.ReportBuild',
             'buildbot.reporters.utils.ReportLog',
             'buildbot.reporters.utils.ReportStep',

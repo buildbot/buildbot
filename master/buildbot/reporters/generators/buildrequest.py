@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -35,6 +34,11 @@ from .utils import BuildStatusGeneratorMixin
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.data.buildrequests import BuildRequestData
+    from buildbot.master import BuildMaster
+    from buildbot.reporters.base import ReporterBase
+    from buildbot.reporters.utils import PendingBuild
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -60,23 +64,29 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
             self.formatter = MessageFormatterRenderable('Build pending.')
 
     @defer.inlineCallbacks
-    def partial_build_dict(self, master: Any, buildrequest: Any) -> InlineCallbacksType[Any]:
+    def partial_build_dict(
+        self, master: BuildMaster, buildrequest: BuildRequestData
+    ) -> InlineCallbacksType[PendingBuild]:
         brdict = yield master.db.buildrequests.getBuildRequest(buildrequest['buildrequestid'])
 
         props = Properties()
-        buildrequest = yield BuildRequest.fromBrdict(master, brdict)
+        request = yield BuildRequest.fromBrdict(master, brdict)
         builder = yield master.botmaster.getBuilderById(brdict.builderid)
 
-        yield Build.setup_properties_known_before_build_starts(props, [buildrequest], builder)
-        Build.setupBuildProperties(props, [buildrequest])
+        yield Build.setup_properties_known_before_build_starts(props, [request], builder)
+        Build.setupBuildProperties(props, [request])
 
         bdict = yield utils.get_pending_build(master, brdict, props.asDict())
         return bdict
 
     @defer.inlineCallbacks
     def generate(
-        self, master: Any, reporter: Any, key: Any, buildrequest: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        key: tuple[str, ...],
+        buildrequest: BuildRequestData,
+    ) -> InlineCallbacksType[Report | None]:
         build = yield self.partial_build_dict(master, buildrequest)
         _, _, event = key
         if event == 'cancel':
@@ -90,9 +100,11 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
         return report
 
     @defer.inlineCallbacks
-    def buildrequest_message(self, master: Any, build: Any) -> InlineCallbacksType[Any]:
+    def buildrequest_message(
+        self, master: BuildMaster, build: PendingBuild
+    ) -> InlineCallbacksType[Report]:
         patches = self._get_patches_for_build(build)
-        users: list[Any] = []
+        users: list[str] = []
         buildmsg = yield self.formatter.format_message_for_build(
             master, build, is_buildset=True, mode=self.mode, users=users
         )

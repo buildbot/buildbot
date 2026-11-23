@@ -171,7 +171,7 @@ class TestBuildRequestGenerator(
         buildrequest = yield self.insert_buildrequest_new(insert_patch=False)
         buildset = yield self.get_inserted_buildset()
         build = yield g.partial_build_dict(self.master, buildrequest)
-        report = yield g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)
+        report = yield g.generate(self.master, Mock(), ('buildrequests', '11', 'new'), buildrequest)
 
         self.assertEqual(
             report,
@@ -221,6 +221,6 @@ class TestBuildRequestGenerator(
     def test_generate_none(self) -> InlineCallbacksType[None]:
         g = BuildRequestGenerator(builders=['not_existing_builder'])
         buildrequest = yield self.insert_buildrequest_new()
-        report = yield g.generate(self.master, None, ('buildrequests', 11, 'new'), buildrequest)
+        report = yield g.generate(self.master, Mock(), ('buildrequests', '11', 'new'), buildrequest)
 
         self.assertIsNone(report, None)

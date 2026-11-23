@@ -178,7 +178,8 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
             want_steps=False,
             want_logs=False,
         )
-        report = await generator.generate(self.master, None, ('builds', 20, 'finished'), build)
+        report = await generator.generate(self.master, Mock(), ('builds', '20', 'finished'), build)
+        assert report is not None
 
         self.assertEqual(
             set(report),
