@@ -62,7 +62,6 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
     @defer.inlineCallbacks
     def partial_build_dict(self, master: Any, buildrequest: Any) -> InlineCallbacksType[Any]:
         brdict = yield master.db.buildrequests.getBuildRequest(buildrequest['buildrequestid'])
-        bdict = {}
 
         props = Properties()
         buildrequest = yield BuildRequest.fromBrdict(master, brdict)
@@ -71,8 +70,7 @@ class BuildRequestGenerator(BuildStatusGeneratorMixin):
         yield Build.setup_properties_known_before_build_starts(props, [buildrequest], builder)
         Build.setupBuildProperties(props, [buildrequest])
 
-        bdict['properties'] = props.asDict()
-        yield utils.get_details_for_buildrequest(master, brdict, bdict)
+        bdict = yield utils.get_pending_build(master, brdict, props.asDict())
         return bdict
 
     @defer.inlineCallbacks

@@ -1,0 +1,1 @@
+``buildbot.reporters.utils.get_details_for_buildrequest`` has been deprecated, use ``buildbot.reporters.utils.get_pending_build`` instead, which returns the build dict rather than filling the one it is given.

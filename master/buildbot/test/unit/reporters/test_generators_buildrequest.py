@@ -26,11 +26,14 @@ from twisted.trial import unittest
 
 from buildbot.process.builder import Builder
 from buildbot.process.results import CANCELLED
+from buildbot.reporters import utils
 from buildbot.reporters.generators.buildrequest import BuildRequestGenerator
 from buildbot.test.fake import fakemaster
 from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.reporter import ReporterTestMixin
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.warnings import DeprecatedApiWarning
 
 if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
@@ -113,6 +116,29 @@ class TestBuildRequestGenerator(
                 'logs': [],
             },
         )
+
+    async def test_partial_build_dict_buildrequest_has_data_api_keys(self) -> None:
+        g = self.setup_generator()
+        buildrequest = await self.insert_buildrequest_new()
+        build = await g.partial_build_dict(self.master, buildrequest)
+        brdata = await self.master.data.get(('buildrequests', buildrequest['buildrequestid']))
+
+        self.assertEqual(set(build['buildrequest']) - {'buildername'}, set(brdata))
+        self.assertFalse(build['buildrequest']['claimed'])
+        self.assertIsNone(build['buildrequest']['properties'])
+
+    async def test_get_details_for_buildrequest_deprecated(self) -> None:
+        buildrequest = await self.insert_buildrequest_new()
+        brdict = await self.master.db.buildrequests.getBuildRequest(buildrequest['buildrequestid'])
+        build: dict[str, Any] = {'properties': {'prop': ('value', 'test')}}
+
+        with assertProducesWarning(DeprecatedApiWarning, message_pattern='get_pending_build'):
+            await utils.get_details_for_buildrequest(self.master, brdict, build)
+
+        self.assertEqual(build['properties'], {'prop': ('value', 'test')})
+        self.assertEqual(build['buildrequest']['buildrequestid'], brdict.buildrequestid)
+        self.assertEqual(build['builderid'], brdict.builderid)
+        self.assertFalse(build['complete'])
 
     @defer.inlineCallbacks
     def test_build_message_add_patch(self) -> InlineCallbacksType[None]:

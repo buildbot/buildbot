@@ -15,30 +15,85 @@
 
 from __future__ import annotations
 
-import dataclasses
 from collections import UserList
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import TypedDict
+from typing import final
 
 from twisted.internet import defer
 from twisted.python import log
+from typing_extensions import NotRequired
 
 from buildbot.data import resultspec
+from buildbot.data.buildrequests import BuildRequestData
+from buildbot.data.builds import BuildData
+from buildbot.data.logs import LogData
+from buildbot.data.steps import StepData
 from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
 from buildbot.process.results import RETRY
 from buildbot.util import flatten
+from buildbot.util.twisted import async_to_deferred
+from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    from buildbot.data.builders import BuilderData
+    from buildbot.data.buildsets import BuildSetData
+    from buildbot.data.logchunks import LogChunkData
     from buildbot.db.buildrequests import BuildRequestModel
     from buildbot.master import BuildMaster
     from buildbot.util.twisted import InlineCallbacksType
 
 
+class ReportLog(LogData):
+    stepname: str
+    url: str
+    url_raw: str
+    url_raw_inline: str
+    content: NotRequired[LogChunkData]
+
+
+class ReportStep(StepData):
+    logs: NotRequired[list[ReportLog]]
+
+
+class ReportBuild(BuildData):
+    buildrequest: NotRequired[BuildRequestData]
+    buildset: NotRequired[BuildSetData]
+    parentbuild: NotRequired[BuildData | None]
+    parentbuilder: NotRequired[BuilderData | None]
+    builder: NotRequired[BuilderData]
+    url: NotRequired[str]
+    steps: NotRequired[list[ReportStep]]
+    prev_build: NotRequired[BuildData | None]
+
+
+class PendingBuildRequest(BuildRequestData):
+    buildername: str
+
+
+@final
+class PendingBuild(TypedDict):
+    properties: dict[str, tuple[Any, str]]
+    buildrequest: PendingBuildRequest
+    buildset: BuildSetData
+    builderid: int
+    builder: BuilderData
+    url: str
+    results: int | None
+    complete: bool
+
+
+class BuildsetDetails(TypedDict):
+    buildset: BuildSetData
+    builds: list[ReportBuild]
+
+
 @defer.inlineCallbacks
 def getPreviousBuild(
-    master: BuildMaster, build: dict[str, Any]
-) -> InlineCallbacksType[dict[str, Any] | None]:
+    master: BuildMaster, build: BuildData
+) -> InlineCallbacksType[BuildData | None]:
     # naive n-1 algorithm. Still need to define what we should skip
     # SKIP builds? forced builds? rebuilds?
     # don't hesitate to contribute improvements to that algorithm
@@ -62,7 +117,7 @@ def getDetailsForBuildset(
     want_logs: bool = False,
     add_logs: list[str] | bool | None = None,
     want_logs_content: bool | list[str] = False,
-) -> InlineCallbacksType[dict[str, Any]]:
+) -> InlineCallbacksType[BuildsetDetails]:
     # Here we will do a bunch of data api calls on behalf of the reporters
     # We do try to make *some* calls in parallel with the help of gatherResults, but don't commit
     # to much in that. The idea is to do parallelism while keeping the code readable
@@ -80,7 +135,7 @@ def getDetailsForBuildset(
     dl = [master.data.get(("buildrequests", breq['buildrequestid'], 'builds')) for breq in breqs]
 
     builds = yield defer.gatherResults(dl, consumeErrors=True)
-    flat_builds: list[dict[str, Any]] = list(flatten(builds, types=(list, UserList)))
+    flat_builds: list[ReportBuild] = list(flatten(builds, types=(list, UserList)))
     if flat_builds:
         yield getDetailsForBuilds(
             master,
@@ -100,14 +155,14 @@ def getDetailsForBuildset(
 @defer.inlineCallbacks
 def getDetailsForBuild(
     master: BuildMaster,
-    build: dict[str, Any],
+    build: ReportBuild,
     want_properties: bool = False,
     want_steps: bool = False,
     want_previous_build: bool = False,
     want_logs: bool = False,
     add_logs: list[str] | bool | None = None,
     want_logs_content: bool | list[str] = False,
-) -> InlineCallbacksType[Any]:
+) -> InlineCallbacksType[None]:
     buildrequest = yield master.data.get(("buildrequests", build['buildrequestid']))
     buildset = yield master.data.get(("buildsets", buildrequest['buildsetid']))
     build['buildrequest'] = buildrequest
@@ -121,7 +176,7 @@ def getDetailsForBuild(
     build['parentbuild'] = parentbuild
     build['parentbuilder'] = parentbuilder
 
-    ret = yield getDetailsForBuilds(
+    yield getDetailsForBuilds(
         master,
         buildset,
         [build],
@@ -132,26 +187,56 @@ def getDetailsForBuild(
         add_logs=add_logs,
         want_logs_content=want_logs_content,
     )
-    return ret
 
 
-@defer.inlineCallbacks
-def get_details_for_buildrequest(
+@async_to_deferred
+async def get_details_for_buildrequest(
     master: BuildMaster, buildrequest: BuildRequestModel, build: dict[str, Any]
-) -> InlineCallbacksType[None]:
-    buildset = yield master.data.get(("buildsets", buildrequest.buildsetid))
-    builder = yield master.data.get(("builders", buildrequest.builderid))
-
-    build['buildrequest'] = dataclasses.asdict(buildrequest)
-    build['buildset'] = buildset
-    build['builderid'] = buildrequest.builderid
-    build['builder'] = builder
-    build['url'] = getURLForBuildrequest(master, buildrequest.buildrequestid)
-    build['results'] = None
-    build['complete'] = False
+) -> None:
+    warn_deprecated(
+        '4.5.0',
+        'get_details_for_buildrequest() has been deprecated, use get_pending_build() instead',
+    )
+    pending_build = await get_pending_build(master, buildrequest, build.get('properties', {}))
+    build.update({k: v for k, v in pending_build.items() if k != 'properties'})
 
 
-def should_attach_log(logs_config: list[str] | bool, log: dict[str, Any]) -> bool:
+async def get_pending_build(
+    master: BuildMaster,
+    buildrequest: BuildRequestModel,
+    properties: dict[str, tuple[Any, str]],
+) -> PendingBuild:
+    buildset = await master.data.get(("buildsets", buildrequest.buildsetid))
+    builder = await master.data.get(("builders", buildrequest.builderid))
+
+    return {
+        'properties': properties,
+        'buildrequest': {
+            'buildrequestid': buildrequest.buildrequestid,
+            'buildsetid': buildrequest.buildsetid,
+            'builderid': buildrequest.builderid,
+            'buildername': buildrequest.buildername,
+            'submitted_at': buildrequest.submitted_at,
+            'complete_at': buildrequest.complete_at,
+            'complete': buildrequest.complete,
+            'results': buildrequest.results,
+            'waited_for': buildrequest.waited_for,
+            'priority': buildrequest.priority,
+            'claimed': buildrequest.claimed,
+            'claimed_at': buildrequest.claimed_at,
+            'claimed_by_masterid': buildrequest.claimed_by_masterid,
+            'properties': None,
+        },
+        'buildset': buildset,
+        'builderid': buildrequest.builderid,
+        'builder': builder,
+        'url': getURLForBuildrequest(master, buildrequest.buildrequestid),
+        'results': None,
+        'complete': False,
+    }
+
+
+def should_attach_log(logs_config: list[str] | bool, log: ReportLog) -> bool:
     if isinstance(logs_config, bool):
         return logs_config
 
@@ -168,8 +253,8 @@ def should_attach_log(logs_config: list[str] | bool, log: dict[str, Any]) -> boo
 @defer.inlineCallbacks
 def getDetailsForBuilds(
     master: BuildMaster,
-    buildset: dict[str, Any],
-    builds: list[dict[str, Any]],
+    buildset: BuildSetData,
+    builds: list[ReportBuild],
     want_properties: bool = False,
     want_steps: bool = False,
     want_previous_build: bool = False,
