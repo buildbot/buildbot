@@ -169,6 +169,33 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
+    async def test_build_end_generator_report_has_all_report_keys(self) -> None:
+        build = await self.insert_build_finished(SUCCESS)
+        generator = GerritBuildEndStatusGenerator(
+            callback=defaultReviewCB,
+            callback_arg=None,
+            builders=None,
+            want_steps=False,
+            want_logs=False,
+        )
+        report = await generator.generate(self.master, None, ('builds', 20, 'finished'), build)
+
+        self.assertEqual(
+            set(report),
+            {
+                'body',
+                'subject',
+                'type',
+                'results',
+                'extra_info',
+                'builds',
+                'buildset',
+                'users',
+                'patches',
+                'logs',
+            },
+        )
+
     @defer.inlineCallbacks
     def setupGerritStatusPushSimple(
         self, *args: Any, **kwargs: Any

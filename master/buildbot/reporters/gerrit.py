@@ -274,11 +274,17 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
 
         return {
             "body": result.get("message", None),
+            "subject": None,
+            "type": "plain",
+            "results": buildset["results"],
             "extra_info": {
                 "labels": result.get("labels"),
             },
             "builds": [builds[0]],
             "buildset": buildset,
+            "users": [],
+            "patches": [],
+            "logs": [],
         }
 
 
@@ -304,11 +310,17 @@ class GerritBuildStartStatusGenerator(GerritStatusGeneratorBase):
 
         return {
             "body": result.get("message", None),
+            "subject": None,
+            "type": "plain",
+            "results": build["results"],
             "extra_info": {
                 "labels": result.get("labels"),
             },
             "builds": [build],
             "buildset": build["buildset"],
+            "users": [],
+            "patches": [],
+            "logs": [],
         }
 
 
@@ -336,11 +348,17 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
 
         return {
             "body": result.get("message", None),
+            "subject": None,
+            "type": "plain",
+            "results": build["results"],
             "extra_info": {
                 "labels": result.get("labels"),
             },
             "builds": [build],
             "buildset": build["buildset"],
+            "users": [],
+            "patches": [],
+            "logs": [],
         }
 
 
