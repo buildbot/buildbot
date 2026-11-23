@@ -191,6 +191,7 @@ class TestSetupPyEntryPoints(unittest.TestCase):
             'buildbot.reporters.irc.IrcStatusFactory',
             'buildbot.reporters.irc.UsageError',
             'buildbot.reporters.mail.Domain',
+            'buildbot.reporters.message.MessageDict',
             'buildbot.reporters.message.MessageFormatterBase',
             'buildbot.reporters.message.MessageFormatterBaseJinja',
             'buildbot.reporters.telegram.TelegramChannel',
