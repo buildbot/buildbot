@@ -1,0 +1,1 @@
+The `Gerrit` source step builds the right ref when a forced build's ``gerrit_change`` number ends in a digit below ten, for example ``1205/3``. The last two digits are zero padded again, so the step fetches ``refs/changes/05/1205/3`` rather than a ref with a space in it.
