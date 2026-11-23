@@ -39,6 +39,8 @@ from buildbot.util import giturlparse
 from buildbot.util import httpclientservice
 
 if TYPE_CHECKING:
+    from buildbot.data.sourcestamps import SourceStampData
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 HOSTED_BASE_URL = 'https://gitlab.com'
@@ -116,7 +118,7 @@ class GitLabStatusPush(ReporterBase):
         self,
         project_id: Any,
         branch: str,
-        sha: str,
+        sha: str | None,
         state: str,
         target_url: str | None = None,
         description: str | None = None,
@@ -148,7 +150,7 @@ class GitLabStatusPush(ReporterBase):
         return self._http.post(f'/api/v4/projects/{project_id}/statuses/{sha}', json=payload)
 
     @defer.inlineCallbacks
-    def getProjectId(self, sourcestamp: dict[str, Any]) -> InlineCallbacksType[Any]:
+    def getProjectId(self, sourcestamp: SourceStampData) -> InlineCallbacksType[Any]:
         # retrieve project id via cache
         url = giturlparse(sourcestamp['repository'])
         if url is None:
@@ -170,17 +172,20 @@ class GitLabStatusPush(ReporterBase):
         return self.project_ids[project_full_name]
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         report = reports[0]
-        build = reports[0]['builds'][0]
+        builds = reports[0]['builds']
+        assert builds
+        build = builds[0]
 
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
         description = report.get('body', None)
+        assert description is None or isinstance(description, str)
 
         if build['complete']:
-            state = {
+            states: dict[int | None, str] = {
                 SUCCESS: 'success',
                 WARNINGS: 'success',
                 FAILURE: 'failed',
@@ -188,7 +193,8 @@ class GitLabStatusPush(ReporterBase):
                 EXCEPTION: 'failed',
                 RETRY: 'pending',
                 CANCELLED: 'canceled',
-            }.get(build['results'], 'failed')
+            }
+            state = states.get(build['results'], 'failed')
         elif build.get('started_at'):
             state = 'running'
         else:

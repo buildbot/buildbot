@@ -52,6 +52,7 @@ from .utils import merge_reports_prop_take_first
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
@@ -279,7 +280,7 @@ class MailNotifier(ReporterBase):
         return m
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         body = merge_reports_prop(reports, 'body')
         subject = merge_reports_prop_take_first(reports, 'subject')
         type = merge_reports_prop_take_first(reports, 'type')
@@ -291,6 +292,7 @@ class MailNotifier(ReporterBase):
         worker = merge_reports_prop_take_first(reports, 'worker')
 
         body = unicode2bytes(body)
+        assert isinstance(body, bytes)
         msgdict = {'body': body, 'subject': subject, 'type': type}
 
         # ensure message body ends with double carriage return
@@ -303,10 +305,10 @@ class MailNotifier(ReporterBase):
 
         # now, who is this message going to?
         if worker is None:
-            recipients = yield self.findInterrestedUsersEmails(list(users))
+            recipients = yield self.findInterrestedUsersEmails(list(users or []))
             all_recipients = self.processRecipients(recipients, m)
         else:
-            all_recipients = list(users)
+            all_recipients = list(users or [])
         yield self.sendMail(m, all_recipients)
 
     @defer.inlineCallbacks

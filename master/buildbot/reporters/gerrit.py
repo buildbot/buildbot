@@ -131,13 +131,17 @@ class DEFAULT_SUMMARY:
 
 
 @defer.inlineCallbacks
-def extract_project_revision(master: Any, report: Any) -> InlineCallbacksType[tuple[Any, Any]]:
+def extract_project_revision(
+    master: BuildMaster, report: Report
+) -> InlineCallbacksType[tuple[Any, Any]]:
     props = None
     if report["builds"]:
         props = report["builds"][0].get("properties", None)
 
     if props is None:
-        props = yield master.data.get(("buildsets", report["buildset"]["bsid"], "properties"))
+        buildset = report["buildset"]
+        assert buildset is not None
+        props = yield master.data.get(("buildsets", buildset["bsid"], "properties"))
 
     def get_property(props: Any, name: str) -> Any:
         if props is None:
@@ -514,7 +518,7 @@ class GerritStatusPush(ReporterBase):
                 log.msg("gerrit status: OK")
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         report = reports[0]
 
         project, revision = yield extract_project_revision(self.master, report)
@@ -527,13 +531,14 @@ class GerritStatusPush(ReporterBase):
         if extra_info is not None:
             labels = extra_info.get("labels", None)
 
-        if labels is None and report.get("builds", None):
+        builds = report.get("builds", None)
+        if labels is None and builds:
             # At least one build
             success = False
             failure = False
             pending = False
 
-            for build in report["builds"]:
+            for build in builds:
                 if build["results"] is None:
                     pending = True
                 elif build["results"] == SUCCESS:

@@ -39,6 +39,7 @@ from buildbot.util import httpclientservice
 if TYPE_CHECKING:
     import datetime
 
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 log = Logger()
@@ -47,7 +48,7 @@ log = Logger()
 class GerritVerifyStatusPush(ReporterBase):
     name: str | None = "GerritVerifyStatusPush"
     # overridable constants
-    RESULTS_TABLE = {
+    RESULTS_TABLE: dict[int | None, int] = {
         SUCCESS: 1,
         WARNINGS: 1,
         FAILURE: -1,
@@ -245,18 +246,24 @@ class GerritVerifyStatusPush(ReporterBase):
         return []
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         report = reports[0]
-        build = reports[0]['builds'][0]
+        builds = reports[0]['builds']
+        assert builds
+        build = builds[0]
 
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
         comment = report.get('body', None)
+        assert comment is None or isinstance(comment, str)
 
         if build['complete']:
             value = self.RESULTS_TABLE.get(build['results'], self.DEFAULT_RESULT)
-            duration = self.formatDuration(build['complete_at'] - build['started_at'])
+            assert 'buildid' in build
+            complete_at = build['complete_at']
+            assert complete_at is not None
+            duration = self.formatDuration(complete_at - build['started_at'])
         else:
             value = 0
             duration = 'pending'

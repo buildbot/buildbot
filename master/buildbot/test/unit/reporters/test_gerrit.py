@@ -55,6 +55,7 @@ from buildbot.test.util.reporter import ReporterTestMixin
 if TYPE_CHECKING:
     from twisted.internet.protocol import ProcessProtocol
 
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 warnings.filterwarnings('error', message='.*Gerrit status')
@@ -789,7 +790,17 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
     def test_extract_project_revision(self) -> InlineCallbacksType[None]:
         yield self.insert_test_data([SUCCESS], SUCCESS)
         res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
-        report = {"builds": res["builds"], "buildset": res["buildset"]}
+        report: Report = {
+            "body": None,
+            "subject": None,
+            "type": None,
+            "results": SUCCESS,
+            "builds": res["builds"],
+            "buildset": res["buildset"],
+            "users": [],
+            "patches": None,
+            "logs": None,
+        }
 
         project, revision = yield extract_project_revision(self.master, report)
         self.assertEqual(project, "testProject")
@@ -814,7 +825,17 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
             ),
         ])
         res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
-        report = {"builds": res["builds"], "buildset": res["buildset"]}
+        report: Report = {
+            "body": None,
+            "subject": None,
+            "type": None,
+            "results": SUCCESS,
+            "builds": res["builds"],
+            "buildset": res["buildset"],
+            "users": [],
+            "patches": None,
+            "logs": None,
+        }
 
         project, revision = yield extract_project_revision(self.master, report)
         self.assertEqual(project, "project1")

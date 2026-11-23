@@ -157,5 +157,5 @@ class ReporterBase(service.BuildbotService):
         return utils.getResponsibleUsersForBuild(master, buildid)
 
     @abc.abstractmethod
-    def sendMessage(self, reports: list[Any]) -> Any:
+    def sendMessage(self, reports: list[Report]) -> Any:
         pass

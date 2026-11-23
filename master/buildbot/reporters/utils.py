@@ -18,8 +18,10 @@ from __future__ import annotations
 from collections import UserList
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Literal
 from typing import TypedDict
 from typing import final
+from typing import overload
 
 from twisted.internet import defer
 from twisted.python import log
@@ -38,6 +40,9 @@ from buildbot.util.twisted import async_to_deferred
 from buildbot.warnings import warn_deprecated
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from collections.abc import Sequence
+
     from buildbot.data.builders import BuilderData
     from buildbot.data.buildsets import BuildSetData
     from buildbot.data.logchunks import LogChunkData
@@ -456,7 +461,35 @@ def URLForBuild(props: Properties) -> str:
     return build.getUrl()
 
 
-def merge_reports_prop(reports: list[dict[str, Any]], prop: str) -> Any:
+@overload
+def merge_reports_prop(reports: list[Report], prop: Literal['body']) -> MessageBody | bytes: ...
+
+
+@overload
+def merge_reports_prop(reports: list[Report], prop: Literal['results']) -> int | None: ...
+
+
+@overload
+def merge_reports_prop(
+    reports: list[Report], prop: Literal['builds']
+) -> list[ReportBuild] | list[PendingBuild] | None: ...
+
+
+@overload
+def merge_reports_prop(reports: list[Report], prop: Literal['users']) -> list[str] | None: ...
+
+
+@overload
+def merge_reports_prop(
+    reports: list[Report], prop: Literal['patches']
+) -> list[PatchData] | None: ...
+
+
+@overload
+def merge_reports_prop(reports: list[Report], prop: Literal['logs']) -> list[ReportLog] | None: ...
+
+
+def merge_reports_prop(reports: Sequence[Mapping[str, Any]], prop: str) -> Any:
     result = None
     for report in reports:
         if prop in report and report[prop] is not None:
@@ -468,7 +501,9 @@ def merge_reports_prop(reports: list[dict[str, Any]], prop: str) -> Any:
     return result
 
 
-def merge_reports_prop_take_first(reports: list[dict[str, Any]], prop: str) -> Any:
+def merge_reports_prop_take_first(
+    reports: list[Report], prop: Literal['subject', 'type', 'worker']
+) -> str | None:
     for report in reports:
         if prop in report and report[prop] is not None:
             return report[prop]

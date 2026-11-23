@@ -42,6 +42,7 @@ from buildbot.util import unicode2bytes
 from .utils import merge_reports_prop
 
 if TYPE_CHECKING:
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 # Magic words understood by Bitbucket Server REST API
@@ -143,14 +144,17 @@ class BitbucketServerStatusPush(ReporterBase):
         return self._http.post(STATUS_API_URL.format(sha=sha), json=payload)
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         report = reports[0]
-        build = reports[0]['builds'][0]
+        builds = reports[0]['builds']
+        assert builds
+        build = builds[0]
 
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
         description = report.get('body', None)
+        assert description is None or isinstance(description, str)
 
         results = build['results']
         if build['complete']:
@@ -332,14 +336,17 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
         return self._http.post(_url, json=payload)
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         report = reports[0]
-        build = reports[0]['builds'][0]
+        builds = reports[0]['builds']
+        assert builds
+        build = builds[0]
 
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
         description = report.get('body', None)
+        assert description is None or isinstance(description, str)
 
         duration = None
         test_results = None
@@ -347,9 +354,9 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             state = SUCCESSFUL if build['results'] == SUCCESS else FAILED
             if self.duration:
                 duration = yield props.render(self.duration)
-            elif "complete_at" in build:
-                complete_at = build['complete_at']
-                started_at = build['started_at']
+            elif "complete_at" in build and build['complete_at'] is not None:
+                complete_at: datetime.datetime | int = build['complete_at']
+                started_at: datetime.datetime | int = build['started_at']
                 if isinstance(complete_at, datetime.datetime):
                     complete_at = datetime2epoch(complete_at)
                 if isinstance(started_at, datetime.datetime):
@@ -361,7 +368,8 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             state = INPROGRESS
             duration = None
 
-        parent_name = (build.get('parentbuilder') or {}).get('name')
+        parentbuilder = build.get('parentbuilder') if 'buildid' in build else None
+        parent_name = parentbuilder['name'] if parentbuilder else None
         if self.parent_name:
             parent = yield props.render(self.parent_name)
         elif parent_name:
@@ -375,9 +383,10 @@ class BitbucketServerCoreAPIStatusPush(ReporterBase):
             build_identifier = props.getProperty("buildnumber") or "(build request)"
             status_name = f'{props.getProperty("buildername")} #{build_identifier}'
             if parent_name:
-                status_name = (
-                    f"{parent_name} #{build['parentbuild']['number']} \u00bb {status_name}"
-                )
+                assert 'buildid' in build
+                parentbuild = build['parentbuild']
+                assert parentbuild is not None
+                status_name = f"{parent_name} #{parentbuild['number']} \u00bb {status_name}"
         if self.status_suffix:
             status_name = status_name + (yield props.render(self.status_suffix))
 
@@ -496,15 +505,17 @@ class BitbucketServerPRCommentPush(ReporterBase):
     def _create_default_generators(self) -> list[Any]:
         return [BuildStatusGenerator()]
 
-    def sendComment(self, pr_url: str, text: str) -> Any:
+    def sendComment(self, pr_url: str, text: str | None) -> Any:
         path = urlparse(unicode2bytes(pr_url)).path
         payload = {'text': text}
         return self._http.post(COMMENT_API_URL.format(path=bytes2unicode(path)), json=payload)
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         body = merge_reports_prop(reports, 'body')
+        assert body is None or isinstance(body, str)
         builds = merge_reports_prop(reports, 'builds')
+        assert builds is not None
 
         pr_urls = set()
         for build in builds:
