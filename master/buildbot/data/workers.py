@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import TypedDict
 
 from twisted.internet import defer
 
@@ -31,7 +32,34 @@ if TYPE_CHECKING:
     from buildbot.util.twisted import InlineCallbacksType
 
 
-def _db2data(model: WorkerModel) -> dict[str, Any]:
+class WorkerMasterData(TypedDict):
+    masterid: int
+
+
+class WorkerConfiguredOnData(TypedDict):
+    masterid: int
+    builderid: int
+
+
+class WorkerData(TypedDict):
+    workerid: int
+    name: str
+    workerinfo: dict[str, Any]
+    paused: bool
+    pause_reason: str | None
+    graceful: bool
+    connected_to: list[WorkerMasterData]
+    configured_on: list[WorkerConfiguredOnData]
+
+
+class MissingWorkerData(WorkerData):
+    """Payload of the ('workers', id, 'missing') event."""
+
+    last_connection: str
+    notify: list[str]
+
+
+def _db2data(model: WorkerModel) -> WorkerData:
     return {
         'workerid': model.id,
         'name': model.name,
@@ -62,7 +90,7 @@ class WorkerEndpoint(base.Endpoint):
     @defer.inlineCallbacks
     def get(
         self, resultSpec: ResultSpec, kwargs: dict[str, Any]
-    ) -> InlineCallbacksType[dict[str, Any] | None]:
+    ) -> InlineCallbacksType[WorkerData | None]:
         sldict = yield self.master.db.workers.getWorker(
             workerid=kwargs.get('workerid'),
             name=kwargs.get('name'),
@@ -103,7 +131,7 @@ class WorkersEndpoint(base.Endpoint):
     @defer.inlineCallbacks
     def get(
         self, resultSpec: ResultSpec, kwargs: dict[str, Any]
-    ) -> InlineCallbacksType[list[dict[str, Any]]]:
+    ) -> InlineCallbacksType[list[WorkerData]]:
         paused = resultSpec.popBooleanFilter('paused')
         graceful = resultSpec.popBooleanFilter('graceful')
         workers_dicts = yield self.master.db.workers.getWorkers(
@@ -180,7 +208,7 @@ class Worker(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def workerMissing(
-        self, workerid: int, masterid: int, last_connection: int, notify: bool
+        self, workerid: int, masterid: int, last_connection: str, notify: list[str]
     ) -> InlineCallbacksType[None]:
         bs = yield self.master.data.get(('workers', workerid))
         bs['last_connection'] = last_connection

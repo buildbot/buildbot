@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import TypedDict
 
 from twisted.internet import defer
 
@@ -28,6 +29,12 @@ if TYPE_CHECKING:
 
     from buildbot.db.logs import LogModel
     from buildbot.util.twisted import InlineCallbacksType
+
+
+class LogChunkData(TypedDict):
+    logid: int
+    firstline: int
+    content: str
 
 
 class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
@@ -113,7 +120,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
     @defer.inlineCallbacks
     def get(
         self, resultSpec: base.ResultSpec, kwargs: dict[str, Any]
-    ) -> InlineCallbacksType[dict[str, Any] | None]:
+    ) -> InlineCallbacksType[LogChunkData | None]:
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
         logid = yield retriever.get_log_id()
         if logid is None:
