@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import datetime
 import textwrap
 from typing import TYPE_CHECKING
 from typing import Any
@@ -40,8 +41,47 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.misc import BuildDictLookAlike
 
 if TYPE_CHECKING:
+    from buildbot.data.sourcestamps import PatchData
+    from buildbot.data.sourcestamps import SourceStampData
     from buildbot.reporters.message import MessageFormatterBase
+    from buildbot.reporters.utils import ReportBuild
     from buildbot.util.twisted import InlineCallbacksType
+
+
+def make_build(state_string: str) -> ReportBuild:
+    return {
+        'buildid': 1,
+        'number': 1,
+        'builderid': 1,
+        'buildrequestid': 1,
+        'workerid': None,
+        'masterid': 1,
+        'started_at': datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc),
+        'complete_at': None,
+        'locks_duration_s': None,
+        'complete': False,
+        'state_string': state_string,
+        'results': None,
+        'properties': {},
+    }
+
+
+def make_sourcestamp(
+    codebase: str,
+    branch: str | None = None,
+    revision: str | None = None,
+    patch: PatchData | None = None,
+) -> SourceStampData:
+    return {
+        'ssid': 1,
+        'branch': branch,
+        'revision': revision,
+        'project': '',
+        'repository': '',
+        'codebase': codebase,
+        'created_at': datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc),
+        'patch': patch,
+    }
 
 
 class TestMessageFormatting(unittest.TestCase):
@@ -116,49 +156,52 @@ class TestMessageFormatting(unittest.TestCase):
 
     def test_get_message_summary_text_success(self) -> None:
         self.assertEqual(
-            message.get_message_summary_text({'state_string': 'mywarning'}, SUCCESS),
+            message.get_message_summary_text(make_build('mywarning'), SUCCESS),
             'Build succeeded!',
         )
 
     def test_get_message_summary_text_warnings(self) -> None:
         self.assertEqual(
-            message.get_message_summary_text({'state_string': 'mywarning'}, WARNINGS),
+            message.get_message_summary_text(make_build('mywarning'), WARNINGS),
             'Build Had Warnings: mywarning',
         )
         self.assertEqual(
-            message.get_message_summary_text({'state_string': None}, WARNINGS), 'Build Had Warnings'
+            message.get_message_summary_text(make_build(''), WARNINGS), 'Build Had Warnings'
         )
 
     def test_get_message_summary_text_cancelled(self) -> None:
         self.assertEqual(
-            message.get_message_summary_text({'state_string': 'mywarning'}, CANCELLED),
+            message.get_message_summary_text(make_build('mywarning'), CANCELLED),
             'Build was cancelled',
         )
 
     def test_get_message_summary_text_skipped(self) -> None:
         self.assertEqual(
-            message.get_message_summary_text({'state_string': 'mywarning'}, SKIPPED),
+            message.get_message_summary_text(make_build('mywarning'), SKIPPED),
             'BUILD FAILED: mywarning',
         )
-        self.assertEqual(
-            message.get_message_summary_text({'state_string': None}, SKIPPED), 'BUILD FAILED'
-        )
+        self.assertEqual(message.get_message_summary_text(make_build(''), SKIPPED), 'BUILD FAILED')
 
     def test_get_message_source_stamp_text_empty(self) -> None:
         self.assertEqual(message.get_message_source_stamp_text([]), '')
 
     def test_get_message_source_stamp_text_multiple(self) -> None:
-        stamps = [
-            {'codebase': 'a', 'branch': None, 'revision': None, 'patch': None},
-            {'codebase': 'b', 'branch': None, 'revision': None, 'patch': None},
-        ]
+        stamps = [make_sourcestamp('a'), make_sourcestamp('b')]
         self.assertEqual(
             message.get_message_source_stamp_text(stamps),
             "Build Source Stamp 'a': HEAD\nBuild Source Stamp 'b': HEAD\n",
         )
 
     def test_get_message_source_stamp_text_with_props(self) -> None:
-        stamps = [{'codebase': 'a', 'branch': 'br', 'revision': 'abc', 'patch': 'patch'}]
+        patch: PatchData = {
+            'patchid': 1,
+            'level': 1,
+            'subdir': None,
+            'author': 'him@foo',
+            'comment': 'foo',
+            'body': b'hello',
+        }
+        stamps = [make_sourcestamp('a', branch='br', revision='abc', patch=patch)]
         self.assertEqual(
             message.get_message_source_stamp_text(stamps),
             "Build Source Stamp 'a': [branch br] abc (plus patch)\n",
@@ -239,7 +282,7 @@ class MessageFormatterTestBase(TestReactorMixin, unittest.TestCase):
         formatter: MessageFormatterBase,
         lastresults: int,
         results: int,
-        mode: str | tuple[str, ...] = "all",
+        mode: str | tuple[str, ...] | None = "all",
         with_steps: bool = False,
         extra_build_properties: dict[str, str] | None = None,
     ) -> InlineCallbacksType[dict[str, Any]]:
@@ -485,7 +528,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
         formatter = message.MessageFormatter(
             template="URL: {{ build_url }} -- {{ summary }}",
             subject="subject",
-            extra_info_cb=lambda ctx: {"key1", ctx["build"]["state_string"]},
+            extra_info_cb=lambda ctx: {"key1": {"state": ctx["build"]["state_string"]}},
         )
         res = yield self.do_one_test(formatter, SUCCESS, SUCCESS)
         self.assertEqual(
@@ -493,7 +536,7 @@ class TestMessageFormatter(MessageFormatterTestBase):
             {
                 "type": "plain",
                 "subject": "subject",
-                "extra_info": {"key1", "test"},
+                "extra_info": {"key1": {"state": "test"}},
                 "body": "URL: http://localhost:8080/#/builders/80/builds/1 -- Build succeeded!",
             },
         )
@@ -502,6 +545,13 @@ class TestMessageFormatter(MessageFormatterTestBase):
     def test_message_failure(self) -> InlineCallbacksType[None]:
         formatter = message.MessageFormatter()
         res = yield self.do_one_test(formatter, SUCCESS, FAILURE)
+        self.assertIn(
+            "A failed build has been detected on builder Builder1 while building", res['body']
+        )
+
+    async def test_message_failure_without_mode(self) -> None:
+        formatter = message.MessageFormatter()
+        res = await self.do_one_test(formatter, SUCCESS, FAILURE, mode=None)
         self.assertIn(
             "A failed build has been detected on builder Builder1 while building", res['body']
         )

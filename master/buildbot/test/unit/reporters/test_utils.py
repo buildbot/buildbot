@@ -173,7 +173,19 @@ class TestDataUtils(TestReactorMixin, logging.LoggingMixin, unittest.TestCase):
     def test_should_attach_log(
         self, name: str, log_name: str, step_name: str, log_config: list[str] | bool, expected: bool
     ) -> None:
-        log = {'name': log_name, 'stepname': step_name}
+        log: utils.ReportLog = {
+            'logid': 1,
+            'name': log_name,
+            'slug': log_name,
+            'stepid': 1,
+            'complete': True,
+            'num_lines': 0,
+            'type': 's',
+            'stepname': step_name,
+            'url': '',
+            'url_raw': '',
+            'url_raw_inline': '',
+        }
         self.assertEqual(utils.should_attach_log(log_config, log), expected)
 
     @defer.inlineCallbacks

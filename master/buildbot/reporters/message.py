@@ -18,6 +18,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
+from typing import TypedDict
+from typing import Union
 
 import jinja2
 from twisted.internet import defer
@@ -38,12 +40,34 @@ from buildbot.reporters import utils
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from collections.abc import Mapping
     from collections.abc import Sequence
 
+    from buildbot.data.buildsets import BuildSetData
+    from buildbot.data.sourcestamps import SourceStampData
+    from buildbot.data.workers import MissingWorkerData
+    from buildbot.master import BuildMaster
+    from buildbot.reporters.utils import PendingBuild
+    from buildbot.reporters.utils import ReportBuild
     from buildbot.util.twisted import InlineCallbacksType
 
+# plain -> str
+# html -> str
+# json -> any json (list[Any], dict[str, Any])
+MessageBody = Union[str, list[Any], dict[str, Any], None]
+ExtraInfo = dict[str, dict[str, Any]]
 
-def get_detected_status_text(mode: Any, results: int, previous_results: int | None) -> str:
+
+class MessageDict(TypedDict):
+    body: MessageBody
+    type: str
+    subject: str | None
+    extra_info: ExtraInfo | None
+
+
+def get_detected_status_text(
+    mode: Sequence[str], results: int | None, previous_results: int | None
+) -> str:
     if results == FAILURE:
         if (
             ('change' in mode or 'problem' in mode)
@@ -68,7 +92,7 @@ def get_detected_status_text(mode: Any, results: int, previous_results: int | No
     return text
 
 
-def get_message_summary_text(build: Any, results: int) -> str:
+def get_message_summary_text(build: ReportBuild, results: int | None) -> str:
     t = build['state_string']
     if t:
         t = ": " + t
@@ -87,7 +111,7 @@ def get_message_summary_text(build: Any, results: int) -> str:
     return text
 
 
-def get_message_source_stamp_text(source_stamps: Any) -> str:
+def get_message_source_stamp_text(source_stamps: list[SourceStampData]) -> str:
     text = ""
 
     for ss in source_stamps:
@@ -113,21 +137,21 @@ def get_message_source_stamp_text(source_stamps: Any) -> str:
     return text
 
 
-def get_projects_text(source_stamps: Any, master: Any) -> str:
-    projects: set[str] | list[Any] = set()
-
-    for ss in source_stamps:
-        if ss['project']:
-            projects.add(ss['project'])  # type: ignore[union-attr]
+def get_projects_text(source_stamps: list[SourceStampData], master: BuildMaster) -> str:
+    projects = {project for ss in source_stamps if (project := ss['project'])}
 
     if not projects:
-        projects = [master.config.title]
+        projects = {master.config.title}
 
-    return ', '.join(list(projects))
+    return ', '.join(projects)
 
 
 def create_context_for_build(
-    mode: Any, build: Any, is_buildset: bool, master: Any, blamelist: Any
+    mode: Sequence[str] | None,
+    build: ReportBuild,
+    is_buildset: bool,
+    master: BuildMaster,
+    blamelist: list[str] | None,
 ) -> dict[str, Any]:
     buildset = build['buildset']
     ss_list = buildset['sourcestamps']
@@ -149,7 +173,7 @@ def create_context_for_build(
         'is_buildset': is_buildset,
         'projects': get_projects_text(ss_list, master),
         'previous_results': previous_results,
-        'status_detected': get_detected_status_text(mode, results, previous_results),
+        'status_detected': get_detected_status_text(mode or (), results, previous_results),
         'build_url': utils.getURLForBuild(master, build['builder']['builderid'], build['number']),
         'buildbot_title': master.config.title,
         'buildbot_url': master.config.buildbotURL,
@@ -160,7 +184,11 @@ def create_context_for_build(
 
 
 def create_context_for_buildset(
-    mode: Any, buildset: Any, builds: Any, master: Any, blamelist: Any
+    mode: Sequence[str] | None,
+    buildset: BuildSetData,
+    builds: list[ReportBuild],
+    master: BuildMaster,
+    blamelist: list[str] | None,
 ) -> dict[str, Any]:
     ss_list = buildset['sourcestamps']
     results = buildset["results"]
@@ -173,7 +201,7 @@ def create_context_for_buildset(
         "builds": builds,
         "is_buildset": True,
         "projects": get_projects_text(ss_list, master),
-        "status_detected": get_detected_status_text(mode, results, None),
+        "status_detected": get_detected_status_text(mode or (), results, None),
         "buildbot_title": master.config.title,
         "buildbot_url": master.config.buildbotURL,
         "blamelist": blamelist,
@@ -181,7 +209,7 @@ def create_context_for_buildset(
     }
 
 
-def create_context_for_worker(master: Any, worker: Any) -> dict[str, Any]:
+def create_context_for_worker(master: BuildMaster, worker: MissingWorkerData) -> dict[str, Any]:
     return {
         'buildbot_title': master.config.title,
         'buildbot_url': master.config.buildbotURL,
@@ -198,7 +226,7 @@ class MessageFormatterBase(util.ComparableMixin):
         want_properties: bool = True,
         want_steps: bool = False,
         want_logs: bool = False,
-        want_logs_content: bool = False,
+        want_logs_content: bool | list[str] = False,
     ) -> None:
         if ctx is None:
             ctx = {}
@@ -208,13 +236,13 @@ class MessageFormatterBase(util.ComparableMixin):
         self.want_logs = want_logs
         self.want_logs_content = want_logs_content
 
-    def buildAdditionalContext(self, master: Any, ctx: dict[str, Any]) -> None:
+    def buildAdditionalContext(self, master: BuildMaster, ctx: dict[str, Any]) -> None:
         pass
 
     @defer.inlineCallbacks
     def render_message_dict(
-        self, master: Any, context: dict[str, Any]
-    ) -> InlineCallbacksType[dict[str, Any]]:
+        self, master: BuildMaster, context: dict[str, Any]
+    ) -> InlineCallbacksType[MessageDict]:
         """Generate a buildbot reporter message and return a dictionary
         containing the message body, type and subject.
 
@@ -265,50 +293,67 @@ class MessageFormatterBase(util.ComparableMixin):
             "extra_info": extra_info,
         }
 
-    def render_message_body(self, context: dict[str, Any]) -> Any:
+    def render_message_body(
+        self, context: dict[str, Any]
+    ) -> MessageBody | defer.Deferred[MessageBody]:
         return None
 
-    def render_message_subject(self, context: dict[str, Any]) -> Any:
+    def render_message_subject(
+        self, context: dict[str, Any]
+    ) -> str | defer.Deferred[str | None] | None:
         return None
 
-    def render_message_extra_info(self, context: dict[str, Any]) -> Any:
+    def render_message_extra_info(
+        self, context: dict[str, Any]
+    ) -> ExtraInfo | defer.Deferred[ExtraInfo | None] | None:
         return None
 
-    def format_message_for_build(self, master: Any, build: Any, **kwargs: Any) -> Any:
+    def format_message_for_build(
+        self, master: BuildMaster, build: ReportBuild, **kwargs: Any
+    ) -> MessageDict | defer.Deferred[MessageDict]:
         # Known kwargs keys: mode, users, is_buildset
         raise NotImplementedError
 
     def format_message_for_buildset(
-        self, master: Any, buildset: Any, builds: Any, **kwargs: Any
-    ) -> Any:
+        self, master: BuildMaster, buildset: BuildSetData, builds: list[ReportBuild], **kwargs: Any
+    ) -> MessageDict | defer.Deferred[MessageDict]:
         # Known kwargs keys: mode, users, is_buildset
         raise NotImplementedError
 
 
 class MessageFormatterEmpty(MessageFormatterBase):
-    def format_message_for_build(self, master: Any, build: Any, **kwargs: Any) -> dict[str, Any]:
+    def format_message_for_build(
+        self, master: BuildMaster, build: ReportBuild, **kwargs: Any
+    ) -> MessageDict:
         return {'body': None, 'type': 'plain', 'subject': None, "extra_info": None}
 
     def format_message_for_buildset(
-        self, master: Any, buildset: Any, builds: Any, **kwargs: Any
-    ) -> dict[str, Any]:
+        self, master: BuildMaster, buildset: BuildSetData, builds: list[ReportBuild], **kwargs: Any
+    ) -> MessageDict:
         return {"body": None, "type": "plain", "subject": None, "extra_info": None}
 
 
 class MessageFormatterFunctionRaw(MessageFormatterBase):
-    def __init__(self, function: Callable[..., Any], **kwargs: Any) -> None:
+    def __init__(
+        self,
+        function: Callable[
+            [BuildMaster, dict[str, Any]],
+            Mapping[str, Any] | defer.Deferred[Mapping[str, Any]],
+        ],
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self._function = function
 
     @defer.inlineCallbacks
     def format_message_for_build(  # type: ignore[override]
         self,
-        master: Any,
-        build: Any,
+        master: BuildMaster,
+        build: ReportBuild,
         is_buildset: bool = False,
-        users: Any = None,
-        mode: Any = None,
-    ) -> InlineCallbacksType[dict[str, Any]]:
+        users: list[str] | None = None,
+        mode: Sequence[str] | None = None,
+    ) -> InlineCallbacksType[MessageDict]:
         ctx = create_context_for_build(mode, build, is_buildset, master, users)
         msgdict = yield self._function(master, ctx)
         return {
@@ -321,13 +366,13 @@ class MessageFormatterFunctionRaw(MessageFormatterBase):
     @defer.inlineCallbacks
     def format_message_for_buildset(
         self,
-        master: Any,
-        buildset: Any,
-        builds: Any,
-        users: Any = None,
-        mode: Any = None,
+        master: BuildMaster,
+        buildset: BuildSetData,
+        builds: list[ReportBuild],
+        users: list[str] | None = None,
+        mode: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> InlineCallbacksType[dict[str, Any]]:
+    ) -> InlineCallbacksType[MessageDict]:
         ctx = create_context_for_buildset(mode, buildset, builds, master, users)
         msgdict = yield self._function(master, ctx)
         return {
@@ -339,26 +384,33 @@ class MessageFormatterFunctionRaw(MessageFormatterBase):
 
 
 class MessageFormatterFunction(MessageFormatterBase):
-    def __init__(self, function: Callable[..., Any], template_type: str, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        function: Callable[[dict[str, Any]], MessageBody | defer.Deferred[MessageBody]],
+        template_type: str,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self.template_type = template_type
         self._function = function
 
     @defer.inlineCallbacks
     def format_message_for_build(
-        self, master: Any, build: Any, **kwargs: Any
-    ) -> InlineCallbacksType[dict[str, Any]]:
+        self, master: BuildMaster, build: ReportBuild, **kwargs: Any
+    ) -> InlineCallbacksType[MessageDict]:
         msgdict = yield self.render_message_dict(master, {'build': build})
         return msgdict
 
     @defer.inlineCallbacks
     def format_message_for_buildset(
-        self, master: Any, buildset: Any, builds: Any, **kwargs: Any
-    ) -> InlineCallbacksType[dict[str, Any]]:
+        self, master: BuildMaster, buildset: BuildSetData, builds: list[ReportBuild], **kwargs: Any
+    ) -> InlineCallbacksType[MessageDict]:
         msgdict = yield self.render_message_dict(master, {"buildset": buildset, "builds": builds})
         return msgdict
 
-    def render_message_body(self, context: dict[str, Any]) -> Any:
+    def render_message_body(
+        self, context: dict[str, Any]
+    ) -> MessageBody | defer.Deferred[MessageBody]:
         return self._function(context)
 
     def render_message_subject(self, context: dict[str, Any]) -> None:
@@ -375,18 +427,18 @@ class MessageFormatterRenderable(MessageFormatterBase):
 
     @defer.inlineCallbacks
     def format_message_for_build(
-        self, master: Any, build: Any, **kwargs: Any
-    ) -> InlineCallbacksType[dict[str, Any]]:
+        self, master: BuildMaster, build: ReportBuild | PendingBuild, **kwargs: Any
+    ) -> InlineCallbacksType[MessageDict]:
         msgdict = yield self.render_message_dict(master, {'build': build, 'master': master})
         return msgdict
 
     def format_message_for_buildset(
-        self, master: Any, buildset: Any, builds: Any, **kwargs: Any
-    ) -> Any:
+        self, master: BuildMaster, buildset: BuildSetData, builds: list[ReportBuild], **kwargs: Any
+    ) -> MessageDict:
         raise NotImplementedError
 
     @defer.inlineCallbacks
-    def render_message_body(self, context: dict[str, Any]) -> InlineCallbacksType[Any]:
+    def render_message_body(self, context: dict[str, Any]) -> InlineCallbacksType[MessageBody]:
         props = Properties.fromDict(context['build']['properties'])
         props.master = context['master']
 
@@ -394,7 +446,7 @@ class MessageFormatterRenderable(MessageFormatterBase):
         return body
 
     @defer.inlineCallbacks
-    def render_message_subject(self, context: dict[str, Any]) -> InlineCallbacksType[Any]:
+    def render_message_subject(self, context: dict[str, Any]) -> InlineCallbacksType[str | None]:
         if self.subject is None:
             return None
 
@@ -475,7 +527,7 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
         template: str | None = None,
         subject: str | None = None,
         template_type: str | None = None,
-        extra_info_cb: Callable[..., Any] | None = None,
+        extra_info_cb: Callable[[dict[str, Any]], ExtraInfo | None] | None = None,
         **kwargs: Any,
     ) -> None:
         if template_type is not None:
@@ -505,7 +557,7 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
 
         super().__init__(**kwargs)
 
-    def buildAdditionalContext(self, master: Any, ctx: dict[str, Any]) -> None:
+    def buildAdditionalContext(self, master: BuildMaster, ctx: dict[str, Any]) -> None:
         if self.uses_default_body_template:
             ctx['results_style'] = {
                 SUCCESS: '',
@@ -523,7 +575,7 @@ class MessageFormatterBaseJinja(MessageFormatterBase):
     def render_message_subject(self, context: dict[str, Any]) -> str:
         return self.subject_template.render(context)  # type: ignore[union-attr]
 
-    def render_message_extra_info(self, context: dict[str, Any]) -> Any:
+    def render_message_extra_info(self, context: dict[str, Any]) -> ExtraInfo | None:
         if self.extra_info_cb is None:
             return None
         return self.extra_info_cb(context)
@@ -533,20 +585,25 @@ class MessageFormatter(MessageFormatterBaseJinja):
     @defer.inlineCallbacks
     def format_message_for_build(  # type: ignore[override]
         self,
-        master: Any,
-        build: Any,
+        master: BuildMaster,
+        build: ReportBuild,
         is_buildset: bool = False,
-        users: Any = None,
-        mode: Any = None,
-    ) -> InlineCallbacksType[dict[str, Any]]:
+        users: list[str] | None = None,
+        mode: Sequence[str] | None = None,
+    ) -> InlineCallbacksType[MessageDict]:
         ctx = create_context_for_build(mode, build, is_buildset, master, users)
         msgdict = yield self.render_message_dict(master, ctx)
         return msgdict
 
     @defer.inlineCallbacks
     def format_message_for_buildset(  # type: ignore[override]
-        self, master: Any, buildset: Any, builds: Any, users: Any = None, mode: Any = None
-    ) -> InlineCallbacksType[dict[str, Any]]:
+        self,
+        master: BuildMaster,
+        buildset: BuildSetData,
+        builds: list[ReportBuild],
+        users: list[str] | None = None,
+        mode: Sequence[str] | None = None,
+    ) -> InlineCallbacksType[MessageDict]:
         ctx = create_context_for_buildset(mode, buildset, builds, master, users)
         msgdict = yield self.render_message_dict(master, ctx)
         return msgdict
@@ -605,8 +662,8 @@ class MessageFormatterMissingWorker(MessageFormatterBaseJinja):
 
     @defer.inlineCallbacks
     def formatMessageForMissingWorker(
-        self, master: Any, worker: Any
-    ) -> InlineCallbacksType[dict[str, Any]]:
+        self, master: BuildMaster, worker: MissingWorkerData
+    ) -> InlineCallbacksType[MessageDict]:
         ctx = create_context_for_worker(master, worker)
         msgdict = yield self.render_message_dict(master, ctx)
         return msgdict

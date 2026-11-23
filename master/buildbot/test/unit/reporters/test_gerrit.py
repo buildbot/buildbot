@@ -55,6 +55,7 @@ from buildbot.test.util.reporter import ReporterTestMixin
 if TYPE_CHECKING:
     from twisted.internet.protocol import ProcessProtocol
 
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 warnings.filterwarnings('error', message='.*Gerrit status')
@@ -138,12 +139,64 @@ def sampleSummaryCBDeferred(
     return result
 
 
+class TestGerritStatusGeneratorName(unittest.TestCase):
+    @parameterized.expand([
+        ('buildset', GerritBuildSetStatusGenerator, None, 'GerritBuildSetStatusGenerator'),
+        ('start', GerritBuildStartStatusGenerator, None, 'GerritBuildStartStatusGenerator'),
+        (
+            'end_builders',
+            GerritBuildEndStatusGenerator,
+            ['b1', 'b2'],
+            'GerritBuildEndStatusGenerator_builders_b1+b2',
+        ),
+    ])
+    def test_generate_name(
+        self, name: str, generator_class: type[Any], builders: list[str] | None, expected: str
+    ) -> None:
+        generator = generator_class(
+            callback=defaultSummaryCB,
+            callback_arg=None,
+            builders=builders,
+            want_steps=False,
+            want_logs=False,
+        )
+        self.assertEqual(generator.generate_name(), expected)
+
+
 class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
         self.setup_test_reactor()
         self.setup_reporter_test()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
+
+    async def test_build_end_generator_report_has_all_report_keys(self) -> None:
+        build = await self.insert_build_finished(SUCCESS)
+        generator = GerritBuildEndStatusGenerator(
+            callback=defaultReviewCB,
+            callback_arg=None,
+            builders=None,
+            want_steps=False,
+            want_logs=False,
+        )
+        report = await generator.generate(self.master, Mock(), ('builds', '20', 'finished'), build)
+        assert report is not None
+
+        self.assertEqual(
+            set(report),
+            {
+                'body',
+                'subject',
+                'type',
+                'results',
+                'extra_info',
+                'builds',
+                'buildset',
+                'users',
+                'patches',
+                'logs',
+            },
+        )
 
     @defer.inlineCallbacks
     def setupGerritStatusPushSimple(
@@ -737,7 +790,17 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
     def test_extract_project_revision(self) -> InlineCallbacksType[None]:
         yield self.insert_test_data([SUCCESS], SUCCESS)
         res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
-        report = {"builds": res["builds"], "buildset": res["buildset"]}
+        report: Report = {
+            "body": None,
+            "subject": None,
+            "type": None,
+            "results": SUCCESS,
+            "builds": res["builds"],
+            "buildset": res["buildset"],
+            "users": [],
+            "patches": None,
+            "logs": None,
+        }
 
         project, revision = yield extract_project_revision(self.master, report)
         self.assertEqual(project, "testProject")
@@ -762,7 +825,17 @@ class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixi
             ),
         ])
         res = yield utils.getDetailsForBuildset(self.master, 98, want_properties=True)
-        report = {"builds": res["builds"], "buildset": res["buildset"]}
+        report: Report = {
+            "body": None,
+            "subject": None,
+            "type": None,
+            "results": SUCCESS,
+            "builds": res["builds"],
+            "buildset": res["buildset"],
+            "users": [],
+            "patches": None,
+            "logs": None,
+        }
 
         project, revision = yield extract_project_revision(self.master, report)
         self.assertEqual(project, "project1")

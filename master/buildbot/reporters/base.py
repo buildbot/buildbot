@@ -31,8 +31,10 @@ from buildbot.util import tuplematch
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.interfaces import IReportGenerator
     from buildbot.master import BuildMaster
     from buildbot.mq.base import QueueRef
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 ENCODING = 'utf-8'
@@ -46,11 +48,11 @@ class ReporterBase(service.BuildbotService):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.generators: list[Any] | None = None
+        self.generators: list[IReportGenerator] | None = None
         self._event_consumers: dict[tuple[str, ...], QueueRef] = {}
         self._pending_got_event_calls: dict[tuple[str, Any], defer.Deferred[None]] = {}
 
-    def checkConfig(self, generators: list[Any]) -> None:  # type: ignore[override]
+    def checkConfig(self, generators: list[IReportGenerator]) -> None:  # type: ignore[override]
         if not isinstance(generators, list):
             config.error(f'{self.__class__.__name__}: generators argument must be a list')
             generators = []
@@ -64,7 +66,9 @@ class ReporterBase(service.BuildbotService):
                 self.name += "_" + g.generate_name()
 
     @defer.inlineCallbacks
-    def reconfigService(self, generators: list[Any]) -> InlineCallbacksType[None]:  # type: ignore[override]
+    def reconfigService(  # type: ignore[override]
+        self, generators: list[IReportGenerator]
+    ) -> InlineCallbacksType[None]:
         self.generators = generators
 
         wanted_event_keys = set()
@@ -95,7 +99,7 @@ class ReporterBase(service.BuildbotService):
 
         yield super().stopService()
 
-    def _does_generator_want_key(self, generator: Any, key: tuple[str, ...]) -> bool:
+    def _does_generator_want_key(self, generator: IReportGenerator, key: tuple[str, ...]) -> bool:
         for filter in generator.wanted_event_keys:
             if tuplematch.matchTuple(key, filter):
                 return True
@@ -121,7 +125,7 @@ class ReporterBase(service.BuildbotService):
                 yield pending_call
 
         try:
-            reports = []
+            reports: list[Report] = []
             assert self.generators is not None
             for g in self.generators:
                 if self._does_generator_want_key(g, key):
@@ -146,10 +150,12 @@ class ReporterBase(service.BuildbotService):
                 del self._pending_got_event_calls[chain_key]
             d.callback(None)  # This event is now fully handled
 
-    def getResponsibleUsersForBuild(self, master: BuildMaster, buildid: int) -> Any:
+    def getResponsibleUsersForBuild(
+        self, master: BuildMaster, buildid: int
+    ) -> defer.Deferred[list[str]]:
         # Use library method but subclassers may want to override that
         return utils.getResponsibleUsersForBuild(master, buildid)
 
     @abc.abstractmethod
-    def sendMessage(self, reports: list[Any]) -> Any:
+    def sendMessage(self, reports: list[Report]) -> Any:
         pass

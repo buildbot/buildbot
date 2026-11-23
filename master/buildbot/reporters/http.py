@@ -27,6 +27,7 @@ from buildbot.reporters.message import MessageFormatterFunction
 from buildbot.util import httpclientservice
 
 if TYPE_CHECKING:
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -92,7 +93,7 @@ class HttpStatusPush(ReporterBase):
         return code // 100 == 2
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         response = yield self._http.post("", json=reports[0]['body'])
         if not self.is_status_2xx(response.code):
             log.msg(f"{response.code}: unable to upload status: {response.content}")

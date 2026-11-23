@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import TypedDict
 
 from twisted.internet import defer
 
@@ -28,12 +29,23 @@ from buildbot.util import identifiers
 if TYPE_CHECKING:
     from buildbot.data.resultspec import ResultSpec
     from buildbot.db.logs import LogModel
+    from buildbot.db.logs import LogType
     from buildbot.util.twisted import InlineCallbacksType
 
 
+class LogData(TypedDict):
+    logid: int
+    name: str
+    slug: str
+    stepid: int
+    complete: bool
+    num_lines: int
+    type: LogType
+
+
 class EndpointMixin:
-    def db2data(self, model: LogModel) -> defer.Deferred[dict[str, Any]]:
-        data = {
+    def db2data(self, model: LogModel) -> defer.Deferred[LogData]:
+        data: LogData = {
             'logid': model.id,
             'name': model.name,
             'slug': model.slug,
@@ -61,7 +73,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(
         self, resultSpec: ResultSpec, kwargs: dict[str, Any]
-    ) -> InlineCallbacksType[dict[str, Any] | None]:
+    ) -> InlineCallbacksType[LogData | None]:
         if 'logid' in kwargs:
             dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
             return (yield self.db2data(dbdict)) if dbdict else None
@@ -90,7 +102,7 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(
         self, resultSpec: ResultSpec, kwargs: dict[str, Any]
-    ) -> InlineCallbacksType[list[dict[str, Any]]]:
+    ) -> InlineCallbacksType[list[LogData]]:
         retriever = base.NestedBuildDataRetriever(self.master, kwargs)
         step_dict = yield retriever.get_step_dict()
         if step_dict is None:

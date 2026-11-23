@@ -41,11 +41,13 @@ if TYPE_CHECKING:
     from twisted.internet.defer import Deferred
 
     from buildbot.config.master import MasterConfig
+    from buildbot.master import BuildMaster
     from buildbot.process.build import Build
     from buildbot.process.log import Log
     from buildbot.process.properties import Properties
     from buildbot.process.workerforbuilder import LatentWorkerForBuilder
     from buildbot.reporters.base import ReporterBase
+    from buildbot.reporters.utils import Report
 
 # exceptions that can be raised while trying to start a build
 
@@ -370,9 +372,24 @@ class IConfigured(Interface):
 
 
 class IReportGenerator(Interface):
+    wanted_event_keys = Attribute(
+        'wanted_event_keys', 'list of mq routing key filters the generator handles'
+    )
+
+    def check() -> None:
+        """Report configuration errors with config.error"""
+
+    def generate_name() -> str:
+        """Name used to derive the name of a reporter that has none"""
+        raise NotImplementedError
+
     def generate(
-        master: IConfigured, reporter: ReporterBase, key: str, build: Build
-    ) -> Deferred[None]:
+        master: BuildMaster, reporter: ReporterBase, key: tuple[str, ...], message: Any
+    ) -> Deferred[Report | None]:
+        """Build a report for the event, or return None to send nothing.
+
+        message is the event payload; its type depends on the event key.
+        """
         raise NotImplementedError
 
 

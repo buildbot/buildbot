@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import TypedDict
 
 from twisted.internet import defer
 
@@ -26,13 +27,30 @@ from buildbot.data.resultspec import ResultSpec
 from buildbot.util.twisted import async_to_deferred
 
 if TYPE_CHECKING:
+    import datetime
     from collections.abc import Sequence
 
     from buildbot.db.builds import BuildModel
     from buildbot.util.twisted import InlineCallbacksType
 
 
-def _db2data(model: BuildModel) -> dict[str, Any]:
+class BuildData(TypedDict):
+    buildid: int
+    number: int
+    builderid: int
+    buildrequestid: int
+    workerid: int | None
+    masterid: int
+    started_at: datetime.datetime
+    complete_at: datetime.datetime | None
+    locks_duration_s: int | None
+    complete: bool
+    state_string: str
+    results: int | None
+    properties: dict[str, tuple[Any, str]]
+
+
+def _db2data(model: BuildModel) -> BuildData:
     return {
         'buildid': model.id,
         'number': model.number,
@@ -96,7 +114,7 @@ class BuildEndpoint(base.BuildNestingMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(
         self, resultSpec: ResultSpec, kwargs: dict[str, Any]
-    ) -> InlineCallbacksType[dict[str, Any] | None]:
+    ) -> InlineCallbacksType[BuildData | None]:
         if 'buildid' in kwargs:
             dbdict = yield self.master.db.builds.getBuild(kwargs['buildid'])
         else:
@@ -153,7 +171,7 @@ class BuildTriggeredBuildsEndpoint(base.Endpoint):
     ]
 
     @async_to_deferred
-    async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> list[dict[str, Any]]:
+    async def get(self, result_spec: base.ResultSpec, kwargs: Any) -> list[BuildData]:
         builds = await self.master.db.builds.get_triggered_builds(kwargs['buildid'])
         return [_db2data(b) for b in builds]
 
@@ -173,7 +191,7 @@ class BuildsEndpoint(base.BuildNestingMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(
         self, resultSpec: ResultSpec, kwargs: dict[str, Any]
-    ) -> InlineCallbacksType[list[dict[str, Any]]]:
+    ) -> InlineCallbacksType[list[BuildData]]:
         changeid = kwargs.get('changeid')
         if changeid is not None:
             builds = yield self.master.db.builds.getBuildsForChange(changeid)

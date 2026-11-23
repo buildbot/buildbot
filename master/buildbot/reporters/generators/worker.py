@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -30,6 +29,10 @@ from buildbot.reporters.message import MessageFormatterMissingWorker
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.data.workers import MissingWorkerData
+    from buildbot.master import BuildMaster
+    from buildbot.reporters.base import ReporterBase
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 ENCODING = 'utf-8'
@@ -43,11 +46,15 @@ class WorkerMissingGenerator(util.ComparableMixin):
         ('workers', None, 'missing'),
     ]
 
-    def __init__(self, workers: str | list[str] = 'all', message_formatter: Any = None) -> None:
+    def __init__(
+        self,
+        workers: str | list[str] = 'all',
+        message_formatter: MessageFormatterMissingWorker | None = None,
+    ) -> None:
         self.workers = workers
-        self.formatter = message_formatter
-        if self.formatter is None:
-            self.formatter = MessageFormatterMissingWorker()
+        self.formatter = (
+            message_formatter if message_formatter is not None else MessageFormatterMissingWorker()
+        )
 
     def check(self) -> None:
         if not (self.workers == 'all' or isinstance(self.workers, (list, tuple, set))):
@@ -55,8 +62,12 @@ class WorkerMissingGenerator(util.ComparableMixin):
 
     @defer.inlineCallbacks
     def generate(
-        self, master: Any, reporter: Any, key: Any, worker: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        key: tuple[str, ...],
+        worker: MissingWorkerData,
+    ) -> InlineCallbacksType[Report | None]:
         if not self._is_message_needed(worker):
             return None
 
@@ -89,5 +100,5 @@ class WorkerMissingGenerator(util.ComparableMixin):
             name += "_workers_" + "+".join(self.workers)
         return name
 
-    def _is_message_needed(self, worker: Any) -> bool:
-        return (self.workers == 'all' or worker['name'] in self.workers) and worker['notify']
+    def _is_message_needed(self, worker: MissingWorkerData) -> bool:
+        return bool((self.workers == 'all' or worker['name'] in self.workers) and worker['notify'])

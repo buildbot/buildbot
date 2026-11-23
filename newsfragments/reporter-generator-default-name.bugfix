@@ -1,0 +1,1 @@
+Reporters without an explicit ``name``, such as `MailNotifier`, no longer fail at configuration load when given a `BuildSetCombinedStatusGenerator` or a Gerrit status generator.

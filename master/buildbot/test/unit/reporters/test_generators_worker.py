@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Any
+from unittest.mock import Mock
 
 from parameterized import parameterized
 from twisted.internet import defer
@@ -28,6 +28,7 @@ from buildbot.test.reactor import TestReactorMixin
 from buildbot.test.util.config import ConfigErrorsMixin
 
 if TYPE_CHECKING:
+    from buildbot.data.workers import MissingWorkerData
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -37,11 +38,17 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.T
         self.setup_test_reactor()
         self.master = yield fakemaster.make_master(self, wantData=True, wantDb=True, wantMq=True)
 
-    def _get_worker_dict(self, worker_name: str) -> dict[str, Any]:
+    def _get_worker_dict(self, worker_name: str) -> MissingWorkerData:
         return {
+            'workerid': 98,
             'name': worker_name,
-            'notify': ["workeradmin@example.org"],
             'workerinfo': {"admin": "myadmin"},
+            'paused': False,
+            'pause_reason': None,
+            'graceful': False,
+            'connected_to': [],
+            'configured_on': [],
+            'notify': ["workeradmin@example.org"],
             'last_connection': "yesterday",
         }
 
@@ -56,7 +63,7 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.T
         g = WorkerMissingGenerator(workers=worker_filter)
 
         report = yield g.generate(
-            self.master, None, 'worker.98.complete', self._get_worker_dict('myworker')
+            self.master, Mock(), ('workers', '98', 'missing'), self._get_worker_dict('myworker')
         )
 
         self.assertEqual(report['users'], ['workeradmin@example.org'])
@@ -67,7 +74,7 @@ class TestWorkerMissingGenerator(ConfigErrorsMixin, TestReactorMixin, unittest.T
         g = WorkerMissingGenerator(workers=['other'])
 
         report = yield g.generate(
-            self.master, None, 'worker.98.complete', self._get_worker_dict('myworker')
+            self.master, Mock(), ('workers', '98', 'missing'), self._get_worker_dict('myworker')
         )
 
         self.assertIsNone(report)

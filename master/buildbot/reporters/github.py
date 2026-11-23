@@ -42,6 +42,8 @@ from buildbot.util.giturlparse import giturlparse
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from buildbot.data.sourcestamps import SourceStampData
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 HOSTED_BASE_URL = 'https://api.github.com'
@@ -184,7 +186,7 @@ class GitHubStatusPush(ReporterBase):
                 return m.group(1)
         return None
 
-    def _extract_github_info(self, sourcestamp: dict[str, Any]) -> tuple[str | None, str | None]:
+    def _extract_github_info(self, sourcestamp: SourceStampData) -> tuple[str | None, str | None]:
         repo_owner = None
         repo_name = None
         project = sourcestamp['project']
@@ -200,17 +202,20 @@ class GitHubStatusPush(ReporterBase):
         return repo_owner, repo_name
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         report = reports[0]
-        build = reports[0]['builds'][0]
+        builds = reports[0]['builds']
+        assert builds
+        build = builds[0]
 
         props = Properties.fromDict(build['properties'])
         props.master = self.master
 
         description = report.get('body', None)
+        assert description is None or isinstance(description, str)
 
         if build['complete']:
-            state = {
+            states: dict[int | None, str] = {
                 SUCCESS: 'success',
                 WARNINGS: 'success',
                 FAILURE: 'failure',
@@ -218,7 +223,8 @@ class GitHubStatusPush(ReporterBase):
                 EXCEPTION: 'error',
                 RETRY: 'pending',
                 CANCELLED: 'error',
-            }.get(build['results'], 'error')
+            }
+            state = states.get(build['results'], 'error')
         else:
             state = 'pending'
 
@@ -312,7 +318,7 @@ class GitHubCommentPush(GitHubStatusPush):
         ]
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         report = reports[0]
         if 'body' not in report or report['body'] is None:
             return

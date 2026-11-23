@@ -44,6 +44,10 @@ from buildbot.reporters.base import ReporterBase
 from buildbot.util import bytes2unicode
 
 if TYPE_CHECKING:
+    from buildbot.data.buildsets import BuildSetData
+    from buildbot.master import BuildMaster
+    from buildbot.reporters.utils import Report
+    from buildbot.reporters.utils import ReportBuild
     from buildbot.util.twisted import InlineCallbacksType
 
 # Cache the version that the gerrit server is running for this many seconds
@@ -127,13 +131,17 @@ class DEFAULT_SUMMARY:
 
 
 @defer.inlineCallbacks
-def extract_project_revision(master: Any, report: Any) -> InlineCallbacksType[tuple[Any, Any]]:
+def extract_project_revision(
+    master: BuildMaster, report: Report
+) -> InlineCallbacksType[tuple[Any, Any]]:
     props = None
     if report["builds"]:
         props = report["builds"][0].get("properties", None)
 
     if props is None:
-        props = yield master.data.get(("buildsets", report["buildset"]["bsid"], "properties"))
+        buildset = report["buildset"]
+        assert buildset is not None
+        props = yield master.data.get(("buildsets", buildset["bsid"], "properties"))
 
     def get_property(props: Any, name: str) -> Any:
         if props is None:
@@ -198,11 +206,41 @@ class GerritStatusGeneratorBase:
         self.want_steps = want_steps
         self.want_logs = want_logs
 
-    def is_build_reported(self, build: Any) -> bool:
+    def generate_name(self) -> str:
+        name = self.__class__.__name__
+        if self.builders is not None:
+            name += "_builders_" + "+".join(self.builders)
+        return name
+
+    def _make_report(
+        self,
+        result: Any,
+        results: int | None,
+        builds: list[ReportBuild],
+        buildset: BuildSetData,
+    ) -> Report:
+        return {
+            "body": result.get("message", None),
+            "subject": None,
+            "type": "plain",
+            "results": results,
+            "extra_info": {
+                "labels": result.get("labels"),
+            },
+            "builds": builds,
+            "buildset": buildset,
+            "users": [],
+            "patches": [],
+            "logs": [],
+        }
+
+    def is_build_reported(self, build: ReportBuild) -> bool:
         return self.builders is None or build["builder"]["name"] in self.builders
 
     @defer.inlineCallbacks
-    def get_build_details(self, master: Any, build: Any) -> InlineCallbacksType[None]:
+    def get_build_details(
+        self, master: BuildMaster, build: ReportBuild
+    ) -> InlineCallbacksType[None]:
         br = yield master.data.get(("buildrequests", build["buildrequestid"]))
         buildset = yield master.data.get(("buildsets", br["buildsetid"]))
         yield utils.getDetailsForBuilds(
@@ -221,8 +259,12 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
 
     @defer.inlineCallbacks
     def generate(
-        self, master: Any, reporter: Any, key: Any, message: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        key: tuple[str, ...],
+        message: BuildSetData,
+    ) -> InlineCallbacksType[Report | None]:
         bsid = message["bsid"]
         res = yield utils.getDetailsForBuildset(
             master,
@@ -240,14 +282,15 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
         if not builds:
             return None
 
-        def get_build_info(build: Any) -> dict[str, Any]:
+        def get_build_info(build: ReportBuild) -> dict[str, Any]:
             result = build["results"]
-            resultText = {
+            result_texts: dict[int | None, str] = {
                 SUCCESS: "succeeded",
                 FAILURE: "failed",
                 WARNINGS: "completed with warnings",
                 EXCEPTION: "encountered an exception",
-            }.get(result, f"completed with unknown result {result}")
+            }
+            resultText = result_texts.get(result, f"completed with unknown result {result}")
 
             return {
                 "name": build["builder"]["name"],
@@ -266,14 +309,7 @@ class GerritBuildSetStatusGenerator(GerritStatusGeneratorBase):
             build_info_list, Results[buildset["results"]], master, self.callback_arg
         )
 
-        return {
-            "body": result.get("message", None),
-            "extra_info": {
-                "labels": result.get("labels"),
-            },
-            "builds": [builds[0]],
-            "buildset": buildset,
-        }
+        return self._make_report(result, buildset["results"], [builds[0]], buildset)
 
 
 @implementer(interfaces.IReportGenerator)
@@ -287,8 +323,12 @@ class GerritBuildStartStatusGenerator(GerritStatusGeneratorBase):
 
     @defer.inlineCallbacks
     def generate(
-        self, master: Any, reporter: Any, key: Any, message: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        key: tuple[str, ...],
+        message: ReportBuild,
+    ) -> InlineCallbacksType[Report | None]:
         build = message
         yield self.get_build_details(master, build)
         if not self.is_build_reported(build):
@@ -296,14 +336,7 @@ class GerritBuildStartStatusGenerator(GerritStatusGeneratorBase):
 
         result = yield self.callback(build["builder"]["name"], build, self.callback_arg)
 
-        return {
-            "body": result.get("message", None),
-            "extra_info": {
-                "labels": result.get("labels"),
-            },
-            "builds": [build],
-            "buildset": build["buildset"],
-        }
+        return self._make_report(result, build["results"], [build], build["buildset"])
 
 
 @implementer(interfaces.IReportGenerator)
@@ -317,8 +350,12 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
 
     @defer.inlineCallbacks
     def generate(
-        self, master: Any, reporter: Any, key: Any, message: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        key: tuple[str, ...],
+        message: ReportBuild,
+    ) -> InlineCallbacksType[Report | None]:
         build = message
         yield self.get_build_details(master, build)
         if not self.is_build_reported(build):
@@ -328,14 +365,7 @@ class GerritBuildEndStatusGenerator(GerritStatusGeneratorBase):
             build['builder']['name'], build, build['results'], master, self.callback_arg
         )
 
-        return {
-            "body": result.get("message", None),
-            "extra_info": {
-                "labels": result.get("labels"),
-            },
-            "builds": [build],
-            "buildset": build["buildset"],
-        }
+        return self._make_report(result, build["results"], [build], build["buildset"])
 
 
 class GerritStatusPush(ReporterBase):
@@ -488,7 +518,7 @@ class GerritStatusPush(ReporterBase):
                 log.msg("gerrit status: OK")
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         report = reports[0]
 
         project, revision = yield extract_project_revision(self.master, report)
@@ -501,13 +531,14 @@ class GerritStatusPush(ReporterBase):
         if extra_info is not None:
             labels = extra_info.get("labels", None)
 
-        if labels is None and report.get("builds", None):
+        builds = report.get("builds", None)
+        if labels is None and builds:
             # At least one build
             success = False
             failure = False
             pending = False
 
-            for build in report["builds"]:
+            for build in builds:
                 if build["results"] is None:
                     pending = True
                 elif build["results"] == SUCCESS:

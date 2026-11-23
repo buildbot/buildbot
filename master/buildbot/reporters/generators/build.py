@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Any
 from typing import ClassVar
 
 from twisted.internet import defer
@@ -33,6 +32,10 @@ from .utils import BuildStatusGeneratorMixin
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from buildbot.master import BuildMaster
+    from buildbot.reporters.base import ReporterBase
+    from buildbot.reporters.utils import Report
+    from buildbot.reporters.utils import ReportBuild
     from buildbot.util.twisted import InlineCallbacksType
 
 
@@ -51,7 +54,7 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
         builders: list[str] | None = None,
         schedulers: list[str] | None = None,
         branches: list[str] | None = None,
-        add_logs: Any = None,
+        add_logs: list[str] | bool | None = None,
         add_patch: bool = False,
         report_new: bool = False,
         message_formatter: MessageFormatter | None = None,
@@ -71,8 +74,12 @@ class BuildStatusGenerator(BuildStatusGeneratorMixin):
 
     @defer.inlineCallbacks
     def generate(
-        self, master: Any, reporter: Any, key: Any, build: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        key: tuple[str, ...],
+        build: ReportBuild,
+    ) -> InlineCallbacksType[Report | None]:
         _, _, event = key
         is_new = event == 'new'
         want_previous_build = False if is_new else self._want_previous_build()
@@ -115,7 +122,7 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
         builders: list[str] | None = None,
         schedulers: list[str] | None = None,
         branches: list[str] | None = None,
-        add_logs: Any = None,
+        add_logs: list[str] | bool | None = None,
         add_patch: bool = False,
         start_formatter: MessageFormatterBase | None = None,
         end_formatter: MessageFormatterBase | None = None,
@@ -132,8 +139,12 @@ class BuildStartEndStatusGenerator(BuildStatusGeneratorMixin):
 
     @defer.inlineCallbacks
     def generate(
-        self, master: Any, reporter: Any, key: Any, build: Any
-    ) -> InlineCallbacksType[Any]:
+        self,
+        master: BuildMaster,
+        reporter: ReporterBase,
+        key: tuple[str, ...],
+        build: ReportBuild,
+    ) -> InlineCallbacksType[Report | None]:
         _, _, event = key
         is_new = event == 'new'
 

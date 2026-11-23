@@ -33,6 +33,7 @@ from buildbot.reporters.message import MessageFormatter
 from buildbot.util import httpclientservice
 
 if TYPE_CHECKING:
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 # Magic words understood by Butbucket REST API
@@ -123,7 +124,7 @@ class BitbucketStatusPush(ReporterBase):
         ]
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
         # Only use OAuth if basic auth has not been specified
         if not self.auth:
             request = yield self.oauthhttp.post("", data=_GET_TOKEN_DATA)  # type: ignore[union-attr]
@@ -134,7 +135,9 @@ class BitbucketStatusPush(ReporterBase):
             token = (yield request.json())['access_token']
             self._http.update_headers({'Authorization': f'Bearer {token}'})
 
-        build = reports[0]['builds'][0]
+        builds = reports[0]['builds']
+        assert builds
+        build = builds[0]
         if build['complete']:
             status = BITBUCKET_SUCCESSFUL if build['results'] == SUCCESS else BITBUCKET_FAILED
         else:
@@ -164,7 +167,9 @@ class BitbucketStatusPush(ReporterBase):
                 continue
             owner, repo = self.get_owner_and_repo(sourcestamp['repository'])
 
-            endpoint = (owner, repo, 'commit', sourcestamp['revision'], 'statuses', 'build')
+            revision = sourcestamp['revision']
+            assert revision is not None
+            endpoint = (owner, repo, 'commit', revision, 'statuses', 'build')
             bitbucket_uri = f"/{'/'.join(endpoint)}"
 
             if self.debug:

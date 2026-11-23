@@ -35,11 +35,12 @@ from .utils import merge_reports_prop
 from .utils import merge_reports_prop_take_first
 
 if TYPE_CHECKING:
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 ENCODING = 'utf8'
 
-LEVELS = {
+LEVELS: dict[int | None, str] = {
     CANCELLED: 'cancelled',
     EXCEPTION: 'exception',
     FAILURE: 'failing',
@@ -93,7 +94,7 @@ class PushjetNotifier(ReporterBase):
         formatter = MessageFormatter(template_type='html', template=DEFAULT_MSG_TEMPLATE)
         return [BuildStatusGenerator(message_formatter=formatter)]
 
-    def sendMessage(self, reports: list[Any]) -> Any:
+    def sendMessage(self, reports: list[Report]) -> Any:
         body = merge_reports_prop(reports, 'body')
         subject = merge_reports_prop_take_first(reports, 'subject')
         results = merge_reports_prop(reports, 'results')

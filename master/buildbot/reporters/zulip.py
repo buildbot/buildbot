@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Any
 
 from twisted.internet import defer
 from twisted.logger import Logger
@@ -27,6 +26,7 @@ from buildbot.reporters.generators.build import BuildStartEndStatusGenerator
 from buildbot.util import httpclientservice
 
 if TYPE_CHECKING:
+    from buildbot.reporters.utils import Report
     from buildbot.util.twisted import InlineCallbacksType
 
 log = Logger()
@@ -69,8 +69,11 @@ class ZulipStatusPush(ReporterBase):
         self.stream = stream
 
     @defer.inlineCallbacks
-    def sendMessage(self, reports: list[Any]) -> InlineCallbacksType[None]:
-        build = reports[0]['builds'][0]
+    def sendMessage(self, reports: list[Report]) -> InlineCallbacksType[None]:
+        builds = reports[0]['builds']
+        assert builds
+        build = builds[0]
+        assert 'buildid' in build
         event = ("new", "finished")[0 if build["complete"] is False else 1]
         jsondata = {
             "event": event,
@@ -82,7 +85,9 @@ class ZulipStatusPush(ReporterBase):
         if event == "new":
             jsondata["timestamp"] = int(build["started_at"].timestamp())
         elif event == "finished":
-            jsondata["timestamp"] = int(build["complete_at"].timestamp())
+            complete_at = build["complete_at"]
+            assert complete_at is not None
+            jsondata["timestamp"] = int(complete_at.timestamp())
             jsondata["results"] = build["results"]
         if self.stream is not None:
             url = f"/api/v1/external/buildbot?api_key={self.token}&stream={self.stream}"
