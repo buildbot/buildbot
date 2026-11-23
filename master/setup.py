@@ -336,6 +336,7 @@ setup_args = {
                     ('buildbot.reporters.irc', ['IRC']),
                     ('buildbot.reporters.telegram', ['TelegramBot']),
                     ('buildbot.reporters.zulip', ['ZulipStatusPush']),
+                    ('buildbot.reporters.msteams', ['MsTeamsStatusPush']),
                 ],
             ),
             (
