@@ -199,6 +199,9 @@ class BuildSetCombinedStatusGenerator:
     def check(self) -> None:
         pass
 
+    def generate_name(self) -> str:
+        return self.__class__.__name__
+
     @defer.inlineCallbacks
     def buildset_message(
         self,

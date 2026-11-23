@@ -138,6 +138,30 @@ def sampleSummaryCBDeferred(
     return result
 
 
+class TestGerritStatusGeneratorName(unittest.TestCase):
+    @parameterized.expand([
+        ('buildset', GerritBuildSetStatusGenerator, None, 'GerritBuildSetStatusGenerator'),
+        ('start', GerritBuildStartStatusGenerator, None, 'GerritBuildStartStatusGenerator'),
+        (
+            'end_builders',
+            GerritBuildEndStatusGenerator,
+            ['b1', 'b2'],
+            'GerritBuildEndStatusGenerator_builders_b1+b2',
+        ),
+    ])
+    def test_generate_name(
+        self, name: str, generator_class: type[Any], builders: list[str] | None, expected: str
+    ) -> None:
+        generator = generator_class(
+            callback=defaultSummaryCB,
+            callback_arg=None,
+            builders=builders,
+            want_steps=False,
+            want_logs=False,
+        )
+        self.assertEqual(generator.generate_name(), expected)
+
+
 class TestGerritStatusPush(TestReactorMixin, unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]

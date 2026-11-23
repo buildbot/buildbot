@@ -32,6 +32,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters import mail
 from buildbot.reporters import utils
 from buildbot.reporters.generators.build import BuildStatusGenerator
+from buildbot.reporters.generators.buildset import BuildSetCombinedStatusGenerator
 from buildbot.reporters.mail import MailNotifier
 from buildbot.reporters.message import MessageFormatter
 from buildbot.test.fake import fakemaster
@@ -63,6 +64,12 @@ class TestMailNotifier(ConfigErrorsMixin, TestReactorMixin, unittest.TestCase, R
     def test_change_name(self) -> InlineCallbacksType[None]:
         mn = yield self.setupMailNotifier('from@example.org', name="custom_name")
         self.assertEqual(mn.name, "custom_name")
+
+    async def test_default_name_with_combined_generator(self) -> None:
+        mn = await self.setupMailNotifier(
+            'from@example.org', generators=[BuildSetCombinedStatusGenerator(MessageFormatter())]
+        )
+        self.assertEqual(mn.name, "MailNotifier_BuildSetCombinedStatusGenerator")
 
     @defer.inlineCallbacks
     def do_test_createEmail_cte(

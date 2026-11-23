@@ -198,6 +198,12 @@ class GerritStatusGeneratorBase:
         self.want_steps = want_steps
         self.want_logs = want_logs
 
+    def generate_name(self) -> str:
+        name = self.__class__.__name__
+        if self.builders is not None:
+            name += "_builders_" + "+".join(self.builders)
+        return name
+
     def is_build_reported(self, build: Any) -> bool:
         return self.builders is None or build["builder"]["name"] in self.builders
 
