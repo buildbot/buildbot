@@ -155,6 +155,7 @@ function ensurePortalOverrides() {
 
 function applyTheme(mode: string) {
   const root = document.documentElement;
+  root.setAttribute('data-bs-theme', mode === 'Dark' ? 'dark' : 'light');
   const variables = mode === 'Dark' ? darkThemeVariables : lightThemeVariables;
   for (const [name, value] of Object.entries(variables)) {
     root.style.setProperty(`--${name}`, value);
