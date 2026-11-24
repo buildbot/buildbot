@@ -1,0 +1,1 @@
+Fixed tables and form fields retaining light backgrounds when the dark theme is selected (:issue:`9324`).
