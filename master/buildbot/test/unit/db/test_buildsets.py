@@ -152,6 +152,21 @@ class Tests(TestReactorMixin, unittest.TestCase):
         return self.do_test_getBuildsetProperties(91, [], {})
 
     @defer.inlineCallbacks
+    def test_addBuildset_large_property_value(self) -> InlineCallbacksType[None]:
+        # Larger than MySQL TEXT (65535 bytes); must succeed with LONGTEXT.
+        large_value = 'x' * 70000
+        props = {"large": (large_value, 'test')}
+        bsid, _ = yield self.db.buildsets.addBuildset(
+            sourcestamps=[234],
+            reason='because',
+            waited_for=False,
+            properties=props,
+            builderids=[1],
+        )
+        got = yield self.db.buildsets.getBuildsetProperties(bsid)
+        self.assertEqual(got, props)
+
+    @defer.inlineCallbacks
     def test_getBuildset_incomplete_zero(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data([
             fakedb.Buildset(

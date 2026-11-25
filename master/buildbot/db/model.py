@@ -145,8 +145,13 @@ class Model(base.DBConnectorComponent):
             'buildid', sa.Integer, sa.ForeignKey('builds.id', ondelete='CASCADE'), nullable=False
         ),
         sa.Column('name', sa.String(model_config.property_name_length), nullable=False),
-        # JSON encoded value
-        sa.Column('value', sa.Text, nullable=False),
+        # JSON encoded value. MySQL TEXT is limited to 64KiB; use LONGTEXT like
+        # build_data.value uses LONGBLOB so large property values can be stored.
+        sa.Column(
+            'value',
+            sa.Text().with_variant(sa.dialects.mysql.LONGTEXT, "mysql"),
+            nullable=False,
+        ),
         sa.Column('source', sa.String(model_config.property_source_length), nullable=False),
     )
 
@@ -281,8 +286,13 @@ class Model(base.DBConnectorComponent):
             nullable=False,
         ),
         sa.Column('property_name', sa.String(model_config.property_name_length), nullable=False),
-        # JSON-encoded tuple of (value, source)
-        sa.Column('property_value', sa.Text, nullable=False),
+        # JSON-encoded tuple of (value, source). MySQL TEXT is limited to 64KiB;
+        # use LONGTEXT so large property values can be stored.
+        sa.Column(
+            'property_value',
+            sa.Text().with_variant(sa.dialects.mysql.LONGTEXT, "mysql"),
+            nullable=False,
+        ),
     )
 
     # This table represents Buildsets - sets of BuildRequests that share the

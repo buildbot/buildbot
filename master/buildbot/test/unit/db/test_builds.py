@@ -446,6 +446,15 @@ class Tests(TestReactorMixin, unittest.TestCase):
         self.assertEqual(props, {'prop': (42, 'test')})
 
     @defer.inlineCallbacks
+    def test_setBuildProperty_large_value(self) -> InlineCallbacksType[None]:
+        # Larger than MySQL TEXT (65535 bytes); must succeed with LONGTEXT.
+        large_value = 'x' * 70000
+        yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
+        yield self.db.builds.setBuildProperty(50, 'large', large_value, 'test')
+        props = yield self.db.builds.getBuildProperties(50)
+        self.assertEqual(props, {'large': (large_value, 'test')})
+
+    @defer.inlineCallbacks
     def testsetgetsetProperties(self) -> InlineCallbacksType[None]:
         yield self.db.insert_test_data(self.backgroundData + self.threeBuilds)
         props = yield self.db.builds.getBuildProperties(50)
