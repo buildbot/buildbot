@@ -1,0 +1,1 @@
+On MySQL, `build_properties.value` and `buildset_properties.property_value` are now `LONGTEXT`, so property values larger than 64KiB can be stored (:issue:`9311`, :issue:`7130`).
