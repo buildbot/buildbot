@@ -427,7 +427,7 @@ class GitHubHandler(BaseHookHandler):
             'pullrequest_ref': options.get('pullrequest_ref', None) or 'merge',
             'token': options.get('token', None),
             'debug': options.get('debug', None) or False,
-            'verify': options.get('verify', None) or True,
+            'verify': options.get('verify', True),
         }
         handler = klass(options.get('secret', None), options.get('strict', False), **klass_kwargs)
         self.handler = handler

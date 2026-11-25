@@ -1,0 +1,1 @@
+The GitHub change hook now honors ``verify=False`` in its ``change_hook_dialects`` options; the value was previously coerced to ``True``.

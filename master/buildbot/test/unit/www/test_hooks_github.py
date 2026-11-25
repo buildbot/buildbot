@@ -1243,6 +1243,45 @@ class TestChangeHookConfiguredWithAuth(TestReactorMixin, unittest.TestCase):
             self._check_git_pull_request_with_skip_message(gitJsonPayloadPullRequest)
 
 
+class TestChangeHookConfiguredWithoutVerify(TestReactorMixin, unittest.TestCase):
+    @defer.inlineCallbacks
+    def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
+        self.setup_test_reactor()
+
+        _token = '7e076f41-b73a-4045-a817'
+        self.changeHook = yield _prepare_github_change_hook(
+            self, strict=False, token=_token, verify=False
+        )
+        self.master = self.changeHook.master
+        fake_headers = {
+            'User-Agent': 'Buildbot',
+            'Authorization': 'token ' + _token,
+        }
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+            self.master,
+            self,
+            'https://api.github.com',
+            headers=fake_headers,
+            debug=False,
+            verify=False,
+        )
+        yield self.master.startService()
+        self.addCleanup(self.master.stopService)
+
+    @defer.inlineCallbacks
+    def test_pull_request(self) -> InlineCallbacksType[None]:
+        commit_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        files_endpoint = '/repos/defunkt/github/pulls/50/files'
+        self._http.expect('get', commit_endpoint, content_json=gitJsonPayloadCommit)
+        self._http.expect('get', files_endpoint, content_json=gitJsonPayloadFiles)
+
+        self.request = _prepare_request(b'pull_request', gitJsonPayloadPullRequest)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
+        change = self.changeHook.master.data.updates.changesAdded[0]
+        self.assertEqual(change['files'], ['README.md', 'old_README.md'])
+
+
 class TestChangeHookConfiguredWithCustomApiRoot(TestReactorMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self) -> InlineCallbacksType[None]:  # type: ignore[override]
