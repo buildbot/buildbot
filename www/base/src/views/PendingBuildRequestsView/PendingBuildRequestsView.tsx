@@ -40,6 +40,7 @@ export const PendingBuildRequestsView = observer(() => {
         limit: requestsFetchLimit,
         order: ['-priority', '-submitted_at'],
         claimed: false,
+        property: ['owner', 'owners'],
       },
     }),
   );
