@@ -250,24 +250,15 @@ span:hover > .mouse-over-only {
   }
 
   .table {
-    color: var(--bb-text-color);
-  }
-
-  .table-striped tbody tr:nth-of-type(odd) {
-    background-color: var(--bb-card-bg-color);
-  }
-
-  .table td,
-  .table th {
-    border-color: var(--bb-border-color);
-  }
-
-  .table-hover tbody tr:hover {
-    color: var(--bb-text-color);
-    background-color: var(--bb-card-bg-color);
-  }
-
-  .table thead th {
+    --bs-table-color: var(--bb-text-color);
+    --bs-table-bg: var(--bb-background-color);
+    --bs-table-border-color: var(--bb-border-color);
+    --bs-table-striped-color: var(--bb-text-color);
+    --bs-table-striped-bg: var(--bb-card-bg-color);
+    --bs-table-hover-color: var(--bb-text-color);
+    --bs-table-hover-bg: var(--bb-card-bg-color);
+    --bs-table-active-color: var(--bb-text-color);
+    --bs-table-active-bg: var(--bb-card-bg-color);
     color: var(--bb-text-color);
     border-color: var(--bb-border-color);
   }
@@ -291,7 +282,9 @@ span:hover > .mouse-over-only {
   }
 
   select.form-control,
-  .custom-select {
+  .form-select {
+    // Mid-grey arrow so it stays visible on both light and dark backgrounds.
+    --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23888' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
     background-color: var(--bb-background-color);
     border-color: var(--bb-btn-border-color);
     color: var(--bb-text-color);
@@ -327,6 +320,13 @@ span:hover > .mouse-over-only {
     background-color: var(--bb-background-color);
     border-color: var(--bb-border-color);
     color: var(--bb-link-color);
+  }
+
+  // The "go to" page input is a bare <input>, so it needs theming explicitly.
+  .pagination input {
+    background-color: var(--bb-background-color);
+    border: 1px solid var(--bb-border-color);
+    color: var(--bb-text-color);
   }
 
   .page-link:hover {
